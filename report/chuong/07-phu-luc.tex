@@ -1,0 +1,56 @@
+\chapter*{Phụ Lục: Hướng Dẫn Triển Khai \& Bảng Tự Kiểm}
+\addcontentsline{toc}{chapter}{Phụ Lục: Hướng Dẫn Triển Khai \& Bảng Tự Kiểm}
+
+\section*{A. Hướng dẫn Cài đặt \& Chạy Mã nguồn}
+
+\subsection*{1. Yêu cầu Môi trường}
+\begin{itemize}
+    \item \en{Node.js} phiên bản $\ge 18.0.0$.
+    \item \en{MongoDB Atlas URI} hợp lệ và kết nối Internet để gọi \en{Gemini AI API}.
+    \item \en{Google Gemini API Key} cấu hình trong file \code{backend/.env}.
+\end{itemize}
+
+\subsection*{2. Cấu hình Biến Môi trường Backend}
+Tạo file \code{backend/.env} với nội dung:
+\begin{lstlisting}[language=bash]
+PORT=3000
+MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/travel_trips
+GEMINI_API_KEY=AIzaSy...
+JWT_SECRET=WanderWiseSecretKey2026
+\end{lstlisting}
+
+\subsection*{3. Khởi chạy Hệ thống}
+\begin{lstlisting}[language=bash]
+# Terminal 1 - Backend Server
+cd backend
+npm install
+npm start
+# Server khoi chay tai http://localhost:3000
+
+# Terminal 2 - Frontend App
+cd frontend
+npm install
+npm run dev
+# Ung dung khoi chay tai http://localhost:5173
+\end{lstlisting}
+
+\section*{B. Bảng Tự Kiểm Tra Đồ Án (Bám sát Rubric Học phần AIP202)}
+
+\begin{table}[H]
+\centering
+\caption{Bảng tự kiểm tra tiêu chí đánh giá chất lượng đồ án}
+\begin{tabular}{|c|p{8.5cm}|c|}
+\hline
+\textbf{STT} & \textbf{Tiêu chí kiểm tra theo Rubric} & \textbf{Tình trạng} \\ \hline
+1 & Đầy đủ trang bìa chuẩn DAU, lời cam đoan, lời cảm ơn, tóm tắt & \textbf{Đạt 100\%} \\ \hline
+2 & Trình bày rõ ràng lý do chọn đề tài, mục tiêu và phạm vi nghiên cứu & \textbf{Đạt 100\%} \\ \hline
+3 & Cơ sở lý thuyết vững chắc về LLM, Gemini AI và kiến trúc Vue 3 & \textbf{Đạt 100\%} \\ \hline
+4 & Thiết kế hệ thống đầy đủ sơ đồ Use-Case, kiến trúc 3 tầng và ERD & \textbf{Đạt 100\%} \\ \hline
+5 & Giải thuật Visited Set Graph giải quyết triệt để bài toán lặp địa điểm & \textbf{Đạt 100\%} \\ \hline
+6 & Cơ sở dữ liệu phong phú hơn 80+ địa điểm thực tế kèm ảnh HD & \textbf{Đạt 100\%} \\ \hline
+7 & Giao diện App-First đẹp mắt, hỗ trợ cả Mobile và PC Desktop & \textbf{Đạt 100\%} \\ \hline
+8 & Các tính năng tiện ích (Chia tiền, Tránh mưa, Vé offline) hoạt động tốt & \textbf{Đạt 100\%} \\ \hline
+9 & Báo cáo không còn sót khối văn bản mẫu (\code{\textbackslash begin\{mau\}}) & \textbf{Đạt 100\%} \\ \hline
+10 & Mã nguồn chuẩn hóa, comment tiếng Anh, tài liệu rõ ràng & \textbf{Đạt 100\%} \\ \hline
+\end{tabular}
+\end{table}

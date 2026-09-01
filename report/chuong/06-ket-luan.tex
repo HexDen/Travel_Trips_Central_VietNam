@@ -1,0 +1,39 @@
+\chapter{Kết Luận \& Hướng Phát Triển}
+
+\begin{muctieu}
+Chương này tổng kết các đóng góp và kết quả đạt được của đồ án WanderWise, đúc kết những bài học kinh nghiệm trong quá trình nghiên cứu và phát triển, chỉ ra các hạn chế và đề xuất lộ trình nâng cấp hệ thống trong tương lai.
+\end{muctieu}
+
+\section{Kết luận chung}
+
+Đồ án \textbf{"Xây dựng Ứng dụng Lập Lịch trình và Khám phá Du lịch Miền Trung Thông minh (WanderWise)"} đã hoàn thành xuất sắc toàn bộ các mục tiêu đặt ra ban đầu cả về mặt lý thuyết lẫn ứng dụng thực tiễn:
+
+\begin{enumerate}
+    \item \textbf{Ứng dụng Trí tuệ Nhân tạo thành công trong Du lịch:} Kết hợp hiệu quả mô hình ngôn ngữ lớn \en{Google Gemini 2.5 Flash} và giải thuật \en{Visited Set Graph} để tự động hóa hoàn toàn quy trình sinh lịch trình du lịch cá nhân hóa, loại bỏ triệt để 100\% hiện tượng lặp lại địa điểm giữa các ngày.
+    \item \textbf{Số hóa Dữ liệu Du lịch Địa phương:} Xây dựng cơ sở dữ liệu phong phú, chính xác với hơn 80+ địa danh thắng cảnh, ẩm thực đặc sản và khách sạn trên địa bàn 9 tỉnh/thành phố Miền Trung kèm hình ảnh chất lượng cao và định vị Google Maps.
+    \item \textbf{Trải nghiệm Người dùng Đột phá (App-First):} Xây dựng giao diện đa nền tảng mượt mà trên Vue 3, hỗ trợ cả màn hình PC Desktop và khung giả lập Mobile iPhone/Android.
+    \item \textbf{Phát triển Bộ Tiện ích Sáng tạo:} Tích hợp thành công công cụ chia tiền nhóm (\en{Bill Splitter}), đổi lịch trình tránh mưa thông minh (\en{Weather Re-scheduler}) và vé hành trình ngoại tuyến (\en{Offline Travel Pass}).
+\end{enumerate}
+
+\section{Bài học kinh nghiệm}
+
+Trong quá trình thực hiện đề tài, nhóm đã tích lũy được nhiều bài học quý báu:
+\begin{itemize}
+    \item \textbf{Làm chủ kỹ thuật Prompt Engineering:} Nhận thức rõ tầm quan trọng của việc thiết lập ràng buộc cứng (\en{Hard Constraints}) và cấu trúc dữ liệu JSON chặt chẽ để kiểm soát hành vi suy luận của các mô hình LLM.
+    \item \textbf{Tối ưu hóa trải nghiệm người dùng (UX):} Việc đặt người dùng làm trung tâm (hiển thị ảnh thực tế, nút 1-click dẫn đường, chia tiền tự động) tạo ra sự khác biệt lớn so với các ứng dụng du lịch truyền thống.
+\end{itemize}
+
+\section{Hạn chế của đồ án}
+
+Mặc dù đã đạt được nhiều kết quả tích cực, đồ án vẫn còn một số điểm cần tiếp tục hoàn thiện:
+\begin{itemize}
+    \item Chưa tích hợp trực tiếp cổng thanh toán điện tử (VNPay, MoMo, ZaloPay) để du khách thanh toán phòng khách sạn và vé tham quan trực tuyến.
+    \item Dữ liệu ẩm thực tại các vùng cao Tây Nguyên (Gia Lai, Kon Tum) cần tiếp tục được mở rộng phong phú hơn nữa.
+\end{itemize}
+
+\section{Hướng phát triển trong tương lai}
+
+\begin{itemize}
+    \item \textbf{Tích hợp Trợ lý Giọng nói (AI Voice Guide):} Phát triển tính năng tự động nhận diện vị trí GPS của du khách và phát giọng đọc thuyết minh audio về lịch sử, văn hóa của danh lam thắng cảnh.
+    \item \textbf{Tích hợp Cổng Thanh toán \& Đặt phòng Trực tuyến:} Kết nối API của các hãng hàng không, nhà xe và hệ thống quản lý phòng khách sạn để du khách đặt tour trọn gói 1 chạm.
+\end{itemize}

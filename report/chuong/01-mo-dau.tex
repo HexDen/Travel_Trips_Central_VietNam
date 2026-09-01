@@ -1,0 +1,83 @@
+\chapter{Mở Đầu}
+
+\begin{muctieu}
+Chương mở đầu trình bày bối cảnh thực tiễn của ngành du lịch Miền Trung, phân tích các rào cản cốt lõi của du khách khi lên lịch trình tự túc, xác định mục tiêu khoa học cần đạt, phạm vi thực hiện và bố cục tổng thể của báo cáo đồ án.
+\end{muctieu}
+
+\section{Lý do chọn đề tài}
+
+Miền Trung Việt Nam sở hữu vị thế địa chiến lược đặc biệt quan trọng trong bản đồ du lịch quốc gia và quốc tế, nơi hội tụ đậm đặc các di sản văn hóa thế giới được UNESCO công nhận (Quần thể Di tích Cố đô Huế, Phố cổ Hội An, Thánh địa Mỹ Sơn, Vườn Quốc gia Phong Nha - Kẻ Bàng) cùng hệ sinh thái biển đảo và cao nguyên tuyệt mỹ (Đà Nẵng, Quy Nhơn, Phú Yên, Nha Trang, Đà Lạt, Gia Lai). Trong giai đoạn chuyển đổi số quốc gia và phục hồi kinh tế hậu đại dịch, nhu cầu du lịch tự túc (\en{Free Independent Travelers - FIT}) của giới trẻ và các gia đình tăng trưởng vượt bậc.
+
+Tuy nhiên, qua khảo sát thực tế hành vi người dùng, quá trình chuẩn bị cho một chuyến du lịch Miền Trung tự túc thường tiêu tốn từ 10 đến 25 giờ tìm kiếm thông tin và đối mặt với hàng loạt rào cản lớn:
+
+\begin{enumerate}
+    \item \textbf{Khó khăn trong việc tối ưu hóa lộ trình không gian (\en{Spatial Route Optimization}):} Khách du lịch thường không nắm rõ khoảng cách địa lý thực tế giữa các điểm tham quan. Việc xếp lịch trình thủ công dễ dẫn đến việc di chuyển qua lại nhiều lần trên cùng một cung đường, gây lãng phí thời gian và tăng chi phí xăng xe, di chuyển.
+    \item \textbf{Hiện tượng lặp lại địa điểm (\en{Destination Duplication}):} Nhiều công cụ gợi ý lịch trình tự động hoặc trợ lý ảo thông thường do thiếu cơ chế theo dõi trạng thái (\en{State Tracking}) nên thường xuyên lặp lại cùng một địa điểm qua các ngày (ví dụ: ngày 1 đã đi Động Thiên Đường, ngày 3 lại tiếp tục xếp đi Động Thiên Đường).
+    \item \textbf{Thiếu thông tin địa chỉ cụ thể và ẩm thực bản địa chính thống:} Đa phần các bài viết chia sẻ trên mạng xã hội chỉ mang tính chất chung chung, thiếu số nhà, tên đường cụ thể hoặc gợi ý các quán ăn không phản ánh đúng phong vị ẩm thực đặc trưng xứ Quảng, xứ Huế hay Bình Định.
+    \item \textbf{Lịch trình cứng nhắc, không thích ứng thời tiết (\en{Weather Inelasticity}):} Khí hậu Miền Trung thường có những cơn mưa rào hoặc biến đổi thời tiết bất chợt. Khi trời mưa lớn, toàn bộ kế hoạch tắm biển hay leo núi ngoài trời bị tê liệt mà du khách không có phương án thay thế nhanh chóng sang các bảo tàng, quán cafe kiến trúc hay khu vui chơi trong nhà.
+    \item \textbf{Khó khăn trong việc quản lý tài chính và chia tiền nhóm (\en{Group Expense Splitting}):} Các chuyến đi của nhóm bạn thường phát sinh nhiều khoản chi tiêu chung (tiền phòng khách sạn, tiền ăn uống, vé thắng cảnh, xăng xe), gây bối rối và mất nhiều thời gian tính toán khi kết thúc hành trình.
+\end{enumerate}
+
+Sự bùng nổ của \term{Trí tuệ Nhân tạo tạo sinh} (\en{Generative AI}) và các mô hình ngôn ngữ lớn (\en{Large Language Models - LLM}) như \en{Google Gemini} đã mở ra phương thức tiếp cận đột phá. Thay vì dựa vào các tập luật tĩnh (\en{Static Rule-Based}) hay các gói tour cố định, AI có khả năng hiểu sâu ngôn ngữ tự nhiên, phân tích ngữ cảnh và sinh lịch trình linh hoạt theo từng yêu cầu cá nhân hóa.
+
+Xuất phát từ những phân tích thực tiễn và công nghệ nêu trên, đề tài \textbf{"Xây dựng Ứng dụng Lập Lịch trình và Khám phá Du lịch Miền Trung Thông minh (WanderWise)"} được lựa chọn thực hiện nhằm mang lại một giải pháp công nghệ toàn diện, thẩm mỹ và hiệu quả cho du khách.
+
+\begin{ghinho}
+WanderWise không chỉ là một ứng dụng tra cứu thông tin tĩnh mà là một trợ lý du lịch số toàn diện (\en{All-in-One Smart Travel Companion}), tích hợp khả năng lập lịch trình tự thích ứng theo ngân sách, sở thích, thời tiết và hỗ trợ tiện ích tài chính nhóm.
+\end{ghinho}
+
+\section{Mục tiêu của đồ án}
+
+Đồ án hướng tới các mục tiêu nghiên cứu, thiết kế và hiện thực hóa cụ thể sau:
+
+\begin{enumerate}
+    \item \textbf{Về mặt Thuật toán và Trí tuệ Nhân tạo:}
+    \begin{itemize}
+        \item Nghiên cứu kỹ thuật \en{Prompt Engineering} nâng cao trên mô hình \en{Google Gemini 2.5 Flash API} để tạo lập lịch trình du lịch cấu trúc JSON nhiều ngày.
+        \item Xây dựng giải thuật đồ thị đỉnh đã duyệt \term{Visited Set Graph} để triệt tiêu 100\% hiện tượng trùng lặp địa điểm du lịch giữa các ngày trong cùng một hành trình.
+    \end{itemize}
+    \item \textbf{Về mặt Dữ liệu và Số hóa Du lịch:}
+    \begin{itemize}
+        \item Thu thập, làm giàu và chuẩn hóa dữ liệu du lịch thực tế tại 9 tỉnh/thành phố trọng điểm Miền Trung (Đà Nẵng, Quảng Bình, Quảng Nam, Thừa Thiên Huế, Bình Định, Phú Yên, Khánh Hòa, Lâm Đồng, Gia Lai).
+        \item Đảm bảo 100\% các bản ghi địa điểm có ảnh chụp chất lượng cao, địa chỉ chi tiết từng số nhà, kinh độ/vĩ độ và phân loại thẻ danh mục (\en{attraction}, \en{restaurant}, \en{cafe}, \en{hotel}).
+    \end{itemize}
+    \item \textbf{Về mặt Xây dựng Ứng dụng (App Development):}
+    \begin{itemize}
+        \item Thiết kế giao diện theo triết lý \term{App-First}, tương thích tối ưu trên cả thiết bị di động (Mobile) và máy tính để bàn (PC Desktop) với chế độ mô phỏng khung điện thoại (\en{Phone Simulator Mode}).
+        \item Phát triển 5 Tab chức năng chính: Khám phá (\en{Explore}), Lên lịch (\en{Planner}), Chuyến đi (\en{My Trips}), Trợ lý AI (\en{AI Chat}), và Tài khoản (\en{Profile}).
+    \end{itemize}
+    \item \textbf{Về mặt Tiện ích Nâng cao:}
+    \begin{itemize}
+        \item Hiện thực hóa tính năng \textit{Chia tiền nhóm} (\en{Group Bill Splitter}) với thuật toán chia đều chi phí tự động.
+        \item Tích hợp tính năng \textit{Đổi lịch tránh mưa thông minh} (\en{Weather Smart Re-scheduler}) dựa trên dữ liệu khí tượng thời gian thực từ \en{Open-Meteo API}.
+        \item Cung cấp tính năng \textit{Xuất thẻ vé hành trình ngoại tuyến} (\en{Offline Travel Pass}) với mã QR mô phỏng để du khách lưu lại dùng khi mất kết nối mạng.
+    \end{itemize}
+\end{enumerate}
+
+\section{Phạm vi và đối tượng nghiên cứu}
+
+\begin{itemize}
+    \item \textbf{Đối tượng người dùng:} Khách du lịch nội địa và quốc tế có nhu cầu du lịch tự túc cá nhân hoặc theo nhóm tại khu vực Miền Trung Việt Nam.
+    \item \textbf{Phạm vi địa lý:} Khảo sát và tích hợp dữ liệu du lịch tại 9 tỉnh/thành phố: Đà Nẵng, Quảng Bình, Hội An (Quảng Nam), Huế (Thừa Thiên Huế), Quy Nhơn (Bình Định), Phú Yên, Nha Trang (Khánh Hòa), Đà Lạt (Lâm Đồng), Gia Lai.
+    \item \textbf{Phạm vi công nghệ:}
+    \begin{itemize}
+        \item \textit{Frontend:} \en{Vue.js 3}, \en{Vite}, \en{Vanilla CSS} theo thiết kế hiện đại, \en{Single Page Application (SPA)}.
+        \item \textit{Backend:} \en{Node.js}, \en{Express.js RESTful API}, \en{JSON Web Token (JWT)} xác thực bảo mật.
+        \item \textit{Cơ sở dữ liệu:} \en{MongoDB Atlas} (NoSQL Cloud Database).
+        \item \textit{Dịch vụ bên thứ ba:} \en{Google Gemini 2.5 Flash API}, \en{Open-Meteo Weather API}, \en{Google Maps URL Scheme}.
+    \end{itemize}
+\end{itemize}
+
+\section{Bố cục của báo cáo đồ án}
+
+Nội dung báo cáo được tổ chức thành 6 chương chính và phần phụ lục như sau:
+
+\begin{itemize}
+    \item \textbf{Chương 1: Mở đầu:} Giới thiệu tổng quan bối cảnh, lý do chọn đề tài, mục tiêu, phạm vi và bố cục báo cáo.
+    \item \textbf{Chương 2: Cơ sở lý thuyết:} Trình bày cơ sở lý thuyết về Mô hình Ngôn ngữ Lớn (LLM), Google Gemini AI, kiến trúc Vue.js 3, cơ sở dữ liệu MongoDB và các công trình liên quan.
+    \item \textbf{Chương 3: Phân tích và Thiết kế hệ thống:} Mô tả kiến trúc tổng thể Client-Server, phân tích ca sử dụng (Use-Case), thiết kế cơ sở dữ liệu (ERD Schema) và giải thuật sinh lịch trình không trùng lặp.
+    \item \textbf{Chương 4: Cài đặt và Hiện thực hóa:} Trình bày chi tiết môi trường phát triển, triển khai mã nguồn Backend, Frontend, tích hợp API AI và các kịch bản kiểm thử.
+    \item \textbf{Chương 5: Kết quả và Đánh giá:} Trình bày các kết quả thực nghiệm về giao diện Mobile/PC, đánh giá các tính năng chia tiền, đổi lịch tránh mưa và phân tích hiệu năng hệ thống.
+    \item \textbf{Chương 6: Kết luận và Hướng phát triển:} Tổng kết các đóng góp đạt được, chỉ ra những mặt hạn chế và đề xuất phương hướng nâng cấp trợ lý âm thanh (Audio Guide) trong tương lai.
+    \item \textbf{Phụ lục:} Hướng dẫn cài đặt, triển khai mã nguồn và bảng tự kiểm tra tiêu chí đồ án.
+\end{itemize}

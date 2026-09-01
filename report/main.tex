@@ -1,0 +1,142 @@
+\documentclass[12pt,a4paper]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[vietnamese]{babel}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{amsmath,amssymb}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{float}
+\usepackage{tcolorbox}
+\usepackage{tikz}
+\usetikzlibrary{calc}
+
+\geometry{left=3.5cm, right=2.0cm, top=2.5cm, bottom=2.5cm}
+
+% ==================== ĐỊNH NGHĨA CÁC THÔNG TIN ====================
+\newcommand{\dauGVHD}{ThS. ................................}
+\newcommand{\dauSinhVienOne}{Trần Văn Nguyên}
+\newcommand{\dauSinhVienTwo}{Vũ Cao Khải}
+\newcommand{\okyten}[2]{\par\noindent\makebox[0.5\textwidth][r]{#1}\par\noindent\makebox[0.5\textwidth][r]{\textit{(Ký và ghi rõ họ tên)}}\vspace{1.5cm}}
+
+\newenvironment{declaration}{\chapter*{Lời Cam Đoan}}{}
+\newenvironment{acknowledgments}{\chapter*{Lời Cảm Ơn}}{}
+\newcommand{\goiy}[1]{\textbf{[Gợi ý: #1]}}
+\newcommand{\code}[1]{\texttt{#1}}
+
+% Hộp Mục tiêu chương (Xanh biển)
+\newtcolorbox{muctieu}{
+  colback=blue!5!white,
+  colframe=blue!75!black,
+  title=\textbf{Mục tiêu chương},
+  arc=3mm
+}
+
+% Hộp Gợi ý / Chú ý (Vàng cam)
+\newtcolorbox{chuy}{
+  colback=yellow!10!white,
+  colframe=orange!80!black,
+  title=\textbf{Lưu ý \& Hướng dẫn},
+  arc=2mm
+}
+
+% Hộp Mẫu nội dung (Xám thanh lịch)
+\newtcolorbox{mau}{
+  colback=gray!5!white,
+  colframe=gray!60!black,
+  arc=2mm
+}
+
+% Hộp Định nghĩa, Ghi nhớ, Lưu ý, Ví dụ
+\newtcolorbox{dinhnghia}[1][]{
+  colback=green!5!white,
+  colframe=green!60!black,
+  title=\textbf{Định nghĩa #1},
+  arc=2mm
+}
+\newtcolorbox{ghinho}{
+  colback=teal!5!white,
+  colframe=teal!70!black,
+  title=\textbf{Ghi nhớ quan trọng},
+  arc=2mm
+}
+\newtcolorbox{luuy}{
+  colback=red!5!white,
+  colframe=red!75!black,
+  title=\textbf{Lưu ý},
+  arc=2mm
+}
+\newtcolorbox{vidu}[1][]{
+  colback=purple!5!white,
+  colframe=purple!70!black,
+  title=\textbf{Ví dụ #1},
+  arc=2mm
+}
+
+% ==================== BẮT ĐẦU TÀI LIỆU ====================
+\begin{document}
+
+% ==================== TRANG BÌA CHUẨN ĐỒ ÁN ====================
+\begin{titlepage}
+\begin{tikzpicture}[remember picture, overlay]
+  \draw[line width = 2pt, color = red!75!black] 
+    ($(current page.north west) + (2.5cm,-2.0cm)$) 
+    rectangle 
+    ($(current page.south east) + (-1.5cm,2.0cm)$);
+  \draw[line width = 0.8pt, color = red!75!black] 
+    ($(current page.north west) + (2.65cm,-2.15cm)$) 
+    rectangle 
+    ($(current page.south east) + (-1.65cm,2.15cm)$);
+\end{tikzpicture}
+
+\begin{center}
+    \textbf{\large BỘ GIÁO DỤC VÀ ĐÀO TẠO}\\[0.3cm]
+    \textbf{\large TRƯỜNG ĐẠI HỌC KIẾN TRÚC ĐÀ NẴNG}\\[0.2cm]
+    \textbf{\large KHOA CÔNG NGHỆ THÔNG TIN}\\[1.2cm]
+    
+    \IfFileExists{assets/dau-logo.png}{
+        \includegraphics[width=3.2cm]{assets/dau-logo.png}\\[1.0cm]
+    }{
+        \vspace{3.0cm}
+    }
+    
+    \textbf{\Large BÁO CÁO ĐỒ ÁN TRÍ TUỆ NHÂN TẠO}\\[0.6cm]
+    \textbf{\huge XÂY DỰNG ỨNG DỤNG LẬP LỊCH TRÌNH VÀ KHÁM PHÁ DU LỊCH MIỀN TRUNG THÔNG MINH}\\[0.3cm]
+    \textbf{\Large (WANDERWISE)}\\[1.5cm]
+    
+    \begin{table}[H]
+        \centering
+        \begin{tabular}{lll}
+            \textbf{Sinh viên thực hiện:} & \textbf{1. Trần Văn Nguyên} & \textbf{MSSV:} ........................ \\
+                                          & \textbf{2. Vũ Cao Khải}   & \textbf{MSSV:} ........................ \\[0.3cm]
+            \textbf{Lớp / Chuyên ngành:} & \multicolumn{2}{l}{Công nghệ Thông tin} \\[0.2cm]
+            \textbf{Giảng viên hướng dẫn:}& \multicolumn{2}{l}{\textbf{ThS. ................................}} \\[0.2cm]
+            \textbf{Năm học:}             & \multicolumn{2}{l}{2025 -- 2026} \\
+        \end{tabular}
+    \end{table}
+    
+    \vfill
+    \textbf{Đà Nẵng, Năm 2026}
+\end{center}
+\end{titlepage}
+
+% ==================== MỤC LỤC TỰ ĐỘNG ====================
+\tableofcontents
+\newpage
+
+% ==================== CÁC TRANG LỜI MỞ ĐẦU ====================
+\input{Chuong/Loi-cam-doan.tex}
+\input{Chuong/Loi-cam-on.tex}
+\input{Chuong/Tom-tat.tex}
+
+% ==================== CÁC CHƯƠNG NỘI DUNG ====================
+\input{Chuong/01-Mo-dau.tex}
+\input{Chuong/02-Co-So-Ly-Thuyet.tex}
+\input{Chuong/03-Phan-Tich-Thiet-Ke.tex}
+\input{Chuong/04-Cai-Dat.tex}
+\input{Chuong/05-Ket-Qua-Danh-Gia.tex}
+\input{Chuong/06-Ket-Luan.tex}
+\input{Chuong/07-Phu-Luc.tex}
+
+\end{document}

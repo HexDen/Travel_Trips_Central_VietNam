@@ -17,6 +17,17 @@ router.get('/public-trips', async (req, res) => {
   res.json(trips)
 })
 
+router.get('/my-trips', requireAuth, async (req, res) => {
+  try {
+    const trips = await Trip.find({ owner: req.userId })
+      .sort({ created_at: -1 })
+      .lean()
+    res.json(trips)
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Không thể tải danh sách chuyến đi' })
+  }
+})
+
 router.get('/favorites', requireAuth, async (req, res) => {
   const user = await User.findById(req.userId).populate('favorite_places')
   res.json(user?.favorite_places || [])

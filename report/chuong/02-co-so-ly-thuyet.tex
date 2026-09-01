@@ -1,0 +1,93 @@
+\chapter{Cơ Sở Lý Thuyết \& Các Công Nghệ Sử Dụng}
+
+\begin{muctieu}
+Chương này cung cấp cơ sở lý thuyết nền tảng về Mô hình Ngôn ngữ Lớn (LLM), cơ chế sinh văn bản có cấu trúc của Google Gemini AI, kỹ thuật Prompt Engineering, kiến trúc Single Page Application với Vue.js 3, hệ quản trị cơ sở dữ liệu phi quan hệ MongoDB, và so sánh với các công trình/hệ thống du lịch liên quan.
+\end{muctieu}
+
+\section{Tổng quan về Mô hình Ngôn ngữ Lớn (LLM) \& Google Gemini AI}
+
+\subsection{Khái niệm Mô hình Ngôn ngữ Lớn (\en{Large Language Models - LLM})}
+
+\begin{dinhnghia}[Mô hình Ngôn ngữ Lớn]
+\term{Mô hình Ngôn ngữ Lớn} (\en{LLM}) là mạng nơ-ron sâu (\en{Deep Neural Network}) dựa trên kiến trúc Transformer \cite{Vaswani2017}, được huấn luyện trên tập dữ liệu văn bản quy mô hàng nghìn tỷ từ (\en{tokens}) để mô hình hóa phân phối xác suất của chuỗi từ ngữ, từ đó có khả năng hiểu ngữ cảnh, suy luận logic và tạo văn bản tự nhiên tương thích với câu hỏi của con người.
+\end{dinhnghia}
+
+Khác với các hệ thống sinh lịch trình truyền thống dựa trên cây quyết định (\en{Decision Tree}) hoặc giải thuật di truyền (\en{Genetic Algorithm}) đòi hỏi hàm mục tiêu toán học tĩnh, LLM cho phép xử lý các ràng buộc phức tạp dưới dạng ngôn ngữ tự nhiên:
+\begin{itemize}
+    \item \textbf{Hiểu ngữ cảnh sở thích:} Xử lý đồng thời các yêu cầu như \textit{"du lịch gia đình có trẻ nhỏ, ưu tiên tắm biển và ăn hải sản bình dân, không di chuyển quá xa"}.
+    \item \textbf{Phân bổ thời gian logic:} Tự động nhận thức thứ tự sinh hoạt trong ngày (ăn sáng trước khi tham quan, check-in khách sạn lúc trưa/đầu giờ chiều, ngắm hoàng hôn lúc chiều muộn và dạo phố đêm sau bữa tối).
+\end{itemize}
+
+\subsection{Google Gemini 2.5 Flash API}
+
+Trong đồ án WanderWise, nhóm lựa chọn mô hình \textbf{Google Gemini 2.5 Flash API}:
+\begin{itemize}
+    \item \textbf{Tốc độ phản hồi cực cao (\en{Sub-second Latency}):} Tối ưu hóa kiến trúc xử lý song song, cho thời gian phản hồi trung bình chỉ từ $1.0$ đến $1.6$ giây đối với prompt phức tạp sinh lịch trình 4--5 ngày.
+    \item \textbf{Khả năng sinh JSON nghiêm ngặt (\en{Structured JSON Output}):} Hỗ trợ ràng buộc mô hình luôn trả về cấu trúc JSON hợp lệ, triệt tiêu lỗi cú pháp khi parse dữ liệu ở Backend.
+    \item \textbf{Cửa sổ ngữ cảnh lớn (\en{Context Window}):} Hỗ trợ ngữ cảnh lên đến hàng triệu token, cho phép nạp toàn bộ danh mục hàng trăm địa điểm của tỉnh/thành phố vào làm tri thức tham chiếu (\en{In-context Reference}).
+\end{itemize}
+
+\section{Kỹ thuật Prompt Engineering trong Du lịch}
+
+\term{Kỹ thuật xây dựng câu lệnh} (\en{Prompt Engineering}) đóng vai trò cốt lõi trong việc điều hướng LLM tạo ra kết quả chính xác theo đúng cấu trúc mong muốn.
+
+\begin{vidu}[Cấu trúc Prompt chuẩn hóa gửi tới Gemini AI]
+Một câu lệnh hoàn chỉnh trong hệ thống WanderWise bao gồm 4 thành phần thiết yếu:
+\begin{enumerate}
+    \item \textbf{Định vai (Role Prompting):} \textit{"Bạn là chuyên gia tư vấn du lịch hàng đầu về Miền Trung Việt Nam."}
+    \item \textbf{Dữ liệu đầu vào (Input Context):} Điểm đến, số ngày, ngân sách, số lượng thành viên và danh sách các địa điểm ưu tiên.
+    \item \textbf{Ràng buộc nghiêm ngặt (Hard Constraints):} Tuyệt đối không lặp lại địa điểm; mỗi ngày bắt buộc đủ 5 mốc hoạt động (Sáng, Trưa, Khách sạn, Chiều, Tối); phân bổ ngân sách thực tế.
+    \item \textbf{Khuôn mẫu định dạng (Output Schema):} Định nghĩa cấu trúc mảng JSON cụ thể từng trường dữ liệu.
+\end{enumerate}
+\end{vidu}
+
+\section{Kiến trúc Frontend với Vue.js 3 và Vite}
+
+Ứng dụng được xây dựng theo mô hình \term{Single Page Application} (\en{SPA}) sử dụng thư viện **Vue.js 3** kết hợp công cụ đóng gói **Vite**:
+
+\begin{itemize}
+    \item \textbf{Composition API (\code{<script setup>}):} Tổ chức logic mã nguồn theo từng khối chức năng mạch lạc, tăng khả năng tái sử dụng và kiểm thử mã nguồn.
+    \item \textbf{Phản ứng dữ liệu (\en{Reactivity System}):} Tận dụng \code{ref()} và \code{computed()} giúp giao diện tự động cập nhật ngay lập tức khi người dùng thay đổi bộ lọc, tick chọn địa điểm hoặc điều chỉnh thanh trượt ngân sách.
+    \item \textbf{Vite Build Tool:} Sử dụng cơ chế \en{Native ES Modules} trong môi trường phát triển (\en{Dev Server}) cho tốc độ khởi động tức thì ($< 300$ms) và tối ưu hóa nén mã nguồn (\en{Minification / Gzip}) cho bản phát hành.
+\end{itemize}
+
+\section{Cơ sở Dữ liệu NoSQL MongoDB Atlas}
+
+\textbf{MongoDB Atlas} là cơ sở dữ liệu hướng tài liệu (\en{Document-Oriented NoSQL}) lưu trữ dữ liệu dưới định dạng BSON (Binary JSON):
+\begin{itemize}
+    \item \textbf{Cấu trúc phi cấu trúc linh hoạt:} Mỗi bản ghi địa điểm (\code{Place}) có thể lưu trữ mảng \code{tags}, tọa độ \code{latitude}/\code{longitude}, giá vé \code{estimated\_cost} và đường dẫn ảnh \code{image} mà không bị ràng buộc tĩnh như cơ sở dữ liệu quan hệ truyền thống.
+    \item \textbf{Truy vấn đánh chỉ mục nhanh (\en{Indexing}):} Đánh chỉ mục trường \code{destination} và \code{type} giúp tốc độ truy vấn danh sách địa điểm theo tỉnh thành đạt dưới $15$ms.
+\end{itemize}
+
+\section{Dịch vụ Dự báo Thời tiết Open-Meteo API}
+
+\en{Open-Meteo} là dịch vụ API khí tượng nguồn mở độ chính xác cao:
+\begin{itemize}
+    \item Truy xuất nhiệt độ hiện tại (\en{temperature}), độ ẩm (\en{humidity}), tốc độ gió và xác suất mưa (\en{precipitation probability}) theo tọa độ GPS thời gian thực.
+    \item Hệ thống WanderWise sử dụng thông số \code{precipitation\_probability} để kích hoạt tính năng thông minh \textit{Đổi lịch tránh mưa tự động} khi xác suất mưa vượt quá $60\%$.
+\end{itemize}
+
+\section{So sánh với các Công trình \& Ứng dụng Liên quan}
+
+\begin{table}[H]
+\centering
+\caption{Bảng so sánh tính năng giữa WanderWise và các nền tảng du lịch hiện hữu}
+\label{tab:comparison}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Tính năng} & \textbf{Google Travel} & \textbf{Traveloka / Trip.com} & \textbf{Chatbot ChatGPT} & \textbf{WanderWise (Đề tài)} \\ \hline
+Tự động sinh lịch trình chi tiết nhiều ngày & Có (Cố định) & Không & Có (Văn bản thuần) & \textbf{Có (Tự động + AI)} \\ \hline
+Kiểm soát 100\% không lặp lại địa điểm & Không rõ & Không & Hay bị lặp lại & \textbf{Triệt để (Visited Set Graph)} \\ \hline
+Tích hợp ảnh thực tế \& địa chỉ chuẩn xác & Có & Có & Không có ảnh & \textbf{Có (100\% Ảnh HD + Địa chỉ)} \\ \hline
+Tiện ích Chia tiền nhóm (Bill Splitter) & Không & Không & Không & \textbf{Có (Tích hợp sẵn)} \\ \hline
+Tự động đổi lịch tránh mưa thông minh & Không & Không & Không & \textbf{Có (Tích hợp Open-Meteo)} \\ \hline
+Xuất vé hành trình Offline (QR Pass) & Không & Chỉ có vé máy bay & Không & \textbf{Có (Thẻ vé Offline)} \\ \hline
+Giao diện App-First Mobile \& PC Desktop & Web/App riêng & Web/App riêng & Chat thuần & \textbf{App-First Đa nền tảng} \\ \hline
+\end{tabular}
+}
+\end{table}
+
+\begin{luuy}
+Các chatbot AI tổng quát (như ChatGPT bản miễn phí) khi được yêu cầu lập lịch trình du lịch thường chỉ sinh ra các đoạn văn bản dài khó đọc, không có địa chỉ số nhà cụ thể, không có hình ảnh minh họa và không thể tương tác trực quan (chọn điểm, lưu lịch trình, chia tiền). WanderWise khắc phục triệt để các nhược điểm này.
+\end{luuy}

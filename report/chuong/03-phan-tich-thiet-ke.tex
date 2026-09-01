@@ -1,0 +1,194 @@
+\chapter{Phân Tích \& Thiết Kế Hệ Thống}
+
+\begin{muctieu}
+Chương này phân tích các yêu cầu chức năng và phi chức năng, xây dựng sơ đồ ca sử dụng (Use-Case), thiết kế kiến trúc hệ thống 3 tầng kết hợp Cloud/AI, mô tả chi tiết lược đồ cơ sở dữ liệu MongoDB và trình bày giải thuật lập lịch không trùng lặp (Visited Set Graph).
+\end{muctieu}
+
+\section{Phân tích Yêu cầu Hệ thống}
+
+\subsection{Yêu cầu Chức năng (\en{Functional Requirements})}
+\begin{itemize}
+    \item \textbf{F1 - Khám phá Địa phương (\en{Local Exploration}):} Cho phép du khách duyệt xem danh sách 9 tỉnh thành Miền Trung, xem hình ảnh bìa thực tế, tra cứu địa chỉ, phân loại danh mục (\en{attraction}, \en{restaurant}, \en{cafe}, \en{hotel}), đánh giá sao và mở Google Maps chỉ đường.
+    \item \textbf{F2 - Tạo Lịch trình Thông minh (\en{AI Trip Planning}):} Thu nhận các tham số đầu vào (Điểm đến, số ngày từ 1 đến 7, ngân sách, số lượng người, địa điểm ưu tiên) và gửi đến AI Engine để tạo lịch trình chi tiết theo từng khung giờ.
+    \item \textbf{F3 - Đổi lịch Tránh mưa Thông minh (\en{Weather Re-scheduler}):} Nhận diện khi gặp thời tiết xấu hoặc theo yêu cầu du khách, tự động hoán đổi các hoạt động ngoài trời sang các địa điểm tham quan/ẩm thực trong nhà.
+    \item \textbf{F4 - Chia tiền Nhóm (\en{Group Bill Splitter}):} Cung cấp bảng kê khai chi phí nhiều mục (phòng nghỉ, ăn uống, vé vào cổng, phương tiện) và tự động tính toán số tiền mỗi thành viên cần đóng.
+    \item \textbf{F5 - Thẻ vé Hành trình Ngoại tuyến (\en{Offline Travel Pass}):} Kết xuất thông tin chuyến đi thành dạng thẻ vé điện tử (\en{Boarding Pass}) có mã QR mô phỏng để du khách chụp ảnh màn hình lưu trữ sử dụng khi không có sóng 4G/Wifi.
+    \item \textbf{F6 - Trợ lý Ảo Tư vấn Du lịch (\en{AI Chat Assistant}):} Khung chat trực tuyến hỗ trợ giải đáp tức thì các thắc mắc về kinh nghiệm du lịch, đặc sản và văn hóa Miền Trung.
+    \item \textbf{F7 - Quản lý Tài khoản \& Chuyến đi (\en{Account \& My Trips}):} Đăng ký, đăng nhập bảo mật qua JWT, lưu trữ và xem lại các chuyến đi đã tạo trên mọi thiết bị.
+\end{itemize}
+
+\subsection{Yêu cầu Phi Chức năng (\en{Non-Functional Requirements})}
+\begin{itemize}
+    \item \textbf{N1 - Thời gian phản hồi (\en{Performance}):} Tốc độ tải trang ban đầu $< 1$ giây; thời gian AI sinh lịch trình hoàn chỉnh $< 2$ giây.
+    \item \textbf{N2 - Tính khả dụng (\en{Usability}):} Giao diện App-First trực quan, hỗ trợ chế độ giả lập điện thoại (\en{Phone Simulator Mode}) giúp thao tác một tay dễ dàng trên màn hình cảm ứng hoặc thuyết trình trên máy tính.
+    \item \textbf{N3 - Tính toàn vẹn dữ liệu (\en{Data Integrity}):} 100\% các địa điểm du lịch có địa chỉ thực tế và ảnh chụp sắc nét, không có dữ liệu giữ chỗ (\en{placeholder}) rỗng.
+\end{itemize}
+
+\section{Sơ đồ Ca Sử Dụng (Use-Case Diagram)}
+
+\begin{figure}[H]
+\centering
+\resizebox{0.95\textwidth}{!}{
+\begin{tikzpicture}[
+    actor/.style={rectangle, draw=blue!80, fill=blue!15, rounded corners=2mm, thick, minimum width=2.6cm, minimum height=1.1cm, align=center, font=\bfseries},
+    usecase/.style={ellipse, draw=orange!80!black, fill=orange!10, thick, minimum width=4.5cm, minimum height=0.9cm, align=center, font=\footnotesize},
+    line/.style={draw, thick, -{Latex[length=2mm]}}
+]
+
+% Actors
+\node [actor] (user) at (0, 0) {Khách Du Lịch\\(User)};
+\node [actor] (ai_actor) at (11, 0) {AI Engine\\(Gemini API)};
+
+% Use cases
+\node [usecase] (uc1) at (5.5, 3.2) {Khám phá địa danh 9 tỉnh Miền Trung};
+\node [usecase] (uc2) at (5.5, 1.9) {Lập lịch trình du lịch thông minh};
+\node [usecase] (uc3) at (5.5, 0.6) {Đổi lịch trình tránh mưa tự động};
+\node [usecase] (uc4) at (5.5, -0.7) {Chia tiền nhóm (Bill Splitter)};
+\node [usecase] (uc5) at (5.5, -2.0) {Xuất thẻ vé hành trình Offline};
+\node [usecase] (uc6) at (5.5, -3.3) {Đăng nhập / Lưu chuyến đi};
+
+% User associations
+\draw [line] (user) -- (uc1);
+\draw [line] (user) -- (uc2);
+\draw [line] (user) -- (uc3);
+\draw [line] (user) -- (uc4);
+\draw [line] (user) -- (uc5);
+\draw [line] (user) -- (uc6);
+
+% AI associations
+\draw [line] (ai_actor) -- (uc2);
+\draw [line] (ai_actor) -- (uc3);
+
+\end{tikzpicture}
+}
+\caption{Sơ đồ Ca Sử Dụng (Use-Case Diagram) của hệ thống WanderWise}
+\label{fig:usecase_detail}
+\end{figure}
+
+\section{Kiến trúc Tổng thể Hệ thống (3-Tier Architecture)}
+
+\begin{figure}[H]
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tikzpicture}[
+    box/.style={rectangle, draw=#1!80!black, fill=#1!12, rounded corners=3mm, thick, align=center, minimum height=1.3cm, font=\small},
+    arrow/.style={draw, -{Latex[length=3mm]}, thick}
+]
+
+% Tier 1: Client
+\node [box=blue, text width=4.0cm] (client) at (0, 0) {
+    \textbf{TẦNG CLIENT}\\[0.1cm]
+    Vue.js 3 + Vite SPA\\
+    \footnotesize (Mobile \& PC Desktop)
+};
+
+% Tier 2: Backend
+\node [box=green!70!black, text width=4.4cm] (backend) at (5.8, 0) {
+    \textbf{TẦNG BACKEND}\\[0.1cm]
+    Node.js + Express API\\
+    \footnotesize JWT Auth + Visited Set Graph
+};
+
+% Tier 3: Cloud & AI
+\node [box=purple, text width=3.8cm] (ai) at (11.5, 2.2) {
+    \textbf{AI ENGINE}\\[0.1cm]
+    Google Gemini 2.5 Flash
+};
+
+\node [box=purple, text width=3.8cm] (db) at (11.5, 0) {
+    \textbf{DATABASE CLOUD}\\[0.1cm]
+    MongoDB Atlas Cluster
+};
+
+\node [box=purple, text width=3.8cm] (weather) at (11.5, -2.2) {
+    \textbf{WEATHER API}\\[0.1cm]
+    Open-Meteo Realtime
+};
+
+% Connections
+\draw [arrow] (client) -- node[above]{\footnotesize REST API} node[below]{\footnotesize (JSON)} (backend);
+\draw [arrow] (backend) -- node[above, sloped]{\footnotesize Prompt} (ai);
+\draw [arrow] (backend) -- node[above]{\footnotesize Mongoose} (db);
+\draw [arrow] (backend) -- node[below, sloped]{\footnotesize Coordinates} (weather);
+
+\end{tikzpicture}
+}
+\caption{Sơ đồ Kiến trúc Tổng thể Hệ thống WanderWise (3-Tier Architecture)}
+\label{fig:architecture_detail}
+\end{figure}
+
+\section{Thiết kế Cơ sở Dữ liệu MongoDB}
+
+\begin{table}[H]
+\centering
+\caption{Cấu trúc thực thể Place (Địa điểm du lịch \& Ẩm thực)}
+\begin{tabular}{|l|l|c|p{7.5cm}|}
+\hline
+\textbf{Trường dữ liệu} & \textbf{Kiểu dữ liệu} & \textbf{Bắt buộc} & \textbf{Ý nghĩa} \\ \hline
+\code{\_id} & ObjectId & Có & Khóa chính định danh duy nhất \\ \hline
+\code{name} & String & Có & Tên địa danh (ví dụ: Bà Nà Hills, Động Phong Nha) \\ \hline
+\code{destination} & String & Có & Tỉnh/Thành phố (Đà Nẵng, Quảng Bình, Huế,...) \\ \hline
+\code{type} & String & Có & Phân loại: \code{attraction}, \code{restaurant}, \code{cafe}, \code{hotel} \\ \hline
+\code{address} & String & Có & Địa chỉ cụ thể số nhà, tên đường, phường, quận \\ \hline
+\code{image} & String & Có & Đường dẫn URL ảnh thực tế chất lượng cao \\ \hline
+\code{rating} & Number & Có & Điểm đánh giá chất lượng (1.0 đến 5.0) \\ \hline
+\code{estimated\_cost} & Number & Có & Chi phí tham quan / suất ăn ước tính (VNĐ) \\ \hline
+\code{tags} & Array[String] & Không & Tập từ khóa đặc trưng (ví dụ: bãi biển, di sản, check-in) \\ \hline
+\code{latitude} & Number & Có & Tọa độ vĩ độ địa lý \\ \hline
+\code{longitude} & Number & Có & Tọa độ kinh độ địa lý \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Cấu trúc thực thể Trip (Lịch trình chuyến đi)}
+\begin{tabular}{|l|l|c|p{7.5cm}|}
+\hline
+\textbf{Trường dữ liệu} & \textbf{Kiểu dữ liệu} & \textbf{Bắt buộc} & \textbf{Ý nghĩa} \\ \hline
+\code{\_id} & ObjectId & Có & Khóa chính \\ \hline
+\code{userId} & ObjectId & Có & Khóa ngoại tham chiếu bảng User \\ \hline
+\code{destination} & String & Có & Tỉnh/Thành phố của chuyến đi \\ \hline
+\code{duration} & Number & Có & Số ngày hành trình (1--7 ngày) \\ \hline
+\code{total\_budget} & Number & Có & Tổng ngân sách dự kiến (VNĐ) \\ \hline
+\code{people} & Number & Có & Số lượng thành viên tham gia \\ \hline
+\code{days} & Array[Object] & Có & Danh sách các ngày, mỗi ngày gồm các hoạt động \\ \hline
+\code{createdAt} & Date & Có & Thời gian tạo lập chuyến đi \\ \hline
+\end{tabular}
+\end{table}
+
+\section{Giải thuật Visited Set Graph (Kiểm soát Không Trùng Lặp)}
+
+\begin{lstlisting}[language=JavaScript, caption=Giải thuật kiểm soát không lặp địa điểm (aiService.js)]
+// Algorithm: Visited Set Graph for Non-Repeating Itinerary
+function taoLichTrinhThongMinh(destination, duration, budget, people, selectedPlaces, dbPlaces) {
+    const usedPlaceNames = new Set();
+    
+    // Step 1: Mark user-selected places into priority queue
+    selectedPlaces.forEach(name => usedPlaceNames.add(name));
+    
+    function layDiaDiemKhongTrung(availableList, fallbackName, type, cost) {
+        // Filter out any place that has already been visited
+        const unvisited = availableList.filter(p => !usedPlaceNames.has(p.name));
+        if (unvisited.length > 0) {
+            const picked = unvisited[0];
+            usedPlaceNames.add(picked.name);
+            return picked;
+        }
+        // Fallback generator with unique incremental ID
+        const fallback = { 
+            name: `${fallbackName} (Điểm ${usedPlaceNames.size + 1})`, 
+            type: type, 
+            cost: cost 
+        };
+        usedPlaceNames.add(fallback.name);
+        return fallback;
+    }
+    
+    // Step 2: Allocate slots for each day (Breakfast, Morning Attraction, Lunch, Check-in, Cafe, Dinner)
+    const itinerary = [];
+    for (let day = 1; day <= duration; day++) {
+        itinerary.push(buildDailySchedule(day, layDiaDiemKhongTrung, dbPlaces));
+    }
+    return itinerary;
+}
+\end{lstlisting}

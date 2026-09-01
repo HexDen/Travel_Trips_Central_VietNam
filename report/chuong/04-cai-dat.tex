@@ -1,0 +1,99 @@
+\chapter{Cài Đặt \& Hiện Thực Hóa Hệ Thống}
+
+\begin{muctieu}
+Chương này trình bày chi tiết về môi trường cài đặt phần cứng và phần mềm, hiện thực hóa các module chính của Backend (Node.js/Express, kết nối Gemini AI), cấu trúc Frontend (Vue 3 Single Page Application), và quy trình làm giàu dữ liệu địa phương.
+\end{muctieu}
+
+\section{Môi trường Phát triển \& Công cụ}
+
+\begin{table}[H]
+\centering
+\caption{Môi trường phần cứng và phần mềm triển khai hệ thống}
+\begin{tabular}{|l|l|p{7.5cm}|}
+\hline
+\textbf{Thành phần} & \textbf{Công nghệ / Thông số} & \textbf{Ghi chú} \\ \hline
+Hệ điều hành & Windows 11 64-bit & Môi trường phát triển chính \\ \hline
+Runtime Môi trường & Node.js v18.17.0, npm v9.6.7 & Nền tảng thực thi JavaScript phía máy chủ \\ \hline
+Backend Framework & Express.js 4.18.2 & Xây dựng RESTful API \\ \hline
+Database & MongoDB Atlas v7.0 & Cụm cơ sở dữ liệu đám mây NoSQL \\ \hline
+Frontend Framework & Vue.js 3.4 (Composition API) & Giao diện ứng dụng đơn trang (SPA) \\ \hline
+Build Tool & Vite 5.4 & Công cụ biên dịch và tối ưu hóa tài nguyên \\ \hline
+AI Engine & Google Gemini 2.5 Flash API & Mô hình ngôn ngữ lớn sinh lịch trình \\ \hline
+Dịch vụ Bản đồ & Google Maps Platform API & Định tuyến và điều hướng không gian \\ \hline
+\end{tabular}
+\end{table}
+
+\section{Hiện thực hóa Backend Server}
+
+\subsection{Cấu hình Máy chủ \& Kết nối Cơ sở Dữ liệu}
+
+\begin{lstlisting}[language=JavaScript, caption=Khởi tạo máy chủ và kết nối MongoDB Atlas (server.js)]
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+require('dotenv').config();
+
+const app = express();
+
+// Middleware configuration
+app.use(cors());
+app.use(express.json());
+
+// MongoDB Atlas Cloud Connection
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('MongoDB Atlas Connected successfully'))
+  .catch(err => console.error('MongoDB Connection Error:', err));
+
+// Route Registrations
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/trips', require('./routes/trips'));
+app.use('/api/places', require('./routes/places'));
+app.use('/api/social', require('./routes/social'));
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`WanderWise Backend Server running on port ${PORT}`);
+});
+\end{lstlisting}
+
+\subsection{Tích hợp Google Gemini AI và Chuẩn hóa Địa chỉ}
+
+Module \code{aiService.js} đóng vai trò trung tâm trong việc nhận dữ liệu từ người dùng, đối soát với các địa điểm có sẵn trong MongoDB, xây dựng prompt và gửi tới mô hình Gemini:
+
+\begin{lstlisting}[language=JavaScript, caption=Hàm gọi Gemini AI sinh lịch trình (aiService.js)]
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+async function callGeminiTravelPlanner(prompt) {
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const result = await model.generateContent({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: {
+            responseMimeType: 'application/json',
+            temperature: 0.4
+        }
+    });
+    return JSON.parse(result.response.text());
+}
+\end{lstlisting}
+
+\section{Hiện thực hóa Frontend App-First với Vue.js 3}
+
+Giao diện người dùng được tổ chức theo kiến trúc 5 Tab linh hoạt trong file \code{frontend/src/App.vue}:
+
+\begin{enumerate}
+    \item \textbf{Tab Khám phá (\code{activeTab === 'explore'}):} Trình bày danh sách các thành phố Miền Trung dạng thẻ ảnh trượt ngang (\en{Hero Carousel}), kèm widget dự báo thời tiết trực tiếp từ \en{Open-Meteo} và danh sách lưới địa điểm có ảnh thực tế độ nét cao, nhãn phân loại màu sắc và nút bấm \code{+ Lên lịch trình}.
+    \item \textbf{Tab Lên lịch (\code{activeTab === 'planner'}):} Form chọn số ngày (1--7 ngày), thanh trượt ngân sách, nút chọn nhanh địa danh và dòng thời gian (\en{Timeline}) hiển thị từng mốc hoạt động kèm nút \code{🗺️ Chỉ đường} mở Google Maps.
+    \item \textbf{Tab Chuyến đi (\code{activeTab === 'saved'}):} Quản lý lịch sử các chuyến đi đã tạo, hỗ trợ xem lại, xóa hoặc chia sẻ.
+    \item \textbf{Tab Trợ lý AI (\code{activeTab === 'ai'}):} Khung chat tư vấn du lịch thời gian thực theo phong cách ứng dụng tin nhắn hiện đại.
+    \item \textbf{Tab Tài khoản (\code{activeTab === 'profile'}):} Quản lý thông tin tài khoản, danh sách địa điểm yêu thích và form đăng nhập/đăng ký.
+\end{enumerate}
+
+\section{Hiện thực hóa Tiện ích Nâng cao}
+
+\subsection{Công cụ Chia tiền Nhóm (Group Bill Splitter)}
+Module cho phép người dùng thêm các mục chi tiêu (tiền khách sạn, ăn uống, vé tham quan, xăng xe), tự động tính tổng chi phí và chia đều cho từng thành viên:
+$$\text{Chi phí mỗi người} = \frac{\sum \text{Khoản chi}}{\text{Số lượng thành viên}}$$
+
+\subsection{Đổi lịch Tránh mưa Thông minh (Weather Smart Re-scheduler)}
+Khi người dùng kích hoạt tính năng tránh mưa, hệ thống duyệt qua mảng hoạt động trong ngày và tự động thay thế các địa điểm ngoài trời (\en{beach}, \en{mountain}) bằng các điểm trong nhà (\en{museum}, \en{indoor cafe}, \en{culinary hall}) mà vẫn bảo toàn quỹ thời gian và chi phí.
