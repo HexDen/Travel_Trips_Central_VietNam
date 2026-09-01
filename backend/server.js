@@ -64,15 +64,19 @@ app.use((err, req, res, next) => {
   })
 })
 
+const { autoInitPlaces } = require('./services/aiCrawlerService')
+
 async function startServer() {
   try {
     await mongoose.connect(MONGODB_URI)
     console.log('MongoDB connected')
+    // Tự động khởi chạy AI Crawler nạp dữ liệu khi khởi động
+    autoInitPlaces()
   } catch (err) {
     console.warn(`MongoDB unavailable: ${err.message}`)
   }
 
-  app.listen(PORT, () => {
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`AI Travel API listening on http://localhost:${PORT}`)
   })
 }

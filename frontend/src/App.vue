@@ -60,8 +60,40 @@
           <div class="map-toolbar"><div><p class="section-kicker">BẢN ĐỒ HÀNH TRÌNH</p><h3>Khám phá từng ngày</h3></div><div class="day-tabs"><button v-for="day in lichTrinh.daysList" :key="day.day" :class="{ active: selectedDay === day.day }" @click="selectedDay = day.day">Ngày {{ day.day }}</button></div></div>
           <iframe class="trip-map" :src="banDoEmbedUrl" title="Bản đồ lịch trình" loading="lazy"></iframe>
         </div>
+        <div v-if="lichTrinh.hotel_recommendation" class="hotel-recommend-card">
+          <div class="hotel-card-badge">🏨 GỢI Ý KHÁCH SẠN / RESORT NGHỈ DƯỠNG</div>
+          <div class="hotel-card-main">
+            <div>
+              <h3>{{ lichTrinh.hotel_recommendation.name }}</h3>
+              <p>{{ lichTrinh.hotel_recommendation.description }}</p>
+            </div>
+            <div class="hotel-card-pricing">
+              <span class="hotel-rating">★ {{ lichTrinh.hotel_recommendation.rating || '4.8' }}</span>
+              <strong>{{ dinhDangTien(lichTrinh.hotel_recommendation.price_per_night || 850000) }}đ <small>/ đêm</small></strong>
+            </div>
+          </div>
+        </div>
+
         <div class="timeline">
-          <article v-for="day in lichTrinh.daysList" :key="day.day" class="day-card"><div class="day-number">{{ String(day.day).padStart(2, '0') }}</div><div class="day-content"><h3>Ngày {{ day.day }}</h3><div v-for="act in day.activities" :key="act.time + act.place" class="activity"><time>{{ act.time }}</time><div><strong>{{ act.place }}</strong><p>{{ act.activity }}</p></div><span v-if="act.estimated_cost" class="activity-cost">{{ dinhDangTien(act.estimated_cost) }}đ</span></div></div></article>
+          <article v-for="day in lichTrinh.daysList" :key="day.day" class="day-card">
+            <div class="day-number">{{ String(day.day).padStart(2, '0') }}</div>
+            <div class="day-content">
+              <h3>Ngày {{ day.day }}</h3>
+              <div v-for="act in day.activities" :key="act.time + act.place" class="activity">
+                <time>{{ act.time }}</time>
+                <div class="activity-body">
+                  <div class="activity-meta">
+                    <span :class="['activity-badge', getBadgeInfo(act).class]">
+                      {{ getBadgeInfo(act).icon }} {{ getBadgeInfo(act).label }}
+                    </span>
+                    <strong>{{ act.place }}</strong>
+                  </div>
+                  <p>{{ act.activity }}</p>
+                </div>
+                <span v-if="act.estimated_cost" class="activity-cost">{{ dinhDangTien(act.estimated_cost) }}đ</span>
+              </div>
+            </div>
+          </article>
         </div>
         <div class="result-actions"><button class="button button-coral" @click="chiaSeLichTrinh" :disabled="!nguoiDung">Chia sẻ lịch trình <span>↗</span></button><button class="button button-quiet" @click="xuatPdf">Xuất PDF ↓</button><a class="text-link" :href="banDoUrl" target="_blank" rel="noreferrer">Mở trên Google Maps ↗</a><a v-if="shareUrl" class="share-link" :href="shareUrl" target="_blank">Link chia sẻ</a></div>
       </section>
@@ -76,8 +108,7 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed } from 'vue'
-import { onMounted } from 'vue'
+import { reactive, ref, computed, onMounted, watch } from 'vue'
 import api from './services/api'
 
 const formDuLieu = reactive({
@@ -115,6 +146,31 @@ const publicTrips = ref([])
 function dinhDangTien(v){
   if(!v && v !== 0) return ''
   return new Intl.NumberFormat('vi-VN').format(v)
+}
+
+function getBadgeInfo(act) {
+  if (!act) return { icon: '📍', label: 'Hoạt động', class: 'badge-attraction' }
+  if (act.type) {
+    const map = {
+      breakfast: { icon: '🍳', label: act.label || 'Ăn sáng', class: 'badge-breakfast' },
+      lunch: { icon: '🍲', label: act.label || 'Ăn trưa', class: 'badge-lunch' },
+      dinner: { icon: '🦞', label: act.label || 'Ăn tối', class: 'badge-dinner' },
+      checkin: { icon: '🏨', label: act.label || 'Nhận phòng', class: 'badge-hotel' },
+      checkout: { icon: '🧳', label: act.label || 'Trả phòng', class: 'badge-hotel' },
+      cafe: { icon: '☕', label: act.label || 'Cafe & Chill', class: 'badge-cafe' },
+      attraction: { icon: '📸', label: act.label || 'Tham quan / Check-in', class: 'badge-attraction' }
+    }
+    if (map[act.type]) return map[act.type]
+  }
+
+  const text = `${act.place || ''} ${act.activity || ''}`.toLowerCase()
+  if (text.includes('sáng') || text.includes('điểm tâm')) return { icon: '🍳', label: 'Ăn sáng', class: 'badge-breakfast' }
+  if (text.includes('trưa') || text.includes('cơm')) return { icon: '🍲', label: 'Ăn trưa', class: 'badge-lunch' }
+  if (text.includes('tối') || text.includes('hải sản') || text.includes('chợ đêm') || text.includes('lẩu')) return { icon: '🦞', label: 'Ăn tối', class: 'badge-dinner' }
+  if (text.includes('nhận phòng') || text.includes('khách sạn')) return { icon: '🏨', label: 'Khách sạn / Nhận phòng', class: 'badge-hotel' }
+  if (text.includes('trả phòng') || text.includes('check-out')) return { icon: '🧳', label: 'Trả phòng', class: 'badge-hotel' }
+  if (text.includes('cafe') || text.includes('cà phê') || text.includes('uống trà')) return { icon: '☕', label: 'Cafe & Chill', class: 'badge-cafe' }
+  return { icon: '📸', label: 'Tham quan / Check-in', class: 'badge-attraction' }
 }
 
 function tenNganSach(key){
@@ -238,6 +294,7 @@ async function taoLichTrinh(){
     chiPhiThucTe.value = 0
     chiPhiMoi.value = null
     layThoiTiet()
+    timDiaDiem()
     // reset chat
     nhanTin.value = []
     chatText.value = ''
@@ -247,6 +304,16 @@ async function taoLichTrinh(){
     dangTao.value = false
   }
 }
+
+let timeoutSearch = null
+watch(() => formDuLieu.diemDen, (newVal) => {
+  if(!newVal) return
+  clearTimeout(timeoutSearch)
+  timeoutSearch = setTimeout(() => {
+    timDiaDiem()
+    layThoiTiet()
+  }, 500)
+})
 
 async function dieuChinhLichTrinh(){
   const instruction = yeuCauDieuChinh.value.trim()
@@ -295,7 +362,32 @@ onMounted(async () => {
 *{box-sizing:border-box} body{margin:0;background:var(--paper);color:var(--ink);font-family:'DM Sans',sans-serif} button,input,select{font:inherit} button{cursor:pointer} button:disabled{cursor:not-allowed;opacity:.55} a{color:inherit}
 .app-shell{min-height:100vh;background:radial-gradient(circle at 85% 4%,#f8d8b9 0,transparent 24%),var(--paper)}.topbar{max-width:1180px;margin:auto;padding:24px 32px;display:flex;justify-content:space-between;align-items:center}.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:700;letter-spacing:.08em}.brand-mark{display:grid;place-items:center;width:29px;height:29px;border-radius:50%;background:var(--coral);color:#fff}.account-area{display:flex;align-items:center;gap:14px}.welcome{color:var(--muted);font-size:14px}.page-content{max-width:1180px;margin:auto;padding:32px}.hero{display:flex;align-items:end;justify-content:space-between;padding:66px 58px 58px;background:var(--teal);color:#fff;border-radius:3px;overflow:hidden;position:relative}.hero:after{content:'';position:absolute;width:390px;height:390px;border:1px solid rgba(255,255,255,.2);border-radius:50%;right:-90px;top:-130px}.eyebrow,.section-kicker{font-size:11px;letter-spacing:.18em;font-weight:700;margin:0 0 16px;color:var(--coral)}.hero .eyebrow{color:#f7c8a3}.hero h1{font:700 clamp(42px,6vw,77px)/.98 'Playfair Display',serif;margin:0;letter-spacing:0}.hero h1 em{color:#f6c29b;font-weight:600}.hero-text{max-width:470px;color:#cce0da;line-height:1.7;margin:25px 0 0}.hero-stamp{width:108px;height:108px;border:1px solid rgba(255,255,255,.45);border-radius:50%;display:grid;place-content:center;text-align:center;transform:rotate(9deg);z-index:1}.hero-stamp span{font:bold 27px 'Playfair Display';color:#f6c29b}.hero-stamp small{font-size:10px;line-height:1.2;letter-spacing:.14em}.planner-layout{display:grid;grid-template-columns:1fr 275px;gap:26px;margin-top:28px}.planner-card,.auth-panel,.results-section,.discovery-section,.tool-card{background:var(--white);box-shadow:var(--shadow);padding:30px}.section-heading,.result-header{display:flex;justify-content:space-between;align-items:start}.section-heading h2,.result-header h2{font:600 30px 'Playfair Display',serif;margin:0}.section-heading h2 span,.result-header h2 span{font:400 18px 'DM Sans';color:var(--muted)}.heading-icon{color:var(--coral);font-size:28px}.form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px 16px;margin-top:30px}.field{display:grid;gap:8px;font-size:12px;font-weight:700;color:var(--muted)}.field-wide{grid-column:span 2}.field input,.field select,.auth-fields input,.search-row input,.tool-input input{width:100%;border:0;border-bottom:1px solid var(--line);background:transparent;padding:11px 2px;color:var(--ink);outline:none}.field input:focus,.field select:focus,.auth-fields input:focus,.search-row input:focus,.tool-input input:focus{border-color:var(--coral)}
 .button{border:0;padding:12px 18px;border-radius:2px;display:inline-flex;align-items:center;justify-content:center;gap:14px;font-weight:700;transition:transform .2s,background .2s}.button:hover:not(:disabled){transform:translateY(-2px)}.button-primary{background:var(--teal);color:#fff}.button-coral{background:var(--coral);color:#fff}.button-quiet{background:transparent;color:var(--ink);border:1px solid var(--line);padding:9px 14px}.plan-button{margin-top:28px;min-width:190px}.plan-button strong{font-size:20px}.side-note{padding:34px 20px;border-top:3px solid var(--coral);align-self:start}.quote-mark{font:700 60px/.5 'Playfair Display';color:var(--coral)}.side-note p{font:600 23px/1.3 'Playfair Display';margin:17px 0 25px}.note-line{display:block;width:42px;border-top:2px solid var(--coral);margin-bottom:13px}.side-note small{font-size:10px;letter-spacing:.14em;color:var(--muted)}
-.auth-panel{margin-top:18px;display:grid;grid-template-columns:220px 1fr;gap:22px;position:relative}.auth-panel h2{font:600 22px 'Playfair Display';margin:0}.auth-fields{display:flex;gap:14px;align-items:end}.auth-fields input{min-width:0}.form-error{grid-column:2;color:#b64035;font-size:13px;margin:0}.results-section,.discovery-section{margin-top:28px}.budget-total{text-align:right}.budget-total small{display:block;color:var(--muted);font-size:10px;letter-spacing:.12em}.budget-total strong{display:block;color:var(--coral);font-size:24px;margin-top:5px}.budget-row{display:flex;gap:22px;flex-wrap:wrap;border-block:1px solid var(--line);padding:15px 0;margin-top:25px;color:var(--muted);font-size:12px}.budget-row b{color:var(--ink);margin-right:5px}.timeline{margin-top:25px}.day-card{display:grid;grid-template-columns:60px 1fr;gap:20px;padding:23px 0;border-bottom:1px solid var(--line)}.day-number{font:700 26px 'Playfair Display';color:var(--coral)}.day-content h3{margin:0 0 14px;font-size:16px}.activity{display:grid;grid-template-columns:65px 1fr auto;gap:13px;padding:9px 0}.activity time{color:var(--teal);font-weight:700;font-size:13px}.activity strong{font-size:14px}.activity p{margin:4px 0 0;color:var(--muted);font-size:13px}.activity-cost{font-size:12px;color:var(--muted)}.result-actions{display:flex;align-items:center;gap:22px;flex-wrap:wrap;margin-top:25px}.text-link,.share-link{font-size:13px;text-decoration:none;border-bottom:1px solid var(--coral);padding-bottom:3px}.share-link{color:var(--teal)}
+.auth-panel{margin-top:18px;display:grid;grid-template-columns:220px 1fr;gap:22px;position:relative}.auth-panel h2{font:600 22px 'Playfair Display';margin:0}.auth-fields{display:flex;gap:14px;align-items:end}.auth-fields input{min-width:0}.form-error{grid-column:2;color:#b64035;font-size:13px;margin:0}.results-section,.discovery-section{margin-top:28px}.budget-total{text-align:right}.budget-total small{display:block;color:var(--muted);font-size:10px;letter-spacing:.12em}.budget-total strong{display:block;color:var(--coral);font-size:24px;margin-top:5px}.budget-row{display:flex;gap:22px;flex-wrap:wrap;border-block:1px solid var(--line);padding:15px 0;margin-top:25px;color:var(--muted);font-size:12px}.budget-row b{color:var(--ink);margin-right:5px}.timeline{margin-top:25px}.day-card{display:grid;grid-template-columns:60px 1fr;gap:20px;padding:23px 0;border-bottom:1px solid var(--line)}.day-number{font:700 26px 'Playfair Display';color:var(--coral)}.day-content h3{margin:0 0 14px;font-size:16px}.activity{display:grid;grid-template-columns:65px 1fr auto;gap:13px;padding:12px 0;align-items:start}
+.activity time{color:var(--teal);font-weight:700;font-size:13px;padding-top:2px}
+.activity-body{display:grid;gap:4px}
+.activity-meta{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.activity strong{font-size:15px;color:var(--ink)}
+.activity p{margin:2px 0 0;color:var(--muted);font-size:13px;line-height:1.5}
+.activity-cost{font-size:13px;font-weight:600;color:var(--coral);padding-top:2px}
+
+.activity-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;border-radius:12px;padding:3px 9px;letter-spacing:.02em}
+.badge-breakfast{background:#fff3d6;color:#9a5b00}
+.badge-lunch{background:#ffe6dc;color:#c0471b}
+.badge-dinner{background:#ffdcd6;color:#9e220a}
+.badge-hotel{background:#e3f2fd;color:#0d47a1}
+.badge-cafe{background:#f3e8dc;color:#6d4c41}
+.badge-attraction{background:#e8f5e9;color:#1b5e20}
+
+.hotel-recommend-card{background:#f0f7f5;border:1px solid #cbe3dc;border-left:4px solid var(--teal);padding:18px 22px;margin:22px 0;border-radius:3px}
+.hotel-card-badge{font-size:11px;font-weight:700;letter-spacing:.14em;color:var(--teal);margin-bottom:8px}
+.hotel-card-main{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
+.hotel-card-main h3{font:600 20px 'Playfair Display',serif;margin:0 0 6px}
+.hotel-card-main p{margin:0;color:var(--muted);font-size:13px;line-height:1.5;max-width:550px}
+.hotel-card-pricing{text-align:right}
+.hotel-rating{display:inline-block;font-size:12px;font-weight:700;color:#c07d17;background:#fff;padding:2px 7px;border-radius:10px;margin-bottom:4px}
+.hotel-card-pricing strong{display:block;font-size:18px;color:var(--coral)}
+.hotel-card-pricing strong small{font-size:11px;color:var(--muted);font-weight:400}
+
 .search-row{display:flex;gap:22px;margin:25px 0}.search-row input{flex:1}.place-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.place-card{border:1px solid var(--line);padding:18px;min-height:190px;display:flex;flex-direction:column}.place-top,.place-footer{display:flex;justify-content:space-between;align-items:center}.place-type{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--coral)}.rating{font-size:12px;color:#bd7b28}.place-card h3{font:600 20px 'Playfair Display';margin:20px 0 8px}.place-card p{font-size:13px;color:var(--muted);line-height:1.5;margin:0 0 20px}.place-footer{margin-top:auto}.place-footer a{font-size:12px;color:var(--teal);text-decoration:none}.heart-button{border:0;background:transparent;color:var(--coral);font-size:23px}.empty-state,.muted{color:var(--muted);font-size:14px}.tools-grid{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:28px}.tool-card{box-shadow:none;border:1px solid var(--line)}.tool-card h3{font:600 24px 'Playfair Display';margin:0 0 8px}.tool-card>p:not(.section-kicker){color:var(--muted);font-size:13px}.tool-input{display:flex;gap:12px;margin-top:22px}.chat-messages{height:100px;overflow:auto;background:#f5f3ed;padding:10px;margin-top:17px}.message{display:flex;gap:8px;font-size:13px;margin-bottom:8px}.message strong{color:var(--coral)}footer{max-width:1180px;margin:auto;padding:45px 32px 30px;display:flex;justify-content:space-between;color:var(--muted);font-size:11px;letter-spacing:.1em}footer span:last-child{letter-spacing:0}
  .weather-section{display:grid;grid-template-columns:1.2fr 2fr;align-items:stretch;margin-top:28px;background:#e7eee8}.weather-current{padding:25px 28px;background:var(--teal);color:#fff}.weather-current .section-kicker{color:#b6d8ca}.weather-main{display:flex;align-items:center;gap:13px}.weather-icon{font-size:37px;color:#f5c18e}.weather-main>strong{font:600 50px 'Playfair Display'}.weather-main b{display:block;font-size:14px}.weather-main small{display:block;color:#c9ded5;font-size:11px;margin-top:4px}.weather-days{display:grid;grid-template-columns:repeat(5,1fr);padding:22px 20px;gap:9px}.weather-day{display:flex;flex-direction:column;justify-content:center;gap:7px;text-align:center;border-left:1px solid rgba(23,43,43,.12);font-size:11px}.weather-day b{color:var(--muted);font-size:10px;text-transform:uppercase}.weather-day>span{font-size:22px;color:var(--coral)}.weather-day strong{font-size:13px}.weather-day strong small{font-weight:400;color:var(--muted)}.weather-day em{font-style:normal;color:var(--teal);font-size:10px}.map-panel{margin-top:25px;border:1px solid var(--line);background:#f4f1e9;padding:18px}.map-toolbar{display:flex;justify-content:space-between;align-items:start;gap:16px}.map-toolbar h3{font:600 22px 'Playfair Display';margin:0}.day-tabs{display:flex;gap:6px;flex-wrap:wrap}.day-tabs button{border:1px solid var(--line);background:var(--white);color:var(--muted);padding:8px 11px;font-size:11px}.day-tabs button.active{background:var(--teal);border-color:var(--teal);color:#fff}.trip-map{display:block;width:100%;height:310px;border:0;margin-top:17px;filter:saturate(.8)}
  .expense-panel{display:flex;justify-content:space-between;align-items:end;gap:25px;background:#f4f1e9;padding:19px 20px;margin-top:20px}.expense-copy{min-width:220px}.expense-copy .section-kicker{margin-bottom:8px}.expense-copy h3{font:600 25px 'Playfair Display';margin:0}.expense-copy h3 span{font:400 14px 'DM Sans';color:var(--muted)}.expense-copy small{color:var(--muted);font-size:11px}.progress-track{height:5px;background:#dddcd2;margin:12px 0 7px;overflow:hidden}.progress-track span{display:block;height:100%;background:var(--coral);transition:width .3s}.expense-form{display:flex;gap:10px;min-width:290px}.expense-form input{width:180px;border:0;border-bottom:1px solid var(--line);background:transparent;padding:10px 2px;outline:none}.community-section{margin-top:28px;padding:30px;background:var(--teal);color:#fff}.community-section .section-kicker{color:#b6d8ca}.community-section .heading-icon{color:#f6c29b}.community-section h2{color:#fff}.community-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:25px}.community-card{background:#185f5c;padding:20px;min-height:165px}.community-card h3{font:600 21px 'Playfair Display';margin:18px 0 8px}.community-card p{color:#c9ded5;font-size:12px;min-height:30px}.community-card div{display:flex;justify-content:space-between;align-items:end;margin-top:22px}.community-card strong{color:#f6c29b;font-size:14px}.community-card small{color:#c9ded5;font-size:11px}.community-section .empty-state{color:#c9ded5}

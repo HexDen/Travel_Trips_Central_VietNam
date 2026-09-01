@@ -1,36 +1,49 @@
 const express = require('express')
 const Place = require('../models/Place')
+const { crawlPlacesByAI } = require('../services/aiCrawlerService')
 
 const router = express.Router()
 
-const placesMau = [
-  { name: 'Biển Mỹ Khê', destination: 'Đà Nẵng', type: 'attraction', description: 'Bãi biển phù hợp tắm biển và ngắm bình minh.', tags: ['biển', 'check-in'], estimated_cost: 0, rating: 4.6 },
-  { name: 'Phở khô Pleiku', destination: 'Gia Lai', type: 'restaurant', description: 'Đặc sản hai tô nổi tiếng của Pleiku.', tags: ['ăn uống', 'đặc sản'], estimated_cost: 60000, rating: 4.5 },
-  { name: "Biển Hồ T'Nưng", destination: 'Gia Lai', type: 'attraction', description: 'Điểm tham quan thiên nhiên gần Pleiku.', tags: ['thiên nhiên', 'check-in'], estimated_cost: 0, rating: 4.7 },
-  { name: 'Cafe view sông Hàn', destination: 'Đà Nẵng', type: 'cafe', description: 'Không gian cafe ngắm thành phố.', tags: ['cafe', 'check-in'], estimated_cost: 70000, rating: 4.3 }
-]
-
-async function damBaoDuLieuMau(){
-  await Promise.all(placesMau.map(place => Place.updateOne(
-    { name: place.name, destination: place.destination },
-    { $setOnInsert: place },
-    { upsert: true }
-  )))
-}
-
+// GET /api/places - Tìm kiếm địa điểm (Tự động kích hoạt AI Crawl nếu điểm đến chưa có trong DB)
 router.get('/', async (req, res) => {
   const { destination, type, q } = req.query
   const filter = {}
-  if(destination) filter.destination = new RegExp(destination, 'i')
-  if(type) filter.type = type
-  if(q) filter.$text = { $search: q }
+  if (destination) filter.destination = new RegExp(destination, 'i')
+  if (type) filter.type = type
+  if (q) filter.$text = { $search: q }
 
-  try{
-    await damBaoDuLieuMau()
-    const places = await Place.find(filter).sort({ rating: -1 }).limit(50).lean()
+  try {
+    let places = await Place.find(filter).sort({ rating: -1 }).limit(50).lean()
+
+    // Nếu tìm theo điểm đến cụ thể mà DB chưa có hoặc quá ít (< 3), tự động gọi AI Crawl ngay lập tức
+    if (destination && places.length < 3) {
+      console.log(`[Places API] Điểm đến "${destination}" có ít dữ liệu, kích hoạt AI Crawler ngay...`)
+      await crawlPlacesByAI(destination)
+      places = await Place.find(filter).sort({ rating: -1 }).limit(50).lean()
+    }
+
     res.json(places)
-  }catch(err){
+  } catch (err) {
     res.status(500).json({ error: err.message || 'Không thể tìm địa điểm' })
+  }
+})
+
+// POST /api/places/crawl - Kích hoạt AI Crawl thủ công hoặc từ UI Admin
+router.post('/crawl', async (req, res) => {
+  const { destination } = req.body
+  if (!destination) {
+    return res.status(400).json({ error: 'Vui lòng cung cấp destination (ví dụ: "Đà Nẵng", "Huế")' })
+  }
+
+  try {
+    const crawledPlaces = await crawlPlacesByAI(destination)
+    res.json({
+      success: true,
+      message: `AI đã thu thập thành công ${crawledPlaces.length} địa điểm tại ${destination}`,
+      data: crawledPlaces
+    })
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Lỗi khi AI Crawl dữ liệu' })
   }
 })
 

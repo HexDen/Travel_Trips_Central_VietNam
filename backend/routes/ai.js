@@ -21,6 +21,7 @@ router.post('/plan', optionalAuth, async (req, res) => {
       interests: duLieu.interests || lichTrinh.interests || [],
       transportation: duLieu.transportation || lichTrinh.transportation,
       hotel_request: duLieu.hotel_request || lichTrinh.hotel_request,
+      hotel_recommendation: lichTrinh.hotel_recommendation,
       budget_breakdown: lichTrinh.budget_breakdown,
       days: lichTrinh.days
     })
