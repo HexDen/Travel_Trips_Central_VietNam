@@ -12,6 +12,7 @@ Chương này cung cấp bảng Đặc tả Yêu cầu Phần mềm (SRS) toàn 
 \centering
 \caption{Bảng phân loại các tác nhân tương tác trong hệ thống WanderWise}
 \label{tab:actors}
+\resizebox{\textwidth}{!}{
 \begin{tabular}{|l|l|p{8.5cm}|}
 \hline
 \textbf{Tác nhân (Actor)} & \textbf{Loại hình} & \textbf{Vai trò và Quyền hạn trong Hệ thống} \\ \hline
@@ -20,6 +21,7 @@ Chương này cung cấp bảng Đặc tả Yêu cầu Phần mềm (SRS) toàn 
 \textbf{Weather Service (Open-Meteo)} & Hệ thống ngoài & Cung cấp dữ liệu khí tượng thời gian thực (nhiệt độ, xác suất mưa) theo tọa độ GPS. \\ \hline
 \textbf{Quản trị viên (Admin)} & Người quản trị & Giám sát hoạt động của API, bảo trì cơ sở dữ liệu và vận hành hệ thống AI Crawler làm giàu dữ liệu địa phương. \\ \hline
 \end{tabular}
+}
 \end{table}
 
 \subsection{Bảng Đặc tả Yêu cầu Chức năng (\en{Functional Requirements - FR})}
@@ -29,7 +31,7 @@ Chương này cung cấp bảng Đặc tả Yêu cầu Phần mềm (SRS) toàn 
 \caption{Bảng đặc tả yêu cầu chức năng hệ thống WanderWise (SRS Table)}
 \label{tab:functional_reqs}
 \resizebox{\textwidth}{!}{
-\begin{tabular}{|c|l|c|p{8cm}|}
+\begin{tabular}{|c|l|c|p{8.5cm}|}
 \hline
 \textbf{Mã YC} & \textbf{Tên Chức năng} & \textbf{Mức ưu tiên} & \textbf{Mô tả chi tiết chức năng} \\ \hline
 \textbf{FR-01} & Quản lý Xác thực (\en{Authentication}) & Bắt buộc (\en{High}) & Đăng ký tài khoản mới, đăng nhập bằng email/mật khẩu mã hóa bcrypt, cấp phát và xác thực phiên qua JWT Token. \\ \hline
@@ -50,7 +52,8 @@ Chương này cung cấp bảng Đặc tả Yêu cầu Phần mềm (SRS) toàn 
 \centering
 \caption{Bảng đặc tả yêu cầu phi chức năng theo mô hình FURPS+}
 \label{tab:non_functional_reqs}
-\begin{tabular}{|l|l|p{7.5cm}|}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|l|l|p{8cm}|}
 \hline
 \textbf{Tiêu chuẩn} & \textbf{Chỉ số mục tiêu} & \textbf{Giải pháp kỹ thuật đáp ứng} \\ \hline
 \textbf{Hiệu năng (\en{Performance})} & Thời gian tải trang $< 1.0$s; AI sinh lịch trình $< 2.0$s & Sử dụng Vite đóng gói nén mã nguồn, Gemini 2.5 Flash tối ưu độ trễ thấp. \\ \hline
@@ -59,6 +62,7 @@ Chương này cung cấp bảng Đặc tả Yêu cầu Phần mềm (SRS) toàn 
 \textbf{Khả năng sử dụng (\en{Usability})} & Dễ thao tác trên cả Mobile \& PC & Thiết kế Responsive, hỗ trợ chế độ giả lập điện thoại (\en{Phone Simulator Mode}). \\ \hline
 \textbf{Tính tương thích (\en{Compatibility})} & Hoạt động trên mọi trình duyệt hiện đại & Tương thích Chrome, Safari, Edge, Firefox trên Windows, macOS, iOS, Android. \\ \hline
 \end{tabular}
+}
 \end{table}
 
 \subsection{Đặc tả Chi tiết Ca Sử Dụng Chính (Use-Case Specification)}
@@ -67,7 +71,8 @@ Chương này cung cấp bảng Đặc tả Yêu cầu Phần mềm (SRS) toàn 
 \centering
 \caption{Đặc tả Use-Case UC-02: Lập lịch trình du lịch thông minh bằng AI}
 \label{tab:uc_spec}
-\begin{tabular}{|l|p{11.5cm}|}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|l|p{11cm}|}
 \hline
 \textbf{Tên Use-Case} & \textbf{UC-02: Lập lịch trình du lịch thông minh bằng AI} \\ \hline
 \textbf{Tác nhân chính} & Khách du lịch (User) \\ \hline
@@ -84,6 +89,7 @@ Chương này cung cấp bảng Đặc tả Yêu cầu Phần mềm (SRS) toàn 
 - \textit{Mất kết nối mạng / Gemini API quá tải:} Hệ thống tự động kích hoạt thuật toán sinh lịch trình dự phòng từ cơ sở dữ liệu MongoDB và thông báo cho người dùng. \\ \hline
 \textbf{Hậu điều kiện} & Lịch trình hoàn chỉnh được hiển thị trên giao diện và sẵn sàng để lưu vào mục "Chuyến đi của tôi". \\ \hline
 \end{tabular}
+}
 \end{table}
 
 \section{Sơ đồ Ca Sử Dụng (Use-Case Diagram)}
@@ -326,6 +332,45 @@ Chương này cung cấp bảng Đặc tả Yêu cầu Phần mềm (SRS) toàn 
 \caption{Sơ đồ Kiến trúc Tổng thể Hệ thống WanderWise (3-Tier Architecture)}
 \label{fig:architecture_detail}
 \end{figure}
+
+\section{Thiết kế Cơ sở Dữ liệu MongoDB}
+
+\begin{table}[H]
+\centering
+\caption{Cấu trúc thực thể Place (Địa điểm du lịch \& Ẩm thực)}
+\begin{tabular}{|l|l|c|p{7.5cm}|}
+\hline
+\textbf{Trường dữ liệu} & \textbf{Kiểu dữ liệu} & \textbf{Bắt buộc} & \textbf{Ý nghĩa} \\ \hline
+\code{\_id} & ObjectId & Có & Khóa chính định danh duy nhất \\ \hline
+\code{name} & String & Có & Tên địa danh (ví dụ: Bà Nà Hills, Động Phong Nha) \\ \hline
+\code{destination} & String & Có & Tỉnh/Thành phố (Đà Nẵng, Quảng Bình, Huế,...) \\ \hline
+\code{type} & String & Có & Phân loại: \code{attraction}, \code{restaurant}, \code{cafe}, \code{hotel} \\ \hline
+\code{address} & String & Có & Địa chỉ cụ thể số nhà, tên đường, phường, quận \\ \hline
+\code{image} & String & Có & Đường dẫn URL ảnh thực tế chất lượng cao \\ \hline
+\code{rating} & Number & Có & Điểm đánh giá chất lượng (1.0 đến 5.0) \\ \hline
+\code{estimated\_cost} & Number & Có & Chi phí tham quan / suất ăn ước tính (VNĐ) \\ \hline
+\code{tags} & Array[String] & Không & Tập từ khóa đặc trưng (ví dụ: bãi biển, di sản, check-in) \\ \hline
+\code{latitude} & Number & Có & Tọa độ vĩ độ địa lý \\ \hline
+\code{longitude} & Number & Có & Tọa độ kinh độ địa lý \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Cấu trúc thực thể Trip (Lịch trình chuyến đi)}
+\begin{tabular}{|l|l|c|p{7.5cm}|}
+\hline
+\textbf{Trường dữ liệu} & \textbf{Kiểu dữ liệu} & \textbf{Bắt buộc} & \textbf{Ý nghĩa} \\ \hline
+\code{\_id} & ObjectId & Có & Khóa chính \\ \hline
+\code{userId} & ObjectId & Có & Khóa ngoại tham chiếu bảng User \\ \hline
+\code{destination} & String & Có & Tỉnh/Thành phố của chuyến đi \\ \hline
+\code{duration} & Number & Có & Số ngày hành trình (1--7 ngày) \\ \hline
+\code{total\_budget} & Number & Có & Tổng ngân sách dự kiến (VNĐ) \\ \hline
+\code{people} & Number & Có & Số lượng thành viên tham gia \\ \hline
+\code{days} & Array[Object] & Có & Danh sách các ngày, mỗi ngày gồm các hoạt động \\ \hline
+\code{createdAt} & Date & Có & Thời gian tạo lập chuyến đi \\ \hline
+\end{tabular}
+\end{table}
 
 \section{Giải thuật Visited Set Graph (Kiểm soát Không Trùng Lặp)}
 
