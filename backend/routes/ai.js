@@ -19,6 +19,7 @@ router.post('/plan', optionalAuth, async (req, res) => {
       total_budget: lichTrinh.total_budget,
       people: lichTrinh.people,
       interests: duLieu.interests || lichTrinh.interests || [],
+      selected_places: lichTrinh.selected_places || duLieu.selected_places || [],
       transportation: duLieu.transportation || lichTrinh.transportation,
       hotel_request: duLieu.hotel_request || lichTrinh.hotel_request,
       hotel_recommendation: lichTrinh.hotel_recommendation,

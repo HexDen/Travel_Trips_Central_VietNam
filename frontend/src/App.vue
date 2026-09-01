@@ -34,7 +34,33 @@
         <div class="planner-card">
           <div class="section-heading"><div><p class="section-kicker">BƯỚC 01 / 01</p><h2>Lên kế hoạch của bạn</h2></div><span class="heading-icon">✈</span></div>
           <div class="form-grid">
-            <label class="field field-wide"><span>Điểm đến</span><input v-model="formDuLieu.diemDen" placeholder="Đà Nẵng, Hội An..." /></label>
+            <div class="field field-wide">
+              <span>Điểm đến</span>
+              <input v-model="formDuLieu.diemDen" list="cities-list" placeholder="Đà Nẵng, Hội An, Quảng Bình..." />
+              <datalist id="cities-list">
+                <option value="Đà Nẵng" />
+                <option value="Hội An" />
+                <option value="Huế" />
+                <option value="Quảng Bình" />
+                <option value="Quy Nhơn" />
+                <option value="Phú Yên" />
+                <option value="Nha Trang" />
+                <option value="Đà Lạt" />
+                <option value="Gia Lai" />
+              </datalist>
+              <div class="quick-cities-row">
+                <span class="quick-city-label">Chọn nhanh:</span>
+                <button
+                  v-for="city in ['Đà Nẵng', 'Hội An', 'Huế', 'Quảng Bình', 'Quy Nhơn', 'Phú Yên', 'Nha Trang', 'Đà Lạt']"
+                  :key="city"
+                  type="button"
+                  :class="['city-pill', { active: formDuLieu.diemDen === city }]"
+                  @click="chonNhanhDiemDen(city)"
+                >
+                  {{ city }}
+                </button>
+              </div>
+            </div>
             <label class="field"><span>Số ngày</span><input type="number" v-model.number="formDuLieu.soNgay" min="1" /></label>
             <label class="field"><span>Số người</span><input type="number" v-model.number="formDuLieu.soNguoi" min="1" /></label>
             <label class="field"><span>Ngân sách (VND)</span><input type="number" v-model.number="formDuLieu.nganSach" /></label>
@@ -44,6 +70,74 @@
             <label class="field"><span>Khách sạn</span><input v-model="formDuLieu.yeuCauKhachSan" placeholder="Gần biển, yên tĩnh..." /></label>
             <label class="field field-wide"><span>Sở thích</span><input v-model="chuoiSoThich" placeholder="Ăn uống, biển, check-in" /></label>
           </div>
+
+          <!-- BỘ CHỌN ĐỊA ĐIỂM & ĐẶC SẢN NỔI BẬT THEO THÀNH PHỐ -->
+          <div v-if="places.length" class="places-picker-section">
+            <div class="picker-header">
+              <div>
+                <p class="section-kicker">GỢI Ý ĐỊA PHƯƠNG · BẤM ĐỂ CHỌN</p>
+                <h3>Bạn muốn ghé địa điểm & món ngon nào tại {{ formDuLieu.diemDen }}?</h3>
+              </div>
+              <span v-if="selectedPlaces.length" class="selected-count-badge">
+                ✓ Đã chọn {{ selectedPlaces.length }} địa điểm
+              </span>
+            </div>
+
+            <!-- Nhóm Thắng cảnh -->
+            <div v-if="attractionsList.length" class="picker-group">
+              <span class="group-label">📸 Thắng cảnh & Check-in:</span>
+              <div class="chip-container">
+                <button
+                  v-for="p in attractionsList"
+                  :key="p.name"
+                  type="button"
+                  :class="['place-chip', { active: isPlaceSelected(p.name) }]"
+                  @click="togglePlaceSelection(p.name)"
+                >
+                  <span class="chip-check">{{ isPlaceSelected(p.name) ? '✓' : '+' }}</span>
+                  <span class="chip-name">{{ p.name }}</span>
+                  <small v-if="p.rating">★ {{ p.rating }}</small>
+                </button>
+              </div>
+            </div>
+
+            <!-- Nhóm Món ngon đặc sản -->
+            <div v-if="restaurantsList.length" class="picker-group">
+              <span class="group-label">🍲 Món ngon & Đặc sản:</span>
+              <div class="chip-container">
+                <button
+                  v-for="p in restaurantsList"
+                  :key="p.name"
+                  type="button"
+                  :class="['place-chip', { active: isPlaceSelected(p.name) }]"
+                  @click="togglePlaceSelection(p.name)"
+                >
+                  <span class="chip-check">{{ isPlaceSelected(p.name) ? '✓' : '+' }}</span>
+                  <span class="chip-name">{{ p.name }}</span>
+                  <small v-if="p.rating">★ {{ p.rating }}</small>
+                </button>
+              </div>
+            </div>
+
+            <!-- Nhóm Cafe & View đẹp -->
+            <div v-if="cafesList.length" class="picker-group">
+              <span class="group-label">☕ Cafe & View đẹp:</span>
+              <div class="chip-container">
+                <button
+                  v-for="p in cafesList"
+                  :key="p.name"
+                  type="button"
+                  :class="['place-chip', { active: isPlaceSelected(p.name) }]"
+                  @click="togglePlaceSelection(p.name)"
+                >
+                  <span class="chip-check">{{ isPlaceSelected(p.name) ? '✓' : '+' }}</span>
+                  <span class="chip-name">{{ p.name }}</span>
+                  <small v-if="p.rating">★ {{ p.rating }}</small>
+                </button>
+              </div>
+            </div>
+          </div>
+
           <button class="button button-primary plan-button" @click="taoLichTrinh" :disabled="dangTao"><span>{{ dangTao ? 'Đang lên lịch...' : 'Tạo lịch trình' }}</span><strong>↗</strong></button>
         </div>
 
@@ -65,11 +159,15 @@
           <div class="hotel-card-main">
             <div>
               <h3>{{ lichTrinh.hotel_recommendation.name }}</h3>
+              <p class="hotel-address" v-if="lichTrinh.hotel_recommendation.address">📍 {{ lichTrinh.hotel_recommendation.address }}</p>
               <p>{{ lichTrinh.hotel_recommendation.description }}</p>
             </div>
             <div class="hotel-card-pricing">
               <span class="hotel-rating">★ {{ lichTrinh.hotel_recommendation.rating || '4.8' }}</span>
               <strong>{{ dinhDangTien(lichTrinh.hotel_recommendation.price_per_night || 850000) }}đ <small>/ đêm</small></strong>
+              <a class="direction-link-btn" :href="chiDuongUrl(lichTrinh.hotel_recommendation.name, lichTrinh.hotel_recommendation.address)" target="_blank" rel="noreferrer">
+                🗺️ Chỉ đường đến khách sạn ↗
+              </a>
             </div>
           </div>
         </div>
@@ -87,8 +185,12 @@
                       {{ getBadgeInfo(act).icon }} {{ getBadgeInfo(act).label }}
                     </span>
                     <strong>{{ act.place }}</strong>
+                    <a class="direction-badge-btn" :href="chiDuongUrl(act.place, act.address)" target="_blank" rel="noreferrer" title="Mở chỉ đường trên Google Maps">
+                      🗺️ Chỉ đường ↗
+                    </a>
                   </div>
-                  <p>{{ act.activity }}</p>
+                  <p v-if="act.address" class="activity-address">📍 {{ act.address }}</p>
+                  <p class="activity-desc">{{ act.activity }}</p>
                 </div>
                 <span v-if="act.estimated_cost" class="activity-cost">{{ dinhDangTien(act.estimated_cost) }}đ</span>
               </div>
@@ -137,11 +239,35 @@ const authError = ref('')
 const shareUrl = ref('')
 const placeQuery = ref('')
 const places = ref([])
+const selectedPlaces = ref([])
 const selectedDay = ref(1)
 const thoiTiet = ref(null)
 const chiPhiThucTe = ref(0)
 const chiPhiMoi = ref(null)
 const publicTrips = ref([])
+
+// Phân nhóm địa điểm theo thể loại để du khách bấm chọn trực quan
+const attractionsList = computed(() => (places.value || []).filter(p => p.type === 'attraction'))
+const restaurantsList = computed(() => (places.value || []).filter(p => p.type === 'restaurant'))
+const cafesList = computed(() => (places.value || []).filter(p => p.type === 'cafe'))
+
+function togglePlaceSelection(placeName) {
+  const idx = selectedPlaces.value.indexOf(placeName)
+  if (idx >= 0) {
+    selectedPlaces.value.splice(idx, 1)
+  } else {
+    selectedPlaces.value.push(placeName)
+  }
+}
+
+function isPlaceSelected(placeName) {
+  return selectedPlaces.value.includes(placeName)
+}
+
+function chiDuongUrl(place, address = '') {
+  const query = address ? `${place}, ${address}` : `${place}, ${formDuLieu.diemDen}`
+  return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(query)}`
+}
 
 function dinhDangTien(v){
   if(!v && v !== 0) return ''
@@ -263,9 +389,28 @@ async function chiaSeLichTrinh(){
   }catch(e){ alert('Không thể chia sẻ: ' + (e?.response?.data?.error || e.message)) }
 }
 
+let currentRequestId = 0
+
+function chonNhanhDiemDen(city) {
+  formDuLieu.diemDen = city
+  selectedPlaces.value = []
+  clearTimeout(timeoutSearch)
+  timDiaDiem()
+  layThoiTiet()
+}
+
 async function timDiaDiem(){
-  const res = await api.get('/places', { params: { destination: formDuLieu.diemDen, q: placeQuery.value } })
-  places.value = res.data
+  const reqId = ++currentRequestId
+  const dest = (formDuLieu.diemDen || '').trim()
+  if (!dest) return
+  try{
+    const res = await api.get('/places', { params: { destination: dest, q: placeQuery.value } })
+    if (reqId === currentRequestId) {
+      places.value = res.data
+    }
+  }catch(e){
+    console.warn('Lỗi tải địa điểm:', e.message)
+  }
 }
 
 async function doiYeuThich(placeId){
@@ -283,6 +428,7 @@ async function taoLichTrinh(){
       budget: formDuLieu.nganSach,
       people: formDuLieu.soNguoi,
       interests: formDuLieu.soThich,
+      selected_places: selectedPlaces.value,
       start_date: formDuLieu.ngayBatDau,
       end_date: formDuLieu.ngayKetThuc,
       transportation: formDuLieu.phuongTien,
@@ -308,11 +454,12 @@ async function taoLichTrinh(){
 let timeoutSearch = null
 watch(() => formDuLieu.diemDen, (newVal) => {
   if(!newVal) return
+  selectedPlaces.value = []
   clearTimeout(timeoutSearch)
   timeoutSearch = setTimeout(() => {
     timDiaDiem()
     layThoiTiet()
-  }, 500)
+  }, 400)
 })
 
 async function dieuChinhLichTrinh(){
@@ -367,8 +514,15 @@ onMounted(async () => {
 .activity-body{display:grid;gap:4px}
 .activity-meta{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
 .activity strong{font-size:15px;color:var(--ink)}
-.activity p{margin:2px 0 0;color:var(--muted);font-size:13px;line-height:1.5}
+.activity-address{margin:2px 0 0;color:var(--teal);font-size:12px;font-weight:500}
+.activity-desc{margin:2px 0 0;color:var(--muted);font-size:13px;line-height:1.5}
 .activity-cost{font-size:13px;font-weight:600;color:var(--coral);padding-top:2px}
+
+.direction-badge-btn{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:600;color:var(--teal);background:#e0f2f1;border:1px solid #b2dfdb;border-radius:12px;padding:2px 8px;text-decoration:none;transition:background .2s}
+.direction-badge-btn:hover{background:#b2dfdb;color:#004d40}
+
+.direction-link-btn{display:inline-block;margin-top:6px;font-size:12px;font-weight:700;color:var(--teal);text-decoration:none;border-bottom:1px dashed var(--teal)}
+.direction-link-btn:hover{color:var(--coral);border-color:var(--coral)}
 
 .activity-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;border-radius:12px;padding:3px 9px;letter-spacing:.02em}
 .badge-breakfast{background:#fff3d6;color:#9a5b00}
@@ -378,21 +532,43 @@ onMounted(async () => {
 .badge-cafe{background:#f3e8dc;color:#6d4c41}
 .badge-attraction{background:#e8f5e9;color:#1b5e20}
 
+.quick-cities-row{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-top:6px}
+.quick-city-label{font-size:11px;font-weight:700;color:var(--muted);margin-right:2px}
+.city-pill{border:1px solid var(--line);background:#faf8f5;color:var(--ink);padding:3px 10px;border-radius:14px;font-size:11px;font-weight:600;transition:all .2s}
+.city-pill:hover{border-color:var(--coral);color:var(--coral)}
+.city-pill.active{background:var(--coral);color:#fff;border-color:var(--coral)}
+
+/* Places Picker CSS */
+.places-picker-section{margin-top:28px;padding-top:24px;border-top:1px solid var(--line)}
+.picker-header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:14px;flex-wrap:wrap;gap:10px}
+.picker-header h3{font:600 18px 'Playfair Display',serif;margin:0}
+.selected-count-badge{font-size:12px;font-weight:700;background:var(--coral);color:#fff;padding:4px 10px;border-radius:20px}
+.picker-group{margin-bottom:14px}
+.group-label{display:block;font-size:12px;font-weight:700;color:var(--ink);margin-bottom:8px}
+.chip-container{display:flex;flex-wrap:wrap;gap:8px}
+.place-chip{border:1px solid var(--line);background:#faf8f5;color:var(--ink);padding:6px 12px;border-radius:20px;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;transition:all .2s;text-align:left}
+.place-chip:hover{border-color:var(--teal);background:#eef7f5}
+.place-chip.active{background:var(--teal);color:#fff;border-color:var(--teal);font-weight:700;box-shadow:0 3px 8px rgba(13,107,104,.25)}
+.place-chip.active small{color:#f6c29b}
+.chip-check{font-weight:700;font-size:13px}
+.place-chip.active .chip-check{color:#f6c29b}
+.place-chip small{color:var(--muted);font-size:11px}
+
 .hotel-recommend-card{background:#f0f7f5;border:1px solid #cbe3dc;border-left:4px solid var(--teal);padding:18px 22px;margin:22px 0;border-radius:3px}
 .hotel-card-badge{font-size:11px;font-weight:700;letter-spacing:.14em;color:var(--teal);margin-bottom:8px}
 .hotel-card-main{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
-.hotel-card-main h3{font:600 20px 'Playfair Display',serif;margin:0 0 6px}
-.hotel-card-main p{margin:0;color:var(--muted);font-size:13px;line-height:1.5;max-width:550px}
+.hotel-card-main h3{font:600 20px 'Playfair Display',serif;margin:0 0 4px}
+.hotel-address{color:var(--teal);font-size:12px;font-weight:600;margin:0 0 6px}
+.hotel-card-main p:not(.hotel-address){margin:0;color:var(--muted);font-size:13px;line-height:1.5;max-width:550px}
 .hotel-card-pricing{text-align:right}
 .hotel-rating{display:inline-block;font-size:12px;font-weight:700;color:#c07d17;background:#fff;padding:2px 7px;border-radius:10px;margin-bottom:4px}
 .hotel-card-pricing strong{display:block;font-size:18px;color:var(--coral)}
 .hotel-card-pricing strong small{font-size:11px;color:var(--muted);font-weight:400}
 
 .search-row{display:flex;gap:22px;margin:25px 0}.search-row input{flex:1}.place-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.place-card{border:1px solid var(--line);padding:18px;min-height:190px;display:flex;flex-direction:column}.place-top,.place-footer{display:flex;justify-content:space-between;align-items:center}.place-type{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--coral)}.rating{font-size:12px;color:#bd7b28}.place-card h3{font:600 20px 'Playfair Display';margin:20px 0 8px}.place-card p{font-size:13px;color:var(--muted);line-height:1.5;margin:0 0 20px}.place-footer{margin-top:auto}.place-footer a{font-size:12px;color:var(--teal);text-decoration:none}.heart-button{border:0;background:transparent;color:var(--coral);font-size:23px}.empty-state,.muted{color:var(--muted);font-size:14px}.tools-grid{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:28px}.tool-card{box-shadow:none;border:1px solid var(--line)}.tool-card h3{font:600 24px 'Playfair Display';margin:0 0 8px}.tool-card>p:not(.section-kicker){color:var(--muted);font-size:13px}.tool-input{display:flex;gap:12px;margin-top:22px}.chat-messages{height:100px;overflow:auto;background:#f5f3ed;padding:10px;margin-top:17px}.message{display:flex;gap:8px;font-size:13px;margin-bottom:8px}.message strong{color:var(--coral)}footer{max-width:1180px;margin:auto;padding:45px 32px 30px;display:flex;justify-content:space-between;color:var(--muted);font-size:11px;letter-spacing:.1em}footer span:last-child{letter-spacing:0}
- .weather-section{display:grid;grid-template-columns:1.2fr 2fr;align-items:stretch;margin-top:28px;background:#e7eee8}.weather-current{padding:25px 28px;background:var(--teal);color:#fff}.weather-current .section-kicker{color:#b6d8ca}.weather-main{display:flex;align-items:center;gap:13px}.weather-icon{font-size:37px;color:#f5c18e}.weather-main>strong{font:600 50px 'Playfair Display'}.weather-main b{display:block;font-size:14px}.weather-main small{display:block;color:#c9ded5;font-size:11px;margin-top:4px}.weather-days{display:grid;grid-template-columns:repeat(5,1fr);padding:22px 20px;gap:9px}.weather-day{display:flex;flex-direction:column;justify-content:center;gap:7px;text-align:center;border-left:1px solid rgba(23,43,43,.12);font-size:11px}.weather-day b{color:var(--muted);font-size:10px;text-transform:uppercase}.weather-day>span{font-size:22px;color:var(--coral)}.weather-day strong{font-size:13px}.weather-day strong small{font-weight:400;color:var(--muted)}.weather-day em{font-style:normal;color:var(--teal);font-size:10px}.map-panel{margin-top:25px;border:1px solid var(--line);background:#f4f1e9;padding:18px}.map-toolbar{display:flex;justify-content:space-between;align-items:start;gap:16px}.map-toolbar h3{font:600 22px 'Playfair Display';margin:0}.day-tabs{display:flex;gap:6px;flex-wrap:wrap}.day-tabs button{border:1px solid var(--line);background:var(--white);color:var(--muted);padding:8px 11px;font-size:11px}.day-tabs button.active{background:var(--teal);border-color:var(--teal);color:#fff}.trip-map{display:block;width:100%;height:310px;border:0;margin-top:17px;filter:saturate(.8)}
- .expense-panel{display:flex;justify-content:space-between;align-items:end;gap:25px;background:#f4f1e9;padding:19px 20px;margin-top:20px}.expense-copy{min-width:220px}.expense-copy .section-kicker{margin-bottom:8px}.expense-copy h3{font:600 25px 'Playfair Display';margin:0}.expense-copy h3 span{font:400 14px 'DM Sans';color:var(--muted)}.expense-copy small{color:var(--muted);font-size:11px}.progress-track{height:5px;background:#dddcd2;margin:12px 0 7px;overflow:hidden}.progress-track span{display:block;height:100%;background:var(--coral);transition:width .3s}.expense-form{display:flex;gap:10px;min-width:290px}.expense-form input{width:180px;border:0;border-bottom:1px solid var(--line);background:transparent;padding:10px 2px;outline:none}.community-section{margin-top:28px;padding:30px;background:var(--teal);color:#fff}.community-section .section-kicker{color:#b6d8ca}.community-section .heading-icon{color:#f6c29b}.community-section h2{color:#fff}.community-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:25px}.community-card{background:#185f5c;padding:20px;min-height:165px}.community-card h3{font:600 21px 'Playfair Display';margin:18px 0 8px}.community-card p{color:#c9ded5;font-size:12px;min-height:30px}.community-card div{display:flex;justify-content:space-between;align-items:end;margin-top:22px}.community-card strong{color:#f6c29b;font-size:14px}.community-card small{color:#c9ded5;font-size:11px}.community-section .empty-state{color:#c9ded5}
+.weather-section{display:grid;grid-template-columns:1.2fr 2fr;align-items:stretch;margin-top:28px;background:#e7eee8}.weather-current{padding:25px 28px;background:var(--teal);color:#fff}.weather-current .section-kicker{color:#b6d8ca}.weather-main{display:flex;align-items:center;gap:13px}.weather-icon{font-size:37px;color:#f5c18e}.weather-main>strong{font:600 50px 'Playfair Display'}.weather-main b{display:block;font-size:14px}.weather-main small{display:block;color:#c9ded5;font-size:11px;margin-top:4px}.weather-days{display:grid;grid-template-columns:repeat(5,1fr);padding:22px 20px;gap:9px}.weather-day{display:flex;flex-direction:column;justify-content:center;gap:7px;text-align:center;border-left:1px solid rgba(23,43,43,.12);font-size:11px}.weather-day b{color:var(--muted);font-size:10px;text-transform:uppercase}.weather-day>span{font-size:22px;color:var(--coral)}.weather-day strong{font-size:13px}.weather-day strong small{font-weight:400;color:var(--muted)}.weather-day em{font-style:normal;color:var(--teal);font-size:10px}.map-panel{margin-top:25px;border:1px solid var(--line);background:#f4f1e9;padding:18px}.map-toolbar{display:flex;justify-content:space-between;align-items:start;gap:16px}.map-toolbar h3{font:600 22px 'Playfair Display';margin:0}.day-tabs{display:flex;gap:6px;flex-wrap:wrap}.day-tabs button{border:1px solid var(--line);background:var(--white);color:var(--muted);padding:8px 11px;font-size:11px}.day-tabs button.active{background:var(--teal);border-color:var(--teal);color:#fff}.trip-map{display:block;width:100%;height:310px;border:0;margin-top:17px;filter:saturate(.8)}
+.expense-panel{display:flex;justify-content:space-between;align-items:end;gap:25px;background:#f4f1e9;padding:19px 20px;margin-top:20px}.expense-copy{min-width:220px}.expense-copy .section-kicker{margin-bottom:8px}.expense-copy h3{font:600 25px 'Playfair Display';margin:0}.expense-copy h3 span{font:400 14px 'DM Sans';color:var(--muted)}.expense-copy small{color:var(--muted);font-size:11px}.progress-track{height:5px;background:#dddcd2;margin:12px 0 7px;overflow:hidden}.progress-track span{display:block;height:100%;background:var(--coral);transition:width .3s}.expense-form{display:flex;gap:10px;min-width:290px}.expense-form input{width:180px;border:0;border-bottom:1px solid var(--line);background:transparent;padding:10px 2px;outline:none}.community-section{margin-top:28px;padding:30px;background:var(--teal);color:#fff}.community-section .section-kicker{color:#b6d8ca}.community-section .heading-icon{color:#f6c29b}.community-section h2{color:#fff}.community-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:25px}.community-card{background:#185f5c;padding:20px;min-height:165px}.community-card h3{font:600 21px 'Playfair Display';margin:18px 0 8px}.community-card p{color:#c9ded5;font-size:12px;min-height:30px}.community-card div{display:flex;justify-content:space-between;align-items:end;margin-top:22px}.community-card strong{color:#f6c29b;font-size:14px}.community-card small{color:#c9ded5;font-size:11px}.community-section .empty-state{color:#c9ded5}
 @media(max-width:800px){.topbar{padding:18px 20px}.page-content{padding:18px 20px}.hero{padding:43px 28px;display:block}.hero-stamp{margin-top:30px}.planner-layout,.tools-grid{grid-template-columns:1fr}.side-note{display:none}.planner-card,.auth-panel,.results-section,.discovery-section,.tool-card{padding:22px}.auth-panel{display:block}.auth-fields{margin-top:20px;display:grid;grid-template-columns:1fr 1fr}.auth-fields input:first-child{grid-column:span 2}.auth-fields .button{grid-column:span 2}.place-grid,.community-grid{grid-template-columns:repeat(2,1fr)}.weather-section{grid-template-columns:1fr}.weather-days{padding:15px 8px}.expense-panel{display:block}.expense-form{min-width:0;margin-top:17px}.expense-form input{flex:1;width:auto}.map-toolbar{display:block}.day-tabs{margin-top:15px}footer{padding-inline:20px}}
 @media(max-width:500px){.account-area .welcome{display:none}.hero h1{font-size:43px}.form-grid{grid-template-columns:1fr;gap:17px}.field-wide{grid-column:auto}.section-heading h2,.result-header h2{font-size:25px}.result-header{display:block}.budget-total{text-align:left;margin-top:16px}.activity{grid-template-columns:52px 1fr}.activity-cost{grid-column:2}.search-row{display:grid;gap:12px}.place-grid{grid-template-columns:1fr}.result-actions{gap:14px}.activity p{line-height:1.4}footer{display:block;line-height:2.2}}
-@media(max-width:500px){.account-area .welcome{display:none}.hero h1{font-size:43px}.form-grid{grid-template-columns:1fr;gap:17px}.field-wide{grid-column:auto}.section-heading h2,.result-header h2{font-size:25px}.result-header{display:block}.budget-total{text-align:left;margin-top:16px}.activity{grid-template-columns:52px 1fr}.activity-cost{grid-column:2}.search-row{display:grid;gap:12px}.place-grid,.community-grid{grid-template-columns:1fr}.result-actions{gap:14px}.activity p{line-height:1.4}footer{display:block;line-height:2.2}}
 @media print{.topbar,.hero,.planner-layout,.weather-section,.discovery-section,.community-section,.tools-grid,footer,.result-actions,.map-panel,.expense-form{display:none!important}.app-shell,.page-content,.results-section{background:#fff;box-shadow:none;padding:0;margin:0}.results-section{display:block!important}.budget-row{border-color:#ccc}}
 </style>

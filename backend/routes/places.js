@@ -8,17 +8,31 @@ const router = express.Router()
 router.get('/', async (req, res) => {
   const { destination, type, q } = req.query
   const filter = {}
-  if (destination) filter.destination = new RegExp(destination, 'i')
   if (type) filter.type = type
   if (q) filter.$text = { $search: q }
 
   try {
-    let places = await Place.find(filter).sort({ rating: -1 }).limit(50).lean()
+    let places = []
+    if (destination && destination.trim()) {
+      const cleanDest = destination.trim()
+      // 1. Ưu tiên khớp chính xác tên địa danh (ví dụ: "Quảng Bình" không bị lẫn với "Quảng Nam")
+      places = await Place.find({ ...filter, destination: new RegExp(`^${cleanDest}$`, 'i') }).sort({ rating: -1 }).limit(50).lean()
 
-    // Nếu tìm theo điểm đến cụ thể mà DB chưa có hoặc quá ít (< 3), tự động gọi AI Crawl ngay lập tức
-    if (destination && places.length < 3) {
-      console.log(`[Places API] Điểm đến "${destination}" có ít dữ liệu, kích hoạt AI Crawler ngay...`)
-      await crawlPlacesByAI(destination)
+      // 2. Nếu chưa có kết quả chính xác, tìm chứa từ
+      if (places.length === 0) {
+        places = await Place.find({ ...filter, destination: new RegExp(cleanDest, 'i') }).sort({ rating: -1 }).limit(50).lean()
+      }
+
+      // 3. Nếu vẫn có ít dữ liệu (< 3), kích hoạt AI Crawler nạp dữ liệu
+      if (places.length < 3) {
+        console.log(`[Places API] Điểm đến "${cleanDest}" có ít dữ liệu, kích hoạt AI Crawler ngay...`)
+        await crawlPlacesByAI(cleanDest)
+        places = await Place.find({ ...filter, destination: new RegExp(`^${cleanDest}$`, 'i') }).sort({ rating: -1 }).limit(50).lean()
+        if (places.length === 0) {
+          places = await Place.find({ ...filter, destination: new RegExp(cleanDest, 'i') }).sort({ rating: -1 }).limit(50).lean()
+        }
+      }
+    } else {
       places = await Place.find(filter).sort({ rating: -1 }).limit(50).lean()
     }
 

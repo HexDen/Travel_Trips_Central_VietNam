@@ -5,6 +5,7 @@ const ActivitySchema = new mongoose.Schema({
   type: String,
   label: String,
   place: String,
+  address: String,
   activity: String,
   estimated_cost: Number
 }, { _id: false, strict: false })
@@ -30,10 +31,12 @@ const TripSchema = new mongoose.Schema({
   total_budget: Number,
   people: Number,
   interests: [String],
+  selected_places: [String],
   transportation: String,
   hotel_request: String,
   hotel_recommendation: {
     name: String,
+    address: String,
     rating: Number,
     price_per_night: Number,
     description: String

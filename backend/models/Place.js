@@ -5,6 +5,7 @@ const PlaceSchema = new mongoose.Schema({
   destination: { type: String, required: true, index: true },
   type: { type: String, enum: ['attraction', 'restaurant', 'hotel', 'cafe'], required: true },
   description: String,
+  address: String,
   tags: [String],
   estimated_cost: Number,
   latitude: Number,
