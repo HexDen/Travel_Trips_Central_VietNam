@@ -1,28 +1,90 @@
 \chapter{Phân Tích \& Thiết Kế Hệ Thống}
 
 \begin{muctieu}
-Chương này phân tích các yêu cầu chức năng và phi chức năng, xây dựng sơ đồ ca sử dụng (Use-Case), thiết kế kiến trúc hệ thống 3 tầng kết hợp Cloud/AI, mô tả chi tiết lược đồ cơ sở dữ liệu MongoDB và trình bày giải thuật lập lịch không trùng lặp (Visited Set Graph).
+Chương này cung cấp bảng Đặc tả Yêu cầu Phần mềm (SRS) toàn diện theo chuẩn kỹ thuật phần mềm, phân tích chi tiết các ca sử dụng (Use-Case Specification), kiến trúc hệ thống 3 tầng kết hợp Cloud/AI, thiết kế lược đồ cơ sở dữ liệu MongoDB và trình bày giải thuật lập lịch không trùng lặp (Visited Set Graph).
 \end{muctieu}
 
-\section{Phân tích Yêu cầu Hệ thống}
+\section{Đặc tả Yêu cầu Phần mềm (Software Requirements Specification - SRS)}
 
-\subsection{Yêu cầu Chức năng (\en{Functional Requirements})}
-\begin{itemize}
-    \item \textbf{F1 - Khám phá Địa phương (\en{Local Exploration}):} Cho phép du khách duyệt xem danh sách 9 tỉnh thành Miền Trung, xem hình ảnh bìa thực tế, tra cứu địa chỉ, phân loại danh mục (\en{attraction}, \en{restaurant}, \en{cafe}, \en{hotel}), đánh giá sao và mở Google Maps chỉ đường.
-    \item \textbf{F2 - Tạo Lịch trình Thông minh (\en{AI Trip Planning}):} Thu nhận các tham số đầu vào (Điểm đến, số ngày từ 1 đến 7, ngân sách, số lượng người, địa điểm ưu tiên) và gửi đến AI Engine để tạo lịch trình chi tiết theo từng khung giờ.
-    \item \textbf{F3 - Đổi lịch Tránh mưa Thông minh (\en{Weather Re-scheduler}):} Nhận diện khi gặp thời tiết xấu hoặc theo yêu cầu du khách, tự động hoán đổi các hoạt động ngoài trời sang các địa điểm tham quan/ẩm thực trong nhà.
-    \item \textbf{F4 - Chia tiền Nhóm (\en{Group Bill Splitter}):} Cung cấp bảng kê khai chi phí nhiều mục (phòng nghỉ, ăn uống, vé vào cổng, phương tiện) và tự động tính toán số tiền mỗi thành viên cần đóng.
-    \item \textbf{F5 - Thẻ vé Hành trình Ngoại tuyến (\en{Offline Travel Pass}):} Kết xuất thông tin chuyến đi thành dạng thẻ vé điện tử (\en{Boarding Pass}) có mã QR mô phỏng để du khách chụp ảnh màn hình lưu trữ sử dụng khi không có sóng 4G/Wifi.
-    \item \textbf{F6 - Trợ lý Ảo Tư vấn Du lịch (\en{AI Chat Assistant}):} Khung chat trực tuyến hỗ trợ giải đáp tức thì các thắc mắc về kinh nghiệm du lịch, đặc sản và văn hóa Miền Trung.
-    \item \textbf{F7 - Quản lý Tài khoản \& Chuyến đi (\en{Account \& My Trips}):} Đăng ký, đăng nhập bảo mật qua JWT, lưu trữ và xem lại các chuyến đi đã tạo trên mọi thiết bị.
-\end{itemize}
+\subsection{Xác định Tác nhân Hệ thống (\en{System Actors})}
 
-\subsection{Yêu cầu Phi Chức năng (\en{Non-Functional Requirements})}
-\begin{itemize}
-    \item \textbf{N1 - Thời gian phản hồi (\en{Performance}):} Tốc độ tải trang ban đầu $< 1$ giây; thời gian AI sinh lịch trình hoàn chỉnh $< 2$ giây.
-    \item \textbf{N2 - Tính khả dụng (\en{Usability}):} Giao diện App-First trực quan, hỗ trợ chế độ giả lập điện thoại (\en{Phone Simulator Mode}) giúp thao tác một tay dễ dàng trên màn hình cảm ứng hoặc thuyết trình trên máy tính.
-    \item \textbf{N3 - Tính toàn vẹn dữ liệu (\en{Data Integrity}):} 100\% các địa điểm du lịch có địa chỉ thực tế và ảnh chụp sắc nét, không có dữ liệu giữ chỗ (\en{placeholder}) rỗng.
-\end{itemize}
+\begin{table}[H]
+\centering
+\caption{Bảng phân loại các tác nhân tương tác trong hệ thống WanderWise}
+\label{tab:actors}
+\begin{tabular}{|l|l|p{8.5cm}|}
+\hline
+\textbf{Tác nhân (Actor)} & \textbf{Loại hình} & \textbf{Vai trò và Quyền hạn trong Hệ thống} \\ \hline
+\textbf{Khách du lịch (User)} & Người dùng cuối & Tra cứu danh lam thắng cảnh, tạo lịch trình AI, đổi lịch tránh mưa, chia tiền nhóm, xuất thẻ vé offline, đăng ký/đăng nhập và lưu trữ lịch sử chuyến đi. \\ \hline
+\textbf{AI Engine (Gemini API)} & Hệ thống ngoài & Tiếp nhận prompt có cấu trúc, phân tích ngữ cảnh du lịch và sinh lịch trình chi tiết kèm dự toán chi phí. \\ \hline
+\textbf{Weather Service (Open-Meteo)} & Hệ thống ngoài & Cung cấp dữ liệu khí tượng thời gian thực (nhiệt độ, xác suất mưa) theo tọa độ GPS. \\ \hline
+\textbf{Quản trị viên (Admin)} & Người quản trị & Giám sát hoạt động của API, bảo trì cơ sở dữ liệu và vận hành hệ thống AI Crawler làm giàu dữ liệu địa phương. \\ \hline
+\end{tabular}
+\end{table}
+
+\subsection{Bảng Đặc tả Yêu cầu Chức năng (\en{Functional Requirements - FR})}
+
+\begin{table}[H]
+\centering
+\caption{Bảng đặc tả yêu cầu chức năng hệ thống WanderWise (SRS Table)}
+\label{tab:functional_reqs}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|c|l|c|p{8cm}|}
+\hline
+\textbf{Mã YC} & \textbf{Tên Chức năng} & \textbf{Mức ưu tiên} & \textbf{Mô tả chi tiết chức năng} \\ \hline
+\textbf{FR-01} & Quản lý Xác thực (\en{Authentication}) & Bắt buộc (\en{High}) & Đăng ký tài khoản mới, đăng nhập bằng email/mật khẩu mã hóa bcrypt, cấp phát và xác thực phiên qua JWT Token. \\ \hline
+\textbf{FR-02} & Khám phá Địa phương (\en{Explore}) & Bắt buộc (\en{High}) & Hiển thị danh mục 9 tỉnh Miền Trung, lọc theo 4 phân loại (\en{attraction}, \en{restaurant}, \en{cafe}, \en{hotel}), xem ảnh HD, xem điểm đánh giá và nút \code{+ Lên lịch trình}. \\ \hline
+\textbf{FR-03} & Lập lịch Trình Thông minh (\en{AI Planner}) & Bắt buộc (\en{High}) & Tiếp nhận tham số (Điểm đến, số ngày 1--7, ngân sách, số người, địa điểm ưu tiên) và gọi Gemini AI sinh Timeline chi tiết không trùng lặp. \\ \hline
+\textbf{FR-04} & Đổi lịch Tránh mưa (\en{Weather Re-scheduler}) & Nâng cao (\en{Medium}) & Tự động hoặc cho phép người dùng 1-click hoán đổi các hoạt động ngoài trời sang các địa điểm tham quan/ẩm thực trong nhà khi thời tiết xấu. \\ \hline
+\textbf{FR-05} & Chia tiền Nhóm (\en{Group Bill Splitter}) & Nâng cao (\en{Medium}) & Thêm các khoản chi (khách sạn, ăn uống, vé thắng cảnh, xăng xe) và tự động tính toán số tiền công bằng mỗi thành viên cần trả. \\ \hline
+\textbf{FR-06} & Xuất vé Ngoại tuyến (\en{Offline Travel Pass}) & Tiện ích (\en{Low}) & Tạo thẻ vé hành trình điện tử dạng Boarding Pass có mã QR mô phỏng để chụp màn hình sử dụng khi mất kết nối mạng 4G/Wifi. \\ \hline
+\textbf{FR-07} & Trợ lý Ảo Tư vấn (\en{AI Chat Assistant}) & Tiện ích (\en{Medium}) & Cung cấp khung chat trực tuyến phong cách tin nhắn, trả lời tự nhiên mọi thắc mắc về kinh nghiệm du lịch và ẩm thực Miền Trung. \\ \hline
+\textbf{FR-08} & Quản lý Chuyến đi (\en{My Trips}) & Bắt buộc (\en{High}) & Lưu lịch trình vào tài khoản, xem lại các chuyến đi cũ, xóa chuyến đi hoặc chia sẻ lịch trình. \\ \hline
+\end{tabular}
+}
+\end{table}
+
+\subsection{Bảng Đặc tả Yêu cầu Phi Chức năng (\en{Non-Functional Requirements - NFR})}
+
+\begin{table}[H]
+\centering
+\caption{Bảng đặc tả yêu cầu phi chức năng theo mô hình FURPS+}
+\label{tab:non_functional_reqs}
+\begin{tabular}{|l|l|p{7.5cm}|}
+\hline
+\textbf{Tiêu chuẩn} & \textbf{Chỉ số mục tiêu} & \textbf{Giải pháp kỹ thuật đáp ứng} \\ \hline
+\textbf{Hiệu năng (\en{Performance})} & Thời gian tải trang $< 1.0$s; AI sinh lịch trình $< 2.0$s & Sử dụng Vite đóng gói nén mã nguồn, Gemini 2.5 Flash tối ưu độ trễ thấp. \\ \hline
+\textbf{Độ tin cậy (\en{Reliability})} & Tính sẵn sàng $\ge 99.5\%$; Dữ liệu không lỗi & Lưu trữ đám mây MongoDB Atlas Cluster, cơ chế Fallback khi mất mạng. \\ \hline
+\textbf{Bảo mật (\en{Security})} & Bảo mật thông tin người dùng & Mã hóa mật khẩu một chiều bằng \en{bcryptjs} (Salt Rounds = 10), xác thực API qua \en{Bearer JWT}. \\ \hline
+\textbf{Khả năng sử dụng (\en{Usability})} & Dễ thao tác trên cả Mobile \& PC & Thiết kế Responsive, hỗ trợ chế độ giả lập điện thoại (\en{Phone Simulator Mode}). \\ \hline
+\textbf{Tính tương thích (\en{Compatibility})} & Hoạt động trên mọi trình duyệt hiện đại & Tương thích Chrome, Safari, Edge, Firefox trên Windows, macOS, iOS, Android. \\ \hline
+\end{tabular}
+\end{table}
+
+\subsection{Đặc tả Chi tiết Ca Sử Dụng Chính (Use-Case Specification)}
+
+\begin{table}[H]
+\centering
+\caption{Đặc tả Use-Case UC-02: Lập lịch trình du lịch thông minh bằng AI}
+\label{tab:uc_spec}
+\begin{tabular}{|l|p{11.5cm}|}
+\hline
+\textbf{Tên Use-Case} & \textbf{UC-02: Lập lịch trình du lịch thông minh bằng AI} \\ \hline
+\textbf{Tác nhân chính} & Khách du lịch (User) \\ \hline
+\textbf{Điều kiện tiên quyết} & Người dùng truy cập vào Tab "Lên lịch" trên giao diện ứng dụng. \\ \hline
+\textbf{Luồng sự kiện chính} & 
+1. Người dùng chọn Tỉnh/Thành phố muốn đến (ví dụ: Quảng Bình).\newline
+2. Người dùng chọn số ngày đi (từ 1 đến 7 ngày) và kéo thanh ngân sách.\newline
+3. Người dùng tick chọn các địa điểm yêu thích muốn ưu tiên ghé thăm.\newline
+4. Người dùng bấm nút \textbf{"Tạo lịch trình với AI"}.\newline
+5. Hệ thống gửi yêu cầu tới Backend, truy vấn dữ liệu địa phương và gửi Prompt tới Gemini AI.\newline
+6. Backend kiểm tra kết quả qua thuật toán Visited Set Graph, chuẩn hóa địa chỉ và lưu vào cơ sở dữ liệu.\newline
+7. Frontend hiển thị Timeline lịch trình chi tiết từng ngày kèm bản đồ Google Maps. \\ \hline
+\textbf{Luồng ngoại lệ} & 
+- \textit{Mất kết nối mạng / Gemini API quá tải:} Hệ thống tự động kích hoạt thuật toán sinh lịch trình dự phòng từ cơ sở dữ liệu MongoDB và thông báo cho người dùng. \\ \hline
+\textbf{Hậu điều kiện} & Lịch trình hoàn chỉnh được hiển thị trên giao diện và sẵn sàng để lưu vào mục "Chuyến đi của tôi". \\ \hline
+\end{tabular}
+\end{table}
 
 \section{Sơ đồ Ca Sử Dụng (Use-Case Diagram)}
 
