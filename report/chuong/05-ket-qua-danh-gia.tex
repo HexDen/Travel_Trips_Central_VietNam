@@ -1,7 +1,7 @@
 \chapter{Kết Quả \& Đánh Giá Thực Nghiệm}
 
 \begin{muctieu}
-Chương này đánh giá các kết quả đạt được về mặt giao diện ứng dụng trên Mobile và PC, kiểm thử thực nghiệm thuật toán không trùng lặp địa điểm, đánh giá hiệu năng hệ thống và bàn luận về các ưu điểm cũng như giới hạn thực tế.
+Chương này đánh giá các kết quả thực nghiệm đạt được về mặt giao diện ứng dụng trên Mobile và PC, kiểm thử thực nghiệm thuật toán không trùng lặp địa điểm, các biểu đồ đo lường hiệu năng hệ thống (pgfplots), biểu đồ phân bố dữ liệu và bàn luận về các ưu điểm cũng như giới hạn thực tế.
 \end{muctieu}
 
 \section{Kết quả Hiện thực Giao diện Ứng dụng}
@@ -34,23 +34,74 @@ Chương này đánh giá các kết quả đạt được về mặt giao diệ
 Kết quả kiểm thử trên toàn bộ 20 kịch bản ngẫu nhiên cho thấy: \textbf{Tỷ lệ trùng lặp địa điểm đạt 0\% tuyệt đối}. Mỗi ngày du khách đều được trải nghiệm các danh thắng, quán ăn đặc sản và không gian cafe hoàn toàn mới lạ.
 \end{ghinho}
 
-\section{Đánh giá Hiệu năng Hệ thống \& Tốc độ Phản hồi}
+\section{Biểu đồ Đo lường Hiệu Năng \& Thời Gian Đáp Ứng}
 
-\begin{table}[H]
+\begin{figure}[H]
 \centering
-\caption{Bảng đo lường hiệu năng và thời gian đáp ứng của hệ thống}
-\label{tab:performance}
-\begin{tabular}{|l|c|c|c|}
-\hline
-\textbf{Chỉ số đánh giá} & \textbf{Giá trị đo lường} & \textbf{Mục tiêu chuẩn} & \textbf{Đạt chuẩn} \\ \hline
-Thời gian tải trang ban đầu (First Contentful Paint) & 0.65 giây & $< 1.5$s & Đạt (Vượt mức) \\ \hline
-Thời gian tải toàn bộ tài nguyên (Page Load) & 0.82 giây & $< 2.0$s & Đạt (Rất tốt) \\ \hline
-Thời gian AI sinh lịch trình 3 ngày hoàn chỉnh & 1.35 giây & $< 3.0$s & Đạt (Rất nhanh) \\ \hline
-Thời gian AI sinh lịch trình 7 ngày & 1.82 giây & $< 4.0$s & Đạt \\ \hline
-Độ trễ API truy vấn danh mục địa điểm MongoDB & 65 ms & $< 200$ms & Đạt (Tức thì) \\ \hline
-Tỷ lệ ảnh tải thành công (Image Availability) & 100\% & $> 98\%$ & Đạt tuyệt đối \\ \hline
-\end{tabular}
-\end{table}
+\begin{tikzpicture}
+\begin{axis}[
+    ybar,
+    enlargelimits=0.2,
+    legend style={at={(0.5,-0.2)}, anchor=north, legend columns=-1},
+    ylabel={Thời gian (giây)},
+    symbolic x coords={Page Load, MongoDB Query, AI Plan (3N), AI Plan (7N), Re-schedule},
+    xtick=data,
+    nodes near coords,
+    nodes near coords align={vertical},
+    x tick label style={rotate=15, anchor=north east, font=\footnotesize},
+    width=0.85\textwidth,
+    height=6.5cm,
+    bar width=0.6cm,
+    fill=blue!60!black
+]
+\addplot[fill=blue!60] coordinates {
+    (Page Load, 0.76)
+    (MongoDB Query, 0.08)
+    (AI Plan (3N), 1.35)
+    (AI Plan (7N), 1.82)
+    (Re-schedule, 0.45)
+};
+\legend{Thời gian đáp ứng trung bình (s)}
+\end{axis}
+\end{tikzpicture}
+\caption{Biểu đồ Đo Lường Thời Gian Đáp Ứng của Các Thành Phần Hệ Thống (pgfplots)}
+\label{fig:performance_chart}
+\end{figure}
+
+\section{Biểu đồ Phân Bố Địa Điểm Theo Tỉnh Thành}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    xbar,
+    enlargelimits=0.15,
+    xlabel={Số lượng địa điểm đã số hóa (Điểm)},
+    symbolic y coords={Gia Lai, Đà Lạt, Nha Trang, Phú Yên, Quy Nhơn, Huế, Hội An, Đà Nẵng, Quảng Bình},
+    ytick=data,
+    nodes near coords,
+    nodes near coords align={horizontal},
+    y tick label style={font=\footnotesize},
+    width=0.85\textwidth,
+    height=8.0cm,
+    bar width=0.45cm
+]
+\addplot[fill=teal!70] coordinates {
+    (16,Quảng Bình)
+    (15,Đà Nẵng)
+    (10,Hội An)
+    (9,Huế)
+    (7,Quy Nhơn)
+    (7,Phú Yên)
+    (6,Nha Trang)
+    (6,Đà Lạt)
+    (5,Gia Lai)
+};
+\end{axis}
+\end{tikzpicture}
+\caption{Biểu đồ Phân Bố Số Lượng Địa Danh \& Quán Ăn Số Hóa Tại 9 Tỉnh Miền Trung}
+\label{fig:places_distribution}
+\end{figure}
 
 \section{Bàn luận \& Đánh giá Tính năng Sáng tạo}
 

@@ -1,7 +1,7 @@
 \chapter{Phân Tích \& Thiết Kế Hệ Thống}
 
 \begin{muctieu}
-Chương này cung cấp bảng Đặc tả Yêu cầu Phần mềm (SRS) toàn diện theo chuẩn kỹ thuật phần mềm, phân tích chi tiết các ca sử dụng (Use-Case Specification), kiến trúc hệ thống 3 tầng kết hợp Cloud/AI, thiết kế lược đồ cơ sở dữ liệu MongoDB và trình bày giải thuật lập lịch không trùng lặp (Visited Set Graph).
+Chương này cung cấp bảng Đặc tả Yêu cầu Phần mềm (SRS) toàn diện, sơ đồ Ca sử dụng (Use-Case), sơ đồ Tuần tự (Sequence Diagram), sơ đồ Hoạt động (Activity Diagram), sơ đồ Thực thể Liên kết (ERD), kiến trúc hệ thống 3 tầng và giải thuật lập lịch không trùng lặp (Visited Set Graph).
 \end{muctieu}
 
 \section{Đặc tả Yêu cầu Phần mềm (Software Requirements Specification - SRS)}
@@ -127,6 +127,154 @@ Chương này cung cấp bảng Đặc tả Yêu cầu Phần mềm (SRS) toàn 
 \label{fig:usecase_detail}
 \end{figure}
 
+\section{Sơ đồ Tuần Tự (Sequence Diagram) Quy Trình Tạo Lịch Trình AI}
+
+\begin{figure}[H]
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tikzpicture}[
+    lifeline/.style={draw, dashed, thick, color=gray},
+    entity/.style={rectangle, draw=blue!80, fill=blue!15, rounded corners=2mm, thick, minimum width=2.4cm, minimum height=0.9cm, align=center, font=\footnotesize\bfseries},
+    msg/.style={draw, -{Latex[length=2.5mm]}, thick},
+    returnmsg/.style={draw, dashed, -{Latex[length=2.5mm]}, thick, color=blue!70!black}
+]
+
+% Lifeline Headers
+\node [entity] (user) at (0, 0) {User (Client)};
+\node [entity] (frontend) at (3.5, 0) {Vue 3 SPA};
+\node [entity] (backend) at (7.0, 0) {Express API};
+\node [entity] (db) at (10.5, 0) {MongoDB};
+\node [entity] (ai) at (14.0, 0) {Gemini AI};
+
+% Lifelines
+\draw [lifeline] (user) -- (0, -6.5);
+\draw [lifeline] (frontend) -- (3.5, -6.5);
+\draw [lifeline] (backend) -- (7.0, -6.5);
+\draw [lifeline] (db) -- (10.5, -6.5);
+\draw [lifeline] (ai) -- (14.0, -6.5);
+
+% Messages
+\draw [msg] (0, -1.0) -- node[above]{\footnotesize 1. Chọn tham số \& Bấm Tạo} (3.5, -1.0);
+\draw [msg] (3.5, -1.8) -- node[above]{\footnotesize 2. POST /api/ai/plan} (7.0, -1.8);
+\draw [msg] (7.0, -2.6) -- node[above]{\footnotesize 3. Query Places(destination)} (10.5, -2.6);
+\draw [returnmsg] (10.5, -3.2) -- node[above]{\footnotesize 4. Return Places List} (7.0, -3.2);
+\draw [msg] (7.0, -4.0) -- node[above]{\footnotesize 5. Call Gemini(Prompt)} (14.0, -4.0);
+\draw [returnmsg] (14.0, -4.8) -- node[above]{\footnotesize 6. Return Itinerary JSON} (7.0, -4.8);
+\draw [msg] (7.0, -5.4) -- node[above]{\footnotesize 7. Run VisitedSet \& Save} (10.5, -5.4);
+\draw [returnmsg] (7.0, -6.0) -- node[above]{\footnotesize 8. Response Timeline JSON} (3.5, -6.0);
+\draw [returnmsg] (3.5, -6.3) -- node[above]{\footnotesize 9. Render Timeline \& Map} (0, -6.3);
+
+\end{tikzpicture}
+}
+\caption{Sơ đồ Tuần Tự (Sequence Diagram) quy trình Lập Lịch Trình Thông Minh bằng AI}
+\label{fig:sequence_diagram}
+\end{figure}
+
+\section{Sơ đồ Hoạt Động (Activity Diagram) Đổi Lịch Tránh Mưa}
+
+\begin{figure}[H]
+\centering
+\resizebox{0.75\textwidth}{!}{
+\begin{tikzpicture}[
+    startstop/.style={circle, draw=red!80, fill=red!20, thick, minimum size=0.9cm},
+    action/.style={rectangle, draw=blue!70, fill=blue!10, rounded corners=2mm, thick, text width=4.5cm, align=center, minimum height=0.9cm, font=\footnotesize},
+    decision/.style={diamond, draw=orange!80!black, fill=orange!15, thick, aspect=2, minimum width=3.2cm, align=center, font=\footnotesize},
+    line/.style={draw, -{Latex[length=2.5mm]}, thick}
+]
+
+\node [startstop] (start) at (0, 0) {Bắt đầu};
+\node [action] (check_weather) at (0, -1.3) {Truy xuất xác suất mưa từ Open-Meteo API};
+\node [decision] (is_rain) at (0, -2.8) {Xác suất mưa $> 60\%$?};
+\node [action] (keep) at (-3.5, -4.3) {Giữ nguyên lịch trình hoạt động ngoài trời};
+\node [action] (filter_indoor) at (3.5, -4.3) {Lọc danh sách địa điểm trong nhà từ MongoDB (Bảo tàng, Cafe, Nhà hàng)};
+\node [action] (replace) at (3.5, -5.8) {Thay thế điểm ngoài trời bằng điểm trong nhà tương đương chi phí};
+\node [action] (update_ui) at (0, -7.0) {Cập nhật Timeline \& Thông báo cho người dùng};
+\node [startstop] (end) at (0, -8.2) {Kết thúc};
+
+\draw [line] (start) -- (check_weather);
+\draw [line] (check_weather) -- (is_rain);
+\draw [line] (is_rain) -| node[above, near start]{\footnotesize Không} (keep);
+\draw [line] (is_rain) -| node[above, near start]{\footnotesize Có} (filter_indoor);
+\draw [line] (filter_indoor) -- (replace);
+\draw [line] (keep) |- (update_ui);
+\draw [line] (replace) |- (update_ui);
+\draw [line] (update_ui) -- (end);
+
+\end{tikzpicture}
+}
+\caption{Sơ đồ Hoạt Động (Activity Diagram) tính năng Đổi Lịch Trình Tránh Mưa Thông Minh}
+\label{fig:activity_diagram}
+\end{figure}
+
+\section{Sơ đồ Thực Thể Liên Kết (Entity Relationship Diagram - ERD)}
+
+\begin{figure}[H]
+\centering
+\resizebox{0.95\textwidth}{!}{
+\begin{tikzpicture}[
+    entity/.style={rectangle, draw=purple!80!black, fill=purple!10, rounded corners=2mm, thick, minimum width=3.8cm, minimum height=2.2cm, align=left, font=\scriptsize},
+    rel/.style={draw, thick, -{Latex[length=2.5mm]}}
+]
+
+% Entity Users
+\node [entity] (user) at (0, 0) {
+    \textbf{\normalsize USER}\\[0.1cm]
+    \underline{\_id}: ObjectId\\
+    username: String\\
+    email: String\\
+    password: String (Hash)\\
+    favorite\_places: Array\\
+    createdAt: Date
+};
+
+% Entity Trips
+\node [entity] (trip) at (6.0, 0) {
+    \textbf{\normalsize TRIP}\\[0.1cm]
+    \underline{\_id}: ObjectId\\
+    \textbf{userId}: ObjectId (FK)\\
+    destination: String\\
+    duration: Number\\
+    total\_budget: Number\\
+    days: Array[Object]\\
+    createdAt: Date
+};
+
+% Entity Places
+\node [entity] (place) at (6.0, -3.5) {
+    \textbf{\normalsize PLACE}\\[0.1cm]
+    \underline{\_id}: ObjectId\\
+    name: String\\
+    destination: String\\
+    type: String\\
+    address: String\\
+    image: String\\
+    rating: Number\\
+    estimated\_cost: Number
+};
+
+% Entity Reviews
+\node [entity] (review) at (0, -3.5) {
+    \textbf{\normalsize REVIEW}\\[0.1cm]
+    \underline{\_id}: ObjectId\\
+    \textbf{userId}: ObjectId (FK)\\
+    \textbf{placeId}: ObjectId (FK)\\
+    rating: Number\\
+    comment: String\\
+    createdAt: Date
+};
+
+% Relationships
+\draw [rel] (user) -- node[above]{\footnotesize 1 -- N} (trip);
+\draw [rel] (user) -- node[left]{\footnotesize 1 -- N} (review);
+\draw [rel] (place) -- node[above]{\footnotesize 1 -- N} (review);
+\draw [rel] (place) -- node[right]{\footnotesize N -- N} (trip);
+
+\end{tikzpicture}
+}
+\caption{Sơ đồ Thực Thể Liên Kết (Entity Relationship Diagram - ERD) trong MongoDB}
+\label{fig:erd_diagram}
+\end{figure}
+
 \section{Kiến trúc Tổng thể Hệ thống (3-Tier Architecture)}
 
 \begin{figure}[H]
@@ -178,45 +326,6 @@ Chương này cung cấp bảng Đặc tả Yêu cầu Phần mềm (SRS) toàn 
 \caption{Sơ đồ Kiến trúc Tổng thể Hệ thống WanderWise (3-Tier Architecture)}
 \label{fig:architecture_detail}
 \end{figure}
-
-\section{Thiết kế Cơ sở Dữ liệu MongoDB}
-
-\begin{table}[H]
-\centering
-\caption{Cấu trúc thực thể Place (Địa điểm du lịch \& Ẩm thực)}
-\begin{tabular}{|l|l|c|p{7.5cm}|}
-\hline
-\textbf{Trường dữ liệu} & \textbf{Kiểu dữ liệu} & \textbf{Bắt buộc} & \textbf{Ý nghĩa} \\ \hline
-\code{\_id} & ObjectId & Có & Khóa chính định danh duy nhất \\ \hline
-\code{name} & String & Có & Tên địa danh (ví dụ: Bà Nà Hills, Động Phong Nha) \\ \hline
-\code{destination} & String & Có & Tỉnh/Thành phố (Đà Nẵng, Quảng Bình, Huế,...) \\ \hline
-\code{type} & String & Có & Phân loại: \code{attraction}, \code{restaurant}, \code{cafe}, \code{hotel} \\ \hline
-\code{address} & String & Có & Địa chỉ cụ thể số nhà, tên đường, phường, quận \\ \hline
-\code{image} & String & Có & Đường dẫn URL ảnh thực tế chất lượng cao \\ \hline
-\code{rating} & Number & Có & Điểm đánh giá chất lượng (1.0 đến 5.0) \\ \hline
-\code{estimated\_cost} & Number & Có & Chi phí tham quan / suất ăn ước tính (VNĐ) \\ \hline
-\code{tags} & Array[String] & Không & Tập từ khóa đặc trưng (ví dụ: bãi biển, di sản, check-in) \\ \hline
-\code{latitude} & Number & Có & Tọa độ vĩ độ địa lý \\ \hline
-\code{longitude} & Number & Có & Tọa độ kinh độ địa lý \\ \hline
-\end{tabular}
-\end{table}
-
-\begin{table}[H]
-\centering
-\caption{Cấu trúc thực thể Trip (Lịch trình chuyến đi)}
-\begin{tabular}{|l|l|c|p{7.5cm}|}
-\hline
-\textbf{Trường dữ liệu} & \textbf{Kiểu dữ liệu} & \textbf{Bắt buộc} & \textbf{Ý nghĩa} \\ \hline
-\code{\_id} & ObjectId & Có & Khóa chính \\ \hline
-\code{userId} & ObjectId & Có & Khóa ngoại tham chiếu bảng User \\ \hline
-\code{destination} & String & Có & Tỉnh/Thành phố của chuyến đi \\ \hline
-\code{duration} & Number & Có & Số ngày hành trình (1--7 ngày) \\ \hline
-\code{total\_budget} & Number & Có & Tổng ngân sách dự kiến (VNĐ) \\ \hline
-\code{people} & Number & Có & Số lượng thành viên tham gia \\ \hline
-\code{days} & Array[Object] & Có & Danh sách các ngày, mỗi ngày gồm các hoạt động \\ \hline
-\code{createdAt} & Date & Có & Thời gian tạo lập chuyến đi \\ \hline
-\end{tabular}
-\end{table}
 
 \section{Giải thuật Visited Set Graph (Kiểm soát Không Trùng Lặp)}
 

@@ -10,11 +10,13 @@
 \usepackage{float}
 \usepackage{tcolorbox}
 \usepackage{tikz}
-\usetikzlibrary{calc}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{calc,shapes.geometric,arrows.meta,positioning,shadows,trees}
 
 \geometry{left=3.5cm, right=2.0cm, top=2.5cm, bottom=2.5cm}
 
-% ==================== ĐỊNH NGHĨA CÁC THÔNG TIN ====================
+% ==================== THÔNG TIN ĐỒ ÁN ====================
 \newcommand{\dauGVHD}{ThS. ................................}
 \newcommand{\dauSinhVienOne}{Trần Văn Nguyên}
 \newcommand{\dauSinhVienTwo}{Vũ Cao Khải}
@@ -25,59 +27,18 @@
 \newcommand{\goiy}[1]{\textbf{[Gợi ý: #1]}}
 \newcommand{\code}[1]{\texttt{#1}}
 
-% Hộp Mục tiêu chương (Xanh biển)
-\newtcolorbox{muctieu}{
-  colback=blue!5!white,
-  colframe=blue!75!black,
-  title=\textbf{Mục tiêu chương},
-  arc=3mm
-}
+% Các hộp màu sắc
+\newtcolorbox{muctieu}{colback=blue!5!white,colframe=blue!75!black,title=\textbf{Mục tiêu chương},arc=3mm}
+\newtcolorbox{chuy}{colback=yellow!10!white,colframe=orange!80!black,title=\textbf{Lưu ý \& Hướng dẫn},arc=2mm}
+\newtcolorbox{mau}{colback=gray!5!white,colframe=gray!60!black,arc=2mm}
+\newtcolorbox{ghinho}{colback=teal!5!white,colframe=teal!70!black,title=\textbf{Ghi nhớ quan trọng},arc=2mm}
+\newtcolorbox{luuy}{colback=red!5!white,colframe=red!75!black,title=\textbf{Lưu ý},arc=2mm}
+\newtcolorbox{dinhnghia}[1][]{colback=green!5!white,colframe=green!60!black,title=\textbf{Định nghĩa #1},arc=2mm}
+\newtcolorbox{vidu}[1][]{colback=purple!5!white,colframe=purple!70!black,title=\textbf{Ví dụ #1},arc=2mm}
 
-% Hộp Gợi ý / Chú ý (Vàng cam)
-\newtcolorbox{chuy}{
-  colback=yellow!10!white,
-  colframe=orange!80!black,
-  title=\textbf{Lưu ý \& Hướng dẫn},
-  arc=2mm
-}
-
-% Hộp Mẫu nội dung (Xám thanh lịch)
-\newtcolorbox{mau}{
-  colback=gray!5!white,
-  colframe=gray!60!black,
-  arc=2mm
-}
-
-% Hộp Định nghĩa, Ghi nhớ, Lưu ý, Ví dụ
-\newtcolorbox{dinhnghia}[1][]{
-  colback=green!5!white,
-  colframe=green!60!black,
-  title=\textbf{Định nghĩa #1},
-  arc=2mm
-}
-\newtcolorbox{ghinho}{
-  colback=teal!5!white,
-  colframe=teal!70!black,
-  title=\textbf{Ghi nhớ quan trọng},
-  arc=2mm
-}
-\newtcolorbox{luuy}{
-  colback=red!5!white,
-  colframe=red!75!black,
-  title=\textbf{Lưu ý},
-  arc=2mm
-}
-\newtcolorbox{vidu}[1][]{
-  colback=purple!5!white,
-  colframe=purple!70!black,
-  title=\textbf{Ví dụ #1},
-  arc=2mm
-}
-
-% ==================== BẮT ĐẦU TÀI LIỆU ====================
 \begin{document}
 
-% ==================== TRANG BÌA CHUẨN ĐỒ ÁN ====================
+% ==================== TRANG BÌA CHUẨN ====================
 \begin{titlepage}
 \begin{tikzpicture}[remember picture, overlay]
   \draw[line width = 2pt, color = red!75!black] 
@@ -121,22 +82,19 @@
 \end{center}
 \end{titlepage}
 
-% ==================== MỤC LỤC TỰ ĐỘNG ====================
 \tableofcontents
 \newpage
 
-% ==================== CÁC TRANG LỜI MỞ ĐẦU ====================
-\input{Chuong/Loi-cam-doan.tex}
-\input{Chuong/Loi-cam-on.tex}
-\input{Chuong/Tom-tat.tex}
+\input{Chuong/00-loi-cam-doan.tex}
+\input{Chuong/00-loi-cam-on.tex}
+\input{Chuong/00-tom-tat.tex}
 
-% ==================== CÁC CHƯƠNG NỘI DUNG ====================
-\input{Chuong/01-Mo-dau.tex}
-\input{Chuong/02-Co-So-Ly-Thuyet.tex}
-\input{Chuong/03-Phan-Tich-Thiet-Ke.tex}
-\input{Chuong/04-Cai-Dat.tex}
-\input{Chuong/05-Ket-Qua-Danh-Gia.tex}
-\input{Chuong/06-Ket-Luan.tex}
-\input{Chuong/07-Phu-Luc.tex}
+\input{Chuong/01-mo-dau.tex}
+\input{Chuong/02-co-so-ly-thuyet.tex}
+\input{Chuong/03-phan-tich-thiet-ke.tex}
+\input{Chuong/04-cai-dat.tex}
+\input{Chuong/05-ket-qua-danh-gia.tex}
+\input{Chuong/06-ket-luan.tex}
+\input{Chuong/07-phu-luc.tex}
 
 \end{document}
