@@ -52,7 +52,7 @@ app.use('/api/social', require('./routes/social'));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`WanderWise Backend Server running on port ${PORT}`);
+    console.log(`Travel Trips Backend Server running on port ${PORT}`);
 });
 \end{lstlisting}
 
@@ -76,6 +76,60 @@ async function callGeminiTravelPlanner(prompt) {
     return JSON.parse(result.response.text());
 }
 \end{lstlisting}
+
+\subsection{Hiện thực hóa Động cơ AI Autonomous Data Crawler (\code{aiCrawlerService.js})}
+
+Động cơ \textbf{AI Data Crawler} đảm nhận vai trò tự động cào quét, bóc tách thực thể và làm giàu dữ liệu địa điểm du lịch, ẩm thực đặc sản cho 11 tỉnh thành sau sáp nhập mà không cần nhập liệu thủ công:
+
+\begin{lstlisting}[language=JavaScript, caption=Động cơ cào dữ liệu tự động bằng Gemini AI (aiCrawlerService.js)]
+// Thu thập 15-25 địa điểm đa danh mục cho mỗi tỉnh thành sau sáp nhập
+async function crawlPlacesByAI(destination) {
+  const geminiKey = getGeminiKey();
+  let placesToSave = [];
+  const contextHint = LOCAL_CONTEXT_PROMPT_MAP[destination];
+
+  // Kỹ thuật Retry with Exponential Backoff đảm bảo độ tin cậy
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const prompt = `Bạn là AI Data Web Crawler Du lịch & Ẩm thực Việt Nam.
+Hãy cào quét và trích xuất 15 đến 25 địa điểm du lịch, đặc sản tại "${destination}" 
+(Bao gồm khu vực mở rộng sau sáp nhập: ${contextHint}).
+Đủ 4 nhóm: "attraction", "restaurant", "cafe", "hotel".
+Mỗi địa điểm có: name, address cụ thể, description, tags, estimated_cost, GPS.
+Trả về JSON array thuần túy.`;
+
+      const res = await axios.post(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
+        { contents: [{ parts: [{ text: prompt }] }] }
+      );
+      const raw = res.data.candidates?.[0]?.content?.parts?.[0]?.text;
+      placesToSave = parseAndCleanJSON(raw);
+      if (placesToSave.length > 0) break;
+    } catch (err) {
+      if (attempt < 3) await sleep(2500 * attempt);
+    }
+  }
+
+  // Tự động gán ảnh HD Unsplash và Atomic Upsert vào MongoDB
+  for (const place of placesToSave) {
+    place.image = resolveHDPhoto(destination, place.type);
+    await Place.updateOne(
+      { name: place.name, destination: place.destination || destination },
+      { $set: place },
+      { upsert: true }
+    );
+  }
+  return placesToSave;
+}
+\end{lstlisting}
+
+\subsection{Cơ chế Tự Động Kích Hoạt Ngầm (\en{Background Ingestion \& On-Demand})}
+
+Hệ thống triển khai cơ chế kích hoạt 2 tầng hoàn toàn tự động và trong suốt:
+\begin{enumerate}
+    \item \textbf{Khởi động máy chủ (\en{Server Boot Ingestion}):} Khi máy chủ Node.js khởi động trong \code{server.js}, hàm \code{autoInitPlaces()} sẽ duyệt qua 11 tỉnh thành. Nếu phát hiện tỉnh thành nào có số lượng bản ghi $< 15$, hệ thống sẽ tự động kích hoạt tác vụ cào ngầm để nạp đủ dữ liệu.
+    \item \textbf{Truy vấn động (\en{On-Demand Fallback}):} Khi người dùng gửi yêu cầu \code{GET /api/places?destination=...}, nếu cơ sở dữ liệu có ít hơn 10 địa điểm, API sẽ tự động kích hoạt \code{crawlPlacesByAI(destination)} ngay trong luồng xử lý trước khi trả về kết quả cho Frontend.
+\end{enumerate}
 
 \section{Hiện thực hóa Frontend App-First với Vue.js 3}
 

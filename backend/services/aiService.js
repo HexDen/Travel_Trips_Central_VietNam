@@ -62,6 +62,20 @@ async function goiGemini(duLieu, diaDiemDatabase, apiKey) {
   return boSungDuLieuLichTrinh(parsed, duLieu, diaDiemDatabase)
 }
 
+const LOCAL_CONTEXT_MAP = {
+  'Thanh Hóa': 'Sầm Sơn, Pù Luông, Thành Nhà Hồ, Suối Cá Thần Cẩm Lương, Đền Bà Triệu; Đặc sản: Nem chua Thanh Hóa, Chả tôm, Bánh khoái tép, Gỏi cá nhệch Nga Sơn, Bánh gai Tứ Trụ',
+  'Nghệ An': 'Bãi biển Cửa Lò, Khu di tích Kim Liên Quê Bác, Đồi chè Thanh Chương, Vườn Quốc gia Pù Mát; Đặc sản: Cháo lươn Nghệ An, Súp lươn bánh mướt, Mực nhảy Cửa Lò, Nhút Thanh Chương, Tương Nam Đàn',
+  'Hà Tĩnh': 'Bãi biển Thiên Cầm, Ngã ba Đồng Lộc, Chùa Hương Tích, Hồ Kẻ Gỗ; Đặc sản: Kẹo cu đơ Hà Tĩnh, Mực nhảy Vũng Áng, Ram mướt, Bánh bèo Hà Tĩnh, Dê núi Hương Sơn',
+  'Quảng Trị': 'Vùng Quảng Trị & Quảng Bình sáp nhập (Thành Cổ Quảng Trị, Địa đạo Vịnh Mốc, Cầu Hiền Lương, Động Phong Nha, Động Thiên Đường, Suối Moọc, Hang Sơn Đoòng); Đặc sản: Bánh canh cá lóc, Bún hến Mai Xá, Bánh lọc, Cháo cá vạt giường, Thịt trâu lá trơng',
+  'Huế': 'Đại Nội Hoàng Thành Huế, Chùa Thiên Mụ, Lăng Khải Định, Lăng Tự Đức, Đồi Vọng Cảnh, Vịnh Lăng Cô, Phá Tam Giang; Đặc sản: Bún bò Huế chuẩn vị, Cơm hến Hoa Đông, Bánh bèo nậm lọc, Cà phê muối, Chè Hẻm',
+  'Đà Nẵng': 'Vùng Đà Nẵng & Quảng Nam - Hội An sáp nhập (Bà Nà Hills & Cầu Vàng, Biển Mỹ Khê, Bán đảo Sơn Trà, Ngũ Hành Sơn, Cầu Rồng, Phố cổ Hội An, Thánh địa Mỹ Sơn, Rừng dừa Bảy Mẫu); Đặc sản: Mì Quảng Bà Mua, Bánh tráng cuốn thịt heo Quán Trần, Bánh mì Phượng Hội An, Cao lầu, Bún chả cá, Hải sản tươi sống',
+  'Quảng Ngãi': 'Vùng Quảng Ngãi & Bình Định - Quy Nhơn sáp nhập (Đảo Lý Sơn, Cổng Tò Vò, Hang Câu, Eo Gió & Kỳ Co, Tháp Đôi Chăm Pa, Khu chứng tích Sơn Mỹ); Đặc sản: Don Quảng Ngãi, Ram bắp, Bánh xèo tôm nhảy Quy Nhơn, Cá bống Sông Trà, Tỏi cô đơn Lý Sơn, Nem Chợ Huyện',
+  'Gia Lai': 'Vùng Gia Lai & Kon Tum sáp nhập (Biển Hồ T’Nưng, Núi lửa Chư Đăng Ya, Biển Hồ Chè, Chùa Minh Thành, Nhà rông Kon Klor, Nhà thờ Gỗ Kon Tum); Đặc sản: Phở hai tô (Phở khô Gia Lai), Bò một nắng muối kiến vàng, Gà nướng cơm lam Pleiku, Bún mắm cua thối, Cà phê Pleiku',
+  'Đắk Lắk': 'Vùng Đắk Lắk & Đắk Nông sáp nhập (Thác Dray Nur & Dray Sap, Bảo tàng Thế giới Cà phê, Hồ Lắk, Buôn Đôn, Chùa Sắc Tứ Khải Đoan, Hồ Tà Đùng); Đặc sản: Bún đỏ Buôn Ma Thuột, Gà nướng than Bản Đôn, Lẩu cá lăng Sông Sêrêpôk, Cà phê Robusta thơm nồng',
+  'Khánh Hòa': 'Vùng Khánh Hòa & Phú Yên sáp nhập (VinWonders Nha Trang, Tháp Bà Ponagar, Viện Hải dương học, Vịnh Vĩnh Hy, Gành Đá Đĩa, Mũi Điện Đại Lãnh, Bãi Dài Cam Ranh); Đặc sản: Bún chả cá Nha Trang, Nem nướng Ninh Hòa, Bánh căn mực, Mắt cá ngừ đại dương Phú Yên, Tôm hùm Bình Ba, Yến sào',
+  'Lâm Đồng': 'Hồ Xuân Hương & Quảng trường Lâm Viên, Thung Lũng Tình Yêu, Ga Đà Lạt, Đỉnh Langbiang, Thác Datanla & Máng trượt, Đồi chè Cầu Đất; Đặc sản: Bánh tráng nướng Đà Lạt, Lẩu gà lá é Tao Ngộ, Bánh ướt lòng gà Long, Lẩu bò Ba Toa Quán Gỗ, Kem bơ Thanh Thảo'
+}
+
 function buildPrompt(duLieu, diaDiemDatabase) {
   const diaDiem = duLieu.destination || 'Đà Nẵng'
   const ngay = Number(duLieu.days) || 3
@@ -71,6 +85,7 @@ function buildPrompt(duLieu, diaDiemDatabase) {
   const nguoi = Number(duLieu.people) || 1
   const soThich = Array.isArray(duLieu.interests) ? duLieu.interests : []
   const selectedPlaces = Array.isArray(duLieu.selected_places) ? duLieu.selected_places : []
+  const contextRegion = LOCAL_CONTEXT_MAP[diaDiem] || `Toàn bộ danh lam thắng cảnh và đặc sản nổi bật tại ${diaDiem}`
 
   let goiYDbText = ''
   if (diaDiemDatabase && diaDiemDatabase.length > 0) {
@@ -89,7 +104,7 @@ BẠN BẮT BUỘC PHẢI XẾP TẤT CẢ CÁC ĐỊA ĐIỂM TRÊN VÀO LỊCH
   }
 
   return `Bạn là Chuyên gia Lên lịch trình Du lịch hàng đầu tại Việt Nam.
-Hãy thiết kế lịch trình du lịch chi tiết, sống động, đầy đủ Khách sạn, Bữa ăn (Sáng/Trưa/Tối), Điểm Check-in và ĐỊA CHỈ RÕ RÀNG cho điểm đến: "${diaDiem}".
+Hãy thiết kế lịch trình du lịch chi tiết, sống động, đầy đủ Khách sạn, Bữa ăn (Sáng/Trưa/Tối), Điểm Check-in và ĐỊA CHỈ RÕ RÀNG cho điểm đến: "${diaDiem}" (Khu vực mở rộng sau sáp nhập gồm: ${contextRegion}).
 
 THÔNG TIN CHUYẾN ĐI:
 - Điểm đến: ${diaDiem}

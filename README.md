@@ -1,4 +1,4 @@
-# 🌴 WanderWise — AI Travel Assistant for Central Vietnam
+# 🌴 Travel Trips Central VietNam — Trợ Lý Du Lịch AI Miền Trung & Tây Nguyên
 
 [![Vue.js](https://img.shields.io/badge/Vue.js-3.4-4FC08D?style=for-the-badge&logo=vue.js&logoColor=white)](https://vuejs.org/)
 [![Vite](https://img.shields.io/badge/Vite-5.4-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.org/)
@@ -7,7 +7,7 @@
 [![MongoDB](https://img.shields.io/badge/MongoDB_Atlas-7.0-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/atlas)
 [![Gemini AI](https://img.shields.io/badge/Google_Gemini-2.5_Flash-8E75B2?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev/)
 
-> **WanderWise** là ứng dụng du lịch thông minh đa nền tảng (_App-First: Mobile & PC Desktop_) ứng dụng Trí tuệ Nhân tạo tạo sinh (_Generative AI_) kết hợp cơ sở dữ liệu số hóa phong phú để hỗ trợ khách du lịch tự túc khám phá và lập lịch trình tối ưu tại **9 tỉnh/thành phố Miền Trung Việt Nam**.
+> **Travel Trips Central VietNam** (Tên đề tài: *Du Lịch Miền Trung -- Tây Nguyên*) là ứng dụng du lịch thông minh đa nền tảng (_App-First: Mobile & PC Desktop_) ứng dụng Trí tuệ Nhân tạo tạo sinh (_Generative AI_) kết hợp cơ sở dữ liệu số hóa phong phú để hỗ trợ khách du lịch tự túc khám phá và lập lịch trình tối ưu tại **9 tỉnh/thành phố Miền Trung & Tây Nguyên**.
 
 ---
 
@@ -124,7 +124,7 @@ Tạo file `backend/.env`:
 PORT=3000
 MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/travel_trips
 GEMINI_API_KEY=AIzaSyYourGeminiApiKeyHere
-JWT_SECRET=WanderWiseSecretKey2026
+JWT_SECRET=TravelTripsSecretKey2026
 ```
 
 ### 3. Khởi Chạy Ứng Dụng

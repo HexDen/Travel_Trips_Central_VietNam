@@ -10,7 +10,7 @@ Chương này cung cấp bảng Đặc tả Yêu cầu Phần mềm (SRS) toàn 
 
 \begin{table}[H]
 \centering
-\caption{Bảng phân loại các tác nhân tương tác trong hệ thống WanderWise}
+\caption{Bảng phân loại các tác nhân tương tác trong hệ thống Travel Trips Central VietNam}
 \label{tab:actors}
 \resizebox{\textwidth}{!}{
 \begin{tabular}{|l|l|p{8.5cm}|}
@@ -28,20 +28,21 @@ Chương này cung cấp bảng Đặc tả Yêu cầu Phần mềm (SRS) toàn 
 
 \begin{table}[H]
 \centering
-\caption{Bảng đặc tả yêu cầu chức năng hệ thống WanderWise (SRS Table)}
+\caption{Bảng đặc tả yêu cầu chức năng hệ thống Travel Trips Central VietNam (SRS Table)}
 \label{tab:functional_reqs}
 \resizebox{\textwidth}{!}{
 \begin{tabular}{|c|l|c|p{8.5cm}|}
 \hline
 \textbf{Mã YC} & \textbf{Tên Chức năng} & \textbf{Mức ưu tiên} & \textbf{Mô tả chi tiết chức năng} \\ \hline
 \textbf{FR-01} & Quản lý Xác thực (\en{Authentication}) & Bắt buộc (\en{High}) & Đăng ký tài khoản mới, đăng nhập bằng email/mật khẩu mã hóa bcrypt, cấp phát và xác thực phiên qua JWT Token. \\ \hline
-\textbf{FR-02} & Khám phá Địa phương (\en{Explore}) & Bắt buộc (\en{High}) & Hiển thị danh mục 9 tỉnh Miền Trung, lọc theo 4 phân loại (\en{attraction}, \en{restaurant}, \en{cafe}, \en{hotel}), xem ảnh HD, xem điểm đánh giá và nút \code{+ Lên lịch trình}. \\ \hline
+\textbf{FR-02} & Khám phá Địa phương (\en{Explore}) & Bắt buộc (\en{High}) & Hiển thị danh mục 11 tỉnh/thành phố Miền Trung -- Tây Nguyên (dữ liệu tự động cào và cập nhật ngầm bởi AI), lọc theo 4 phân loại (\en{attraction}, \en{restaurant}, \en{cafe}, \en{hotel}), xem ảnh HD, xem điểm đánh giá và nút \code{+ Lên lịch trình}. \\ \hline
 \textbf{FR-03} & Lập lịch Trình Thông minh (\en{AI Planner}) & Bắt buộc (\en{High}) & Tiếp nhận tham số (Điểm đến, số ngày 1--7, ngân sách, số người, địa điểm ưu tiên) và gọi Gemini AI sinh Timeline chi tiết không trùng lặp. \\ \hline
 \textbf{FR-04} & Đổi lịch Tránh mưa (\en{Weather Re-scheduler}) & Nâng cao (\en{Medium}) & Tự động hoặc cho phép người dùng 1-click hoán đổi các hoạt động ngoài trời sang các địa điểm tham quan/ẩm thực trong nhà khi thời tiết xấu. \\ \hline
 \textbf{FR-05} & Chia tiền Nhóm (\en{Group Bill Splitter}) & Nâng cao (\en{Medium}) & Thêm các khoản chi (khách sạn, ăn uống, vé thắng cảnh, xăng xe) và tự động tính toán số tiền công bằng mỗi thành viên cần trả. \\ \hline
 \textbf{FR-06} & Xuất vé Ngoại tuyến (\en{Offline Travel Pass}) & Tiện ích (\en{Low}) & Tạo thẻ vé hành trình điện tử dạng Boarding Pass có mã QR mô phỏng để chụp màn hình sử dụng khi mất kết nối mạng 4G/Wifi. \\ \hline
 \textbf{FR-07} & Trợ lý Ảo Tư vấn (\en{AI Chat Assistant}) & Tiện ích (\en{Medium}) & Cung cấp khung chat trực tuyến phong cách tin nhắn, trả lời tự nhiên mọi thắc mắc về kinh nghiệm du lịch và ẩm thực Miền Trung. \\ \hline
 \textbf{FR-08} & Quản lý Chuyến đi (\en{My Trips}) & Bắt buộc (\en{High}) & Lưu lịch trình vào tài khoản, xem lại các chuyến đi cũ, xóa chuyến đi hoặc chia sẻ lịch trình. \\ \hline
+\textbf{FR-09} & AI Data Crawler Tự Động (\en{AI Autonomous Ingestion}) & Bắt buộc (\en{High}) & Tự động cào quét, bóc tách thực thể (thắng cảnh, đặc sản, cafe, khách sạn) từ Gemini AI cho 11 tỉnh thành sau sáp nhập, tự động làm giàu địa chỉ GPS, ảnh HD và nạp vào MongoDB Atlas khi khởi động hoặc khi phát hiện thiếu dữ liệu. \\ \hline
 \end{tabular}
 }
 \end{table}
@@ -129,7 +130,7 @@ Chương này cung cấp bảng Đặc tả Yêu cầu Phần mềm (SRS) toàn 
 
 \end{tikzpicture}
 }
-\caption{Sơ đồ Ca Sử Dụng (Use-Case Diagram) của hệ thống WanderWise}
+\caption{Sơ đồ Ca Sử Dụng (Use-Case Diagram) của hệ thống Travel Trips Central VietNam}
 \label{fig:usecase_detail}
 \end{figure}
 
@@ -174,6 +175,49 @@ Chương này cung cấp bảng Đặc tả Yêu cầu Phần mềm (SRS) toàn 
 }
 \caption{Sơ đồ Tuần Tự (Sequence Diagram) quy trình Lập Lịch Trình Thông Minh bằng AI}
 \label{fig:sequence_diagram}
+\end{figure}
+
+\subsection{Sơ đồ Tuần Tự Quy Trình AI Autonomous Data Crawler}
+
+\begin{figure}[H]
+\centering
+\resizebox{0.95\textwidth}{!}{
+\begin{tikzpicture}[
+    entity/.style={rectangle, draw=blue!80, fill=blue!12, rounded corners=2mm, thick, minimum width=2.6cm, minimum height=1.0cm, align=center, font=\bfseries\footnotesize},
+    lifeline/.style={draw=gray!80, dashed, thick},
+    msg/.style={draw=blue!80!black, thick, -{Latex[length=2.5mm]}},
+    returnmsg/.style={draw=teal!80!black, dashed, thick, -{Latex[length=2.5mm]}}
+]
+
+% Lifeline headers
+\node [entity] (boot) at (0, 0) {Server Boot /\\User Request};
+\node [entity] (crawler) at (3.5, 0) {AI Crawler\\Service};
+\node [entity] (db) at (7.0, 0) {MongoDB Atlas\\(Place Coll)};
+\node [entity] (gemini) at (10.5, 0) {Google Gemini\\2.5 Flash API};
+\node [entity] (unsplash) at (14.0, 0) {Photo Resolver\\(Unsplash HD)};
+
+% Lifelines
+\draw [lifeline] (boot) -- (0, -6.5);
+\draw [lifeline] (crawler) -- (3.5, -6.5);
+\draw [lifeline] (db) -- (7.0, -6.5);
+\draw [lifeline] (gemini) -- (10.5, -6.5);
+\draw [lifeline] (unsplash) -- (14.0, -6.5);
+
+% Messages
+\draw [msg] (0, -1.0) -- node[above]{\footnotesize 1. Check Count(Dest) < 15} (3.5, -1.0);
+\draw [msg] (3.5, -1.8) -- node[above]{\footnotesize 2. Query Count} (7.0, -1.8);
+\draw [returnmsg] (7.0, -2.4) -- node[above]{\footnotesize 3. Return Count < 15} (3.5, -2.4);
+\draw [msg] (3.5, -3.2) -- node[above]{\footnotesize 4. Prompt Context 11 Tỉnh} (10.5, -3.2);
+\draw [returnmsg] (10.5, -4.0) -- node[above]{\footnotesize 5. Extract 20-30 Places JSON} (3.5, -4.0);
+\draw [msg] (3.5, -4.6) -- node[above]{\footnotesize 6. Map HD Photo by Type} (14.0, -4.6);
+\draw [returnmsg] (14.0, -5.2) -- node[above]{\footnotesize 7. Return Image URLs} (3.5, -5.2);
+\draw [msg] (3.5, -5.8) -- node[above]{\footnotesize 8. Atomic Upsert (name, dest)} (7.0, -5.8);
+\draw [returnmsg] (3.5, -6.3) -- node[above]{\footnotesize 9. Dữ liệu sẵn sàng phục vụ} (0, -6.3);
+
+\end{tikzpicture}
+}
+\caption{Sơ đồ Tuần Tự (Sequence Diagram) quy trình AI Tự Động Cào \& Làm Giàu Dữ Liệu Ngầm}
+\label{fig:crawler_sequence_diagram}
 \end{figure}
 
 \section{Sơ đồ Hoạt Động (Activity Diagram) Đổi Lịch Tránh Mưa}
@@ -329,7 +373,7 @@ Chương này cung cấp bảng Đặc tả Yêu cầu Phần mềm (SRS) toàn 
 
 \end{tikzpicture}
 }
-\caption{Sơ đồ Kiến trúc Tổng thể Hệ thống WanderWise (3-Tier Architecture)}
+\caption{Sơ đồ Kiến trúc Tổng thể Hệ thống Travel Trips Central VietNam (3-Tier Architecture)}
 \label{fig:architecture_detail}
 \end{figure}
 

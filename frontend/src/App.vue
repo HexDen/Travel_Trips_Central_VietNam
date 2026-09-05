@@ -8,8 +8,8 @@
         <div class="header-brand" @click="activeTab = 'explore'">
           <span class="app-logo-icon">✈</span>
           <div class="brand-text">
-            <h1>WanderWise</h1>
-            <small>AI Travel App · Central Vietnam</small>
+            <h1>Travel Trips</h1>
+            <small>AI Travel App · Central VietNam</small>
           </div>
         </div>
 
@@ -101,7 +101,10 @@
           <!-- Danh sách địa điểm đặc sắc theo thành phố CÓ HÌNH ẢNH SỐNG ĐỘNG -->
           <div class="explore-section">
             <div class="section-title-row">
-              <h3>Địa điểm & Đặc sản tại {{ formDuLieu.diemDen }}</h3>
+              <div>
+                <h3>Địa điểm & Đặc sản tại {{ formDuLieu.diemDen }}</h3>
+                <small class="sub-region-hint">(Khu vực mở rộng sau sáp nhập)</small>
+              </div>
               <div class="filter-pills">
                 <button
                   :class="['filter-pill', { active: filterExploreType === 'all' }]"
@@ -496,7 +499,7 @@
           <div class="chat-header">
             <div class="ai-avatar-badge">🤖</div>
             <div>
-              <h3>Trợ lý Du lịch AI WanderWise</h3>
+              <h3>Trợ lý Du lịch AI Travel Trips</h3>
               <small class="ai-status">● Sẵn sàng giải đáp 24/7</small>
             </div>
           </div>
@@ -530,7 +533,7 @@
               :key="m.id"
               :class="['chat-bubble', m.role === 'user' ? 'bubble-user' : 'bubble-assistant']"
             >
-              <div class="bubble-header">{{ m.role === 'user' ? 'Bạn' : 'WanderWise AI' }}</div>
+              <div class="bubble-header">{{ m.role === 'user' ? 'Bạn' : 'Travel Trips AI' }}</div>
               <div class="bubble-body">{{ m.text }}</div>
             </div>
 
@@ -743,7 +746,7 @@
         </div>
         <div class="boarding-pass">
           <div class="pass-header">
-            <span class="pass-logo">WanderWise PASS</span>
+            <span class="pass-logo">Travel Trips PASS</span>
             <span class="pass-dest">{{ lichTrinh.destination }}</span>
           </div>
           <div class="pass-body">
@@ -778,17 +781,19 @@ import api from './services/api'
 const activeTab = ref('explore')
 const isMobileFrame = ref(false)
 
-// Danh sách các thành phố Miền Trung nổi tiếng có hình ảnh sắc nét
+// Danh sách 11 Tỉnh/Thành phố Miền Trung & Tây Nguyên sau sáp nhập
 const centralCities = [
-  { name: 'Đà Nẵng', icon: '🌉', tag: 'Cầu Vàng & Biển Mỹ Khê', image: 'https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?w=600&auto=format&fit=crop&q=80' },
-  { name: 'Hội An', icon: '🏮', tag: 'Phố Cổ Lung Linh', image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600&auto=format&fit=crop&q=80' },
+  { name: 'Thanh Hóa', icon: '🏰', tag: 'Sầm Sơn & Pù Luông', image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=600&auto=format&fit=crop&q=80' },
+  { name: 'Nghệ An', icon: '🌾', tag: 'Cửa Lò & Quê Bác', image: 'https://images.unsplash.com/photo-1528127269322-539801943592?w=600&auto=format&fit=crop&q=80' },
+  { name: 'Hà Tĩnh', icon: '🌊', tag: 'Thiên Cầm & Ngã Ba Đồng Lộc', image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&auto=format&fit=crop&q=80' },
+  { name: 'Quảng Trị', icon: '⛰️', tag: 'Phong Nha, Thiên Đường & Vịnh Mốc', image: 'https://images.unsplash.com/photo-1528127269322-539801943592?w=600&auto=format&fit=crop&q=80' },
   { name: 'Huế', icon: '👑', tag: 'Cố Đô Di Sản Triều Nguyễn', image: 'https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=600&auto=format&fit=crop&q=80' },
-  { name: 'Quảng Bình', icon: '⛰️', tag: 'Vương Quốc Hang Động', image: 'https://images.unsplash.com/photo-1528127269322-539801943592?w=600&auto=format&fit=crop&q=80' },
-  { name: 'Quy Nhơn', icon: '🏖️', tag: 'Kỳ Co - Eo Gió', image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&auto=format&fit=crop&q=80' },
-  { name: 'Phú Yên', icon: '🌾', tag: 'Gành Đá Đĩa - Hoa Vàng', image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=600&auto=format&fit=crop&q=80' },
-  { name: 'Nha Trang', icon: '⛵', tag: 'Vịnh Biển Thiên Đường', image: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600&auto=format&fit=crop&q=80' },
-  { name: 'Đà Lạt', icon: '🌲', tag: 'Thành Phố Ngàn Hoa', image: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=600&auto=format&fit=crop&q=80' },
-  { name: 'Gia Lai', icon: '🐘', tag: 'Biển Hồ T’Nưng', image: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=600&auto=format&fit=crop&q=80' }
+  { name: 'Đà Nẵng', icon: '🌉', tag: 'Cầu Vàng, Phố Cổ Hội An & Mỹ Khê', image: 'https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?w=600&auto=format&fit=crop&q=80' },
+  { name: 'Quảng Ngãi', icon: '🏖️', tag: 'Đảo Lý Sơn & Eo Gió - Kỳ Co', image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&auto=format&fit=crop&q=80' },
+  { name: 'Gia Lai', icon: '🐘', tag: 'Biển Hồ T’Nưng & Nhà Rông Kon Tum', image: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=600&auto=format&fit=crop&q=80' },
+  { name: 'Đắk Lắk', icon: '☕', tag: 'Bảo Tàng Cà Phê & Thác Dray Nur', image: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=600&auto=format&fit=crop&q=80' },
+  { name: 'Khánh Hòa', icon: '⛵', tag: 'Nha Trang, Vịnh Vĩnh Hy & Gành Đá Đĩa', image: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600&auto=format&fit=crop&q=80' },
+  { name: 'Lâm Đồng', icon: '🌲', tag: 'Đà Lạt Ngàn Hoa & Thác Dambri', image: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=600&auto=format&fit=crop&q=80' }
 ]
 
 // Form State
@@ -1397,16 +1402,49 @@ button { cursor: pointer; }
   box-shadow: 0 4px 12px rgba(242,100,64,0.3);
 }
 
-/* CITY CAROUSEL */
 .section-title-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 .section-title-row h3 {
   font-size: 16px;
   font-weight: 800;
+  margin: 0;
+}
+.sub-region-hint {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 500;
+}
+.explore-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.ai-crawl-btn {
+  background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+  color: white;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 16px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+  transition: all 0.2s ease;
+}
+.ai-crawl-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+.ai-crawl-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 .badge-count {
   font-size: 11px;

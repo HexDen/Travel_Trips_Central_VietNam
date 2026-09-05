@@ -20,7 +20,7 @@ Khác với các hệ thống sinh lịch trình truyền thống dựa trên c�
 
 \subsection{Google Gemini 2.5 Flash API}
 
-Trong đồ án WanderWise, nhóm lựa chọn mô hình \textbf{Google Gemini 2.5 Flash API}:
+Trong đồ án Travel Trips Central VietNam, nhóm lựa chọn mô hình \textbf{Google Gemini 2.5 Flash API}:
 \begin{itemize}
     \item \textbf{Tốc độ phản hồi cực cao (\en{Sub-second Latency}):} Tối ưu hóa kiến trúc xử lý song song, cho thời gian phản hồi trung bình chỉ từ $1.0$ đến $1.6$ giây đối với prompt phức tạp sinh lịch trình 4--5 ngày.
     \item \textbf{Khả năng sinh JSON nghiêm ngặt (\en{Structured JSON Output}):} Hỗ trợ ràng buộc mô hình luôn trả về cấu trúc JSON hợp lệ, triệt tiêu lỗi cú pháp khi parse dữ liệu ở Backend.
@@ -32,7 +32,7 @@ Trong đồ án WanderWise, nhóm lựa chọn mô hình \textbf{Google Gemini 2
 \term{Kỹ thuật xây dựng câu lệnh} (\en{Prompt Engineering}) đóng vai trò cốt lõi trong việc điều hướng LLM tạo ra kết quả chính xác theo đúng cấu trúc mong muốn.
 
 \begin{vidu}[Cấu trúc Prompt chuẩn hóa gửi tới Gemini AI]
-Một câu lệnh hoàn chỉnh trong hệ thống WanderWise bao gồm 4 thành phần thiết yếu:
+Một câu lệnh hoàn chỉnh trong hệ thống Travel Trips Central VietNam bao gồm 4 thành phần thiết yếu:
 \begin{enumerate}
     \item \textbf{Định vai (Role Prompting):} \textit{"Bạn là chuyên gia tư vấn du lịch hàng đầu về Miền Trung Việt Nam."}
     \item \textbf{Dữ liệu đầu vào (Input Context):} Điểm đến, số ngày, ngân sách, số lượng thành viên và danh sách các địa điểm ưu tiên.
@@ -40,6 +40,25 @@ Một câu lệnh hoàn chỉnh trong hệ thống WanderWise bao gồm 4 thành
     \item \textbf{Khuôn mẫu định dạng (Output Schema):} Định nghĩa cấu trúc mảng JSON cụ thể từng trường dữ liệu.
 \end{enumerate}
 \end{vidu}
+
+\section{Cơ Chế Thu Thập Dữ Liệu Tự Động Bằng AI (AI Autonomous Data Crawler)}
+
+\subsection{Hạn chế của phương pháp Web Scraping truyền thống}
+Các công cụ cào dữ liệu truyền thống (như \en{BeautifulSoup}, \en{Scrapy}, \en{Puppeteer}) phụ thuộc hoàn toàn vào cấu trúc thẻ HTML (\en{DOM Tree}) và các bộ chọn CSS Selector:
+\begin{itemize}
+    \item \textbf{Dễ gãy vỡ khi website thay đổi giao diện:} Khi các trang du lịch cập nhật class CSS hoặc kiến trúc trang, toàn bộ mã crawler sẽ báo lỗi và ngừng hoạt động.
+    \item \textbf{Thiếu khả năng làm sạch ngữ nghĩa:} Không thể tự động phân biệt giữa tên món ăn đặc sản, tên quán gia truyền và các thông tin quảng cáo nhiễu xung quanh.
+    \item \textbf{Không tự chuẩn hóa được địa chỉ:} Khó bóc tách chính xác số nhà, tên đường, phường/xã và ước lượng tọa độ GPS nếu bài viết mô tả phi cấu trúc.
+\end{itemize}
+
+\subsection{Nguyên lý hoạt động của LLM-powered Autonomous Crawler}
+Hệ thống Travel Trips Central VietNam tiên phong ứng dụng mô hình \textbf{LLM-powered Crawler} dựa trên Google Gemini 2.5 Flash:
+\begin{itemize}
+    \item \textbf{Nhận dạng Thực thể Tên riêng (NER - Named Entity Recognition):} Mô hình tự động phân tích và trích xuất danh sách thực thể địa danh (thắng cảnh, di tích lịch sử, hàng quán gia truyền, khách sạn) từ kho tri thức khổng lồ.
+    \item \textbf{Phân loại Đa danh mục Tự động:} Phân định chính xác 4 nhóm dữ liệu: \code{attraction} (thắng cảnh/di tích), \code{restaurant} (ẩm thực đặc sản), \code{cafe} (quán cafe view đẹp), và \code{hotel} (nơi lưu trú).
+    \item \textbf{Làm giàu Dữ liệu Không gian (Geocoding \& Spatial Enrichment):} Tự động sinh địa chỉ chi tiết từng số nhà, tên đường thực tế, tọa độ kinh độ/vĩ độ chuẩn xác và ước lượng mức giá (\en{estimated cost}) sát với thực tế thị trường.
+    \item \textbf{Khử trùng lặp và Cập nhật nguyên tử (Atomic Upsert):} Tích hợp cơ chế kiểm tra sự tồn tại trong CSDL và cập nhật nguyên tử (\en{Upsert}) theo cặp khóa \code{(name, destination)}, đảm bảo không lưu trùng lặp dữ liệu.
+\end{itemize}
 
 \section{Kiến trúc Frontend với Vue.js 3 và Vite}
 
@@ -64,19 +83,19 @@ Một câu lệnh hoàn chỉnh trong hệ thống WanderWise bao gồm 4 thành
 \en{Open-Meteo} là dịch vụ API khí tượng nguồn mở độ chính xác cao:
 \begin{itemize}
     \item Truy xuất nhiệt độ hiện tại (\en{temperature}), độ ẩm (\en{humidity}), tốc độ gió và xác suất mưa (\en{precipitation probability}) theo tọa độ GPS thời gian thực.
-    \item Hệ thống WanderWise sử dụng thông số \code{precipitation\_probability} để kích hoạt tính năng thông minh \textit{Đổi lịch tránh mưa tự động} khi xác suất mưa vượt quá $60\%$.
+    \item Hệ thống Travel Trips Central VietNam sử dụng thông số \code{precipitation\_probability} để kích hoạt tính năng thông minh \textit{Đổi lịch tránh mưa tự động} khi xác suất mưa vượt quá $60\%$.
 \end{itemize}
 
 \section{So sánh với các Công trình \& Ứng dụng Liên quan}
 
 \begin{table}[H]
 \centering
-\caption{Bảng so sánh tính năng giữa WanderWise và các nền tảng du lịch hiện hữu}
+\caption{Bảng so sánh tính năng giữa Travel Trips Central VietNam và các nền tảng du lịch hiện hữu}
 \label{tab:comparison}
 \resizebox{\textwidth}{!}{
 \begin{tabular}{|l|c|c|c|c|}
 \hline
-\textbf{Tính năng} & \textbf{Google Travel} & \textbf{Traveloka / Trip.com} & \textbf{Chatbot ChatGPT} & \textbf{WanderWise (Đề tài)} \\ \hline
+\textbf{Tính năng} & \textbf{Google Travel} & \textbf{Traveloka / Trip.com} & \textbf{Chatbot ChatGPT} & \textbf{Travel Trips (Đề tài)} \\ \hline
 Tự động sinh lịch trình chi tiết nhiều ngày & Có (Cố định) & Không & Có (Văn bản thuần) & \textbf{Có (Tự động + AI)} \\ \hline
 Kiểm soát 100\% không lặp lại địa điểm & Không rõ & Không & Hay bị lặp lại & \textbf{Triệt để (Visited Set Graph)} \\ \hline
 Tích hợp ảnh thực tế \& địa chỉ chuẩn xác & Có & Có & Không có ảnh & \textbf{Có (100\% Ảnh HD + Địa chỉ)} \\ \hline
@@ -89,5 +108,5 @@ Giao diện App-First Mobile \& PC Desktop & Web/App riêng & Web/App riêng & C
 \end{table}
 
 \begin{luuy}
-Các chatbot AI tổng quát (như ChatGPT bản miễn phí) khi được yêu cầu lập lịch trình du lịch thường chỉ sinh ra các đoạn văn bản dài khó đọc, không có địa chỉ số nhà cụ thể, không có hình ảnh minh họa và không thể tương tác trực quan (chọn điểm, lưu lịch trình, chia tiền). WanderWise khắc phục triệt để các nhược điểm này.
+Các chatbot AI tổng quát (như ChatGPT bản miễn phí) khi được yêu cầu lập lịch trình du lịch thường chỉ sinh ra các đoạn văn bản dài khó đọc, không có địa chỉ số nhà cụ thể, không có hình ảnh minh họa và không thể tương tác trực quan (chọn điểm, lưu lịch trình, chia tiền). Travel Trips Central VietNam khắc phục triệt để các nhược điểm này.
 \end{luuy}
