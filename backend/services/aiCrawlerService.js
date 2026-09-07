@@ -108,9 +108,25 @@ function getGeminiKey() {
 }
 
 /**
+ * Tính khoảng cách địa lý theo tọa độ GPS (Công thức Haversine - đơn vị km)
+ */
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  if (!lat1 || !lon1 || !lat2 || !lon2) return null
+  const R = 6371 // Bán kính Trái đất theo km
+  const dLat = (lat2 - lat1) * Math.PI / 180
+  const dLon = (lon2 - lon1) * Math.PI / 180
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2)
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  return Math.round((R * c) * 10) / 10 // làm tròn 1 chữ số thập phân
+}
+
+/**
  * AI Crawler: Thu thập & làm giàu dữ liệu địa điểm sâu rộng cho một điểm đến bằng Gemini AI
  */
-async function crawlPlacesByAI(destination) {
+async function crawlPlacesByAI(destination, category = null) {
   const geminiKey = getGeminiKey()
   let placesToSave = []
 
@@ -119,24 +135,43 @@ async function crawlPlacesByAI(destination) {
   if (geminiKey) {
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
-        console.log(`[AI Crawler] 🤖 Đang gửi yêu cầu tới Gemini AI để cào dữ liệu sâu rộng tại: ${destination} (Lần thử ${attempt}/3)...`)
-        const prompt = `Bạn là một AI Data Web Crawler chuyên nghiệp về Du lịch & Ẩm thực Việt Nam.
-Hãy cào quét, tìm kiếm và trích xuất danh sách 15 đến 25 địa điểm du lịch, quán ăn đặc sản, quán cafe và khách sạn nổi tiếng, xác thực nhất tại tỉnh/thành phố "${destination}" (Lưu ý: Đây là đơn vị hành chính/khu vực mở rộng sau sáp nhập bao gồm: ${contextHint}).
-
-Yêu cầu bóc tách đủ 4 loại (type):
+        console.log(`[AI Crawler] 🤖 Đang gửi yêu cầu tới Gemini AI để cào dữ liệu sâu rộng tại: ${destination} ${category ? `(Nhóm: ${category})` : ''} (Lần thử ${attempt}/3)...`)
+        
+        let categoryPrompt = `Yêu cầu bóc tách đủ 4 loại (type):
 1. "attraction": Các danh lam thắng cảnh, bãi biển, di tích lịch sử, vườn quốc gia, hang động, bảo tàng, làng nghề nổi tiếng nhất.
 2. "restaurant": Các quán ăn lâu đời trứ danh, nhà hàng đặc sản bản địa chính thống, phục vụ món ăn đặc sắc của ${destination}.
 3. "cafe": Quán cafe view đẹp, cafe sân thượng ngắm cảnh, cafe check-in phong cách độc đáo.
-4. "hotel": Khách sạn, resort nghỉ dưỡng sạch sẽ, uy tín, view đẹp tại ${destination}.
+4. "hotel": Khách sạn, resort nghỉ dưỡng sạch sẽ, uy tín, view đẹp tại ${destination}.`
 
-MỖI ĐỊA ĐIỂM PHẢI CÓ ĐỊA CHỈ THỰC TẾ CHI TIẾT (Số nhà, Tên đường, Phường/Xã, Quận/Huyện, Tỉnh/TP), giá cả thực tế và tọa độ GPS chuẩn xác.
+        if (category === 'attraction') {
+          categoryPrompt = `Yêu cầu tập trung 100% vào cào quét TẤT CẢ các danh lam thắng cảnh, bãi biển, di tích lịch sử, hang động, thác nước, làng nghề, bảo tàng, khu vui chơi nổi tiếng nhất tại "${destination}" (type: "attraction"). Cào ít nhất 15-20 địa điểm danh thắng nổi tiếng trên khắp các quận/huyện/thị xã.`
+        } else if (category === 'restaurant') {
+          categoryPrompt = `Yêu cầu tập trung 100% vào cào quét TẤT CẢ các quán ăn đặc sản truyền thống, quán ăn lâu đời trứ danh, nhà hàng đặc sản bản địa nổi tiếng nhất tại "${destination}" (type: "restaurant"). Nêu rõ tên món đặc sản nổi tiếng nhất của từng quán trong description. Cào ít nhất 15-20 quán đặc sản.`
+        } else if (category === 'hotel') {
+          categoryPrompt = `Yêu cầu tập trung 100% vào cào quét TẤT CẢ các khách sạn, resort, homestay nghỉ dưỡng uy tín, view đẹp, gần các điểm du lịch tại "${destination}" (type: "hotel"). Cào ít nhất 12-15 khách sạn từ cao cấp đến giá tốt.`
+        } else if (category === 'cafe') {
+          categoryPrompt = `Yêu cầu tập trung cào quét các quán cafe view đẹp, cafe sân thượng ngắm cảnh, cafe check-in sống ảo phong cách độc đáo tại "${destination}" (type: "cafe"). Cào 10-15 quán cafe.`
+        }
+
+        const prompt = `Bạn là một AI Data Web Crawler & Travel Intelligence chuyên nghiệp số 1 về Du lịch & Ẩm thực Việt Nam.
+Hãy cào quét, tìm kiếm toàn diện và trích xuất danh sách địa điểm thực tế, xác thực 100% tại tỉnh/thành phố "${destination}" (Lưu ý: Khu vực mở rộng bao gồm: ${contextHint}).
+
+${categoryPrompt}
+
+MỖI ĐỊA ĐIỂM BẮT BUỘC PHẢI CÓ:
+- Tên địa điểm chính xác, có thật tại ${destination}.
+- Địa chỉ thực tế chi tiết: Số nhà, Tên đường, Phường/Xã, Quận/Huyện, Tỉnh/TP ${destination}.
+- Tọa độ GPS chuẩn xác (latitude, longitude) để hiển thị bản đồ và tính khoảng cách di chuyển.
+- Giá tiền thực tế tham khảo (estimated_cost VND).
+- Điểm đánh giá (rating từ 4.5 đến 5.0).
+- Mô tả sinh động (description) nêu rõ nét độc đáo, cảnh quan hoặc hương vị món ăn đặc sản.
 
 TRẢ VỀ KẾT QUẢ DUY NHẤT LÀ MỘT MẢNG JSON HỢP LỆ (KHÔNG KÈM TEXT GIẢI THÍCH):
 [
   {
     "name": "Tên địa điểm chính xác",
     "destination": "${destination}",
-    "type": "attraction | restaurant | cafe | hotel",
+    "type": "${category || 'attraction | restaurant | cafe | hotel'}",
     "address": "Địa chỉ cụ thể từng số nhà, tên đường tại ${destination}",
     "description": "Mô tả sinh động 1-2 câu về nét độc đáo, cảnh quan hoặc hương vị món ăn",
     "tags": ["tag1", "tag2", "tag3"],
@@ -203,8 +238,118 @@ TRẢ VỀ KẾT QUẢ DUY NHẤT LÀ MỘT MẢNG JSON HỢP LỆ (KHÔNG KÈM 
     savedCount++
   }
 
-  console.log(`[AI Crawler] ✅ Đã tự động thu thập & nạp ${savedCount} địa điểm phong phú tại "${destination}" vào MongoDB Atlas!`)
+  console.log(`[AI Crawler] ✅ Đã tự động thu thập & nạp ${savedCount} địa điểm phong phú tại "${destination}" (${category || 'tất cả'}) vào MongoDB Atlas!`)
   return placesToSave
+}
+
+/**
+ * AI Deep Crawl: Cào sâu toàn diện đa danh mục (Thắng cảnh, Quán đặc sản, Khách sạn, Cafe) cho 1 tỉnh thành
+ */
+async function crawlDeepPlacesByDestination(destination) {
+  console.log(`[AI Deep-Crawler] 🚀 Bắt đầu quy trình cào quét sâu toàn bộ danh mục tại "${destination}"...`)
+  const categories = ['attraction', 'restaurant', 'hotel', 'cafe']
+  let totalCrawled = 0
+  const detailResults = {}
+
+  for (const cat of categories) {
+    try {
+      const list = await crawlPlacesByAI(destination, cat)
+      detailResults[cat] = list.length
+      totalCrawled += list.length
+    } catch (e) {
+      console.error(`[AI Deep-Crawler] Lỗi cào ${cat} tại ${destination}:`, e.message)
+      detailResults[cat] = 0
+    }
+  }
+
+  const currentTotal = await Place.countDocuments({ destination: new RegExp(`^${destination}$`, 'i') })
+  console.log(`[AI Deep-Crawler] 🎉 HOÀN TẤT CÀO SÂU TẠI "${destination}"! Tổng số địa điểm hiện có: ${currentTotal}`)
+  return {
+    destination,
+    crawledInThisRun: totalCrawled,
+    details: detailResults,
+    totalInDb: currentTotal
+  }
+}
+
+/**
+ * AI Nearby Discovery: Tìm kiếm chính xác các khách sạn & quán ăn đặc sản xung quanh 1 địa điểm du lịch cụ thể
+ */
+async function crawlNearbyServicesForPlace(placeName, destination, address = '', lat = null, lng = null) {
+  const geminiKey = getGeminiKey()
+  if (!geminiKey) return []
+
+  try {
+    console.log(`[AI Nearby-Crawler] 🎯 Đang tìm kiếm khách sạn & đặc sản gần nhất quanh danh thắng: "${placeName}" (${destination})...`)
+    const prompt = `Bạn là Chuyên gia Bản đồ Du lịch & Ẩm thực Bản địa Việt Nam.
+Du khách đang ghé thăm địa điểm du lịch: "${placeName}" tại ${destination} (Địa chỉ: ${address || destination}).
+
+Hãy tìm kiếm và đề xuất:
+1. Top 4-5 Khách sạn / Resort / Homestay uy tín, sạch sẽ, view đẹp nằm GẦN NHẤT với địa điểm "${placeName}".
+2. Top 5-6 Quán ăn đặc sản bản địa trứ danh, quán ăn lâu đời phục vụ món ăn đặc sắc của ${destination} nằm GẦN NHẤT với địa điểm "${placeName}".
+3. Top 2-3 Quán Cafe view đẹp / check-in lân cận.
+
+YÊU CẦU QUAN TRỌNG:
+- Địa chỉ thực tế cụ thể (Số nhà, Tên đường, Phường/Xã, Quận/Huyện) nằm quanh khu vực "${placeName}".
+- Tọa độ GPS (latitude, longitude) thực tế để tính khoảng cách di chuyển.
+- Nêu rõ món đặc sản nổi bật trong description (Ví dụ: "Bún bò chuẩn vị Huế", "Bánh tráng thịt heo chấm mắm nêm", "Hải sản tươi sống vừa đánh bắt").
+
+TRẢ VỀ KẾT QUẢ DUY NHẤT LÀ MẢNG JSON HỢP LỆ:
+[
+  {
+    "name": "Tên khách sạn hoặc quán ăn cụ thể",
+    "destination": "${destination}",
+    "type": "hotel | restaurant | cafe",
+    "address": "Địa chỉ cụ thể gần ${placeName}",
+    "description": "Mô tả điểm nổi bật hoặc món đặc sản trứ danh",
+    "tags": ["gần ${placeName}", "đặc sản", "view đẹp"],
+    "estimated_cost": 850000,
+    "latitude": ${lat || 16.05},
+    "longitude": ${lng || 108.24},
+    "rating": 4.8
+  }
+]`
+
+    const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash'
+    const res = await axios.post(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`,
+      { contents: [{ parts: [{ text: prompt }] }] },
+      { headers: { 'Content-Type': 'application/json' }, timeout: 60000 }
+    )
+
+    const raw = res.data.candidates?.[0]?.content?.parts?.[0]?.text
+    if (raw) {
+      const cleaned = raw.replace(/^```json\s*/i, '').replace(/\s*```$/i, '').trim()
+      const startIdx = cleaned.indexOf('[')
+      const endIdx = cleaned.lastIndexOf(']')
+      if (startIdx >= 0 && endIdx >= startIdx) {
+        let nearbyPlaces = JSON.parse(cleaned.slice(startIdx, endIdx + 1))
+        const destPhotos = PHOTO_MAP[destination] || PHOTO_MAP['Đà Nẵng']
+
+        // Chuẩn hóa và lưu vào DB
+        for (const p of nearbyPlaces) {
+          if (!p.name) continue
+          const fullPlace = {
+            ...p,
+            destination,
+            image: p.image || destPhotos[p.type] || destPhotos.attraction,
+            rating: Number(p.rating) || 4.8,
+            estimated_cost: Number(p.estimated_cost) || (p.type === 'hotel' ? 850000 : 120000)
+          }
+          await Place.updateOne(
+            { name: fullPlace.name, destination },
+            { $set: fullPlace },
+            { upsert: true }
+          )
+        }
+        console.log(`[AI Nearby-Crawler] ✅ Đã tìm thấy và lưu ${nearbyPlaces.length} dịch vụ & quán ăn lân cận quanh "${placeName}"!`)
+        return nearbyPlaces
+      }
+    }
+  } catch (err) {
+    console.warn(`[AI Nearby-Crawler] Lỗi khi tìm dịch vụ lân cận: ${err.message}`)
+  }
+  return []
 }
 
 /**
@@ -215,8 +360,8 @@ async function crawlAllDestinations() {
   const results = {}
   for (const dest of CENTRAL_VIETNAM_DESTINATIONS) {
     try {
-      const places = await crawlPlacesByAI(dest)
-      results[dest] = places.length
+      const res = await crawlDeepPlacesByDestination(dest)
+      results[dest] = res.crawledInThisRun
     } catch (e) {
       console.error(`[AI Crawler] Lỗi khi cào ${dest}:`, e.message)
       results[dest] = 0
@@ -235,8 +380,8 @@ async function autoInitPlaces() {
     console.log('[AI Auto-Crawler] 🔍 Đang kiểm tra dữ liệu cho 11 tỉnh thành sau sáp nhập...')
     for (const dest of CENTRAL_VIETNAM_DESTINATIONS) {
       const count = await Place.countDocuments({ destination: new RegExp(`^${dest}$`, 'i') })
-      if (count < 15) {
-        console.log(`[AI Auto-Crawler] Tỉnh/TP "${dest}" hiện có ${count} địa điểm (<15). Đang tự động cào dữ liệu mới...`)
+      if (count < 20) {
+        console.log(`[AI Auto-Crawler] Tỉnh/TP "${dest}" hiện có ${count} địa điểm (<20). Đang tự động cào dữ liệu mới...`)
         await crawlPlacesByAI(dest)
       } else {
         console.log(`[AI Auto-Crawler] ✅ Tỉnh/TP "${dest}" đã có ${count} địa điểm đầy đủ.`)
@@ -251,7 +396,11 @@ async function autoInitPlaces() {
 
 module.exports = {
   CENTRAL_VIETNAM_DESTINATIONS,
+  calculateDistance,
   crawlPlacesByAI,
+  crawlDeepPlacesByDestination,
+  crawlNearbyServicesForPlace,
   crawlAllDestinations,
   autoInitPlaces
 }
+

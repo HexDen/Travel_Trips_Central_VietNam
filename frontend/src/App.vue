@@ -109,20 +109,34 @@
                 <button
                   :class="['filter-pill', { active: filterExploreType === 'all' }]"
                   @click="filterExploreType = 'all'"
-                >Tất cả</button>
+                >Tất cả ({{ places.length }})</button>
                 <button
                   :class="['filter-pill', { active: filterExploreType === 'attraction' }]"
                   @click="filterExploreType = 'attraction'"
-                >📸 Thắng cảnh</button>
+                >🏛️ Thắng cảnh ({{ attractionsList.length }})</button>
                 <button
                   :class="['filter-pill', { active: filterExploreType === 'restaurant' }]"
                   @click="filterExploreType = 'restaurant'"
-                >🍲 Đặc sản</button>
+                >🍜 Đặc sản ({{ restaurantsList.length }})</button>
+                <button
+                  :class="['filter-pill', { active: filterExploreType === 'hotel' }]"
+                  @click="filterExploreType = 'hotel'"
+                >🏨 Khách sạn ({{ hotelsList.length }})</button>
                 <button
                   :class="['filter-pill', { active: filterExploreType === 'cafe' }]"
                   @click="filterExploreType = 'cafe'"
-                >☕ Cafe</button>
+                >☕ Cafe ({{ cafesList.length }})</button>
               </div>
+            </div>
+
+            <!-- Thanh tìm kiếm nhanh địa danh, món ăn, bãi biển -->
+            <div class="explore-search-box">
+              <input
+                v-model="searchExploreQuery"
+                class="explore-search-input"
+                :placeholder="'🔍 Tìm kiếm địa danh, di tích, món ăn, bãi biển tại ' + formDuLieu.diemDen + '...'"
+              />
+              <button v-if="searchExploreQuery" class="clear-search-btn" @click="searchExploreQuery = ''">✕</button>
             </div>
 
             <!-- Grid Thẻ Địa điểm CÓ HÌNH ẢNH NỔI BẬT -->
@@ -268,12 +282,17 @@
             <div v-if="places.length" class="places-picker-box">
               <div class="picker-top">
                 <div>
-                  <small class="picker-kicker">GỢI Ý ĐỊA PHƯƠNG · BẤM ĐỂ CHỌN</small>
-                  <h4>Bạn muốn ghé địa điểm & quán ngon nào?</h4>
+                  <small class="picker-kicker">GỢI Ý ĐỊA PHƯƠNG — BẤM ĐỂ CHỌN</small>
+                  <h4>Bạn muốn ghé địa điểm & quán ngon nào tại {{ formDuLieu.diemDen }}?</h4>
                 </div>
                 <span v-if="selectedPlaces.length" class="badge-selected-count">
                   ✓ Đã chọn {{ selectedPlaces.length }} điểm
                 </span>
+              </div>
+
+              <!-- Thông báo AI Crawler -->
+              <div v-if="thongBaoCrawl" class="crawl-alert-banner">
+                <span>{{ thongBaoCrawl }}</span>
               </div>
 
               <!-- Nhóm Thắng cảnh -->
@@ -295,10 +314,27 @@
 
               <!-- Nhóm Món ngon -->
               <div v-if="restaurantsList.length" class="picker-row">
-                <span class="row-label">🍲 Quán đặc sản:</span>
+                <span class="row-label">🍜 Quán đặc sản:</span>
                 <div class="chips-wrap">
                   <button
                     v-for="p in restaurantsList"
+                    :key="p.name"
+                    type="button"
+                    :class="['app-chip', { active: isPlaceSelected(p.name) }]"
+                    @click="togglePlaceSelection(p.name)"
+                  >
+                    <span class="chip-status">{{ isPlaceSelected(p.name) ? '✓' : '+' }}</span>
+                    <span>{{ p.name }}</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Nhóm Khách sạn -->
+              <div v-if="hotelsList.length" class="picker-row">
+                <span class="row-label">🏨 Khách sạn:</span>
+                <div class="chips-wrap">
+                  <button
+                    v-for="p in hotelsList"
                     :key="p.name"
                     type="button"
                     :class="['app-chip', { active: isPlaceSelected(p.name) }]"
@@ -335,7 +371,7 @@
               :disabled="dangTao"
             >
               <span v-if="dangTao" class="btn-spinner"></span>
-              <span>{{ dangTao ? 'AI Đang thiết kế lịch trình tối ưu...' : '✨ Tạo Lịch Trình Thông Minh' }}</span>
+              <span>{{ dangTao ? 'Đang lên lịch trình...' : '✨ Tạo Lịch Trình Thông Minh' }}</span>
             </button>
           </div>
 
@@ -344,14 +380,26 @@
             <!-- Thẻ tổng quan kết quả -->
             <div class="plan-summary-card">
               <div class="summary-meta">
-                <span class="plan-dest-badge">{{ lichTrinh.destination }}</span>
+                <div class="summary-top-tag">
+                  <span class="plan-dest-badge">{{ lichTrinh.destination }}</span>
+                  <span class="savings-badge">💡 Đã tối ưu tuyến đường & chi phí tiết kiệm</span>
+                </div>
                 <h2>Hành trình {{ lichTrinh.daysList.length }} Ngày Tuyệt Vời</h2>
-                <p class="summary-budget">Tổng dự toán: <strong>{{ dinhDangTien(lichTrinh.total_budget) }}đ</strong> ({{ lichTrinh.people }} người)</p>
+                <p class="summary-budget">Tổng dự toán: <strong>{{ dinhDangTien(lichTrinh.total_budget) }}đ</strong> ({{ lichTrinh.people }} người · TB {{ dinhDangTien(Math.round(lichTrinh.total_budget / lichTrinh.people)) }}đ/người)</p>
+              </div>
+
+              <!-- Thanh phân bổ ngân sách khoa học -->
+              <div v-if="lichTrinh.budget_breakdown" class="budget-breakdown-row">
+                <div class="bb-pill"><span>🏨 Khách sạn:</span> <b>{{ dinhDangTien(lichTrinh.budget_breakdown.hotel) }}đ</b></div>
+                <div class="bb-pill"><span>🍜 Ăn uống:</span> <b>{{ dinhDangTien(lichTrinh.budget_breakdown.food) }}đ</b></div>
+                <div class="bb-pill"><span>🚗 Di chuyển:</span> <b>{{ dinhDangTien(lichTrinh.budget_breakdown.transportation) }}đ</b></div>
+                <div class="bb-pill"><span>🎫 Vé & Check-in:</span> <b>{{ dinhDangTien(lichTrinh.budget_breakdown.tickets) }}đ</b></div>
+                <div class="bb-pill"><span>🛡️ Dự phòng:</span> <b>{{ dinhDangTien(lichTrinh.budget_breakdown.reserve) }}đ</b></div>
               </div>
 
               <div class="plan-tool-actions">
                 <button class="tool-btn" @click="hienBillSplitter = true" title="Tính tiền chia đều cho nhóm">
-                  💸 Chia tiền nhóm
+                  💰 Chia tiền nhóm
                 </button>
                 <button class="tool-btn" @click="hienTravelPass = true" title="Xuất vé hành trình offline">
                   🎫 Xuất vé Offline
@@ -494,69 +542,6 @@
         </section>
 
 
-        <!-- ==================== TAB 4: TRỢ LÝ AI (AI CHAT) ==================== -->
-        <section v-if="activeTab === 'aichat'" class="tab-pane chat-pane">
-          <div class="chat-header">
-            <div class="ai-avatar-badge">🤖</div>
-            <div>
-              <h3>Trợ lý Du lịch AI Travel Trips</h3>
-              <small class="ai-status">● Sẵn sàng giải đáp 24/7</small>
-            </div>
-          </div>
-
-          <!-- Gợi ý câu hỏi nhanh -->
-          <div class="quick-prompts-row">
-            <button class="prompt-chip" @click="guiChatNhanh('Ăn sáng ở đâu ngon nhất tại ' + formDuLieu.diemDen + '?')">
-              🍳 Ăn sáng ngon nhất?
-            </button>
-            <button class="prompt-chip" @click="guiChatNhanh('Gợi ý 3 quán cafe view đẹp sống ảo tại ' + formDuLieu.diemDen)">
-              ☕ Quán cafe view đẹp?
-            </button>
-            <button class="prompt-chip" @click="guiChatNhanh('Đặc sản gì nên mua làm quà ở ' + formDuLieu.diemDen + '?')">
-              🎁 Mua đặc sản làm quà?
-            </button>
-            <button class="prompt-chip" @click="guiChatNhanh('Kinh nghiệm đi du lịch tiết kiệm tại ' + formDuLieu.diemDen)">
-              💡 Mẹo đi tiết kiệm?
-            </button>
-          </div>
-
-          <!-- Khung tin nhắn -->
-          <div class="chat-messages-container" ref="chatBoxRef">
-            <div v-if="!nhanTin.length" class="chat-welcome">
-              <span class="welcome-robot">🤖</span>
-              <h4>Xin chào! Tôi là Trợ lý AI Du lịch.</h4>
-              <p>Bạn có thể hỏi tôi bất kỳ điều gì về đường đi, quán ăn ngon chuẩn vị, giá vé tham quan hay kinh nghiệm du lịch tại Miền Trung!</p>
-            </div>
-
-            <div
-              v-for="m in nhanTin"
-              :key="m.id"
-              :class="['chat-bubble', m.role === 'user' ? 'bubble-user' : 'bubble-assistant']"
-            >
-              <div class="bubble-header">{{ m.role === 'user' ? 'Bạn' : 'Travel Trips AI' }}</div>
-              <div class="bubble-body">{{ m.text }}</div>
-            </div>
-
-            <div v-if="dangGuiChat" class="chat-bubble bubble-assistant typing-bubble">
-              <span>AI đang soạn câu trả lời...</span>
-            </div>
-          </div>
-
-          <!-- Ô nhập tin nhắn -->
-          <div class="chat-input-bar">
-            <input
-              v-model="chatText"
-              class="chat-text-input"
-              placeholder="Nhập câu hỏi của bạn cho AI..."
-              @keydown.enter.prevent="sendChat"
-            />
-            <button class="send-msg-btn" @click="sendChat" :disabled="!chatText.trim() || dangGuiChat">
-              <span>Gửi</span>
-            </button>
-          </div>
-        </section>
-
-
         <!-- ==================== TAB 5: TÀI KHOẢN & YÊU THÍCH (PROFILE) ==================== -->
         <section v-if="activeTab === 'profile'" class="tab-pane">
           <!-- Nếu đã đăng nhập -->
@@ -654,13 +639,7 @@
           <span class="nav-label">Chuyến đi</span>
         </button>
 
-        <button
-          :class="['nav-item', { active: activeTab === 'aichat' }]"
-          @click="activeTab = 'aichat'"
-        >
-          <span class="nav-icon">💬</span>
-          <span class="nav-label">Trợ lý AI</span>
-        </button>
+        
 
         <button
           :class="['nav-item', { active: activeTab === 'profile' }]"
@@ -843,11 +822,47 @@ const hienTravelPass = ref(false)
 // Computed Lists
 const attractionsList = computed(() => (places.value || []).filter(p => p.type === 'attraction'))
 const restaurantsList = computed(() => (places.value || []).filter(p => p.type === 'restaurant'))
+const hotelsList = computed(() => (places.value || []).filter(p => p.type === 'hotel'))
 const cafesList = computed(() => (places.value || []).filter(p => p.type === 'cafe'))
 
+// AI Deep Crawl State
+const dangCrawl = ref(false)
+const thongBaoCrawl = ref('')
+
+async function kichHoatAICrawl(destOverride = null) {
+  const dest = destOverride || formDuLieu.diemDen || 'Đà Nẵng'
+  dangCrawl.value = true
+  thongBaoCrawl.value = `🤖 AI đang tự động cào quét sâu toàn bộ danh lam thắng cảnh, quán ngon & khách sạn tại "${dest}"...`
+  try {
+    const res = await api.post('/places/crawl-deep', { destination: dest })
+    await taiDuLieuThanhPho()
+    thongBaoCrawl.value = `🎉 ${res.data?.message || 'Cào dữ liệu thành công!'} (Hiện có ${places.value.length} địa điểm)`
+    setTimeout(() => { thongBaoCrawl.value = '' }, 6000)
+  } catch (e) {
+    thongBaoCrawl.value = '⚠️ Lỗi khi cào dữ liệu: ' + (e?.response?.data?.error || e.message)
+    setTimeout(() => { thongBaoCrawl.value = '' }, 6000)
+  } finally {
+    dangCrawl.value = false
+  }
+}
+
+const searchExploreQuery = ref('')
+
 const filteredExplorePlaces = computed(() => {
-  if (filterExploreType.value === 'all') return places.value || []
-  return (places.value || []).filter(p => p.type === filterExploreType.value)
+  let list = places.value || []
+  if (filterExploreType.value !== 'all') {
+    list = list.filter(p => p.type === filterExploreType.value)
+  }
+  const q = (searchExploreQuery.value || '').trim().toLowerCase()
+  if (q) {
+    list = list.filter(p =>
+      (p.name && p.name.toLowerCase().includes(q)) ||
+      (p.description && p.description.toLowerCase().includes(q)) ||
+      (p.address && p.address.toLowerCase().includes(q)) ||
+      (p.tags && p.tags.some(t => t.toLowerCase().includes(q)))
+    )
+  }
+  return list
 })
 
 const banDoEmbedUrl = computed(() => {
@@ -1545,6 +1560,50 @@ button { cursor: pointer; }
   color: #fff;
   border-color: var(--primary);
 }
+
+.explore-search-box {
+  position: relative;
+  margin: 12px 0 16px 0;
+  display: flex;
+  align-items: center;
+}
+.explore-search-input {
+  width: 100%;
+  padding: 10px 38px 10px 14px;
+  background: var(--card-bg);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--text-main);
+  outline: none;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+}
+.explore-search-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+.clear-search-btn {
+  position: absolute;
+  right: 12px;
+  background: #cbd5e1;
+  color: #334155;
+  border: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: grid;
+  place-content: center;
+  font-size: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.clear-search-btn:hover {
+  background: #94a3b8;
+  color: #fff;
+}
 .places-app-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -1771,6 +1830,13 @@ button { cursor: pointer; }
   justify-content: space-between;
   align-items: center;
   margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.picker-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 .picker-kicker { font-size: 10px; font-weight: 800; color: var(--primary); }
 .picker-top h4 { font-size: 14px; font-weight: 700; }
@@ -1781,6 +1847,52 @@ button { cursor: pointer; }
   font-weight: 700;
   padding: 3px 8px;
   border-radius: 12px;
+}
+.ai-crawl-action-btn {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: #fff;
+  border: 0;
+  padding: 4px 10px;
+  border-radius: 14px;
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: opacity .2s, transform .2s;
+}
+.ai-crawl-action-btn:hover { opacity: 0.9; transform: scale(1.02); }
+.ai-crawl-action-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.ai-crawl-pill {
+  background: linear-gradient(135deg, #eff6ff, #f5f3ff);
+  border-color: #c7d2fe !important;
+  color: #4f46e5 !important;
+  cursor: pointer;
+}
+.ai-crawl-pill:hover { background: #e0e7ff; }
+
+.crawl-alert-banner {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  animation: fadeIn .3s ease;
+}
+
+.btn-spinner-small {
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
 }
 .picker-row { margin-bottom: 8px; }
 .row-label { font-size: 11px; font-weight: 700; color: var(--text-main); display: block; margin-bottom: 4px; }
@@ -1833,6 +1945,13 @@ button { cursor: pointer; }
   border-radius: var(--radius-lg);
   padding: 18px;
 }
+.summary-top-tag {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
 .plan-dest-badge {
   background: var(--primary-light);
   color: var(--primary);
@@ -1841,11 +1960,41 @@ button { cursor: pointer; }
   padding: 3px 10px;
   border-radius: 12px;
   display: inline-block;
-  margin-bottom: 6px;
+}
+.savings-badge {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 12px;
 }
 .summary-meta h2 { font-size: 20px; font-weight: 800; }
 .summary-budget { font-size: 13px; color: var(--text-sub); margin-top: 4px; }
 .summary-budget strong { color: var(--accent); font-size: 16px; }
+
+.budget-breakdown-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 10px;
+  background: #f8fafc;
+  border-radius: var(--radius-sm);
+  border: 1px solid #e2e8f0;
+}
+.bb-pill {
+  font-size: 11px;
+  color: var(--text-sub);
+  display: inline-flex;
+  gap: 4px;
+  background: #fff;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+.bb-pill b { color: var(--text-main); }
 
 .plan-tool-actions {
   display: flex;

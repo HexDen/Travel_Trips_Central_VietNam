@@ -12,14 +12,34 @@ function getGeminiKey() {
     : null
 }
 
+const DESTINATION_ALIASES = {
+  'Hội An': 'Đà Nẵng',
+  'Quảng Nam': 'Đà Nẵng',
+  'Nha Trang': 'Khánh Hòa',
+  'Phú Yên': 'Khánh Hòa',
+  'Quy Nhơn': 'Quảng Ngãi',
+  'Bình Định': 'Quảng Ngãi',
+  'Quảng Bình': 'Quảng Trị',
+  'Đà Lạt': 'Lâm Đồng',
+  'Kon Tum': 'Gia Lai',
+  'Đắk Nông': 'Đắk Lắk',
+  'Buôn Ma Thuột': 'Đắk Lắk'
+}
+
 async function taoLichTrinh(duLieu) {
   const geminiKey = getGeminiKey()
-  const diemDen = duLieu.destination || 'Đà Nẵng'
+  let diemDen = duLieu.destination || 'Đà Nẵng'
+  if (DESTINATION_ALIASES[diemDen]) {
+    diemDen = DESTINATION_ALIASES[diemDen]
+  }
 
   // 1. Lấy danh sách địa điểm thực tế từ MongoDB Atlas cho điểm đến này
   let diaDiemDatabase = []
   try {
-    diaDiemDatabase = await Place.find({ destination: new RegExp(diemDen, 'i') }).lean()
+    diaDiemDatabase = await Place.find({ destination: new RegExp(`^${diemDen}$`, 'i') }).lean()
+    if (diaDiemDatabase.length === 0) {
+      diaDiemDatabase = await Place.find({ destination: new RegExp(diemDen, 'i') }).lean()
+    }
   } catch (e) {
     console.warn('Không thể đọc địa điểm từ DB:', e.message)
   }
@@ -47,12 +67,18 @@ async function taoLichTrinh(duLieu) {
 }
 
 async function goiGemini(duLieu, diaDiemDatabase, apiKey) {
-  const prompt = `${buildPrompt(duLieu, diaDiemDatabase)}\n\nChỉ trả về JSON hợp lệ, không dùng markdown (\`\`\`json).`
-  const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash'
+  const prompt = `${buildPrompt(duLieu, diaDiemDatabase)}\n\nChỉ trả về JSON duy nhất tuân thủ cấu trúc trên.`
+  const model = process.env.GEMINI_MODEL || 'gemini-1.5-flash'
   const res = await axios.post(
     `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-    { contents: [{ parts: [{ text: prompt }] }] },
-    { headers: { 'Content-Type': 'application/json' }, timeout: 60000 }
+    {
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: {
+        responseMimeType: 'application/json',
+        temperature: 0.2
+      }
+    },
+    { headers: { 'Content-Type': 'application/json' }, timeout: 5000 }
   )
 
   const raw = res.data.candidates?.[0]?.content?.parts?.[0]?.text
@@ -63,17 +89,17 @@ async function goiGemini(duLieu, diaDiemDatabase, apiKey) {
 }
 
 const LOCAL_CONTEXT_MAP = {
-  'Thanh Hóa': 'Sầm Sơn, Pù Luông, Thành Nhà Hồ, Suối Cá Thần Cẩm Lương, Đền Bà Triệu; Đặc sản: Nem chua Thanh Hóa, Chả tôm, Bánh khoái tép, Gỏi cá nhệch Nga Sơn, Bánh gai Tứ Trụ',
-  'Nghệ An': 'Bãi biển Cửa Lò, Khu di tích Kim Liên Quê Bác, Đồi chè Thanh Chương, Vườn Quốc gia Pù Mát; Đặc sản: Cháo lươn Nghệ An, Súp lươn bánh mướt, Mực nhảy Cửa Lò, Nhút Thanh Chương, Tương Nam Đàn',
-  'Hà Tĩnh': 'Bãi biển Thiên Cầm, Ngã ba Đồng Lộc, Chùa Hương Tích, Hồ Kẻ Gỗ; Đặc sản: Kẹo cu đơ Hà Tĩnh, Mực nhảy Vũng Áng, Ram mướt, Bánh bèo Hà Tĩnh, Dê núi Hương Sơn',
-  'Quảng Trị': 'Vùng Quảng Trị & Quảng Bình sáp nhập (Thành Cổ Quảng Trị, Địa đạo Vịnh Mốc, Cầu Hiền Lương, Động Phong Nha, Động Thiên Đường, Suối Moọc, Hang Sơn Đoòng); Đặc sản: Bánh canh cá lóc, Bún hến Mai Xá, Bánh lọc, Cháo cá vạt giường, Thịt trâu lá trơng',
-  'Huế': 'Đại Nội Hoàng Thành Huế, Chùa Thiên Mụ, Lăng Khải Định, Lăng Tự Đức, Đồi Vọng Cảnh, Vịnh Lăng Cô, Phá Tam Giang; Đặc sản: Bún bò Huế chuẩn vị, Cơm hến Hoa Đông, Bánh bèo nậm lọc, Cà phê muối, Chè Hẻm',
-  'Đà Nẵng': 'Vùng Đà Nẵng & Quảng Nam - Hội An sáp nhập (Bà Nà Hills & Cầu Vàng, Biển Mỹ Khê, Bán đảo Sơn Trà, Ngũ Hành Sơn, Cầu Rồng, Phố cổ Hội An, Thánh địa Mỹ Sơn, Rừng dừa Bảy Mẫu); Đặc sản: Mì Quảng Bà Mua, Bánh tráng cuốn thịt heo Quán Trần, Bánh mì Phượng Hội An, Cao lầu, Bún chả cá, Hải sản tươi sống',
-  'Quảng Ngãi': 'Vùng Quảng Ngãi & Bình Định - Quy Nhơn sáp nhập (Đảo Lý Sơn, Cổng Tò Vò, Hang Câu, Eo Gió & Kỳ Co, Tháp Đôi Chăm Pa, Khu chứng tích Sơn Mỹ); Đặc sản: Don Quảng Ngãi, Ram bắp, Bánh xèo tôm nhảy Quy Nhơn, Cá bống Sông Trà, Tỏi cô đơn Lý Sơn, Nem Chợ Huyện',
-  'Gia Lai': 'Vùng Gia Lai & Kon Tum sáp nhập (Biển Hồ T’Nưng, Núi lửa Chư Đăng Ya, Biển Hồ Chè, Chùa Minh Thành, Nhà rông Kon Klor, Nhà thờ Gỗ Kon Tum); Đặc sản: Phở hai tô (Phở khô Gia Lai), Bò một nắng muối kiến vàng, Gà nướng cơm lam Pleiku, Bún mắm cua thối, Cà phê Pleiku',
-  'Đắk Lắk': 'Vùng Đắk Lắk & Đắk Nông sáp nhập (Thác Dray Nur & Dray Sap, Bảo tàng Thế giới Cà phê, Hồ Lắk, Buôn Đôn, Chùa Sắc Tứ Khải Đoan, Hồ Tà Đùng); Đặc sản: Bún đỏ Buôn Ma Thuột, Gà nướng than Bản Đôn, Lẩu cá lăng Sông Sêrêpôk, Cà phê Robusta thơm nồng',
-  'Khánh Hòa': 'Vùng Khánh Hòa & Phú Yên sáp nhập (VinWonders Nha Trang, Tháp Bà Ponagar, Viện Hải dương học, Vịnh Vĩnh Hy, Gành Đá Đĩa, Mũi Điện Đại Lãnh, Bãi Dài Cam Ranh); Đặc sản: Bún chả cá Nha Trang, Nem nướng Ninh Hòa, Bánh căn mực, Mắt cá ngừ đại dương Phú Yên, Tôm hùm Bình Ba, Yến sào',
-  'Lâm Đồng': 'Hồ Xuân Hương & Quảng trường Lâm Viên, Thung Lũng Tình Yêu, Ga Đà Lạt, Đỉnh Langbiang, Thác Datanla & Máng trượt, Đồi chè Cầu Đất; Đặc sản: Bánh tráng nướng Đà Lạt, Lẩu gà lá é Tao Ngộ, Bánh ướt lòng gà Long, Lẩu bò Ba Toa Quán Gỗ, Kem bơ Thanh Thảo'
+  'Thanh Hóa': 'Sầm Sơn, Pù Luông, Thành Nhà Hồ, Suối Cá Thần; Đặc sản: Nem chua, Chả tôm, Bánh khoái tép',
+  'Nghệ An': 'Cửa Lò, Kim Liên Quê Bác, Đồi chè Thanh Chương; Đặc sản: Cháo lươn, Súp lươn bánh mướt, Mực nhảy',
+  'Hà Tĩnh': 'Thiên Cầm, Ngã ba Đồng Lộc, Chùa Hương Tích; Đặc sản: Kẹo cu đơ, Mực nhảy Vũng Áng, Ram mướt',
+  'Quảng Trị': 'Phong Nha, Thiên Đường, Suối Moọc, Thành Cổ, Vịnh Mốc; Đặc sản: Bánh canh cá lóc, Bún hến Mai Xá',
+  'Huế': 'Đại Nội Hoàng Thành, Chùa Thiên Mụ, Lăng Khải Định, Lăng Tự Đức; Đặc sản: Bún bò Huế, Cơm hến, Bánh bèo nậm lọc',
+  'Đà Nẵng': 'Bà Nà Hills, Cầu Vàng, Biển Mỹ Khê, Sơn Trà, Cầu Rồng, Phố cổ Hội An; Đặc sản: Mì Quảng, Bánh tráng thịt heo, Cao lầu',
+  'Quảng Ngãi': 'Đảo Lý Sơn, Cổng Tò Vò, Eo Gió, Kỳ Co; Đặc sản: Don Quảng Ngãi, Ram bắp, Bánh xèo tôm nhảy',
+  'Gia Lai': 'Biển Hồ T\'Nưng, Chư Đăng Ya, Kon Klor, Nhà thờ Gỗ; Đặc sản: Phở hai tô, Bò một nắng muối kiến vàng, Gà nướng cơm lam',
+  'Đắk Lắk': 'Bảo tàng Cà phê, Thác Dray Nur, Hồ Lắk, Buôn Đôn; Đặc sản: Bún đỏ Ban Mê, Gà nướng than, Lẩu cá lăng',
+  'Khánh Hòa': 'VinWonders, Tháp Bà Ponagar, Gành Đá Đĩa, Mũi Điện; Đặc sản: Bún chả cá, Nem nướng Ninh Hòa, Bánh căn mực',
+  'Lâm Đồng': 'Hồ Xuân Hương, Quảng trường Lâm Viên, Thung Lũng Tình Yêu, Langbiang, Datanla; Đặc sản: Bánh tráng nướng, Lẩu gà lá é, Bánh ướt lòng gà'
 }
 
 function buildPrompt(duLieu, diaDiemDatabase) {
@@ -89,11 +115,11 @@ function buildPrompt(duLieu, diaDiemDatabase) {
 
   let goiYDbText = ''
   if (diaDiemDatabase && diaDiemDatabase.length > 0) {
-    const listAttractions = diaDiemDatabase.filter(p => p.type === 'attraction').map(p => `${p.name} (Địa chỉ: ${p.address || diaDiem})`).join('; ')
-    const listFood = diaDiemDatabase.filter(p => p.type === 'restaurant').map(p => `${p.name} - ${p.description || ''} (Địa chỉ: ${p.address || diaDiem})`).join('; ')
-    const listCafe = diaDiemDatabase.filter(p => p.type === 'cafe').map(p => `${p.name} (Địa chỉ: ${p.address || diaDiem})`).join('; ')
-    const listHotels = diaDiemDatabase.filter(p => p.type === 'hotel').map(p => `${p.name} (Địa chỉ: ${p.address || diaDiem}, giá: ${p.estimated_cost || 850000}đ)`).join('; ')
-    goiYDbText = `\nDANH SÁCH ĐỊA ĐIỂM & ĐẶC SẢN THỰC TẾ CÓ SẴN TẠI ${diaDiem.toUpperCase()}:\n- Khách sạn: ${listHotels || 'Gợi ý chuẩn xác của bạn'}\n- Thắng cảnh/Check-in: ${listAttractions || 'Gợi ý chuẩn xác của bạn'}\n- Món ngon/Quán ăn: ${listFood || 'Gợi ý chuẩn xác của bạn'}\n- Quán Cafe: ${listCafe || 'Gợi ý chuẩn xác của bạn'}\n`
+    const listAttractions = diaDiemDatabase.filter(p => p.type === 'attraction').slice(0, 8).map(p => `${p.name} (${p.address || diaDiem})`).join('; ')
+    const listFood = diaDiemDatabase.filter(p => p.type === 'restaurant').slice(0, 8).map(p => `${p.name} (${p.address || diaDiem})`).join('; ')
+    const listCafe = diaDiemDatabase.filter(p => p.type === 'cafe').slice(0, 4).map(p => `${p.name} (${p.address || diaDiem})`).join('; ')
+    const listHotels = diaDiemDatabase.filter(p => p.type === 'hotel').slice(0, 4).map(p => `${p.name} (${p.address || diaDiem}, giá: ${p.estimated_cost || 850000}đ)`).join('; ')
+    goiYDbText = `\nĐỊA ĐIỂM THỰC TẾ TẠI ${diaDiem.toUpperCase()}:\n- Khách sạn: ${listHotels}\n- Thắng cảnh: ${listAttractions}\n- Quán ăn: ${listFood}\n- Cafe: ${listCafe}\n`
   }
 
   let mustVisitText = ''
