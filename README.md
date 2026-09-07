@@ -14,7 +14,7 @@
 ## 📑 MỤC LỤC TỔNG QUAN
 
 1. [Bảng Đặc Tả Yêu Cầu Phần Mềm (SRS — Chuẩn IEEE 830)](#1-bảng-đặc-tả-yêu-cầu-phần-mềm-srs--chuẩn-ieee-830)
-2. [Hệ Thống Sơ Đồ Thiết Kế & Lời Thuyết Minh Báo Cáo](#2-hệ-thống-sơ-đồ-thiết-kế--lời-thuyết-minh-báo-cáo)
+2. [Hệ Thống Sơ Đồ Thiết Kế Hệ Thống Toàn Diện](#2-hệ-thống-sơ-đồ-thiết-kế-hệ-thống-toàn-diện)
    - [2.1 Sơ đồ Ca sử dụng Hệ thống (Use Case Diagram)](#21-sơ-đồ-ca-sử-dụng-hệ-thống-use-case-diagram)
    - [2.2 Sơ đồ Kiến trúc Hệ thống 3 Tầng (Architecture Diagram)](#22-sơ-đồ-kiến-trúc-hệ-thống-3-tầng-architecture-diagram)
    - [2.3 Sơ đồ Tuần tự: AI Cào & Làm Giàu Dữ Liệu Địa Điểm](#23-sơ-đồ-tuần-tự-ai-cào--làm-giàu-dữ-liệu-địa-điểm)
@@ -73,7 +73,7 @@
 
 ---
 
-## 2. Hệ Thống Sơ Đồ Thiết Kế & Lời Thuyết Minh Báo Cáo
+## 2. Hệ Thống Sơ Đồ Thiết Kế Hệ Thống Toàn Diện
 
 ### 2.1 Sơ đồ Ca sử dụng Hệ thống (Use Case Diagram)
 
@@ -123,8 +123,10 @@ flowchart TD
     UC10 --> GeminiAI
 ```
 
-> 🗣️ **Lời thuyết minh khi báo cáo Sơ đồ Ca sử dụng:**
-> *"Kính thưa Thầy/Cô, sơ đồ Use Case thể hiện toàn bộ các chức năng mà người dùng có thể tương tác trên hệ thống. Tác nhân chính là **Khách Du Lịch**, có thể thực hiện 9 ca sử dụng từ Khám phá, Tìm kiếm tức thì, Lên lịch trình AI đến các tiện ích như Đổi lịch tránh mưa, Chia tiền nhóm và Xuất vé Offline. Đặc biệt, ca sử dụng số 10 là **AI Tự Động Cào Dữ Liệu** hoạt động ngầm, kết nối với Google Gemini AI và MongoDB Atlas để liên tục cập nhật và làm giàu kho tri thức du lịch cho hệ thống."*
+**Mô tả phân tích sơ đồ Ca sử dụng:**
+- **Tác nhân chính (Khách Du Lịch):** Tương tác trực tiếp với các chức năng cốt lõi gồm khám phá điểm đến, tìm kiếm địa danh/đặc sản, lập lịch trình thông minh, đổi lịch tránh mưa, chia tiền nhóm và xuất thẻ vé offline.
+- **Tiến trình ngầm (AI Tự động cào dữ liệu):** Hoạt động tự trị kết nối giữa Google Gemini AI và MongoDB Atlas nhằm cập nhật tri thức du lịch mới liên tục.
+- **Dịch vụ ngoại vi:** Bao gồm Google Gemini 2.5 Flash (sinh ngôn ngữ và bóc tách dữ liệu), Open-Meteo API (dữ liệu khí tượng thời gian thực) và MongoDB Atlas Cloud (lưu trữ phân tán).
 
 ---
 
@@ -170,11 +172,10 @@ graph TB
     SocialCtrl --> MongoDB
 ```
 
-> 🗣️ **Lời thuyết minh khi báo cáo Sơ đồ Kiến trúc 3 Tầng:**
-> *"Hệ thống được xây dựng theo mô hình Kiến trúc 3 Tầng hiện đại:
-> - **Tầng 1 (Trình diễn):** Xây dựng bằng Vue.js 3 và Vite, thiết kế theo triết lý App-First mượt mà, hỗ trợ thanh tìm kiếm tức thì và bộ lọc 1-chạm.
-> - **Tầng 2 (Ứng dụng & Xử lý nghiệp vụ):** Sử dụng Node.js và Express.js, đảm nhận điều phối các module nghiệp vụ như AI Data Crawler, AI Trip Planner và bộ xử lý đổi lịch thích ứng thời tiết.
-> - **Tầng 3 (Dữ liệu & AI):** Tích hợp mô hình Google Gemini 2.5 Flash để sinh lịch và cào dữ liệu, kết hợp cơ sở dữ liệu phân tán MongoDB Atlas lưu trữ hơn 520+ địa điểm thực tế và Open-Meteo API để lấy dữ liệu khí tượng thời gian thực."*
+**Mô tả phân tích kiến trúc 3 tầng:**
+- **Tầng 1 — Trình diễn (Presentation Tier):** Ứng dụng Single Page Application (SPA) phát triển trên nền Vue.js 3 và Vite, đảm bảo tốc độ tải nhanh, giao diện linh hoạt chuẩn App-First hỗ trợ chế độ giả lập điện thoại và màn hình máy tính.
+- **Tầng 2 — Ứng dụng & Nghiệp vụ (Application Tier):** Máy chủ Node.js & Express.js điều phối toàn bộ các dịch vụ bảo mật JWT, module AI Crawler bóc tách dữ liệu địa phương, thuật toán lập lịch trình tối ưu và xử lý thích ứng thời tiết.
+- **Tầng 3 — Dữ liệu & Trí tuệ Nhân tạo (Data & AI Tier):** Cung cấp tài nguyên tính toán từ Google Gemini 2.5 Flash, hệ quản trị cơ sở dữ liệu NoSQL đám mây MongoDB Atlas với hơn 520+ bản ghi địa điểm và cổng dữ liệu khí tượng Open-Meteo.
 
 ---
 
@@ -199,8 +200,10 @@ sequenceDiagram
     BoCaoAI-->>HeThongServer: Hoàn tất nạp dữ liệu, sẵn sàng phục vụ tra cứu
 ```
 
-> 🗣️ **Lời thuyết minh khi báo cáo Sơ đồ AI Cào Dữ Liệu:**
-> *"Đây là quy trình hoạt động của Module AI Crawler — 'trái tim dữ liệu' của đồ án. Thay vì nhập liệu thủ công gò bó, hệ thống tự động sinh các lệnh Prompt có cấu trúc, yêu cầu Google Gemini 2.5 Flash trích xuất danh sách địa điểm chuẩn xác theo 4 nhóm: Thắng cảnh, Quán ăn đặc sản, Khách sạn và Cafe. Dữ liệu trả về được chuẩn hóa đầy đủ 10 thuộc tính, gán tọa độ GPS thực tế và lưu vào MongoDB Atlas theo cơ chế Upsert chống trùng lặp tuyệt đối."*
+**Mô tả phân tích luồng AI Cào Dữ Liệu:**
+- Hệ thống tự động kích hoạt kiểm tra số lượng địa điểm của từng tỉnh thành khi khởi động.
+- Module AI Crawler áp dụng kỹ thuật Prompt Engineering theo 4 danh mục độc lập (Thắng cảnh, Ẩm thực đặc sản, Khách sạn, Cafe), yêu cầu Gemini AI trích xuất mảng JSON chuẩn xác.
+- Dữ liệu được chuẩn hóa đầy đủ 10 thuộc tính, gán tọa độ GPS thực tế và thực hiện cập nhật theo cơ chế Upsert vào MongoDB Atlas để loại trừ trùng lặp dữ liệu.
 
 ---
 
@@ -229,8 +232,10 @@ sequenceDiagram
     GiaoDien-->>KhachHang: Hiển thị Thẻ lịch trình, Dòng thời gian, Bản đồ và Gợi ý Khách sạn
 ```
 
-> 🗣️ **Lời thuyết minh khi báo cáo Sơ đồ AI Lên Lịch Trình:**
-> *"Quy trình lập lịch trình được tối ưu hóa cực kỳ mượt mà: Khi người dùng bấm nút tạo lịch, nút ngay lập tức chuyển trạng thái sang `'Đang lên lịch trình...'`. Backend gửi tham số đến Gemini AI để tối ưu hóa tuyến đường di chuyển và phân bổ 5 khoản chi phí khoa học. Toàn bộ lịch trình chi tiết từng buổi Sáng - Trưa - Tối kèm bản đồ di chuyển và gợi ý khách sạn được trả về và hiển thị trên màn hình chỉ trong vỏn vẹn **~1.9 giây**."*
+**Mô tả phân tích luồng AI Lập Lịch Trình:**
+- Khi người dùng gửi yêu cầu, giao diện chuyển sang trạng thái chờ `"Đang lên lịch trình..."`.
+- Backend chuyển tiếp tham số cho AI Service, gọi Google Gemini để phân bổ tuyến đường hợp lý và tính toán 5 khoản chi phí (khách sạn, ăn uống, di chuyển, vé tham quan, dự phòng).
+- Bản ghi chuyến đi được lưu vào MongoDB Atlas và phản hồi về giao diện người dùng chỉ trong khoảng **~1.9 giây**.
 
 ---
 
@@ -284,11 +289,10 @@ erDiagram
     }
 ```
 
-> 🗣️ **Lời thuyết minh khi báo cáo Sơ đồ ERD:**
-> *"Sơ đồ ERD thể hiện cấu trúc cơ sở dữ liệu chuẩn hóa của hệ thống:
-> - Thực thể **NGƯỜI DÙNG (`User`)** liên kết 1-Nhiều với bảng **CHUYẾN ĐI (`Trip`)** và bảng **YÊU THÍCH (`Favorite`)**.
-> - Thực thể **ĐỊA ĐIỂM (`Place`)** lưu trữ hơn 520 địa điểm với đầy đủ tọa độ GPS, mức giá và mô tả.
-> - Thực thể **CHUYẾN ĐI (`Trip`)** nhúng danh sách các **NGÀY LỊCH TRÌNH** và các **HOẠT ĐỘNG**, cùng cấu trúc phân bổ 5 khoản ngân sách và thông tin khách sạn gợi ý."*
+**Mô tả phân tích cấu trúc dữ liệu:**
+- Bảng `NGUOI_DUNG` quản lý thông tin xác thực tài khoản.
+- Bảng `DIA_DIEM` lưu trữ kho dữ liệu phong phú với 10 thuộc tính (GPS, giá vé, hình ảnh, đánh giá, loại hình).
+- Bảng `CHUYEN_DI` liên kết với người dùng và lưu trữ chi tiết lịch trình nhiều ngày kèm phân bổ ngân sách.
 
 ---
 
@@ -315,8 +319,9 @@ flowchart LR
     CSDLDamMay -->|Kết quả truy vấn dữ liệu| HeThong
 ```
 
-> 🗣️ **Lời thuyết minh khi báo cáo Sơ đồ Luồng Dữ liệu DFD:**
-> *"Sơ đồ DFD mức 0 khái quát dòng thông tin vào và ra của hệ thống: Khách du lịch gửi yêu cầu tạo lịch hoặc tìm kiếm địa điểm; Hệ thống sẽ điều phối dữ liệu qua lại với Google Gemini AI để sinh dữ liệu thông minh, gọi Open-Meteo API để cập nhật thời tiết thực tế, và đồng bộ dữ liệu hai chiều với cơ sở dữ liệu đám mây MongoDB Atlas để phản hồi cho người dùng nhanh nhất."*
+**Mô tả luồng thông tin DFD:**
+- Người dùng truyền tham số tìm kiếm hoặc tạo lịch trình vào hệ thống.
+- Hệ thống gửi prompt tới Gemini AI để nhận cấu trúc lịch trình, đồng thời truy vấn Open-Meteo để thu thập thời tiết thời gian thực và đồng bộ dữ liệu vào cơ sở dữ liệu MongoDB Atlas.
 
 ---
 
