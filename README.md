@@ -7,26 +7,25 @@
 [![MongoDB](https://img.shields.io/badge/MongoDB_Atlas-7.0-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/atlas)
 [![Gemini AI](https://img.shields.io/badge/Google_Gemini-2.5_Flash-8E75B2?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev/)
 
-> **Travel Trips Central VietNam** là ứng dụng du lịch thông minh đa nền tảng (_Giao diện chuẩn App di động & Máy tính PC_) ứng dụng **Trí tuệ Nhân tạo (Generative AI & Công cụ Cào dữ liệu Tri thức)** kết hợp cơ sở dữ liệu số hóa phong phú để tự động thu thập thông tin địa điểm du lịch thực tế, hỗ trợ du khách khám phá toàn diện và lập lịch trình tối ưu tại **11 tỉnh/thành phố Miền Trung & Tây Nguyên (theo địa giới sáp nhập mở rộng)**.
+> **Travel Trips Central VietNam** là ứng dụng du lịch thông minh đa nền tảng (_Giao diện chuẩn App di động & Máy tính PC_) ứng dụng **Trí tuệ Nhân tạo (Generative AI & Data Intelligence Crawler)** kết hợp cơ sở dữ liệu số hóa phong phú để tự động thu thập thông tin địa điểm du lịch thực tế, hỗ trợ du khách khám phá toàn diện và lập lịch trình tối ưu tại **11 tỉnh/thành phố Miền Trung & Tây Nguyên (theo địa giới sáp nhập mở rộng)**.
 
 ---
 
 ## 📑 MỤC LỤC TỔNG QUAN
 
 1. [Bảng Đặc Tả Yêu Cầu Phần Mềm (SRS — Chuẩn IEEE 830)](#1-bảng-đặc-tả-yêu-cầu-phần-mềm-srs--chuẩn-ieee-830)
-2. [Hệ Thống Sơ Đồ Thiết Kế Toàn Diện (100% Tiếng Việt)](#2-hệ-thống-sơ-đồ-thiết-kế-toàn-diện-100-tiếng-việt)
+2. [Hệ Thống Sơ Đồ Thiết Kế & Lời Thuyết Minh Báo Cáo](#2-hệ-thống-sơ-đồ-thiết-kế--lời-thuyết-minh-báo-cáo)
    - [2.1 Sơ đồ Ca sử dụng Hệ thống (Use Case Diagram)](#21-sơ-đồ-ca-sử-dụng-hệ-thống-use-case-diagram)
    - [2.2 Sơ đồ Kiến trúc Hệ thống 3 Tầng (Architecture Diagram)](#22-sơ-đồ-kiến-trúc-hệ-thống-3-tầng-architecture-diagram)
    - [2.3 Sơ đồ Tuần tự: AI Cào & Làm Giàu Dữ Liệu Địa Điểm](#23-sơ-đồ-tuần-tự-ai-cào--làm-giàu-dữ-liệu-địa-điểm)
    - [2.4 Sơ đồ Tuần tự: AI Lập Lịch Trình Tự Động](#24-sơ-đồ-tuần-tự-ai-lập-lịch-trình-tự-động)
    - [2.5 Sơ đồ Cơ sở Dữ liệu Thực thể Liên kết (ERD)](#25-sơ-đồ-cơ-sở-dữ-liệu-thực-thể-liên-kết-erd)
-   - [2.6 Sơ đồ Luồng Dữ liệu (DFD Mức Ngữ Cảnh 0 & Mức 1)](#26-sơ-đồ-luồng-dữ-liệu-dfd-mức-ngữ-cảnh-0--mức-1)
+   - [2.6 Sơ đồ Luồng Dữ liệu (DFD Mức Ngữ Cảnh 0)](#26-sơ-đồ-luồng-dữ-liệu-dfd-mức-ngữ-cảnh-0)
 3. [Cơ Chế & Hoạt Động Của AI Cào Dữ Liệu Du Lịch (AI Crawler)](#3-cơ-chế--hoạt-động-của-ai-cào-dữ-liệu-du-lịch-ai-crawler)
 4. [Báo Cáo Thống Kê Dữ Liệu Thực Tế (523+ Địa Điểm)](#4-báo-cáo-thống-kê-dữ-liệu-thực-tế-523-địa-điểm)
 5. [Các Tính Năng Cốt Lõi Đã Triển Khai](#5-các-tính-năng-cốt-lõi-đã-triển-khai)
 6. [Hướng Dẫn Cài Đặt & Khởi Chạy](#6-hướng-dẫn-cài-đặt--khởi-chạy)
 7. [Danh Mục API Endpoints](#7-danh-mục-api-endpoints)
-8. [Kịch Bản & Hướng Dẫn Thuyết Trình Báo Cáo Tiến Độ (Dành Cho Sinh Viên)](#8-kịch-bản--hướng-dẫn-thuyết-trình-báo-cáo-tiến-độ-dành-cho-sinh-viên)
 
 ---
 
@@ -74,7 +73,7 @@
 
 ---
 
-## 2. Hệ Thống Sơ Đồ Thiết Kế Toàn Diện (100% Tiếng Việt)
+## 2. Hệ Thống Sơ Đồ Thiết Kế & Lời Thuyết Minh Báo Cáo
 
 ### 2.1 Sơ đồ Ca sử dụng Hệ thống (Use Case Diagram)
 
@@ -124,6 +123,9 @@ flowchart TD
     UC10 --> GeminiAI
 ```
 
+> 🗣️ **Lời thuyết minh khi báo cáo Sơ đồ Ca sử dụng:**
+> *"Kính thưa Thầy/Cô, sơ đồ Use Case thể hiện toàn bộ các chức năng mà người dùng có thể tương tác trên hệ thống. Tác nhân chính là **Khách Du Lịch**, có thể thực hiện 9 ca sử dụng từ Khám phá, Tìm kiếm tức thì, Lên lịch trình AI đến các tiện ích như Đổi lịch tránh mưa, Chia tiền nhóm và Xuất vé Offline. Đặc biệt, ca sử dụng số 10 là **AI Tự Động Cào Dữ Liệu** hoạt động ngầm, kết nối với Google Gemini AI và MongoDB Atlas để liên tục cập nhật và làm giàu kho tri thức du lịch cho hệ thống."*
+
 ---
 
 ### 2.2 Sơ đồ Kiến trúc Hệ thống 3 Tầng (Architecture Diagram)
@@ -132,7 +134,7 @@ flowchart TD
 graph TB
     subgraph TANG_TRINH_DIEN["1. TẦNG TRÌNH DIỄN (Giao Diện Người Dùng - Vue.js 3 SPA)"]
         UI["Ứng dụng Đơn trang Vue.js 3 kết hợp Vite"]
-        Tabs["5 Chế độ Giao diện: Khám Phá, Lên Lịch, Chuyến Đi, Tài Khoản"]
+        Tabs["4 Chế độ Giao diện: Khám Phá, Lên Lịch, Chuyến Đi, Tài Khoản"]
         Pills["Thanh chọn 11 Tỉnh Thành và Bộ lọc 4 Nhóm Danh Mục"]
         Search["Thanh tìm kiếm thời gian thực theo từ khóa và quận huyện"]
         Modals["Cửa sổ Chia Tiền Nhóm và Xuất Thẻ Vé Hành Trình Offline"]
@@ -168,6 +170,12 @@ graph TB
     SocialCtrl --> MongoDB
 ```
 
+> 🗣️ **Lời thuyết minh khi báo cáo Sơ đồ Kiến trúc 3 Tầng:**
+> *"Hệ thống được xây dựng theo mô hình Kiến trúc 3 Tầng hiện đại:
+> - **Tầng 1 (Trình diễn):** Xây dựng bằng Vue.js 3 và Vite, thiết kế theo triết lý App-First mượt mà, hỗ trợ thanh tìm kiếm tức thì và bộ lọc 1-chạm.
+> - **Tầng 2 (Ứng dụng & Xử lý nghiệp vụ):** Sử dụng Node.js và Express.js, đảm nhận điều phối các module nghiệp vụ như AI Data Crawler, AI Trip Planner và bộ xử lý đổi lịch thích ứng thời tiết.
+> - **Tầng 3 (Dữ liệu & AI):** Tích hợp mô hình Google Gemini 2.5 Flash để sinh lịch và cào dữ liệu, kết hợp cơ sở dữ liệu phân tán MongoDB Atlas lưu trữ hơn 520+ địa điểm thực tế và Open-Meteo API để lấy dữ liệu khí tượng thời gian thực."*
+
 ---
 
 ### 2.3 Sơ đồ Tuần tự: AI Cào & Làm Giàu Dữ Liệu Địa Điểm
@@ -190,6 +198,9 @@ sequenceDiagram
     CoSoDuLieu-->>BoCaoAI: Xác nhận lưu trữ thành công 100%
     BoCaoAI-->>HeThongServer: Hoàn tất nạp dữ liệu, sẵn sàng phục vụ tra cứu
 ```
+
+> 🗣️ **Lời thuyết minh khi báo cáo Sơ đồ AI Cào Dữ Liệu:**
+> *"Đây là quy trình hoạt động của Module AI Crawler — 'trái tim dữ liệu' của đồ án. Thay vì nhập liệu thủ công gò bó, hệ thống tự động sinh các lệnh Prompt có cấu trúc, yêu cầu Google Gemini 2.5 Flash trích xuất danh sách địa điểm chuẩn xác theo 4 nhóm: Thắng cảnh, Quán ăn đặc sản, Khách sạn và Cafe. Dữ liệu trả về được chuẩn hóa đầy đủ 10 thuộc tính, gán tọa độ GPS thực tế và lưu vào MongoDB Atlas theo cơ chế Upsert chống trùng lặp tuyệt đối."*
 
 ---
 
@@ -217,6 +228,9 @@ sequenceDiagram
     CongAPI-->>GiaoDien: Phản hồi dữ liệu JSON kết quả
     GiaoDien-->>KhachHang: Hiển thị Thẻ lịch trình, Dòng thời gian, Bản đồ và Gợi ý Khách sạn
 ```
+
+> 🗣️ **Lời thuyết minh khi báo cáo Sơ đồ AI Lên Lịch Trình:**
+> *"Quy trình lập lịch trình được tối ưu hóa cực kỳ mượt mà: Khi người dùng bấm nút tạo lịch, nút ngay lập tức chuyển trạng thái sang `'Đang lên lịch trình...'`. Backend gửi tham số đến Gemini AI để tối ưu hóa tuyến đường di chuyển và phân bổ 5 khoản chi phí khoa học. Toàn bộ lịch trình chi tiết từng buổi Sáng - Trưa - Tối kèm bản đồ di chuyển và gợi ý khách sạn được trả về và hiển thị trên màn hình chỉ trong vỏn vẹn **~1.9 giây**."*
 
 ---
 
@@ -270,11 +284,16 @@ erDiagram
     }
 ```
 
+> 🗣️ **Lời thuyết minh khi báo cáo Sơ đồ ERD:**
+> *"Sơ đồ ERD thể hiện cấu trúc cơ sở dữ liệu chuẩn hóa của hệ thống:
+> - Thực thể **NGƯỜI DÙNG (`User`)** liên kết 1-Nhiều với bảng **CHUYẾN ĐI (`Trip`)** và bảng **YÊU THÍCH (`Favorite`)**.
+> - Thực thể **ĐỊA ĐIỂM (`Place`)** lưu trữ hơn 520 địa điểm với đầy đủ tọa độ GPS, mức giá và mô tả.
+> - Thực thể **CHUYẾN ĐI (`Trip`)** nhúng danh sách các **NGÀY LỊCH TRÌNH** và các **HOẠT ĐỘNG**, cùng cấu trúc phân bổ 5 khoản ngân sách và thông tin khách sạn gợi ý."*
+
 ---
 
-### 2.6 Sơ đồ Luồng Dữ liệu (DFD Mức Ngữ Cảnh 0 & Mức 1)
+### 2.6 Sơ đồ Luồng Dữ liệu (DFD Mức Ngữ Cảnh 0)
 
-#### Sơ đồ DFD Mức Ngữ Cảnh 0 (Context Diagram):
 ```mermaid
 flowchart LR
     KhachDuLich(["Khách Du Lịch"])
@@ -295,6 +314,9 @@ flowchart LR
     HeThong -->|Đọc và Ghi Địa điểm, Chuyến đi, Tài khoản| CSDLDamMay
     CSDLDamMay -->|Kết quả truy vấn dữ liệu| HeThong
 ```
+
+> 🗣️ **Lời thuyết minh khi báo cáo Sơ đồ Luồng Dữ liệu DFD:**
+> *"Sơ đồ DFD mức 0 khái quát dòng thông tin vào và ra của hệ thống: Khách du lịch gửi yêu cầu tạo lịch hoặc tìm kiếm địa điểm; Hệ thống sẽ điều phối dữ liệu qua lại với Google Gemini AI để sinh dữ liệu thông minh, gọi Open-Meteo API để cập nhật thời tiết thực tế, và đồng bộ dữ liệu hai chiều với cơ sở dữ liệu đám mây MongoDB Atlas để phản hồi cho người dùng nhanh nhất."*
 
 ---
 
@@ -410,63 +432,6 @@ npm run dev
 | `GET` | `/api/weather?destination={city}` | Lấy dữ liệu dự báo thời tiết thời gian thực |
 | `POST` | `/api/auth/register` \| `/api/auth/login` | Đăng ký & Đăng nhập tài khoản người dùng |
 | `GET` | `/api/social/my-trips` | Lấy danh sách chuyến đi đã lưu của tài khoản |
-
----
-
-## 8. Kịch Bản & Hướng Dẫn Thuyết Trình Báo Cáo Tiến Độ (Dành Cho Sinh Viên)
-
-Dưới đây là kịch bản trình bày chuẩn 10 phút chi tiết từng câu từ giúp bạn tự tin báo cáo trước Thầy/Cô và Hội đồng:
-
-### ⏱️ Phần 1: Giới Thiệu Đề Tài & Tính Cấp Thiết (Thời lượng: ~2 Phút)
-- **Lời mở đầu:**
-  > *"Kính thưa Thầy/Cô và các bạn, hôm nay nhóm em xin phép được báo cáo tiến độ Đồ án môn học Trí tuệ Nhân tạo với đề tài: **Travel Trips Central VietNam — Hệ thống Trợ lý Du lịch & Lập lịch trình thông minh ứng dụng Trí tuệ Nhân tạo**."*
-- **Lý do chọn đề tài & Vấn đề thực tế:**
-  > *"Hiện nay, nhu cầu du lịch tự túc tại Miền Trung và Tây Nguyên tăng rất cao. Tuy nhiên, khách du lịch thường mất hàng giờ đồng hồ để tìm kiếm thông tin bị phân tán trên mạng, không biết rõ các quán ăn đặc sản gia truyền chính gốc ở đâu, và gặp nhiều khó khăn khi tự lên lịch trình hợp lý theo ngân sách và thời gian của mình."*
-- **Mục tiêu của nhóm:**
-  > *"Nhóm em xây dựng ứng dụng này nhằm mục tiêu ứng dụng **Mô hình Trí tuệ Nhân tạo tạo sinh (Generative AI)** và **Công nghệ Cào dữ liệu Tri thức du lịch (AI Data Crawler)** để tự động hóa toàn bộ quá trình: từ thu thập địa điểm thực tế đến sinh lịch trình thông minh chỉ trong vài giây."*
-
-### ⏱️ Phần 2: Kiến Trúc Kỹ Thuật & Điểm Nhấn AI Data Crawler (Thời lượng: ~3 Phút)
-- **Điểm đột phá về dữ liệu:**
-  > *"Thưa Thầy/Cô, một điểm đặc biệt trong đồ án của nhóm em là **không nhập liệu thủ công một cách tĩnh và gò bó**. Thay vào đó, nhóm em đã thiết kế module **AI Data Crawler** sử dụng mô hình **Google Gemini 2.5 Flash**."*
-- **Quy trình hoạt động của AI Crawler:**
-  > *"Khi cần dữ liệu của một tỉnh thành, AI sẽ tự động phân tích ngữ cảnh và bóc tách dữ liệu độc lập thành 4 nhóm danh mục:
-  > 1. Thắng cảnh, di tích lịch sử và làng nghề truyền thống.
-  > 2. Các quán ăn đặc sản lâu đời, ẩm thực đường phố trứ danh.
-  > 3. Khách sạn, resort nghỉ dưỡng uy tín.
-  > 4. Quán cafe ngắm cảnh và check-in đẹp."*
-- **Chất lượng và quy mô dữ liệu:**
-  > *"Mỗi địa điểm đều được AI trích xuất đầy đủ 10 thuộc tính, bao gồm địa chỉ chi tiết số nhà tên đường, mô tả sinh động, giá vé tham khảo và đặc biệt là **tọa độ GPS thực tế** để tích hợp bản đồ dẫn đường. Hiện tại, CSDL của nhóm em đã thu thập được **hơn 520+ địa điểm thực tế** phủ khắp **11 tỉnh thành Miền Trung và Tây Nguyên sau sáp nhập**, trong đó riêng khu vực Đà Nẵng và Hội An đã có tới **77 địa điểm**."*
-
-### ⏱️ Phần 3: Trình Diễn Demo Trực Tiếp Trên Ứng Dụng (Thời lượng: ~4 Phút)
-*(Mở trình duyệt tại địa chỉ `http://localhost:5173` và thao tác từng bước)*
-
-1. **Trình diễn Tab Khám Phá:**
-   > *"Đầu tiên, ở Tab Khám Phá, du khách có thể bấm chọn nhanh giữa 11 tỉnh thành. Dữ liệu địa điểm và thời tiết thời gian thực hiển thị ngay lập tức dưới 30 mili-giây."*
-   > *(Thao tác: Gõ vào thanh tìm kiếm từ khóa ví dụ "Bà Nà", "Mì Quảng", "Hội An")*
-   > *"Thanh tìm kiếm thời gian thực này cho phép du khách lọc tức thì mọi địa danh, món ăn đặc sản hoặc quận huyện theo nhu cầu."*
-
-2. **Trình diễn Tab Lên Lịch Trình (AI Planner):**
-   > *(Thao tác: Chọn Đà Nẵng, 3 ngày, 2 người, ngân sách 4 triệu, sở thích Ăn uống đặc sản, biển)*
-   > *"Bây giờ em sẽ bấm nút **Tạo Lịch Trình Thông Minh**. Nút chuyển sang trạng thái `'Đang lên lịch trình...'` và chỉ sau **khoảng 1.9 giây**, AI đã trả về kết quả hoàn chỉnh."*
-   > *(Chỉ vào màn hình giải thích các phần:)*
-   > - *"Thứ nhất, bảng phân bổ ngân sách khoa học thành 5 khoản: Khách sạn, Ăn uống, Di chuyển, Vé tham quan và Dự phòng."*
-   > - *"Thứ hai, gợi ý khách sạn nghỉ dưỡng phù hợp kèm nút chỉ đường Google Maps 1-chạm."*
-   > - *"Thứ ba, dòng thời gian chi tiết từng buổi Sáng - Trưa - Tối với các địa điểm không bị trùng lặp."*
-   > - *"Thứ tư, bản đồ trực quan hiển thị lộ trình di chuyển theo từng ngày."*
-
-3. **Trình diễn Các Tiện Ích Độc Đáo:**
-   > *(Thao tác: Bấm nút 'Đổi lịch tránh mưa')*
-   > *"Nếu gặp thời tiết mưa bão, tính năng **Đổi lịch tránh mưa** kết nối dữ liệu thời tiết Open-Meteo sẽ tự động chuyển các hoạt động ngoài trời sang các địa điểm trong nhà có mái che."*
-   > *(Thao tác: Bấm nút 'Chia tiền nhóm' và 'Xuất vé Offline')*
-   > *"Ngoài ra, ứng dụng còn tích hợp công cụ tính tiền chia đều cho nhóm và xuất vé điện tử Boarding Pass có mã QR để du khách sử dụng ngoại tuyến khi mất sóng 4G."*
-
-### ⏱️ Phần 4: Kết Luận & Kế Hoạch Tiếp Theo (Thời lượng: ~1 Phút)
-- **Tổng kết:**
-  > *"Tóm lại, nhóm em đã hoàn thành toàn bộ các yêu cầu chức năng cốt lõi (FR-01 đến FR-08), xây dựng thành công cơ chế AI Crawler tự động hóa dữ liệu, đạt tốc độ phản hồi cao và giao diện thân thiện với người dùng."*
-- **Hướng phát triển:**
-  > *"Trong giai đoạn tới, nhóm em sẽ tiếp tục tối ưu hóa thuật toán định tuyến thông minh theo thời gian thực và hoàn thiện báo cáo tổng kết đồ án."*
-- **Lời cảm ơn:**
-  > *"Em xin chân thành cảm ơn Thầy/Cô và các bạn đã chú ý lắng nghe. Nhóm em rất mong nhận được những nhận xét và đóng góp quý báu từ Thầy/Cô để đồ án được hoàn thiện tốt hơn nữa ạ!"*
 
 ---
 
