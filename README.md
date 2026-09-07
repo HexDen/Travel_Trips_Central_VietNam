@@ -58,21 +58,6 @@
 
 ---
 
-### 1.3 Ma Trận Truy Xuất Yêu Cầu (Requirements Traceability Matrix — RTM)
-
-| Mã YC | Giao Diện Người Dùng | Điểm Cuối API Backend | Mô Hình Dữ Liệu MongoDB | Kịch Bản Kiểm Thử |
-| :---: | :--- | :--- | :---: | :---: |
-| **FR-01** | Tab Tài khoản (Form Đăng nhập / Đăng ký) | `POST /api/auth/register`<br>`POST /api/auth/login` | `User.js` | TC-AUTH-01 |
-| **FR-02** | Tab Khám phá (`activeTab === 'explore'`) | `GET /api/places?destination=...` | `Place.js` | TC-EXPLORE-01 |
-| **FR-03** | Khởi động Server & Module AI Crawler | `POST /api/places/crawl-deep`<br>`services/aiCrawlerService.js` | `Place.js` | TC-CRAWL-01 |
-| **FR-04** | Tab Lên lịch (`activeTab === 'planner'`) | `POST /api/ai/plan` | `Trip.js`, `Place.js` | TC-PLAN-01 |
-| **FR-05** | Nút `🌧️ Đổi lịch tránh mưa` | `POST /api/ai/replan` | `Trip.js`, Open-Meteo | TC-WEATHER-01 |
-| **FR-06** | Cửa sổ `💸 Chia tiền nhóm` | Local Engine (`App.vue`) | `Trip.js` | TC-SPLIT-01 |
-| **FR-07** | Cửa sổ `🎫 Xuất vé Offline` | Trình tạo vé Boarding Pass | `Trip.js` | TC-PASS-01 |
-| **FR-08** | Tab Chuyến đi (`activeTab === 'saved'`) | `GET /api/social/my-trips` | `Trip.js` | TC-TRIP-01 |
-
----
-
 ## 2. Hệ Thống Sơ Đồ Thiết Kế Hệ Thống Toàn Diện
 
 ### 2.1 Sơ đồ Ca sử dụng Hệ thống (Use Case Diagram)
