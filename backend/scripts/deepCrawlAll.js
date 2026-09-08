@@ -80,7 +80,7 @@ Trả về JSON duy nhất là mảng các đối tượng:`
 
 async function runMegaCrawl() {
   await mongoose.connect(process.env.MONGODB_URI)
-  console.log('🚀 Bắt đầu quy trình AI Mega-Crawl toàn diện cho 11 tỉnh thành...')
+  console.log(' Bắt đầu quy trình AI Mega-Crawl toàn diện cho 11 tỉnh thành...')
 
   for (const dest of CENTRAL_VIETNAM_DESTINATIONS) {
     console.log(`\n📌 Đang cào dữ liệu sâu cho: ${dest}...`)
@@ -97,7 +97,7 @@ async function runMegaCrawl() {
   }
 
   const grandTotal = await Place.countDocuments()
-  console.log(`\n🎉 HOÀN TẤT MEGA-CRAWL! Tổng số địa điểm toàn hệ thống: ${grandTotal}`)
+  console.log(`\n HOÀN TẤT MEGA-CRAWL! Tổng số địa điểm toàn hệ thống: ${grandTotal}`)
   process.exit(0)
 }
 

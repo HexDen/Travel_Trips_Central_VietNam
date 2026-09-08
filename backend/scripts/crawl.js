@@ -11,12 +11,12 @@ const { crawlPlacesByAI, CENTRAL_VIETNAM_DESTINATIONS } = require('../services/a
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/ai-travel'
 
 async function runManualCrawl() {
-  console.log('🚀 [AI Crawler CLI] Đang kết nối tới MongoDB Atlas...')
+  console.log(' [AI Crawler CLI] Đang kết nối tới MongoDB Atlas...')
   try {
     await mongoose.connect(MONGODB_URI)
     console.log('✅ [AI Crawler CLI] Kết nối MongoDB Atlas thành công!\n')
 
-    console.log('🤖 Bắt đầu thu thập dữ liệu bằng AI cho các tỉnh thành Miền Trung:')
+    console.log(' Bắt đầu thu thập dữ liệu bằng AI cho các tỉnh thành Miền Trung:')
     console.log(CENTRAL_VIETNAM_DESTINATIONS.join(', '))
     console.log('------------------------------------------------------------')
 
@@ -24,10 +24,10 @@ async function runManualCrawl() {
       await crawlPlacesByAI(destination)
     }
 
-    console.log('\n🎉 [AI Crawler CLI] HOÀN TẤT! Toàn bộ dữ liệu đã được lưu vào MongoDB Atlas.')
+    console.log('\n [AI Crawler CLI] HOÀN TẤT! Toàn bộ dữ liệu đã được lưu vào MongoDB Atlas.')
     process.exit(0)
   } catch (err) {
-    console.error('❌ [AI Crawler CLI] Lỗi:', err.message)
+    console.error(' [AI Crawler CLI] Lỗi:', err.message)
     process.exit(1)
   }
 }
