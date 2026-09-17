@@ -65,13 +65,43 @@ app.use((err, req, res, next) => {
 })
 
 const { autoInitPlaces } = require('./services/aiCrawlerService')
+const { runCrawlPlacesWithImages } = require('./scripts/crawlPlacesWithImages')
+const { enrichAllDatabaseWithRealPhotos } = require('./scripts/enrichAllRealPhotos')
+
+/**
+ * Đường ống dữ liệu tự động (Autonomous Pipeline) chạy ngầm khi khởi động server:
+ * 1. Cào nạp & đồng bộ các danh thắng chuẩn bách khoa từ Wikipedia
+ * 2. Tự động kiểm tra và cào thêm các điểm đến địa phương bằng AI
+ * 3. Quét toàn bộ CSDL và nâng cấp ảnh thật HD 100%
+ */
+async function runAutonomousDataPipeline() {
+  try {
+    console.log('\n===============================================================')
+    console.log('🔄 [Autonomous Pipeline] BẮT ĐẦU TỰ ĐỘNG CHẠY HỆ THỐNG DỮ LIỆU...')
+    console.log('===============================================================')
+    
+    // Bước 1: Nạp & cập nhật các danh lam thắng cảnh chính thống từ Wikipedia
+    await runCrawlPlacesWithImages()
+
+    // Bước 2: Kiểm tra số lượng & cào AI các điểm địa phương nếu chưa đủ
+    await autoInitPlaces()
+
+    // Bước 3: Nâng cấp đồng bộ ảnh thật 100% cho các quán ăn, cafe, khách sạn, di tích
+    await enrichAllDatabaseWithRealPhotos()
+
+    console.log('✅ [Autonomous Pipeline] TẤT CẢ DỮ LIỆU & ẢNH THẬT ĐÃ HOÀN TẤT ĐỒNG BỘ!\n')
+  } catch (err) {
+    console.warn(`⚠️ [Autonomous Pipeline] Cảnh báo trong quá trình chạy tự động: ${err.message}`)
+  }
+}
 
 async function startServer() {
   try {
     await mongoose.connect(MONGODB_URI)
     console.log('MongoDB connected')
-    // Tự động khởi chạy AI Crawler nạp dữ liệu khi khởi động
-    autoInitPlaces()
+    
+    // Kích hoạt toàn bộ chu trình cào & làm giàu ảnh thật ngầm (không chặn cổng server)
+    // runAutonomousDataPipeline()
   } catch (err) {
     console.warn(`MongoDB unavailable: ${err.message}`)
   }

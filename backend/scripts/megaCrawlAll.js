@@ -8,6 +8,7 @@ const mongoose = require('mongoose')
 const axios = require('axios')
 const Place = require('../models/Place')
 const { CENTRAL_VIETNAM_DESTINATIONS, PHOTO_MAP } = require('../services/aiCrawlerService')
+const { getRealImageFromGoogleMaps } = require('../services/googleMapsService')
 
 const apiKey = process.env.GEMINI_API_KEY
 const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash'
@@ -97,7 +98,15 @@ TRẢ VỀ KẾT QUẢ DUY NHẤT LÀ MẢNG JSON HỢP LỆ:
           let saved = 0
           for (const item of list) {
             if (!item.name) continue
-            const img = item.image || destPhotos[item.type] || destPhotos.attraction || 'https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?w=600&auto=format&fit=crop&q=80'
+            
+            let img = item.image;
+            const realImg = await getRealImageFromGoogleMaps(item.name, dest);
+            if (realImg) {
+              img = realImg;
+            } else if (!img) {
+              img = destPhotos[item.type] || destPhotos.attraction || 'https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?w=600&auto=format&fit=crop&q=80';
+            }
+
             await Place.updateOne(
               { name: item.name, destination: dest },
               {

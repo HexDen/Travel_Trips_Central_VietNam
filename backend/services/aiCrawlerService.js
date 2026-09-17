@@ -1,6 +1,6 @@
 const axios = require('axios')
 const Place = require('../models/Place')
-
+const { getRealImageFromGoogleMaps } = require('./googleMapsService')
 // 11 Tỉnh/Thành phố Miền Trung & Tây Nguyên sau sáp nhập
 const CENTRAL_VIETNAM_DESTINATIONS = [
   'Thanh Hóa',
@@ -212,19 +212,28 @@ TRẢ VỀ KẾT QUẢ DUY NHẤT LÀ MỘT MẢNG JSON HỢP LỆ (KHÔNG KÈM 
 
   // Tự động gán hình ảnh độ nét cao và chuẩn hóa dữ liệu
   const destPhotos = PHOTO_MAP[destination] || PHOTO_MAP['Đà Nẵng']
-  placesToSave = (placesToSave || []).map(p => {
+  const enrichedPlaces = []
+  for (const p of (placesToSave || [])) {
     let img = p.image
-    if (!img || !img.startsWith('http')) {
+    
+    // Thử lấy ảnh từ Google Maps trước
+    const realImg = await getRealImageFromGoogleMaps(p.name, destination)
+    if (realImg) {
+      img = realImg
+    } else if (!img || !img.startsWith('http')) {
+      // Fallback
       img = destPhotos[p.type] || destPhotos.attraction
     }
-    return {
+    
+    enrichedPlaces.push({
       ...p,
       destination,
       image: img,
       rating: Number(p.rating) || 4.7,
       estimated_cost: Number(p.estimated_cost) || (p.type === 'hotel' ? 850000 : p.type === 'restaurant' ? 120000 : 50000)
-    }
-  })
+    })
+  }
+  placesToSave = enrichedPlaces
 
   // Lưu tự động vào MongoDB Atlas (Upsert chống trùng lặp)
   let savedCount = 0
@@ -329,10 +338,19 @@ TRẢ VỀ KẾT QUẢ DUY NHẤT LÀ MẢNG JSON HỢP LỆ:
         // Chuẩn hóa và lưu vào DB
         for (const p of nearbyPlaces) {
           if (!p.name) continue
+          
+          let img = p.image;
+          const realImg = await getRealImageFromGoogleMaps(p.name, destination);
+          if (realImg) {
+            img = realImg;
+          } else {
+             img = img || destPhotos[p.type] || destPhotos.attraction;
+          }
+
           const fullPlace = {
             ...p,
             destination,
-            image: p.image || destPhotos[p.type] || destPhotos.attraction,
+            image: img,
             rating: Number(p.rating) || 4.8,
             estimated_cost: Number(p.estimated_cost) || (p.type === 'hotel' ? 850000 : 120000)
           }
