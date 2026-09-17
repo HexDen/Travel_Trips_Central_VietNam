@@ -247,6 +247,32 @@ AI Crawler phân chia dữ liệu của mỗi tỉnh thành thành 4 nhóm độ
 - **Tự động khởi chạy khi bật Server (`autoInitPlaces`):** Khi hệ thống Backend khởi động, AI sẽ tự động kiểm tra số lượng dữ liệu của từng tỉnh thành. Nếu khu vực nào chưa có đủ dữ liệu, AI Crawler sẽ tự động quét ngầm và nạp thêm.
 - **Chống trùng lặp tuyệt đối (Upsert Mechanism):** Sử dụng khóa duy nhất `{ name, destination }` khi ghi vào MongoDB Atlas, giúp dữ liệu luôn được làm mới mà không bị nhân bản trùng tên.
 
+### 3.4 Cơ Chế Tích Hợp Hình Ảnh Thực Tế (Google Maps API & Puppeteer Crawler)
+
+Nhằm khắc phục hoàn toàn điểm yếu của dữ liệu hình ảnh giả lập (Unsplash) thiếu tính chân thực, hệ thống đã được nâng cấp với **Kiến trúc Lai (Hybrid Image Engine)**. Kiến trúc này cho phép tự động hóa việc lấy hình ảnh chân thực 100% của từng địa điểm, quán ăn, khách sạn từ Google Maps thông qua 2 phương thức hoạt động song song, đảm bảo tính ổn định và tối ưu hóa chi phí (Cost-Optimization) tuyệt đối:
+
+#### A. Tích hợp Google Maps Places API (Phương thức Chính quy)
+- **Cơ chế hoạt động (`googleMapsService.js`):** 
+  - Hệ thống sử dụng Giao thức RESTful API kết nối trực tiếp với máy chủ Google Cloud thông qua `Places API (New)`.
+  - Khi AI sinh ra một địa điểm mới, hệ thống sẽ tự động gọi phương thức `Text Search` kèm theo tọa độ (nếu có) để tìm kiếm địa điểm chính xác nhất.
+  - Sau khi lấy được `Place ID`, hệ thống tiếp tục gọi phương thức `Place Photos` để tải về URL hình ảnh chất lượng cao nhất của địa điểm đó do người dùng thật đánh giá (Reviews).
+- **Ưu điểm:** Tốc độ phản hồi cực nhanh (dưới 500ms), dữ liệu chuẩn hóa JSON, hoạt động ổn định và có thể lấy được các hình ảnh độc quyền.
+- **Hạn chế:** Chịu sự kiểm soát khắt khe của hệ thống thanh toán Google Cloud Billing (thường yêu cầu xác minh thẻ tín dụng quốc tế hoặc đặt cọc phí ngăn chặn bot).
+
+#### B. Trình cào dữ liệu tự động hóa - Puppeteer Headless (Phương thức Tối ưu chi phí)
+Để vượt qua rào cản chi phí và giới hạn quota của Google Cloud, hệ thống được trang bị một công cụ cào dữ liệu độc lập cực kỳ mạnh mẽ tại `scripts/crawlGoogleMapsPuppeteer.js`.
+- **Cơ chế giả lập (Browser Automation):** Khởi chạy một trình duyệt Chrome ẩn danh ngầm (Headless Mode) thông qua thư viện `puppeteer-core`. Hệ thống truyền các tham số như `--no-sandbox`, `--disable-setuid-sandbox` và giả mạo cấu trúc `User-Agent` hợp lệ để qua mặt hàng rào chống Bot (Anti-bot) của Google.
+- **Phân tích cú pháp DOM sâu (Deep DOM Parsing):** Kịch bản tự động điều hướng đến URL bản đồ, nhập hàng loạt biến thể từ khóa phức tạp (Ví dụ: *"khu du lịch sinh thái điểm tham quan Đà Nẵng"*). Sau đó, nó can thiệp vào mã nguồn trang web, tự động mô phỏng thao tác "cuộn chuột liên tục" (Scrolling Trigger) để ép máy chủ Google Maps tải thêm dữ liệu cho đến khi hết danh sách.
+- **Khai thác dữ liệu ngầm (Data Extraction):** 
+  - Đọc các thẻ DOM (`div.Nv2PK`, `a.hfpxzc`) để lấy tên địa điểm, địa chỉ và điểm đánh giá thực tế (Rating).
+  - Trích xuất URL gốc của hình ảnh từ các thẻ `img` và **tự động nâng cấp độ phân giải** hình ảnh từ ảnh thumb mờ lên chất lượng HD thông qua thuật toán thay thế tham số định dạng URL (`=w800-h600-k-no`).
+  - Bóc tách Vĩ độ và Kinh độ (Latitude & Longitude) trực tiếp từ chuỗi URL định tuyến bằng Regex.
+
+#### C. Công cụ Đồng bộ Dữ liệu Không gián đoạn (Zero-Downtime Migration)
+- Các kịch bản chạy nền như `updateGoogleMapsPhotos.js` và `enrichAllRealPhotos.js` được thiết kế để quét qua toàn bộ cơ sở dữ liệu hàng trăm bản ghi đang có trong MongoDB Atlas.
+- Trình quét (Scanner) thông minh chỉ nhắm mục tiêu vào các địa điểm đang sử dụng ảnh Unsplash hoặc ảnh lỗi, tiến hành gọi module Puppeteer/API để fetch ảnh thực tế và lưu đè (Upsert) mà không làm sập server hay ghi đè các trường dữ liệu quan trọng khác.
+- **Kết quả:** Toàn bộ hình ảnh trên giao diện người dùng ngay lập tức trở nên sinh động, thực tế, góp phần tăng tính thuyết phục cho hệ thống tạo lịch trình AI.
+
 ---
 
 ## 4. Báo Cáo Thống Kê Dữ Liệu Thực Tế (523+ Địa Điểm)
