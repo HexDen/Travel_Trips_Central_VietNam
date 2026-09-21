@@ -145,9 +145,10 @@ ${goiYDbText}${mustVisitText}
 QUY TẮC BẮT BUỘC:
 1. TUYỆT ĐỐI KHÔNG ĐƯỢC LẶP LẠI ĐỊA ĐIỂM: Mọi thắng cảnh, quán ăn sáng, quán ăn trưa, quán ăn tối trong suốt toàn bộ ${ngay} ngày BẮT BUỘC PHẢI KHÁC NHAU 100%. Không được xếp lại cùng 1 địa điểm ở các ngày khác nhau.
 2. ĐỊA CHỈ RÕ RÀNG (ADDRESS): BẮT BUỘC mọi hoạt động và khách sạn đều phải có trường "address" cụ thể (Số nhà, Tên đường, Quận/Huyện, Tỉnh/TP).
-3. KHÁCH SẠN (HOTEL): Có trường "hotel_recommendation" gồm: name, address, rating, price_per_night, description. Ngày 1 lúc 14:00 có mốc "Nhận phòng", ngày cuối lúc 12:00 có mốc "Trả phòng".
+3. KHÁCH SẠN (HOTEL): ƯU TIÊN CHỌN KHÁCH SẠN BÌNH DÂN, GIÁ RẺ. Có trường "hotel_recommendation" gồm: name, address, rating, price_per_night, description. Ngày 1 lúc 14:00 có mốc "Nhận phòng", ngày cuối lúc 12:00 có mốc "Trả phòng".
 4. NHÃN PHÂN LOẠI (CATEGORY): Mỗi hoạt động có type ('breakfast' | 'lunch' | 'dinner' | 'checkin' | 'attraction' | 'cafe' | 'checkout') và label ('Ăn sáng' | 'Ăn trưa' | 'Ăn tối' | 'Nhận phòng' | 'Tham quan / Check-in' | 'Cafe & Chill' | 'Trả phòng').
 5. ĐẶC SẢN & ĐỊA DANH CHÍNH XÁC: Nêu rõ tên món đặc sản + tên quán ăn cụ thể tại ${diaDiem}. TUYỆT ĐỐI KHÔNG dùng tên chung chung.
+6. TỐI ƯU KHOẢNG CÁCH & PHÍ DI CHUYỂN: Các địa điểm trong cùng MỘT NGÀY bắt buộc phải nằm gần nhau. BẮT BUỘC phải ghi chú tên điểm xuất phát, khoảng cách, THỜI GIAN DI CHUYỂN, và phí di chuyển ước tính vào cuối nội dung "activity" (Buổi sáng bắt buộc tính từ KHÁCH SẠN). (Ví dụ: "... (Từ khách sạn di chuyển ~5km, đi xe khoảng 10 phút, phí taxi ước tính 75.000đ)").
 
 ĐỊNH DẠNG ĐẦU RA (CHỈ TRẢ VỀ JSON DUY NHẤT):
 {
@@ -157,11 +158,11 @@ QUY TẮC BẮT BUỘC:
   "transportation": "${duLieu.transportation || 'linh hoạt'}",
   "hotel_request": "${duLieu.hotel_request || ''}",
   "hotel_recommendation": {
-    "name": "Tên khách sạn / resort cụ thể tại ${diaDiem}",
+    "name": "Tên khách sạn / homestay bình dân cụ thể tại ${diaDiem}",
     "address": "Địa chỉ cụ thể của khách sạn",
-    "rating": 4.7,
-    "price_per_night": 850000,
-    "description": "Mô tả điểm cộng của khách sạn"
+    "rating": 4.5,
+    "price_per_night": 350000,
+    "description": "Mô tả điểm cộng của khách sạn giá rẻ"
   },
   "budget_breakdown": {
     "hotel": number,
@@ -213,6 +214,7 @@ async function taoLichTrinhThongMinh(duLieu, diaDiemDatabase) {
   const availableRestaurants = [...diaDiemDatabase.filter(p => p.type === 'restaurant')]
   const availableCafes = [...diaDiemDatabase.filter(p => p.type === 'cafe')]
   const hotels = diaDiemDatabase.filter(p => p.type === 'hotel')
+  hotels.sort((a, b) => (a.estimated_cost || 9999999) - (b.estimated_cost || 9999999)) // Chọn khách sạn bình dân giá rẻ
 
   const hotelChon = hotels[0] || {
     name: `Khách sạn nghỉ dưỡng trung tâm ${diemDen}`,
@@ -225,90 +227,131 @@ async function taoLichTrinhThongMinh(duLieu, diaDiemDatabase) {
   // Danh sách các địa điểm đã đi để TUYỆT ĐỐI KHÔNG LẶP LẠI
   const usedPlaceNames = new Set()
 
-  function layDiaDiemKhongTrung(list, fallbackTen, fallbackType, fallbackCost) {
-    // 1. Kiểm tra nếu có địa điểm do người dùng chọn trước
+  // Tính khoảng cách Haversine (km)
+  function calculateDistance(lat1, lon1, lat2, lon2) {
+    if (!lat1 || !lon1 || !lat2 || !lon2) return 999;
+    const R = 6371; 
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  }
+
+  function layDiaDiemKhongTrung(list, fallbackTen, fallbackType, fallbackCost, anchor = null) {
     const customIdx = selectedPlaces.findIndex(name => !usedPlaceNames.has(name) && list.some(p => p.name === name))
     if (customIdx >= 0) {
-      const targetName = selectedPlaces[customIdx]
-      const found = list.find(p => p.name === targetName)
+      const found = list.find(p => p.name === selectedPlaces[customIdx])
       if (found) {
         usedPlaceNames.add(found.name)
         return found
       }
     }
 
-    // 2. Tìm trong danh sách địa điểm chưa sử dụng
-    const available = list.filter(p => !usedPlaceNames.has(p.name))
+    let available = list.filter(p => !usedPlaceNames.has(p.name))
     if (available.length > 0) {
+      if (anchor && anchor.latitude && anchor.longitude) {
+        available.sort((a, b) => {
+          const distA = calculateDistance(anchor.latitude, anchor.longitude, a.latitude, a.longitude);
+          const distB = calculateDistance(anchor.latitude, anchor.longitude, b.latitude, b.longitude);
+          return distA - distB;
+        });
+      }
       const picked = available[0]
       usedPlaceNames.add(picked.name)
       return picked
     }
 
-    // 3. Nếu danh sách cạn, tạo địa điểm biến thể hợp lý theo ngày
     const index = usedPlaceNames.size + 1
     const fallback = {
       name: `${fallbackTen} (Điểm ${index})`,
       address: `Thành phố ${diemDen}`,
       type: fallbackType,
       description: `Khám phá và trải nghiệm không gian độc đáo tại ${diemDen}`,
-      estimated_cost: fallbackCost
+      estimated_cost: fallbackCost,
+      latitude: anchor ? anchor.latitude : null,
+      longitude: anchor ? anchor.longitude : null
     }
     usedPlaceNames.add(fallback.name)
     return fallback
   }
 
   const mangNgay = []
+  let previousAnchor = hotelChon; // Bắt đầu từ khách sạn
+  
   for (let d = 1; d <= soNgay; d++) {
     const actDay = []
+    let dayAnchor = previousAnchor;
 
-    // 1. Ăn sáng
-    const restSang = layDiaDiemKhongTrung(availableRestaurants, `Điểm tâm đặc sản ${diemDen}`, 'restaurant', 45000)
-    actDay.push({
-      time: '07:30',
-      type: 'breakfast',
-      label: 'Ăn sáng',
-      place: restSang.name,
-      address: restSang.address || `Trung tâm ẩm thực ${diemDen}`,
-      activity: restSang.description ? `Thưởng thức ${restSang.description}` : `Thưởng thức món ngon đặc trưng xứ ${diemDen}`,
-      estimated_cost: restSang.estimated_cost || 45000
-    })
+    // Ngày mới: Tìm một danh thắng ở khu vực khác (xa anchor cũ) để đổi gió
+    if (d > 1) {
+      const unusedAttractions = availableAttractions.filter(p => !usedPlaceNames.has(p.name));
+      if (unusedAttractions.length > 0 && previousAnchor.latitude) {
+        unusedAttractions.sort((a, b) => {
+          const distA = calculateDistance(previousAnchor.latitude, previousAnchor.longitude, a.latitude, a.longitude);
+          const distB = calculateDistance(previousAnchor.latitude, previousAnchor.longitude, b.latitude, b.longitude);
+          return distB - distA; // Descending, chọn xa nhất
+        });
+        dayAnchor = unusedAttractions[0];
+      }
+    }
 
-    // 2. Tham quan buổi sáng (Thắng cảnh 1)
-    const attSang = layDiaDiemKhongTrung(availableAttractions, `Danh thắng nổi tiếng ${diemDen}`, 'attraction', 100000)
-    actDay.push({
-      time: '09:00',
-      type: 'attraction',
-      label: 'Tham quan / Check-in',
-      place: attSang.name,
-      address: attSang.address || `Thành phố ${diemDen}`,
-      activity: attSang.description ? `Tham quan, chụp ảnh check-in: ${attSang.description}` : `Khám phá địa danh biểu tượng của ${diemDen}`,
-      estimated_cost: attSang.estimated_cost || 100000
-    })
+    let lastPlaceInDay = hotelChon; // Luôn bắt đầu ngày mới từ khách sạn
 
-    // 3. Ăn trưa
-    const restTrua = layDiaDiemKhongTrung(availableRestaurants, `Nhà hàng đặc sản ${diemDen}`, 'restaurant', 150000)
-    actDay.push({
-      time: '12:00',
-      type: 'lunch',
-      label: 'Ăn trưa',
-      place: restTrua.name,
-      address: restTrua.address || `Trung tâm ẩm thực ${diemDen}`,
-      activity: restTrua.description ? `Ăn trưa, thưởng thức: ${restTrua.description}` : `Dùng bữa trưa với các món đặc sản địa phương`,
-      estimated_cost: restTrua.estimated_cost || 150000
-    })
+    function addActivity(time, type, label, placeObj, fallbackActivityText) {
+      let transportNote = '';
+      if (lastPlaceInDay && lastPlaceInDay.latitude && placeObj.latitude) {
+        const dist = calculateDistance(lastPlaceInDay.latitude, lastPlaceInDay.longitude, placeObj.latitude, placeObj.longitude);
+        if (dist > 1 && dist < 1000) { // Lớn hơn 1km thì mới tính xe cộ
+          const transportCost = Math.round(dist * 15000 / 1000) * 1000;
+          const travelTimeMins = Math.round((dist / 35) * 60); // Vận tốc trung bình 35km/h
+          transportNote = ` (Từ ${lastPlaceInDay.name} di chuyển ~${dist.toFixed(1)}km, khoảng ${travelTimeMins} phút, phí taxi ước tính ${transportCost.toLocaleString('vi-VN')}đ)`;
+        }
+      }
+      
+      const activityText = (placeObj.description ? `Thưởng thức/tham quan: ${placeObj.description}` : fallbackActivityText) + transportNote;
+      
+      actDay.push({
+        time,
+        type,
+        label,
+        place: placeObj.name,
+        address: placeObj.address || `Khu vực ${diemDen}`,
+        activity: activityText,
+        estimated_cost: placeObj.estimated_cost || 50000
+      });
+      lastPlaceInDay = placeObj;
+    }
 
-    // 4. Ngày 1: Nhận phòng; Ngày khác: Cafe; Ngày cuối: Trả phòng
+    const restSang = layDiaDiemKhongTrung(availableRestaurants, `Điểm tâm đặc sản ${diemDen}`, 'restaurant', 45000, dayAnchor)
+    addActivity('07:30', 'breakfast', 'Ăn sáng', restSang, `Thưởng thức món ngon đặc trưng xứ ${diemDen}`)
+
+    const attSang = layDiaDiemKhongTrung(availableAttractions, `Danh thắng nổi tiếng ${diemDen}`, 'attraction', 100000, dayAnchor)
+    addActivity('09:00', 'attraction', 'Tham quan / Check-in', attSang, `Khám phá địa danh biểu tượng của ${diemDen}`)
+
+    const restTrua = layDiaDiemKhongTrung(availableRestaurants, `Nhà hàng đặc sản ${diemDen}`, 'restaurant', 150000, lastPlaceInDay)
+    addActivity('12:00', 'lunch', 'Ăn trưa', restTrua, `Dùng bữa trưa với các món đặc sản địa phương`)
+
     if (d === 1) {
+      let taxiNote = '';
+      if (lastPlaceInDay.latitude && hotelChon.latitude) {
+        const distToHotel = calculateDistance(lastPlaceInDay.latitude, lastPlaceInDay.longitude, hotelChon.latitude, hotelChon.longitude);
+        if (distToHotel > 2 && distToHotel < 1000) {
+            taxiNote = ` (Taxi về KS ~${distToHotel.toFixed(1)}km, ~${(Math.round(distToHotel * 15)).toLocaleString('vi-VN')}k)`;
+        }
+      }
       actDay.push({
         time: '14:00',
         type: 'checkin',
         label: 'Nhận phòng',
         place: hotelChon.name,
         address: hotelChon.address || `Trung tâm ${diemDen}`,
-        activity: `Làm thủ tục nhận phòng tại ${hotelChon.name}, nghỉ ngơi thư giãn.`,
+        activity: `Làm thủ tục nhận phòng tại ${hotelChon.name}, nghỉ ngơi thư giãn.${taxiNote}`,
         estimated_cost: 0
       })
+      lastPlaceInDay = hotelChon;
     } else if (d === soNgay) {
       actDay.push({
         time: '12:00',
@@ -316,47 +359,23 @@ async function taoLichTrinhThongMinh(duLieu, diaDiemDatabase) {
         label: 'Trả phòng',
         place: hotelChon.name,
         address: hotelChon.address || `Trung tâm ${diemDen}`,
-        activity: `Làm thủ tục trả phòng, gửi hành lý tại quầy lễ tân để tiếp tục lịch trình.`,
+        activity: `Làm thủ tục trả phòng, gửi hành lý tại quầy lễ tân.`,
         estimated_cost: 0
       })
+      lastPlaceInDay = hotelChon;
     } else {
-      const cafeChieu = layDiaDiemKhongTrung(availableCafes, `Quán Cafe view đẹp ${diemDen}`, 'cafe', 50000)
-      actDay.push({
-        time: '14:30',
-        type: 'cafe',
-        label: 'Cafe & Chill',
-        place: cafeChieu.name,
-        address: cafeChieu.address || `Khu phố trung tâm ${diemDen}`,
-        activity: cafeChieu.description ? `Thư giãn, thưởng thức đồ uống: ${cafeChieu.description}` : `Thưởng thức cafe và nghỉ ngơi nhẹ`,
-        estimated_cost: cafeChieu.estimated_cost || 50000
-      })
+      const cafeChieu = layDiaDiemKhongTrung(availableCafes, `Quán Cafe view đẹp ${diemDen}`, 'cafe', 50000, lastPlaceInDay)
+      addActivity('14:30', 'cafe', 'Cafe & Chill', cafeChieu, `Thưởng thức cafe và nghỉ ngơi nhẹ`)
     }
 
-    // 5. Tham quan buổi chiều (Thắng cảnh 2)
-    const attChieu = layDiaDiemKhongTrung(availableAttractions, `Điểm check-in chiều ${diemDen}`, 'attraction', 50000)
-    actDay.push({
-      time: '16:00',
-      type: 'attraction',
-      label: 'Tham quan / Check-in',
-      place: attChieu.name,
-      address: attChieu.address || `Ven biển/sông ${diemDen}`,
-      activity: attChieu.description ? `Ngắm cảnh chiều tà, check-in: ${attChieu.description}` : `Dạo chơi và tận hưởng không khí trong lành`,
-      estimated_cost: attChieu.estimated_cost || 0
-    })
+    const attChieu = layDiaDiemKhongTrung(availableAttractions, `Điểm check-in chiều ${diemDen}`, 'attraction', 50000, lastPlaceInDay)
+    addActivity('16:00', 'attraction', 'Tham quan / Check-in', attChieu, `Tiếp tục hành trình tham quan buổi chiều`)
 
-    // 6. Ăn tối
-    const restToi = layDiaDiemKhongTrung(availableRestaurants, `Ẩm thực đêm ${diemDen}`, 'restaurant', 200000)
-    actDay.push({
-      time: '19:00',
-      type: 'dinner',
-      label: 'Ăn tối',
-      place: restToi.name,
-      address: restToi.address || `Phố ẩm thực đêm ${diemDen}`,
-      activity: restToi.description ? `Ăn tối, thưởng thức đặc sản: ${restToi.description}` : `Khám phá phố đêm và ẩm thực đường phố`,
-      estimated_cost: restToi.estimated_cost || 200000
-    })
+    const restToi = layDiaDiemKhongTrung(availableRestaurants, `Nhà hàng ăn tối ${diemDen}`, 'restaurant', 200000, lastPlaceInDay)
+    addActivity('19:00', 'dinner', 'Ăn tối', restToi, `Dùng bữa tối, khám phá ẩm thực về đêm`)
 
     mangNgay.push({ day: d, activities: actDay })
+    previousAnchor = dayAnchor;
   }
 
   return {
