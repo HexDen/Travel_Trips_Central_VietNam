@@ -194,8 +194,17 @@
               <span class="planner-icon">✈</span>
             </div>
 
-            <!-- Form fields -->
-            <div class="app-form-grid">
+            <!-- Tiến trình Wizard -->
+            <div class="wizard-progress">
+              <div :class="['step-indicator', { active: currentPlannerStep >= 1 }]">1. Điểm đến</div>
+              <div class="step-divider"></div>
+              <div :class="['step-indicator', { active: currentPlannerStep >= 2 }]">2. Tài chính</div>
+              <div class="step-divider"></div>
+              <div :class="['step-indicator', { active: currentPlannerStep >= 3 }]">3. Sở thích</div>
+            </div>
+
+            <!-- BƯỚC 1: ĐIỂM ĐẾN & THỜI GIAN -->
+            <div v-show="currentPlannerStep === 1" class="app-form-grid wizard-step-content">
               <!-- Chọn Thành phố -->
               <div class="app-field full-width">
                 <label>Điểm đến du lịch</label>
@@ -231,6 +240,10 @@
                 </div>
               </div>
 
+            </div>
+
+            <!-- BƯỚC 2: TÀI CHÍNH & DI CHUYỂN -->
+            <div v-show="currentPlannerStep === 2" class="app-form-grid wizard-step-content">
               <!-- Ngân sách -->
               <div class="app-field full-width">
                 <div class="field-label-between">
@@ -278,8 +291,10 @@
               </div>
             </div>
 
+            <!-- BƯỚC 3: SỞ THÍCH & ĐỊA ĐIỂM -->
+            <div v-show="currentPlannerStep === 3" class="wizard-step-content">
             <!-- BỘ CHỌN ĐỊA ĐIỂM & ĐẶC SẢN NỔI TIẾNG THEO THÀNH PHỐ -->
-            <div v-if="places.length" class="places-picker-box">
+            <div class="places-picker-box" style="margin-top:0">
               <div class="picker-top">
                 <div>
                   <small class="picker-kicker">GỢI Ý ĐỊA PHƯƠNG — BẤM ĐỂ CHỌN</small>
@@ -364,15 +379,38 @@
               </div>
             </div>
 
-            <!-- Nút tạo lịch trình -->
-            <button
-              class="app-primary-btn submit-plan-btn"
-              @click="taoLichTrinh"
-              :disabled="dangTao"
-            >
-              <span v-if="dangTao" class="btn-spinner"></span>
-              <span>{{ dangTao ? 'Đang lên lịch trình...' : '✨ Tạo Lịch Trình Thông Minh' }}</span>
-            </button>
+            <!-- ĐÓNG BƯỚC 3 -->
+            </div>
+
+            <!-- WIZARD FOOTER NAVIGATION -->
+            <div class="wizard-footer">
+              <button 
+                v-if="currentPlannerStep > 1" 
+                @click="currentPlannerStep--" 
+                class="app-secondary-btn"
+                :disabled="dangTao"
+              >
+                ← Quay lại
+              </button>
+              
+              <button 
+                v-if="currentPlannerStep < 3" 
+                @click="currentPlannerStep++" 
+                class="app-primary-btn"
+              >
+                Tiếp theo →
+              </button>
+
+              <button
+                v-if="currentPlannerStep === 3"
+                class="app-primary-btn submit-plan-btn"
+                @click="taoLichTrinh"
+                :disabled="dangTao"
+              >
+                <span v-if="dangTao" class="btn-spinner"></span>
+                <span>{{ dangTao ? 'Đang lên lịch trình...' : '✨ Tạo Lịch Trình' }}</span>
+              </button>
+            </div>
           </div>
 
           <!-- KẾT QUẢ LỊCH TRÌNH CHI TIẾT -->
@@ -452,7 +490,7 @@
                   </button>
                 </div>
               </div>
-              <iframe class="app-map-iframe" :src="banDoEmbedUrl" title="Bản đồ" loading="lazy"></iframe>
+              <div id="routing-map" class="app-map-iframe" style="z-index: 1;"></div>
             </div>
 
             <!-- Dòng thời gian từng ngày (Timeline) -->
@@ -753,8 +791,18 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed, onMounted, watch } from 'vue'
+import { reactive, ref, computed, onMounted, watch, nextTick } from 'vue'
 import api from './services/api'
+import 'leaflet/dist/leaflet.css'
+import L from 'leaflet'
+
+// Fix default icon issue for Leaflet in Vite
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+});
 
 // Navigation Tab State
 const activeTab = ref('explore')
@@ -776,6 +824,7 @@ const centralCities = [
 ]
 
 // Form State
+const currentPlannerStep = ref(1)
 const formDuLieu = reactive({
   diemDen: 'Đà Nẵng',
   soNgay: 3,
@@ -865,15 +914,144 @@ const filteredExplorePlaces = computed(() => {
   return list
 })
 
-const banDoEmbedUrl = computed(() => {
-  const trip = lichTrinh.value
-  const day = trip?.daysList?.find(item => item.day === selectedDay.value) || trip?.daysList?.[0]
-  const stops = day?.activities?.map(a => a.place).filter(Boolean).slice(0, 5) || []
-  const query = [trip?.destination || formDuLieu.diemDen, ...stops].join(', ')
-  return `https://www.google.com/maps?q=${encodeURIComponent(query)}&output=embed`
+// Bản đồ trung tâm các tỉnh miền Trung (fallback khi không có tọa độ)
+const DESTINATION_CENTERS = {
+  'Đà Nẵng':    [16.047079, 108.206230],
+  'Huế':        [16.463713, 107.590866],
+  'Hội An':     [15.879884, 108.335211],
+  'Quảng Nam':  [15.879884, 108.335211],
+  'Nha Trang':  [12.238791, 109.196749],
+  'Đà Lạt':     [11.940419, 108.458313],
+  'Quảng Bình': [17.469603, 106.622633],
+  'Quảng Trị':  [16.815773, 107.100786],
+  'Quảng Ngãi': [15.120498, 108.792480],
+  'Quy Nhơn':   [13.782553, 109.219428],
+  'Thanh Hóa':  [19.808068, 105.784964],
+  'Nghệ An':    [18.666667, 105.666667],
+  'Hà Tĩnh':    [18.355556, 105.888611],
+  'Gia Lai':    [13.983333, 108.000000],
+  'Đắk Lắk':   [12.666667, 108.033333],
+}
+
+function getDestCenter() {
+  const dest = lichTrinh.value?.destination || ''
+  for (const [k, v] of Object.entries(DESTINATION_CENTERS)) {
+    if (dest.includes(k) || k.includes(dest)) return v
+  }
+  return [16.047079, 108.206230] // Default: Đà Nẵng
+}
+
+let routingMap = null;
+let routingLayerGroup = null;
+
+function renderLeafletMap() {
+  if (!lichTrinh.value) return;
+  const trip = lichTrinh.value;
+  const day = trip?.daysList?.find(item => item.day === selectedDay.value) || trip?.daysList?.[0];
+  const stops = day?.activities?.filter(a => a.latitude && a.longitude) || [];
+
+  nextTick(() => {
+    const mapEl = document.getElementById('routing-map');
+    if (!mapEl) return;
+
+    // Hủy map cũ trước
+    if (routingMap) {
+      routingMap.off();
+      routingMap.remove();
+      routingMap = null;
+      routingLayerGroup = null;
+    }
+
+    // Khởi tạo map — dùng setTimeout để chờ container render ra DOM với kích thước thực
+    setTimeout(() => {
+      const el2 = document.getElementById('routing-map');
+      if (!el2 || el2.clientHeight === 0) return;
+
+      routingMap = L.map('routing-map', { zoomControl: true });
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19
+      }).addTo(routingMap);
+
+      routingLayerGroup = L.layerGroup().addTo(routingMap);
+
+      if (stops.length === 0) {
+        const center = getDestCenter();
+        routingMap.setView(center, 13);
+        routingMap.invalidateSize();
+        return;
+      }
+
+      const latlngs = stops.map(s => [s.latitude, s.longitude]);
+
+      // Cắm Marker có số thứ tự
+      stops.forEach((stop, index) => {
+        const numIcon = L.divIcon({
+          html: `<div style="background:#0ea5e9;color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)">${index + 1}</div>`,
+          className: '',
+          iconSize: [28, 28],
+          iconAnchor: [14, 14],
+        });
+        L.marker([stop.latitude, stop.longitude], { icon: numIcon })
+          .bindPopup(`<b>${index + 1}. ${stop.place}</b><br/><small>${stop.address}</small>`)
+          .addTo(routingLayerGroup);
+      });
+
+      // Tự động zoom vừa vặn với tất cả các điểm đến (không vẽ đường kẻ nữa)
+      if (latlngs.length > 1) {
+        const bounds = L.latLngBounds(latlngs);
+        routingMap.fitBounds(bounds, { padding: [40, 40] });
+      } else {
+        routingMap.setView(latlngs[0], 14);
+      }
+
+      // Quan trọng: báo cho Leaflet biết kích thước container thật
+      routingMap.invalidateSize();
+    }, 350);
+  });
+}
+
+watch(selectedDay, () => {
+  renderLeafletMap();
+});
+
+watch(lichTrinh, () => {
+  renderLeafletMap();
+}, { deep: true });
+
+watch(activeTab, (newTab) => {
+  if (newTab === 'planner') {
+    // Luôn re-render khi chuyển sang tab planner để tránh grey tiles
+    renderLeafletMap();
+  }
+});
+
+onMounted(() => {
+  const saved = localStorage.getItem('currentTrip')
+  if (saved) {
+    try {
+      lichTrinh.value = JSON.parse(saved)
+      if (lichTrinh.value?.daysList?.[0]) {
+        selectedDay.value = lichTrinh.value.daysList[0].day
+      }
+    } catch (e) {
+      console.error(e)
+    }
+  }
+  
+  if (activeTab.value === 'planner') {
+    nextTick(() => {
+      renderLeafletMap();
+    });
+  }
+  
+  window.addEventListener('resize', () => {
+    isMobileFrame.value = window.innerWidth <= 768
+  })
+  isMobileFrame.value = window.innerWidth <= 768
 })
 
-// Methods
 function dinhDangTien(v) {
   if (!v && v !== 0) return '0'
   return new Intl.NumberFormat('vi-VN').format(v)
@@ -1896,7 +2074,24 @@ button { cursor: pointer; }
 }
 .picker-row { margin-bottom: 8px; }
 .row-label { font-size: 11px; font-weight: 700; color: var(--text-main); display: block; margin-bottom: 4px; }
-.chips-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips-wrap { 
+  display: flex; 
+  flex-wrap: nowrap; 
+  overflow-x: auto; 
+  gap: 8px; 
+  padding-bottom: 8px; 
+  scroll-behavior: smooth;
+}
+.chips-wrap::-webkit-scrollbar {
+  height: 4px;
+}
+.chips-wrap::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+.chips-wrap::-webkit-scrollbar-track {
+  background: transparent;
+}
 .app-chip {
   background: #fff;
   border: 1px solid var(--border-color);
@@ -1907,6 +2102,8 @@ button { cursor: pointer; }
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 .app-chip.active {
   background: var(--primary);
@@ -2501,5 +2698,63 @@ button { cursor: pointer; }
     box-shadow: none;
     padding: 0;
   }
+}
+/* WIZARD UI STYLES */
+.wizard-progress {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  background: rgba(255, 255, 255, 0.4);
+  padding: 12px 20px;
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+}
+.step-indicator {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #94a3b8;
+  padding: 6px 12px;
+  border-radius: 20px;
+  transition: all 0.3s;
+}
+.step-indicator.active {
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
+}
+.step-divider {
+  flex: 1;
+  height: 2px;
+  background: #e2e8f0;
+  margin: 0 10px;
+}
+.wizard-step-content {
+  animation: fadeIn 0.4s ease-out;
+}
+.wizard-footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 24px;
+  gap: 16px;
+}
+.wizard-footer button {
+  flex: 1;
+}
+.app-secondary-btn {
+  background: #f1f5f9;
+  color: #475569;
+  border: none;
+  padding: 14px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.app-secondary-btn:hover:not(:disabled) {
+  background: #e2e8f0;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 </style>

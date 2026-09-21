@@ -50,7 +50,7 @@ async function taoLichTrinh(duLieu) {
       return await goiGemini(duLieu, diaDiemDatabase, geminiKey)
     } catch (err) {
       console.error('Gemini call failed, falling back to smart dynamic local generator:', err.message)
-      return await taoLichTrinhThongMinh(duLieu, diaDiemDatabase)
+      return boSungDuLieuLichTrinh(await taoLichTrinhThongMinh(duLieu, diaDiemDatabase), duLieu, diaDiemDatabase)
     }
   }
 
@@ -59,11 +59,11 @@ async function taoLichTrinh(duLieu) {
       return await goiOpenAI(duLieu, diaDiemDatabase)
     } catch (err) {
       console.error('OpenAI call failed, falling back to smart dynamic local generator:', err.message)
-      return await taoLichTrinhThongMinh(duLieu, diaDiemDatabase)
+      return boSungDuLieuLichTrinh(await taoLichTrinhThongMinh(duLieu, diaDiemDatabase), duLieu, diaDiemDatabase)
     }
   }
 
-  return await taoLichTrinhThongMinh(duLieu, diaDiemDatabase)
+  return boSungDuLieuLichTrinh(await taoLichTrinhThongMinh(duLieu, diaDiemDatabase), duLieu, diaDiemDatabase)
 }
 
 async function goiGemini(duLieu, diaDiemDatabase, apiKey) {
@@ -400,38 +400,51 @@ function boSungDuLieuLichTrinh(lichTrinh, duLieu, diaDiemDatabase) {
     description: `Khách sạn tiện nghi, vị trí thuận tiện di chuyển tại ${duLieu.destination}.`
   }
 
-  // Bổ sung địa chỉ từ DB nếu AI chưa điền address cho activity
+  // Bổ sung địa chỉ và tọa độ từ DB nếu AI chưa điền cho activity
   const diaDiemList = diaDiemDatabase || []
-  const placeAddressMap = new Map(diaDiemList.map(p => [p.name.toLowerCase().trim(), p.address]))
+  const placeDataMap = new Map(diaDiemList.map(p => [p.name.toLowerCase().trim(), p]))
 
   const updatedDays = (lichTrinh.days || []).map(day => ({
     ...day,
     activities: (day.activities || []).map(act => {
       let addr = act.address
-      if (!addr || addr === duLieu.destination) {
-        const actName = (act.place || '').toLowerCase().trim()
-        // 1. Khớp chính xác
-        if (placeAddressMap.has(actName)) {
-          addr = placeAddressMap.get(actName)
-        } else {
-          // 2. Khớp chứa từ
-          for (const [pName, pAddr] of placeAddressMap.entries()) {
-            if (pAddr && (actName.includes(pName) || pName.includes(actName) || (pName.length > 5 && actName.slice(0, 10) === pName.slice(0, 10)))) {
-              addr = pAddr
-              break
-            }
+      let lat = null
+      let lng = null
+      const actName = (act.place || '').toLowerCase().trim()
+      
+      let foundPlace = null
+      if (placeDataMap.has(actName)) {
+        foundPlace = placeDataMap.get(actName)
+      } else {
+        // Tìm kiếm tương đối
+        for (const [pName, pData] of placeDataMap.entries()) {
+          if (pName.length > 3 && (actName.includes(pName) || pName.includes(actName) || (pName.length > 5 && actName.slice(0, 10) === pName.slice(0, 10)))) {
+            foundPlace = pData
+            break
           }
         }
-        if (!addr) addr = `Thành phố ${duLieu.destination}`
       }
+
+      if (foundPlace) {
+        addr = foundPlace.address || addr
+        lat = foundPlace.latitude
+        lng = foundPlace.longitude
+      }
+
+      if (!addr || addr === duLieu.destination) {
+        addr = `Thành phố ${duLieu.destination}`
+      }
+
       return {
         ...act,
-        address: addr
+        address: addr,
+        latitude: lat,
+        longitude: lng
       }
     })
   }))
 
-  return {
+  const finalResult = {
     ...lichTrinh,
     destination: lichTrinh.destination || duLieu.destination,
     total_budget: Number(lichTrinh.total_budget) || nganSach,
@@ -442,8 +455,11 @@ function boSungDuLieuLichTrinh(lichTrinh, duLieu, diaDiemDatabase) {
     hotel_request: lichTrinh.hotel_request || duLieu.hotel_request || '',
     hotel_recommendation: lichTrinh.hotel_recommendation || defaultHotel,
     budget_breakdown: lichTrinh.budget_breakdown || taoPhanBoNganSach(nganSach),
+    daysList: updatedDays,
     days: updatedDays
   }
+  require('fs').writeFileSync('debug_plan.json', JSON.stringify(finalResult, null, 2))
+  return finalResult
 }
 
 function parseJsonResponse(raw) {
