@@ -3,37 +3,15 @@
     <!-- KHUNG ĐIỆN THOẠI NẾU BẬT CHẾ ĐỘ GIẢ LẬP MOBILE TRÊN PC -->
     <div class="app-container">
       
-      <!-- TOP HEADER CỦA APP -->
-      <header class="app-header">
-        <div class="header-brand" @click="activeTab = 'explore'">
-          <span class="app-logo-icon">✈</span>
-          <div class="brand-text">
-            <h1>Travel Trips</h1>
-            <small>AI Travel App · Central VietNam</small>
-          </div>
-        </div>
-
-        <div class="header-actions">
-          <!-- Nút chuyển đổi giao diện giả lập Mobile / Desktop -->
-          <button
-            type="button"
-            class="mode-toggle-btn"
-            @click="isMobileFrame = !isMobileFrame"
-            :title="isMobileFrame ? 'Mở rộng toàn màn hình PC' : 'Thu nhỏ xem khung Mobile App'"
-          >
-            <span>{{ isMobileFrame ? '💻 Bản PC' : '📱 Giả lập App' }}</span>
-          </button>
-
-          <!-- Nút tài khoản -->
-          <button v-if="nguoiDung" class="user-chip-btn" @click="activeTab = 'profile'">
-            <span class="user-avatar">{{ nguoiDung.name ? nguoiDung.name[0].toUpperCase() : 'U' }}</span>
-            <span class="user-name">{{ nguoiDung.name }}</span>
-          </button>
-          <button v-else class="login-header-btn" @click="hienAuthModal = true">
-            <span>Đăng nhập</span>
-          </button>
-        </div>
-      </header>
+      <!-- TOP HEADER CỦA APP (ĐÃ TÁCH COMPONENT) -->
+      <AppHeader
+        :activeTab="activeTab"
+        :isMobileFrame="isMobileFrame"
+        :nguoiDung="nguoiDung"
+        @update:activeTab="activeTab = $event"
+        @update:isMobileFrame="isMobileFrame = $event"
+        @openAuth="hienAuthModal = true"
+      />
 
       <!-- KHÔNG GIAN NỘI DUNG CHÍNH (THEO TỪNG TAB APP) -->
       <main class="app-main">
@@ -503,7 +481,7 @@
 
                 <div class="activities-stream">
                   <div
-                    v-for="act in day.activities"
+                    v-for="(act, actIndex) in day.activities"
                     :key="act.time + act.place"
                     class="activity-row"
                   >
@@ -515,6 +493,7 @@
                           {{ getBadgeInfo(act).icon }} {{ getBadgeInfo(act).label }}
                         </span>
                         <h4 class="place-name">{{ act.place }}</h4>
+                        <button class="act-change-btn" @click="moModalDoiDiaDiem(day.day - 1, actIndex, act.type)" title="Đổi sang địa điểm khác">🔄 Đổi điểm</button>
                         <a
                           class="act-direction-btn"
                           :href="chiDuongUrl(act.place, act.address)"
@@ -787,12 +766,39 @@
       </div>
     </div>
 
+    <!-- ==================== POPUP MODAL ĐỔI ĐỊA ĐIỂM ==================== -->
+    <div v-if="showChangePlaceModal" class="modal-overlay" @click.self="showChangePlaceModal = false">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>🔄 Chọn địa điểm thay thế</h3>
+          <button class="close-modal-btn" @click="showChangePlaceModal = false">✕</button>
+        </div>
+        <div class="modal-body" style="max-height: 60vh; overflow-y: auto; padding: 15px;">
+          <div v-if="alternativePlaces.length === 0" style="text-align:center; padding: 20px; color: #666;">
+            Không có địa điểm thay thế nào phù hợp.
+          </div>
+          <div class="places-app-grid" style="grid-template-columns: 1fr;">
+            <article v-for="p in alternativePlaces" :key="p._id" class="app-place-card" style="cursor: pointer;" @click="chonDiaDiemMoi(p)">
+              <div class="place-card-top">
+                <span class="place-card-type">{{ getPlaceTypeLabel(p.type) }}</span>
+                <span class="hotel-price" v-if="p.estimated_cost">{{ dinhDangTien(p.estimated_cost) }}đ</span>
+              </div>
+              <h4>{{ p.name }}</h4>
+              <p class="place-card-desc">{{ p.description }}</p>
+              <p class="place-card-address" v-if="p.address">📍 {{ p.address }}</p>
+            </article>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
 <script setup>
 import { reactive, ref, computed, onMounted, watch, nextTick } from 'vue'
 import api from './services/api'
+import AppHeader from './components/layout/AppHeader.vue'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 
@@ -873,6 +879,43 @@ const attractionsList = computed(() => (places.value || []).filter(p => p.type =
 const restaurantsList = computed(() => (places.value || []).filter(p => p.type === 'restaurant'))
 const hotelsList = computed(() => (places.value || []).filter(p => p.type === 'hotel'))
 const cafesList = computed(() => (places.value || []).filter(p => p.type === 'cafe'))
+
+// Đổi địa điểm State
+const showChangePlaceModal = ref(false)
+const changingActivity = ref(null)
+const alternativePlaces = ref([])
+
+function moModalDoiDiaDiem(dayIndex, actIndex, actType) {
+  changingActivity.value = { dayIndex, actIndex, actType }
+  let targetType = actType
+  if (['breakfast', 'lunch', 'dinner'].includes(actType)) targetType = 'restaurant'
+  
+  alternativePlaces.value = (places.value || []).filter(p => p.type === targetType)
+  showChangePlaceModal.value = true
+}
+
+function chonDiaDiemMoi(newPlace) {
+  if (!changingActivity.value || !lichTrinh.value) return
+  const { dayIndex, actIndex, actType } = changingActivity.value
+  
+  const actToUpdate = lichTrinh.value.daysList[dayIndex].activities[actIndex]
+  actToUpdate.place = newPlace.name
+  actToUpdate.address = newPlace.address || `Khu vực ${lichTrinh.value.destination}`
+  actToUpdate.estimated_cost = newPlace.estimated_cost || 50000
+  actToUpdate.latitude = newPlace.latitude
+  actToUpdate.longitude = newPlace.longitude
+  
+  if (['breakfast', 'lunch', 'dinner'].includes(actType)) {
+    actToUpdate.activity = `Thưởng thức ẩm thực tại ${newPlace.name}`
+  } else {
+    actToUpdate.activity = newPlace.description || `Tham quan và trải nghiệm tại ${newPlace.name}`
+  }
+  
+  showChangePlaceModal.value = false
+  changingActivity.value = null
+  
+  setTimeout(() => renderLeafletMap(), 100)
+}
 
 // AI Deep Crawl State
 const dangCrawl = ref(false)
@@ -1181,18 +1224,21 @@ async function taiDuLieuThanhPho() {
   const currentId = ++reqIdCounter
   const dest = (formDuLieu.diemDen || '').trim()
   if (!dest) return
-  try {
-    const [resPlaces, resWeather] = await Promise.allSettled([
-      api.get('/places', { params: { destination: dest } }),
-      api.get('/weather', { params: { destination: dest } })
-    ])
-    if (currentId === reqIdCounter) {
-      if (resPlaces.status === 'fulfilled') places.value = resPlaces.value.data || []
-      if (resWeather.status === 'fulfilled') thoiTiet.value = resWeather.value.data
-    }
-  } catch (e) {
-    console.warn('Lỗi tải dữ liệu:', e.message)
-  }
+
+  api.get('/places', { params: { destination: dest } })
+    .then(res => {
+      if (currentId === reqIdCounter) places.value = res.data || []
+    })
+    .catch(e => console.warn('Lỗi tải địa điểm:', e.message))
+
+  api.get('/weather', { params: { destination: dest } })
+    .then(res => {
+      if (currentId === reqIdCounter) thoiTiet.value = res.data
+    })
+    .catch(e => {
+      console.warn('Lỗi tải thời tiết:', e.message)
+      if (currentId === reqIdCounter) thoiTiet.value = null
+    })
 }
 
 async function taoLichTrinh() {
@@ -2326,8 +2372,20 @@ button { cursor: pointer; }
 .badge-attraction { background: #e8f5e9; color: #1b5e20; }
 
 .place-name { font-size: 13px; font-weight: 700; color: var(--text-main); margin: 0; }
-.act-direction-btn {
+.act-change-btn {
   margin-left: auto;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--primary);
+  border: none;
+  padding: 2px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.act-change-btn:hover { background: #0056b3; }
+.act-direction-btn {
+  margin-left: 8px;
   font-size: 11px;
   font-weight: 700;
   color: var(--primary);

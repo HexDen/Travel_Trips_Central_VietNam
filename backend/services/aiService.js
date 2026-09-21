@@ -26,6 +26,66 @@ const DESTINATION_ALIASES = {
   'Buôn Ma Thuột': 'Đắk Lắk'
 }
 
+// Tính khoảng cách Haversine (km)
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  if (!lat1 || !lon1 || !lat2 || !lon2) return 999;
+  const R = 6371; 
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
+// Thuật toán K-Means++ gom cụm các địa điểm gần nhau
+function clusterPlaces(places, numClusters) {
+  if (!places || places.length === 0) return [];
+  const validPlaces = places.filter(p => p.latitude && p.longitude);
+  if (validPlaces.length < numClusters) {
+    const chunks = [];
+    const chunkSize = Math.ceil(places.length / (numClusters || 1));
+    for (let i = 0; i < numClusters; i++) {
+      chunks.push(places.slice(i * chunkSize, (i + 1) * chunkSize));
+    }
+    return chunks;
+  }
+  
+  let centroids = [validPlaces[0]];
+  for (let i = 1; i < numClusters; i++) {
+    let furthest = validPlaces[0];
+    let maxDist = 0;
+    for (const p of validPlaces) {
+      let minDist = Math.min(...centroids.map(c => calculateDistance(c.latitude, c.longitude, p.latitude, p.longitude)));
+      if (minDist > maxDist) {
+        maxDist = minDist;
+        furthest = p;
+      }
+    }
+    centroids.push(furthest);
+  }
+
+  let clusters = Array.from({ length: numClusters }, () => []);
+  for (const p of places) {
+    if (!p.latitude || !p.longitude) {
+      clusters[0].push(p);
+      continue;
+    }
+    let minDist = Infinity;
+    let clusterIdx = 0;
+    for (let i = 0; i < numClusters; i++) {
+      const dist = calculateDistance(centroids[i].latitude, centroids[i].longitude, p.latitude, p.longitude);
+      if (dist < minDist) {
+        minDist = dist;
+        clusterIdx = i;
+      }
+    }
+    clusters[clusterIdx].push(p);
+  }
+  return clusters;
+}
+
 async function taoLichTrinh(duLieu) {
   const geminiKey = getGeminiKey()
   let diemDen = duLieu.destination || 'Đà Nẵng'
@@ -115,11 +175,19 @@ function buildPrompt(duLieu, diaDiemDatabase) {
 
   let goiYDbText = ''
   if (diaDiemDatabase && diaDiemDatabase.length > 0) {
-    const listAttractions = diaDiemDatabase.filter(p => p.type === 'attraction').slice(0, 8).map(p => `${p.name} (${p.address || diaDiem})`).join('; ')
-    const listFood = diaDiemDatabase.filter(p => p.type === 'restaurant').slice(0, 8).map(p => `${p.name} (${p.address || diaDiem})`).join('; ')
-    const listCafe = diaDiemDatabase.filter(p => p.type === 'cafe').slice(0, 4).map(p => `${p.name} (${p.address || diaDiem})`).join('; ')
     const listHotels = diaDiemDatabase.filter(p => p.type === 'hotel').slice(0, 4).map(p => `${p.name} (${p.address || diaDiem}, giá: ${p.estimated_cost || 850000}đ)`).join('; ')
-    goiYDbText = `\nĐỊA ĐIỂM THỰC TẾ TẠI ${diaDiem.toUpperCase()}:\n- Khách sạn: ${listHotels}\n- Thắng cảnh: ${listAttractions}\n- Quán ăn: ${listFood}\n- Cafe: ${listCafe}\n`
+    
+    // Sử dụng thuật toán phân cụm để nhóm địa điểm gần nhau
+    const clusters = clusterPlaces(diaDiemDatabase, Math.min(ngay, 5));
+    let clusteredText = '';
+    clusters.forEach((cluster, idx) => {
+      const cAttractions = cluster.filter(p => p.type === 'attraction').slice(0, 5).map(p => p.name).join(', ');
+      const cFoods = cluster.filter(p => p.type === 'restaurant').slice(0, 5).map(p => p.name).join(', ');
+      const cCafe = cluster.filter(p => p.type === 'cafe').slice(0, 3).map(p => p.name).join(', ');
+      clusteredText += `\n- Cụm Khu Vực ${idx + 1} (Các điểm RẤT GẦN NHAU, Dùng cho Ngày ${idx + 1}): Thắng cảnh: [${cAttractions}]; Quán ăn: [${cFoods}]; Cafe: [${cCafe}].`;
+    });
+
+    goiYDbText = `\nĐỊA ĐIỂM THỰC TẾ TẠI ${diaDiem.toUpperCase()}:\n- Khách sạn (chọn 1 cho cả chuyến đi): ${listHotels}\n${clusteredText}\n`
   }
 
   let mustVisitText = ''
@@ -148,7 +216,8 @@ QUY TẮC BẮT BUỘC:
 3. KHÁCH SẠN (HOTEL): ƯU TIÊN CHỌN KHÁCH SẠN BÌNH DÂN, GIÁ RẺ. Có trường "hotel_recommendation" gồm: name, address, rating, price_per_night, description. Ngày 1 lúc 14:00 có mốc "Nhận phòng", ngày cuối lúc 12:00 có mốc "Trả phòng".
 4. NHÃN PHÂN LOẠI (CATEGORY): Mỗi hoạt động có type ('breakfast' | 'lunch' | 'dinner' | 'checkin' | 'attraction' | 'cafe' | 'checkout') và label ('Ăn sáng' | 'Ăn trưa' | 'Ăn tối' | 'Nhận phòng' | 'Tham quan / Check-in' | 'Cafe & Chill' | 'Trả phòng').
 5. ĐẶC SẢN & ĐỊA DANH CHÍNH XÁC: Nêu rõ tên món đặc sản + tên quán ăn cụ thể tại ${diaDiem}. TUYỆT ĐỐI KHÔNG dùng tên chung chung.
-6. TỐI ƯU KHOẢNG CÁCH & PHÍ DI CHUYỂN: Các địa điểm trong cùng MỘT NGÀY bắt buộc phải nằm gần nhau. BẮT BUỘC phải ghi chú tên điểm xuất phát, khoảng cách, THỜI GIAN DI CHUYỂN, và phí di chuyển ước tính vào cuối nội dung "activity" (Buổi sáng bắt buộc tính từ KHÁCH SẠN). (Ví dụ: "... (Từ khách sạn di chuyển ~5km, đi xe khoảng 10 phút, phí taxi ước tính 75.000đ)").
+6. MỖI NGÀY MỘT CỤM (CLUSTER-PER-DAY): Để tiết kiệm sức khỏe di chuyển, BẮT BUỘC Ngày 1 chỉ được lấy các địa điểm ở "Cụm Khu Vực 1", Ngày 2 chỉ lấy ở "Cụm Khu Vực 2"... TUYỆT ĐỐI KHÔNG trộn lẫn điểm của Cụm 1 sang Cụm 2 trong cùng một ngày!
+7. TỐI ƯU KHOẢNG CÁCH & PHÍ DI CHUYỂN: Các địa điểm trong cùng MỘT NGÀY bắt buộc phải nằm gần nhau. BẮT BUỘC phải ghi chú tên điểm xuất phát, khoảng cách, THỜI GIAN DI CHUYỂN, và phí di chuyển ước tính vào cuối nội dung "activity" (Buổi sáng bắt buộc tính từ KHÁCH SẠN). (Ví dụ: "... (Từ khách sạn di chuyển ~5km, đi xe khoảng 10 phút, phí taxi ước tính 75.000đ)").
 
 ĐỊNH DẠNG ĐẦU RA (CHỈ TRẢ VỀ JSON DUY NHẤT):
 {
@@ -213,32 +282,52 @@ async function taoLichTrinhThongMinh(duLieu, diaDiemDatabase) {
   const availableAttractions = [...diaDiemDatabase.filter(p => p.type === 'attraction')]
   const availableRestaurants = [...diaDiemDatabase.filter(p => p.type === 'restaurant')]
   const availableCafes = [...diaDiemDatabase.filter(p => p.type === 'cafe')]
+
+  // 1. Phân cụm toàn bộ địa điểm (tối đa `soNgay` cụm hoặc 5 cụm)
+  const clusters = clusterPlaces(diaDiemDatabase, Math.min(soNgay, 5));
+  let bestCluster = clusters[0] || diaDiemDatabase;
+  if (clusters.length > 0) {
+    bestCluster = clusters.reduce((prev, curr) => (curr.length > prev.length) ? curr : prev, clusters[0]);
+  }
+  
+  // 2. Tìm Centroid của cụm dày đặc nhất
+  let centroid = null;
+  const clusterWithCoords = bestCluster.filter(p => p.latitude && p.longitude);
+  if (clusterWithCoords.length > 0) {
+    const sumLat = clusterWithCoords.reduce((sum, p) => sum + parseFloat(p.latitude), 0);
+    const sumLng = clusterWithCoords.reduce((sum, p) => sum + parseFloat(p.longitude), 0);
+    centroid = { latitude: sumLat / clusterWithCoords.length, longitude: sumLng / clusterWithCoords.length };
+  }
+
+  // 3. Chọn Khách sạn bình dân GẦN CENTROID NHẤT
   const hotels = diaDiemDatabase.filter(p => p.type === 'hotel')
-  hotels.sort((a, b) => (a.estimated_cost || 9999999) - (b.estimated_cost || 9999999)) // Chọn khách sạn bình dân giá rẻ
+  if (centroid && hotels.length > 0) {
+    hotels.sort((a, b) => {
+      const distA = calculateDistance(centroid.latitude, centroid.longitude, a.latitude, a.longitude);
+      const distB = calculateDistance(centroid.latitude, centroid.longitude, b.latitude, b.longitude);
+      const priceA = a.estimated_cost || 9999999;
+      const priceB = b.estimated_cost || 9999999;
+      // Trọng số: Khách sạn quá xa (>10km) bị phạt nặng, ưu tiên giá + khoảng cách
+      const scoreA = priceA + (distA > 10 ? 5000000 : distA * 20000); // 1km xa thêm coi như đắt thêm 20k
+      const scoreB = priceB + (distB > 10 ? 5000000 : distB * 20000);
+      return scoreA - scoreB;
+    });
+  } else {
+    hotels.sort((a, b) => (a.estimated_cost || 9999999) - (b.estimated_cost || 9999999));
+  }
 
   const hotelChon = hotels[0] || {
     name: `Khách sạn nghỉ dưỡng trung tâm ${diemDen}`,
     address: `Đường trung tâm thành phố ${diemDen}`,
     rating: 4.8,
     estimated_cost: 850000,
-    description: `Khách sạn vị trí đắc địa gần trung tâm ${diemDen}, tiện nghi hiện đại và phòng ốc thoáng đãng.`
+    description: `Khách sạn vị trí đắc địa gần trung tâm ${diemDen}, tiện nghi hiện đại và phòng ốc thoáng đãng.`,
+    latitude: centroid ? centroid.latitude : null,
+    longitude: centroid ? centroid.longitude : null
   }
 
   // Danh sách các địa điểm đã đi để TUYỆT ĐỐI KHÔNG LẶP LẠI
   const usedPlaceNames = new Set()
-
-  // Tính khoảng cách Haversine (km)
-  function calculateDistance(lat1, lon1, lat2, lon2) {
-    if (!lat1 || !lon1 || !lat2 || !lon2) return 999;
-    const R = 6371; 
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-              Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
-  }
 
   function layDiaDiemKhongTrung(list, fallbackTen, fallbackType, fallbackCost, anchor = null) {
     const customIdx = selectedPlaces.findIndex(name => !usedPlaceNames.has(name) && list.some(p => p.name === name))
@@ -283,17 +372,19 @@ async function taoLichTrinhThongMinh(duLieu, diaDiemDatabase) {
   
   for (let d = 1; d <= soNgay; d++) {
     const actDay = []
+    
+    // Lấy cụm của ngày hôm nay (xoay vòng nếu số ngày > số cụm)
+    const currentCluster = clusters.length > 0 ? clusters[(d - 1) % clusters.length] : diaDiemDatabase;
+    const cAttractions = currentCluster.filter(p => p.type === 'attraction');
+    const cRestaurants = currentCluster.filter(p => p.type === 'restaurant');
+    const cCafes = currentCluster.filter(p => p.type === 'cafe');
+    
     let dayAnchor = previousAnchor;
 
-    // Ngày mới: Tìm một danh thắng ở khu vực khác (xa anchor cũ) để đổi gió
+    // Ngày mới: Tìm một danh thắng ở cụm hiện tại để làm mỏ neo
     if (d > 1) {
-      const unusedAttractions = availableAttractions.filter(p => !usedPlaceNames.has(p.name));
-      if (unusedAttractions.length > 0 && previousAnchor.latitude) {
-        unusedAttractions.sort((a, b) => {
-          const distA = calculateDistance(previousAnchor.latitude, previousAnchor.longitude, a.latitude, a.longitude);
-          const distB = calculateDistance(previousAnchor.latitude, previousAnchor.longitude, b.latitude, b.longitude);
-          return distB - distA; // Descending, chọn xa nhất
-        });
+      const unusedAttractions = cAttractions.filter(p => !usedPlaceNames.has(p.name));
+      if (unusedAttractions.length > 0) {
         dayAnchor = unusedAttractions[0];
       }
     }
@@ -325,13 +416,13 @@ async function taoLichTrinhThongMinh(duLieu, diaDiemDatabase) {
       lastPlaceInDay = placeObj;
     }
 
-    const restSang = layDiaDiemKhongTrung(availableRestaurants, `Điểm tâm đặc sản ${diemDen}`, 'restaurant', 45000, dayAnchor)
+    const restSang = layDiaDiemKhongTrung(cRestaurants.length > 0 ? cRestaurants : availableRestaurants, `Điểm tâm đặc sản ${diemDen}`, 'restaurant', 45000, dayAnchor)
     addActivity('07:30', 'breakfast', 'Ăn sáng', restSang, `Thưởng thức món ngon đặc trưng xứ ${diemDen}`)
 
-    const attSang = layDiaDiemKhongTrung(availableAttractions, `Danh thắng nổi tiếng ${diemDen}`, 'attraction', 100000, dayAnchor)
+    const attSang = layDiaDiemKhongTrung(cAttractions.length > 0 ? cAttractions : availableAttractions, `Danh thắng nổi tiếng ${diemDen}`, 'attraction', 100000, dayAnchor)
     addActivity('09:00', 'attraction', 'Tham quan / Check-in', attSang, `Khám phá địa danh biểu tượng của ${diemDen}`)
 
-    const restTrua = layDiaDiemKhongTrung(availableRestaurants, `Nhà hàng đặc sản ${diemDen}`, 'restaurant', 150000, lastPlaceInDay)
+    const restTrua = layDiaDiemKhongTrung(cRestaurants.length > 0 ? cRestaurants : availableRestaurants, `Nhà hàng đặc sản ${diemDen}`, 'restaurant', 150000, lastPlaceInDay)
     addActivity('12:00', 'lunch', 'Ăn trưa', restTrua, `Dùng bữa trưa với các món đặc sản địa phương`)
 
     if (d === 1) {
@@ -364,14 +455,14 @@ async function taoLichTrinhThongMinh(duLieu, diaDiemDatabase) {
       })
       lastPlaceInDay = hotelChon;
     } else {
-      const cafeChieu = layDiaDiemKhongTrung(availableCafes, `Quán Cafe view đẹp ${diemDen}`, 'cafe', 50000, lastPlaceInDay)
+      const cafeChieu = layDiaDiemKhongTrung(cCafes.length > 0 ? cCafes : availableCafes, `Quán Cafe view đẹp ${diemDen}`, 'cafe', 50000, lastPlaceInDay)
       addActivity('14:30', 'cafe', 'Cafe & Chill', cafeChieu, `Thưởng thức cafe và nghỉ ngơi nhẹ`)
     }
 
-    const attChieu = layDiaDiemKhongTrung(availableAttractions, `Điểm check-in chiều ${diemDen}`, 'attraction', 50000, lastPlaceInDay)
+    const attChieu = layDiaDiemKhongTrung(cAttractions.length > 0 ? cAttractions : availableAttractions, `Điểm check-in chiều ${diemDen}`, 'attraction', 50000, lastPlaceInDay)
     addActivity('16:00', 'attraction', 'Tham quan / Check-in', attChieu, `Tiếp tục hành trình tham quan buổi chiều`)
 
-    const restToi = layDiaDiemKhongTrung(availableRestaurants, `Nhà hàng ăn tối ${diemDen}`, 'restaurant', 200000, lastPlaceInDay)
+    const restToi = layDiaDiemKhongTrung(cRestaurants.length > 0 ? cRestaurants : availableRestaurants, `Nhà hàng ăn tối ${diemDen}`, 'restaurant', 200000, lastPlaceInDay)
     addActivity('19:00', 'dinner', 'Ăn tối', restToi, `Dùng bữa tối, khám phá ẩm thực về đêm`)
 
     mangNgay.push({ day: d, activities: actDay })

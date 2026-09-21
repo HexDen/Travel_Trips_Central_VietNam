@@ -26,46 +26,73 @@ const DESTINATION_ALIASES = {
 }
 
 // GET /api/places - Tìm kiếm địa điểm (Trả về ngay lập tức từ DB cache, tự động cào nếu điểm đến hoàn toàn mới)
+// Mảng RAM chứa TOÀN BỘ 5250+ địa điểm để truy vấn trong 0.001ms
+let RAM_PLACES = []
+let isRamLoaded = false
+
+// Tải toàn bộ data lên RAM (chạy ngầm 1 lần khi import)
+const Place = require('../models/Place')
+setTimeout(async () => {
+  try {
+    console.log('⏳ [RAM CACHE] Đang kéo toàn bộ dữ liệu từ MongoDB lên RAM để tăng tốc 0ms...')
+    RAM_PLACES = await Place.find({}).lean()
+    isRamLoaded = true
+    console.log(`✅ [RAM CACHE] Đã nạp thành công ${RAM_PLACES.length} địa điểm lên RAM! Ứng dụng sẽ chạy với tốc độ ánh sáng!`)
+  } catch (err) {
+    console.error('❌ [RAM CACHE] Lỗi khi nạp dữ liệu:', err.message)
+  }
+}, 2000)
+
 router.get('/', async (req, res) => {
   const { destination, type, q } = req.query
-  const filter = {}
-  if (type && type !== 'all') filter.type = type
-  if (q) filter.$text = { $search: q }
+  const filterType = type && type !== 'all' ? type : null
+  const searchQ = q ? q.toLowerCase() : null
+  let cleanDest = destination ? destination.trim() : null
+  
+  if (cleanDest && DESTINATION_ALIASES[cleanDest]) {
+    cleanDest = DESTINATION_ALIASES[cleanDest]
+  }
 
+  // 1. Nếu RAM đã sẵn sàng, trả về 100% từ RAM siêu tốc
+  if (isRamLoaded) {
+    let result = RAM_PLACES
+    
+    if (cleanDest) {
+      const destRegex = new RegExp(`^${cleanDest}$`, 'i')
+      const destSubRegex = new RegExp(cleanDest, 'i')
+      
+      let filtered = result.filter(p => destRegex.test(p.destination))
+      if (filtered.length === 0 && !filterType) {
+        filtered = result.filter(p => destSubRegex.test(p.destination))
+      }
+      result = filtered
+    }
+    
+    if (filterType) result = result.filter(p => p.type === filterType)
+    if (searchQ) result = result.filter(p => (p.name || '').toLowerCase().includes(searchQ))
+    
+    result.sort((a, b) => (b.rating || 0) - (a.rating || 0))
+    return res.json(result.slice(0, 500))
+  }
+
+  // 2. Dự phòng: Khi RAM chưa tải xong (khoảng vài giây đầu khi mới bật server), đành phải gọi tạm MongoDB
   try {
     let places = []
-    if (destination && destination.trim()) {
-      let cleanDest = destination.trim()
-      if (DESTINATION_ALIASES[cleanDest]) {
-        cleanDest = DESTINATION_ALIASES[cleanDest]
-      }
-
-      // 1. Kiểm tra xem điểm đến này đã có dữ liệu trong DB chưa
-      const totalForDest = await Place.countDocuments({ destination: new RegExp(`^${cleanDest}$`, 'i') })
-
-      // 2. Nếu là điểm đến mới toanh chưa có trong CSDL (0 điểm), tự động cào ngầm bằng AI ngay
-      if (totalForDest === 0) {
-        console.log(`[AI Auto-Crawler] Điểm đến mới "${cleanDest}" chưa có trong DB, AI đang tự động cào dữ liệu...`)
-        try {
-          await crawlPlacesByAI(cleanDest)
-        } catch (crawlErr) {
-          console.warn(`[AI Auto-Crawler] Lỗi cào nhanh cho "${cleanDest}":`, crawlErr.message)
-        }
-      }
-
-      // 3. Trả về kết quả từ DB (siêu nhanh < 30ms)
-      places = await Place.find({ ...filter, destination: new RegExp(`^${cleanDest}$`, 'i') }).sort({ rating: -1 }).limit(500).lean()
-
-      if (places.length === 0 && !filter.type) {
-        places = await Place.find({ ...filter, destination: new RegExp(cleanDest, 'i') }).sort({ rating: -1 }).limit(500).lean()
+    const dbFilter = {}
+    if (filterType) dbFilter.type = filterType
+    if (searchQ) dbFilter.$text = { $search: searchQ }
+    
+    if (cleanDest) {
+      places = await Place.find({ ...dbFilter, destination: new RegExp(`^${cleanDest}$`, 'i') }).sort({ rating: -1 }).limit(500).lean()
+      if (places.length === 0 && !filterType) {
+        places = await Place.find({ ...dbFilter, destination: new RegExp(cleanDest, 'i') }).sort({ rating: -1 }).limit(500).lean()
       }
     } else {
-      places = await Place.find(filter).sort({ rating: -1 }).limit(500).lean()
+      places = await Place.find(dbFilter).sort({ rating: -1 }).limit(500).lean()
     }
-
     res.json(places)
   } catch (err) {
-    res.status(500).json({ error: err.message || 'Không thể tìm địa điểm' })
+    res.status(500).json({ error: err.message })
   }
 })
 

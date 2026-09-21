@@ -1,0 +1,457 @@
+{
+  "destination": "Đà Nẵng",
+  "total_budget": 3500000,
+  "people": 2,
+  "interests": [
+    "Ăn uống đặc sản",
+    "check-in cảnh đẹp",
+    "biển"
+  ],
+  "selected_places": [],
+  "transportation": "máy bay",
+  "hotel_request": "",
+  "hotel_recommendation": {
+    "name": "Bliss Luxury Hotel",
+    "address": "Bliss Luxury Hotel, Đà Nẵng",
+    "rating": 4,
+    "price_per_night": 413995,
+    "description": "Địa điểm khách sạn nghỉ dưỡng chất lượng cao trên Google Maps tại Đà Nẵng."
+  },
+  "budget_breakdown": {
+    "hotel": 1225000,
+    "food": 875000,
+    "transportation": 525000,
+    "tickets": 525000,
+    "reserve": 350000
+  },
+  "days": [
+    {
+      "day": 1,
+      "activities": [
+        {
+          "time": "07:30",
+          "type": "breakfast",
+          "label": "Ăn sáng",
+          "place": "Quán Ly - Hải Sản Tươi Sống",
+          "address": "Quán Ly - Hải Sản Tươi Sống, Đà Nẵng",
+          "activity": "Thưởng thức/tham quan: Địa điểm ẩm thực đặc sản chất lượng cao trên Google Maps tại Đà Nẵng.",
+          "estimated_cost": 202406,
+          "latitude": 16.0705821,
+          "longitude": 108.2373999
+        },
+        {
+          "time": "09:00",
+          "type": "attraction",
+          "label": "Tham quan / Check-in",
+          "place": "Ban Quản lí Bán đảo Sơn Trà và các Bãi biển Du lịch Đà Nẵng",
+          "address": "Ban Quản lí Bán đảo Sơn Trà và các Bãi biển Du lịch Đà Nẵng, Đà Nẵng",
+          "activity": "Thưởng thức/tham quan: Địa điểm du lịch tham quan chất lượng cao trên Google Maps tại Đà Nẵng.",
+          "estimated_cost": 96131,
+          "latitude": 16.0729286,
+          "longitude": 108.2431726
+        },
+        {
+          "time": "12:00",
+          "type": "lunch",
+          "label": "Ăn trưa",
+          "place": "Hải Sản Family",
+          "address": "Hải Sản Family, Đà Nẵng",
+          "activity": "Thưởng thức/tham quan: Địa điểm ẩm thực đặc sản chất lượng cao trên Google Maps tại Đà Nẵng.",
+          "estimated_cost": 215498,
+          "latitude": 16.0739267,
+          "longitude": 108.2432059
+        },
+        {
+          "time": "14:00",
+          "type": "checkin",
+          "label": "Nhận phòng",
+          "place": "Bliss Luxury Hotel",
+          "address": "Bliss Luxury Hotel, Đà Nẵng",
+          "activity": "Làm thủ tục nhận phòng tại Bliss Luxury Hotel, nghỉ ngơi thư giãn.",
+          "estimated_cost": 0,
+          "latitude": 16.0717337,
+          "longitude": 108.2378044
+        },
+        {
+          "time": "16:00",
+          "type": "attraction",
+          "label": "Tham quan / Check-in",
+          "place": "Vincom Plaza Đà Nẵng",
+          "address": "Vincom Plaza Đà Nẵng, Đà Nẵng",
+          "activity": "Thưởng thức/tham quan: Địa điểm du lịch tham quan chất lượng cao trên Google Maps tại Đà Nẵng.",
+          "estimated_cost": 65322,
+          "latitude": 16.0714014,
+          "longitude": 108.2299673
+        },
+        {
+          "time": "19:00",
+          "type": "dinner",
+          "label": "Ăn tối",
+          "place": "Bún Chả Cá 109",
+          "address": "109 Nguyễn Chí Thanh, Quận Hải Châu, TP Đà Nẵng",
+          "activity": "Thưởng thức/tham quan: Quán bún chả cá lâu đời với nước dùng ngọt thanh từ xương cá, chả cá dai ngon và các loại rau sống tươi mát, mang đến hương vị đặc trưng của Đà Nẵng.",
+          "estimated_cost": 30000,
+          "latitude": 16.0716,
+          "longitude": 108.2243
+        }
+      ]
+    },
+    {
+      "day": 2,
+      "activities": [
+        {
+          "time": "07:30",
+          "type": "breakfast",
+          "label": "Ăn sáng",
+          "place": "Bánh tráng cuốn thịt heo Quán Trần",
+          "address": "04 Lê Duẩn, Quận Hải Châu, TP Đà Nẵng",
+          "activity": "Thưởng thức/tham quan: Đặc sản thịt heo hai đầu da luộc mềm béo ngậy cuốn bánh tráng phơi sương, rau ghém rừng hơn 10 loại chấm mắm nêm bí truyền thơm lừng. (Từ Bliss Luxury Hotel di chuyển ~1.7km, khoảng 3 phút, phí taxi ước tính 26.000đ)",
+          "estimated_cost": 140000,
+          "latitude": 16.0712,
+          "longitude": 108.2215
+        },
+        {
+          "time": "09:00",
+          "type": "attraction",
+          "label": "Tham quan / Check-in",
+          "place": "Bà Nà Hills & Cầu Vàng",
+          "address": "Thôn An Sơn, Xã Hòa Ninh, Huyện Hòa Vang, TP Đà Nẵng",
+          "activity": "Thưởng thức/tham quan: Quần thể du lịch nghỉ dưỡng trên đỉnh núi Chúa với biểu tượng Cầu Vàng đôi bàn tay khổng lồ vang danh thế giới, Làng Pháp cổ kính và cáp treo đạt nhiều kỷ lục. (Từ Bánh tráng cuốn thịt heo Quán Trần di chuyển ~25.4km, khoảng 44 phút, phí taxi ước tính 381.000đ)",
+          "estimated_cost": 900000,
+          "latitude": 15.9988,
+          "longitude": 107.9959
+        },
+        {
+          "time": "12:00",
+          "type": "lunch",
+          "label": "Ăn trưa",
+          "place": "Quán MỲ QUẢNG CÔ TUYẾT - Đặc sản Hoà Sơn",
+          "address": "Quán MỲ QUẢNG CÔ TUYẾT - Đặc sản Hoà Sơn, Đà Nẵng",
+          "activity": "Thưởng thức/tham quan: Địa điểm ẩm thực đặc sản chất lượng cao trên Google Maps tại Đà Nẵng. (Từ Bà Nà Hills & Cầu Vàng di chuyển ~12.8km, khoảng 22 phút, phí taxi ước tính 192.000đ)",
+          "estimated_cost": 210810,
+          "latitude": 16.0498691,
+          "longitude": 108.1034591
+        },
+        {
+          "time": "14:30",
+          "type": "cafe",
+          "label": "Cafe & Chill",
+          "place": "Salavan Coffee",
+          "address": "Salavan Coffee, Đà Nẵng",
+          "activity": "Thưởng thức/tham quan: Địa điểm quán cafe check-in chất lượng cao trên Google Maps tại Đà Nẵng. (Từ Quán MỲ QUẢNG CÔ TUYẾT - Đặc sản Hoà Sơn di chuyển ~5.1km, khoảng 9 phút, phí taxi ước tính 77.000đ)",
+          "estimated_cost": 49074,
+          "latitude": 16.0689523,
+          "longitude": 108.1470401
+        },
+        {
+          "time": "16:00",
+          "type": "attraction",
+          "label": "Tham quan / Check-in",
+          "place": "Nhà Thờ Giáo Xứ Hòa Khánh",
+          "address": "Nhà Thờ Giáo Xứ Hòa Khánh, Đà Nẵng",
+          "activity": "Thưởng thức/tham quan: Địa điểm du lịch tham quan chất lượng cao trên Google Maps tại Đà Nẵng.",
+          "estimated_cost": 21019,
+          "latitude": 16.0736982,
+          "longitude": 108.1511203
+        },
+        {
+          "time": "19:00",
+          "type": "dinner",
+          "label": "Ăn tối",
+          "place": "Quán Mì Quảng Bà Bích",
+          "address": "Quán Mì Quảng Bà Bích, Đà Nẵng",
+          "activity": "Thưởng thức/tham quan: Địa điểm ẩm thực đặc sản chất lượng cao trên Google Maps tại Đà Nẵng.",
+          "estimated_cost": 226253,
+          "latitude": 16.071235,
+          "longitude": 108.1501031
+        }
+      ]
+    },
+    {
+      "day": 3,
+      "activities": [
+        {
+          "time": "07:30",
+          "type": "breakfast",
+          "label": "Ăn sáng",
+          "place": "Mì Quảng Bà Mua",
+          "address": "19-21 Trần Bình Trọng, Quận Hải Châu, TP Đà Nẵng",
+          "activity": "Thưởng thức/tham quan: Thương hiệu mì Quảng trứ danh Đà Nẵng với sợi mì mềm dai, nước dùng đậm đà ngọt từ tôm thịt gà, ăn kèm rau sống tươi ngon và bánh tráng mè nướng giòn. (Từ Bliss Luxury Hotel di chuyển ~2.1km, khoảng 4 phút, phí taxi ước tính 31.000đ)",
+          "estimated_cost": 45000,
+          "latitude": 16.0645,
+          "longitude": 108.2198
+        },
+        {
+          "time": "09:00",
+          "type": "attraction",
+          "label": "Tham quan / Check-in",
+          "place": "Bãi biển Mỹ Khê",
+          "address": "Đường Võ Nguyên Giáp, Phường Phước Mỹ, Quận Sơn Trà, TP Đà Nẵng",
+          "activity": "Thưởng thức/tham quan: Một trong những bãi biển quyến rũ nhất hành tinh do tạp chí Forbes bình chọn với bờ cát trắng mịn màng, làn nước trong xanh ấm áp quanh năm. (Từ Mì Quảng Bà Mua di chuyển ~2.9km, khoảng 5 phút, phí taxi ước tính 44.000đ)",
+          "estimated_cost": 50000,
+          "latitude": 16.0592,
+          "longitude": 108.2467
+        },
+        {
+          "time": "12:00",
+          "type": "lunch",
+          "label": "Ăn trưa",
+          "place": "Nhà Hàng Hải Sản 24h",
+          "address": "Nhà Hàng Hải Sản 24h, Đà Nẵng",
+          "activity": "Thưởng thức/tham quan: Địa điểm ẩm thực đặc sản chất lượng cao trên Google Maps tại Đà Nẵng.",
+          "estimated_cost": 147626,
+          "latitude": 16.0572622,
+          "longitude": 108.2467946
+        },
+        {
+          "time": "12:00",
+          "type": "checkout",
+          "label": "Trả phòng",
+          "place": "Bliss Luxury Hotel",
+          "address": "Bliss Luxury Hotel, Đà Nẵng",
+          "activity": "Làm thủ tục trả phòng, gửi hành lý tại quầy lễ tân.",
+          "estimated_cost": 0,
+          "latitude": 16.0717337,
+          "longitude": 108.2378044
+        },
+        {
+          "time": "16:00",
+          "type": "attraction",
+          "label": "Tham quan / Check-in",
+          "place": "Công viên Biển Đông",
+          "address": "Công viên Biển Đông, Đà Nẵng",
+          "activity": "Thưởng thức/tham quan: Địa điểm du lịch tham quan chất lượng cao trên Google Maps tại Đà Nẵng.",
+          "estimated_cost": 61564,
+          "latitude": 16.0703173,
+          "longitude": 108.2458368
+        },
+        {
+          "time": "19:00",
+          "type": "dinner",
+          "label": "Ăn tối",
+          "place": "Hải Sản Đà Nẵng Bé Biển",
+          "address": "Hải Sản Đà Nẵng Bé Biển, Đà Nẵng",
+          "activity": "Thưởng thức/tham quan: Địa điểm ẩm thực đặc sản nổi tiếng trên Google Maps tại Đà Nẵng.",
+          "estimated_cost": 120000,
+          "latitude": 16.0685271,
+          "longitude": 108.2449805
+        }
+      ]
+    }
+  ],
+  "daysList": [
+    {
+      "day": 1,
+      "activities": [
+        {
+          "time": "07:30",
+          "type": "breakfast",
+          "label": "Ăn sáng",
+          "place": "Quán Ly - Hải Sản Tươi Sống",
+          "address": "Quán Ly - Hải Sản Tươi Sống, Đà Nẵng",
+          "activity": "Thưởng thức/tham quan: Địa điểm ẩm thực đặc sản chất lượng cao trên Google Maps tại Đà Nẵng.",
+          "estimated_cost": 202406,
+          "latitude": 16.0705821,
+          "longitude": 108.2373999
+        },
+        {
+          "time": "09:00",
+          "type": "attraction",
+          "label": "Tham quan / Check-in",
+          "place": "Ban Quản lí Bán đảo Sơn Trà và các Bãi biển Du lịch Đà Nẵng",
+          "address": "Ban Quản lí Bán đảo Sơn Trà và các Bãi biển Du lịch Đà Nẵng, Đà Nẵng",
+          "activity": "Thưởng thức/tham quan: Địa điểm du lịch tham quan chất lượng cao trên Google Maps tại Đà Nẵng.",
+          "estimated_cost": 96131,
+          "latitude": 16.0729286,
+          "longitude": 108.2431726
+        },
+        {
+          "time": "12:00",
+          "type": "lunch",
+          "label": "Ăn trưa",
+          "place": "Hải Sản Family",
+          "address": "Hải Sản Family, Đà Nẵng",
+          "activity": "Thưởng thức/tham quan: Địa điểm ẩm thực đặc sản chất lượng cao trên Google Maps tại Đà Nẵng.",
+          "estimated_cost": 215498,
+          "latitude": 16.0739267,
+          "longitude": 108.2432059
+        },
+        {
+          "time": "14:00",
+          "type": "checkin",
+          "label": "Nhận phòng",
+          "place": "Bliss Luxury Hotel",
+          "address": "Bliss Luxury Hotel, Đà Nẵng",
+          "activity": "Làm thủ tục nhận phòng tại Bliss Luxury Hotel, nghỉ ngơi thư giãn.",
+          "estimated_cost": 0,
+          "latitude": 16.0717337,
+          "longitude": 108.2378044
+        },
+        {
+          "time": "16:00",
+          "type": "attraction",
+          "label": "Tham quan / Check-in",
+          "place": "Vincom Plaza Đà Nẵng",
+          "address": "Vincom Plaza Đà Nẵng, Đà Nẵng",
+          "activity": "Thưởng thức/tham quan: Địa điểm du lịch tham quan chất lượng cao trên Google Maps tại Đà Nẵng.",
+          "estimated_cost": 65322,
+          "latitude": 16.0714014,
+          "longitude": 108.2299673
+        },
+        {
+          "time": "19:00",
+          "type": "dinner",
+          "label": "Ăn tối",
+          "place": "Bún Chả Cá 109",
+          "address": "109 Nguyễn Chí Thanh, Quận Hải Châu, TP Đà Nẵng",
+          "activity": "Thưởng thức/tham quan: Quán bún chả cá lâu đời với nước dùng ngọt thanh từ xương cá, chả cá dai ngon và các loại rau sống tươi mát, mang đến hương vị đặc trưng của Đà Nẵng.",
+          "estimated_cost": 30000,
+          "latitude": 16.0716,
+          "longitude": 108.2243
+        }
+      ]
+    },
+    {
+      "day": 2,
+      "activities": [
+        {
+          "time": "07:30",
+          "type": "breakfast",
+          "label": "Ăn sáng",
+          "place": "Bánh tráng cuốn thịt heo Quán Trần",
+          "address": "04 Lê Duẩn, Quận Hải Châu, TP Đà Nẵng",
+          "activity": "Thưởng thức/tham quan: Đặc sản thịt heo hai đầu da luộc mềm béo ngậy cuốn bánh tráng phơi sương, rau ghém rừng hơn 10 loại chấm mắm nêm bí truyền thơm lừng. (Từ Bliss Luxury Hotel di chuyển ~1.7km, khoảng 3 phút, phí taxi ước tính 26.000đ)",
+          "estimated_cost": 140000,
+          "latitude": 16.0712,
+          "longitude": 108.2215
+        },
+        {
+          "time": "09:00",
+          "type": "attraction",
+          "label": "Tham quan / Check-in",
+          "place": "Bà Nà Hills & Cầu Vàng",
+          "address": "Thôn An Sơn, Xã Hòa Ninh, Huyện Hòa Vang, TP Đà Nẵng",
+          "activity": "Thưởng thức/tham quan: Quần thể du lịch nghỉ dưỡng trên đỉnh núi Chúa với biểu tượng Cầu Vàng đôi bàn tay khổng lồ vang danh thế giới, Làng Pháp cổ kính và cáp treo đạt nhiều kỷ lục. (Từ Bánh tráng cuốn thịt heo Quán Trần di chuyển ~25.4km, khoảng 44 phút, phí taxi ước tính 381.000đ)",
+          "estimated_cost": 900000,
+          "latitude": 15.9988,
+          "longitude": 107.9959
+        },
+        {
+          "time": "12:00",
+          "type": "lunch",
+          "label": "Ăn trưa",
+          "place": "Quán MỲ QUẢNG CÔ TUYẾT - Đặc sản Hoà Sơn",
+          "address": "Quán MỲ QUẢNG CÔ TUYẾT - Đặc sản Hoà Sơn, Đà Nẵng",
+          "activity": "Thưởng thức/tham quan: Địa điểm ẩm thực đặc sản chất lượng cao trên Google Maps tại Đà Nẵng. (Từ Bà Nà Hills & Cầu Vàng di chuyển ~12.8km, khoảng 22 phút, phí taxi ước tính 192.000đ)",
+          "estimated_cost": 210810,
+          "latitude": 16.0498691,
+          "longitude": 108.1034591
+        },
+        {
+          "time": "14:30",
+          "type": "cafe",
+          "label": "Cafe & Chill",
+          "place": "Salavan Coffee",
+          "address": "Salavan Coffee, Đà Nẵng",
+          "activity": "Thưởng thức/tham quan: Địa điểm quán cafe check-in chất lượng cao trên Google Maps tại Đà Nẵng. (Từ Quán MỲ QUẢNG CÔ TUYẾT - Đặc sản Hoà Sơn di chuyển ~5.1km, khoảng 9 phút, phí taxi ước tính 77.000đ)",
+          "estimated_cost": 49074,
+          "latitude": 16.0689523,
+          "longitude": 108.1470401
+        },
+        {
+          "time": "16:00",
+          "type": "attraction",
+          "label": "Tham quan / Check-in",
+          "place": "Nhà Thờ Giáo Xứ Hòa Khánh",
+          "address": "Nhà Thờ Giáo Xứ Hòa Khánh, Đà Nẵng",
+          "activity": "Thưởng thức/tham quan: Địa điểm du lịch tham quan chất lượng cao trên Google Maps tại Đà Nẵng.",
+          "estimated_cost": 21019,
+          "latitude": 16.0736982,
+          "longitude": 108.1511203
+        },
+        {
+          "time": "19:00",
+          "type": "dinner",
+          "label": "Ăn tối",
+          "place": "Quán Mì Quảng Bà Bích",
+          "address": "Quán Mì Quảng Bà Bích, Đà Nẵng",
+          "activity": "Thưởng thức/tham quan: Địa điểm ẩm thực đặc sản chất lượng cao trên Google Maps tại Đà Nẵng.",
+          "estimated_cost": 226253,
+          "latitude": 16.071235,
+          "longitude": 108.1501031
+        }
+      ]
+    },
+    {
+      "day": 3,
+      "activities": [
+        {
+          "time": "07:30",
+          "type": "breakfast",
+          "label": "Ăn sáng",
+          "place": "Mì Quảng Bà Mua",
+          "address": "19-21 Trần Bình Trọng, Quận Hải Châu, TP Đà Nẵng",
+          "activity": "Thưởng thức/tham quan: Thương hiệu mì Quảng trứ danh Đà Nẵng với sợi mì mềm dai, nước dùng đậm đà ngọt từ tôm thịt gà, ăn kèm rau sống tươi ngon và bánh tráng mè nướng giòn. (Từ Bliss Luxury Hotel di chuyển ~2.1km, khoảng 4 phút, phí taxi ước tính 31.000đ)",
+          "estimated_cost": 45000,
+          "latitude": 16.0645,
+          "longitude": 108.2198
+        },
+        {
+          "time": "09:00",
+          "type": "attraction",
+          "label": "Tham quan / Check-in",
+          "place": "Bãi biển Mỹ Khê",
+          "address": "Đường Võ Nguyên Giáp, Phường Phước Mỹ, Quận Sơn Trà, TP Đà Nẵng",
+          "activity": "Thưởng thức/tham quan: Một trong những bãi biển quyến rũ nhất hành tinh do tạp chí Forbes bình chọn với bờ cát trắng mịn màng, làn nước trong xanh ấm áp quanh năm. (Từ Mì Quảng Bà Mua di chuyển ~2.9km, khoảng 5 phút, phí taxi ước tính 44.000đ)",
+          "estimated_cost": 50000,
+          "latitude": 16.0592,
+          "longitude": 108.2467
+        },
+        {
+          "time": "12:00",
+          "type": "lunch",
+          "label": "Ăn trưa",
+          "place": "Nhà Hàng Hải Sản 24h",
+          "address": "Nhà Hàng Hải Sản 24h, Đà Nẵng",
+          "activity": "Thưởng thức/tham quan: Địa điểm ẩm thực đặc sản chất lượng cao trên Google Maps tại Đà Nẵng.",
+          "estimated_cost": 147626,
+          "latitude": 16.0572622,
+          "longitude": 108.2467946
+        },
+        {
+          "time": "12:00",
+          "type": "checkout",
+          "label": "Trả phòng",
+          "place": "Bliss Luxury Hotel",
+          "address": "Bliss Luxury Hotel, Đà Nẵng",
+          "activity": "Làm thủ tục trả phòng, gửi hành lý tại quầy lễ tân.",
+          "estimated_cost": 0,
+          "latitude": 16.0717337,
+          "longitude": 108.2378044
+        },
+        {
+          "time": "16:00",
+          "type": "attraction",
+          "label": "Tham quan / Check-in",
+          "place": "Công viên Biển Đông",
+          "address": "Công viên Biển Đông, Đà Nẵng",
+          "activity": "Thưởng thức/tham quan: Địa điểm du lịch tham quan chất lượng cao trên Google Maps tại Đà Nẵng.",
+          "estimated_cost": 61564,
+          "latitude": 16.0703173,
+          "longitude": 108.2458368
+        },
+        {
+          "time": "19:00",
+          "type": "dinner",
+          "label": "Ăn tối",
+          "place": "Hải Sản Đà Nẵng Bé Biển",
+          "address": "Hải Sản Đà Nẵng Bé Biển, Đà Nẵng",
+          "activity": "Thưởng thức/tham quan: Địa điểm ẩm thực đặc sản nổi tiếng trên Google Maps tại Đà Nẵng.",
+          "estimated_cost": 120000,
+          "latitude": 16.0685271,
+          "longitude": 108.2449805
+        }
+      ]
+    }
+  ]
+}

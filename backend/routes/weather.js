@@ -3,9 +3,18 @@ const axios = require('axios')
 
 const router = express.Router()
 
+// In-memory cache for weather to make it instant
+const weatherCache = new Map()
+
 router.get('/', async (req, res) => {
   const destination = String(req.query.destination || '').trim()
   if(!destination) return res.status(400).json({ error: 'Điểm đến là bắt buộc' })
+
+  // Khóa cache
+  const cacheKey = destination.toLowerCase()
+  if (weatherCache.has(cacheKey)) {
+    return res.json(weatherCache.get(cacheKey))
+  }
 
   try {
     const geocodeResponse = await axios.get('https://geocoding-api.open-meteo.com/v1/search', {
@@ -28,7 +37,7 @@ router.get('/', async (req, res) => {
     })
 
     const forecast = forecastResponse.data
-    res.json({
+    const weatherData = {
       location: { name: location.name, country: location.country, latitude: location.latitude, longitude: location.longitude },
       current: {
         temperature: forecast.current.temperature_2m,
@@ -43,7 +52,10 @@ router.get('/', async (req, res) => {
         rainChance: forecast.daily.precipitation_probability_max[index],
         weatherCode: forecast.daily.weather_code[index]
       }))
-    })
+    }
+
+    weatherCache.set(cacheKey, weatherData)
+    res.json(weatherData)
   } catch(err) {
     console.error('Weather request failed:', err.message)
     res.status(502).json({ error: 'Không thể lấy dữ liệu thời tiết lúc này' })
