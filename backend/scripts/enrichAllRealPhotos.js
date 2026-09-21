@@ -1,5 +1,5 @@
 const path = require('path')
-const dns = require('dns')
+const dns = require('node:dns')
 try {
   dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1'])
 } catch (e) {}
@@ -222,7 +222,7 @@ async function processBatch(places, batchSize = 12) {
         }
       } catch (err) {}
     }))
-    process.stdout.write(`\r🚀 Tiến độ: ${Math.min(i + batchSize, places.length)} / ${places.length} địa điểm đã quét...`)
+    console.log(`🚀 Tiến độ: ${Math.min(i + batchSize, places.length)} / ${places.length} địa điểm đã quét...`)
   }
   return updated
 }
@@ -233,10 +233,12 @@ async function enrichAllDatabaseWithRealPhotos() {
   console.log('==================================================================\n')
 
   try {
-    await mongoose.connect(MONGODB_URI)
-    console.log('✅ Kết nối MongoDB Atlas thành công!\n')
+    if (mongoose.connection.readyState !== 1) {
+      await mongoose.connect(MONGODB_URI)
+      console.log('✅ Kết nối MongoDB Atlas thành công!\n')
+    }
 
-    const allPlaces = await Place.find({})
+    const allPlaces = await Place.find({}).select('_id name destination tags description latitude longitude image').lean()
     console.log(`📊 Tổng số địa điểm cần làm giàu trong CSDL: ${allPlaces.length}`)
 
     const startTime = Date.now()

@@ -31,7 +31,6 @@ let RAM_PLACES = []
 let isRamLoaded = false
 
 // Tải toàn bộ data lên RAM (chạy ngầm 1 lần khi import)
-const Place = require('../models/Place')
 setTimeout(async () => {
   try {
     console.log('⏳ [RAM CACHE] Đang kéo toàn bộ dữ liệu từ MongoDB lên RAM để tăng tốc 0ms...')
@@ -263,6 +262,24 @@ router.post('/crawl-all', async (req, res) => {
     })
   } catch (err) {
     res.status(500).json({ error: err.message || 'Lỗi khi AI Crawl toàn bộ dữ liệu' })
+  }
+})
+
+router.post('/enrich-photos', async (req, res) => {
+  try {
+    const { enrichAllDatabaseWithRealPhotos } = require('../scripts/enrichAllRealPhotos')
+    const result = await enrichAllDatabaseWithRealPhotos()
+    
+    // Nạp lại RAM
+    RAM_PLACES = await Place.find({}).lean()
+    
+    res.json({
+      success: true,
+      message: 'Đã hoàn tất làm giàu ảnh thật và nạp lại RAM!',
+      details: result
+    })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
   }
 })
 
