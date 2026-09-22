@@ -324,7 +324,10 @@ Trong đợt cập nhật gần nhất, hệ thống đã hoàn thiện và kh�
 
 3. **Hệ thống Trí Tuệ Nhân Tạo Tự Động Tìm Ảnh Thật (AI Photo Enricher & Google Maps Crawler):**
    - **Vấn đề cũ:** Các danh lam thắng cảnh nổi tiếng bị gán ảnh minh họa generic (từ Unsplash) do Crawler chưa tìm thấy ảnh thực tế, làm giảm trải nghiệm trực quan.
-   - **Cách thức hoạt động mới:** Xây dựng script chạy nền tự động quét qua toàn bộ 5250+ địa điểm trong Database. Hệ thống đối chiếu từ khóa với từ điển xác thực và kết hợp song song 2 luồng: **Wikipedia API** và **Google Maps API (kết hợp Puppeteer Crawler)** để cào ảnh gốc. Nhờ đó, ảnh minh họa lập tức bị ghi đè bằng ảnh thật, giúp người dùng nhìn thấy chính xác vẻ đẹp thực tế của điểm đến (như Động Thiên Đường, Cầu Vàng).
+   - **Cách thức hoạt động mới:** Hệ thống kết hợp 2 luồng tự động (Auto-Crawling) chạy nền:
+     - **Luồng 1 (Wikipedia API):** Sử dụng chuẩn Open REST API của Wikipedia (không cần API Key). Thuật toán gọi trực tiếp endpoint `https://vi.wikipedia.org/w/api.php?action=query&prop=pageimages...` truyền vào từ khóa là Tên địa điểm. Wikipedia sẽ trả về chuẩn JSON chứa đường dẫn ảnh gốc (Original HD Image) của các danh lam thắng cảnh, di tích lịch sử nổi tiếng (như Động Thiên Đường, Đại Nội Huế). Nguồn ảnh này đảm bảo độ chính xác tuyệt đối, sắc nét và tuân thủ giấy phép mã nguồn mở.
+     - **Luồng 2 (Google Maps / Bing Images Web Scraping):** Đối với các nhà hàng, khách sạn, quán cafe không có trên Wikipedia, hệ thống sử dụng thuật toán Web Scraping (`Axios`, `Cheerio`, `Puppeteer`) để phân tích mã nguồn HTML kết quả tìm kiếm và trích xuất đường dẫn ảnh độ phân giải cao.
+     - *Kết quả:* Toàn bộ 5250+ ảnh minh họa lập tức bị ghi đè bằng ảnh thật trong Database và đồng bộ lên RAM, mang lại trải nghiệm thị giác chân thực 100%.
 
 4. **Tích hợp Bản đồ Tương tác & Định vị Nổi bật (Interactive Map & Markers):**
    - **Mô tả hoạt động:** Khắc phục việc xem lịch trình dạng chữ khô khan, hệ thống hiện đã vẽ nổi bật toàn bộ các địa điểm lên bản đồ số.
