@@ -23,7 +23,8 @@ async function getBingImage(query) {
     const mAttr = $('a.iusc').first().attr('m');
     if (mAttr) {
       const data = JSON.parse(mAttr);
-      return data.murl || data.turl;
+      // LUÔN DÙNG turl (thumbnail của Bing) để tránh lỗi 403 Hotlink Protection từ các website ngoài!
+      return data.turl || data.murl;
     }
   } catch (err) {
     // Bỏ qua lỗi 
@@ -36,15 +37,16 @@ async function run() {
   await mongoose.connect(MONGODB_URI);
   console.log('✅ Kết nối MongoDB thành công!');
 
-  // Lấy các địa điểm đang dùng ảnh giả (unsplash)
+  // Sử dụng truy vấn MongoDB để lọc trực tiếp trên server, tránh kéo 5250 bản ghi về nodejs gây lag
   const places = await Place.find({
     $or: [
       { image: null },
       { image: { $exists: false } },
       { image: '' },
-      { image: { $regex: 'unsplash.com', $options: 'i' } }
+      { image: { $regex: 'unsplash.com', $options: 'i' } },
+      { image: { $not: /wikimedia|googleusercontent\.com|th\.bing\.com/i } }
     ]
-  });
+  }, { name: 1, destination: 1, image: 1 }).lean();
 
   console.log(`🔍 Tìm thấy ${places.length} địa điểm chưa có ảnh thực. Bắt đầu xử lý siêu tốc...`);
 
@@ -58,8 +60,7 @@ async function run() {
     await Promise.all(batch.map(async (place) => {
       const imgUrl = await getBingImage(`${place.name} ${place.destination}`);
       if (imgUrl) {
-        place.image = imgUrl;
-        await place.save();
+        await Place.updateOne({ _id: place._id }, { $set: { image: imgUrl } });
         successCount++;
       }
     }));
