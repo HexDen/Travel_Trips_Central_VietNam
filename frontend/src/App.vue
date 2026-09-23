@@ -1,16 +1,15 @@
 <template>
-  <div :class="['app-root', { 'mobile-frame-mode': isMobileFrame }]">
-    <!-- KHUNG ĐIỆN THOẠI NẾU BẬT CHẾ ĐỘ GIẢ LẬP MOBILE TRÊN PC -->
+  <div class="app-root">
     <div class="app-container">
       
       <!-- TOP HEADER CỦA APP (ĐÃ TÁCH COMPONENT) -->
       <AppHeader
         :activeTab="activeTab"
-        :isMobileFrame="isMobileFrame"
         :nguoiDung="nguoiDung"
+        :isDark="isDark"
         @update:activeTab="activeTab = $event"
-        @update:isMobileFrame="isMobileFrame = $event"
         @openAuth="hienAuthModal = true"
+        @toggleDark="toggleDark"
       />
 
       <!-- KHÔNG GIAN NỘI DUNG CHÍNH (THEO TỪNG TAB APP) -->
@@ -43,7 +42,7 @@
                 :key="city.name"
                 :class="['city-card-btn', { active: formDuLieu.diemDen === city.name }]"
                 @click="chonDiemDenExplore(city.name)"
-                :style="{ backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(15,23,42,0.85) 100%), url(${city.image})` }"
+                :style="{ backgroundImage: `url(${city.image})` }"
               >
                 <span class="city-icon">{{ city.icon }}</span>
                 <span class="city-name">{{ city.name }}</span>
@@ -118,7 +117,10 @@
             </div>
 
             <!-- Grid Thẻ Địa điểm CÓ HÌNH ẢNH NỔI BẬT -->
-            <div v-if="filteredExplorePlaces.length" class="places-app-grid">
+            <div v-if="loadingPlaces" class="places-app-grid">
+              <SkeletonCard v-for="i in 8" :key="'skeleton-' + i" />
+            </div>
+            <div v-else-if="filteredExplorePlaces.length" class="places-app-grid">
               <article v-for="place in filteredExplorePlaces" :key="place._id || place.name" class="app-place-card">
                 <div class="place-img-cover" :style="{ backgroundImage: `url(${getPlaceImage(place)})` }">
                   <span :class="['place-card-type', 'type-' + place.type]">
@@ -155,7 +157,15 @@
                 </div>
               </article>
             </div>
-            <p v-else class="empty-state-text">Đang tải địa điểm hoặc chưa có dữ liệu.</p>
+            <p v-else class="empty-state-text">Chưa có dữ liệu địa điểm cho khu vực này.</p>
+            
+            <!-- BẢN ĐỒ TƯƠNG TÁC (MapComponent) -->
+            <div v-if="!loadingPlaces && filteredExplorePlaces.length > 0" style="margin-top: 32px;">
+              <div class="section-title-row">
+                <h3>🗺️ Bản đồ các điểm đến</h3>
+              </div>
+              <MapComponent :places="filteredExplorePlaces" :centerCity="formDuLieu.diemDen" />
+            </div>
           </div>
         </section>
 
@@ -630,42 +640,6 @@
 
       </main>
 
-      <!-- ==================== BOTTOM NAVIGATION BAR (CHUẨN MOBILE APP) ==================== -->
-      <nav class="app-bottom-nav">
-        <button
-          :class="['nav-item', { active: activeTab === 'explore' }]"
-          @click="activeTab = 'explore'"
-        >
-          <span class="nav-icon">🏠</span>
-          <span class="nav-label">Khám phá</span>
-        </button>
-
-        <button
-          :class="['nav-item', { active: activeTab === 'planner' }]"
-          @click="activeTab = 'planner'"
-        >
-          <span class="nav-icon">🧭</span>
-          <span class="nav-label">Lên lịch</span>
-        </button>
-
-        <button
-          :class="['nav-item', { active: activeTab === 'mytrips' }]"
-          @click="activeTab = 'mytrips'"
-        >
-          <span class="nav-icon">🧳</span>
-          <span class="nav-label">Chuyến đi</span>
-        </button>
-
-        
-
-        <button
-          :class="['nav-item', { active: activeTab === 'profile' }]"
-          @click="activeTab = 'profile'"
-        >
-          <span class="nav-icon">👤</span>
-          <span class="nav-label">Tài khoản</span>
-        </button>
-      </nav>
 
     </div>
 
@@ -799,6 +773,8 @@
 import { reactive, ref, computed, onMounted, watch, nextTick } from 'vue'
 import api from './services/api'
 import AppHeader from './components/layout/AppHeader.vue'
+import SkeletonCard from './components/SkeletonCard.vue'
+import MapComponent from './components/MapComponent.vue'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 
@@ -812,21 +788,34 @@ L.Icon.Default.mergeOptions({
 
 // Navigation Tab State
 const activeTab = ref('explore')
-const isMobileFrame = ref(false)
+
+// Dark Mode State
+const isDark = ref(false)
+
+function toggleDark() {
+  isDark.value = !isDark.value
+  if (isDark.value) {
+    document.documentElement.setAttribute('data-theme', 'dark')
+    localStorage.setItem('theme', 'dark')
+  } else {
+    document.documentElement.removeAttribute('data-theme')
+    localStorage.setItem('theme', 'light')
+  }
+}
 
 // Danh sách 11 Tỉnh/Thành phố Miền Trung & Tây Nguyên sau sáp nhập
 const centralCities = [
-  { name: 'Thanh Hóa', icon: '🏰', tag: 'Sầm Sơn & Pù Luông', image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=600&auto=format&fit=crop&q=80' },
-  { name: 'Nghệ An', icon: '🌾', tag: 'Cửa Lò & Quê Bác', image: 'https://images.unsplash.com/photo-1528127269322-539801943592?w=600&auto=format&fit=crop&q=80' },
-  { name: 'Hà Tĩnh', icon: '🌊', tag: 'Thiên Cầm & Ngã Ba Đồng Lộc', image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&auto=format&fit=crop&q=80' },
-  { name: 'Quảng Trị', icon: '⛰️', tag: 'Phong Nha, Thiên Đường & Vịnh Mốc', image: 'https://images.unsplash.com/photo-1528127269322-539801943592?w=600&auto=format&fit=crop&q=80' },
-  { name: 'Huế', icon: '👑', tag: 'Cố Đô Di Sản Triều Nguyễn', image: 'https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=600&auto=format&fit=crop&q=80' },
-  { name: 'Đà Nẵng', icon: '🌉', tag: 'Cầu Vàng, Phố Cổ Hội An & Mỹ Khê', image: 'https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?w=600&auto=format&fit=crop&q=80' },
-  { name: 'Quảng Ngãi', icon: '🏖️', tag: 'Đảo Lý Sơn & Eo Gió - Kỳ Co', image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&auto=format&fit=crop&q=80' },
-  { name: 'Gia Lai', icon: '🐘', tag: 'Biển Hồ T’Nưng & Nhà Rông Kon Tum', image: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=600&auto=format&fit=crop&q=80' },
-  { name: 'Đắk Lắk', icon: '☕', tag: 'Bảo Tàng Cà Phê & Thác Dray Nur', image: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=600&auto=format&fit=crop&q=80' },
-  { name: 'Khánh Hòa', icon: '⛵', tag: 'Nha Trang, Vịnh Vĩnh Hy & Gành Đá Đĩa', image: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600&auto=format&fit=crop&q=80' },
-  { name: 'Lâm Đồng', icon: '🌲', tag: 'Đà Lạt Ngàn Hoa & Thác Dambri', image: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=600&auto=format&fit=crop&q=80' }
+  { name: 'Thanh Hóa', icon: '🏰', tag: 'Sầm Sơn & Pù Luông', image: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ad/Ru%E1%BB%99ng_b%E1%BA%ADc_thang_P%C3%B9_Lu%C3%B4ng_1_-_NKS.jpg/330px-Ru%E1%BB%99ng_b%E1%BA%ADc_thang_P%C3%B9_Lu%C3%B4ng_1_-_NKS.jpg' },
+  { name: 'Nghệ An', icon: '🌾', tag: 'Cửa Lò & Quê Bác', image: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/6/61/Cualovedem.jpg/330px-Cualovedem.jpg' },
+  { name: 'Hà Tĩnh', icon: '🌊', tag: 'Thiên Cầm & Ngã Ba Đồng Lộc', image: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3f/Toancanhthixa.jpg/330px-Toancanhthixa.jpg' },
+  { name: 'Quảng Trị', icon: '⛰️', tag: 'Phong Nha, Thiên Đường & Vịnh Mốc', image: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1c/Th%C3%A0nh_c%E1%BB%95_Qu%E1%BA%A3ng_Tr%E1%BB%8B_Foto.jpg/330px-Th%C3%A0nh_c%E1%BB%95_Qu%E1%BA%A3ng_Tr%E1%BB%8B_Foto.jpg' },
+  { name: 'Huế', icon: '👑', tag: 'Cố Đô Di Sản Triều Nguyễn', image: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b9/%C4%90%E1%BA%A1i_n%E1%BB%99i.jpg/330px-%C4%90%E1%BA%A1i_n%E1%BB%99i.jpg' },
+  { name: 'Đà Nẵng', icon: '🌉', tag: 'Cầu Vàng, Phố Cổ Hội An & Mỹ Khê', image: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a5/The_Golden_Bridge%2C_Ba_Na_Hills%2C_Vietnam.jpg/330px-The_Golden_Bridge%2C_Ba_Na_Hills%2C_Vietnam.jpg' },
+  { name: 'Quảng Ngãi', icon: '🏖️', tag: 'Đảo Lý Sơn & Eo Gió - Kỳ Co', image: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/d/dd/C%E1%BB%95ng_ch%C3%A0o_tr%C3%AAn_Huy%E1%BB%87n_%C4%90%E1%BA%A3o_L%C3%BD_S%C6%A1n_-_Qu%E1%BA%A3ng_Ng%C3%A3i.jpg/330px-C%E1%BB%95ng_ch%C3%A0o_tr%C3%AAn_Huy%E1%BB%87n_%C4%90%E1%BA%A3o_L%C3%BD_S%C6%A1n_-_Qu%E1%BA%A3ng_Ng%C3%A3i.jpg' },
+  { name: 'Gia Lai', icon: '🐘', tag: 'Biển Hồ T’Nưng & Nhà Rông Kon Tum', image: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9c/Chi%E1%BB%81u_cao_nguy%C3%AAn_-_Late_afternoon_in_the_Central_High_Plateaux_-_panoramio.jpg/330px-Chi%E1%BB%81u_cao_nguy%C3%AAn_-_Late_afternoon_in_the_Central_High_Plateaux_-_panoramio.jpg' },
+  { name: 'Đắk Lắk', icon: '☕', tag: 'Bảo Tàng Cà Phê & Thác Dray Nur', image: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9a/Lak_Lake.jpg/330px-Lak_Lake.jpg' },
+  { name: 'Khánh Hòa', icon: '⛵', tag: 'Nha Trang, Vịnh Vĩnh Hy & Gành Đá Đĩa', image: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9c/Nha_Trang_%2C_Vietnam_-_panoramio_%2835%29.jpg/330px-Nha_Trang_%2C_Vietnam_-_panoramio_%2835%29.jpg' },
+  { name: 'Lâm Đồng', icon: '🌲', tag: 'Đà Lạt Ngàn Hoa & Thác Dambri', image: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e2/Da_Lat_-_Viet_Nam.jpg/330px-Da_Lat_-_Viet_Nam.jpg' }
 ]
 
 // Form State
@@ -849,6 +838,7 @@ const lichTrinh = ref(null)
 const selectedPlaces = ref([])
 const selectedDay = ref(1)
 const places = ref([])
+const loadingPlaces = ref(false)
 const thoiTiet = ref(null)
 const filterExploreType = ref('all')
 
@@ -1088,11 +1078,6 @@ onMounted(() => {
       renderLeafletMap();
     });
   }
-  
-  window.addEventListener('resize', () => {
-    isMobileFrame.value = window.innerWidth <= 768
-  })
-  isMobileFrame.value = window.innerWidth <= 768
 })
 
 function dinhDangTien(v) {
@@ -1225,11 +1210,20 @@ async function taiDuLieuThanhPho() {
   const dest = (formDuLieu.diemDen || '').trim()
   if (!dest) return
 
+  loadingPlaces.value = true
+  places.value = []
+
   api.get('/places', { params: { destination: dest } })
     .then(res => {
-      if (currentId === reqIdCounter) places.value = res.data || []
+      if (currentId === reqIdCounter) {
+        places.value = res.data || []
+        loadingPlaces.value = false
+      }
     })
-    .catch(e => console.warn('Lỗi tải địa điểm:', e.message))
+    .catch(e => {
+      console.warn('Lỗi tải địa điểm:', e.message)
+      if (currentId === reqIdCounter) loadingPlaces.value = false
+    })
 
   api.get('/weather', { params: { destination: dest } })
     .then(res => {
@@ -1412,6 +1406,13 @@ function moTaThoiTiet(code) {
 }
 
 onMounted(async () => {
+  // Restore Dark Mode
+  const savedTheme = localStorage.getItem('theme')
+  if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    isDark.value = true
+    document.documentElement.setAttribute('data-theme', 'dark')
+  }
+
   if (localStorage.getItem('travel_token')) {
     try {
       nguoiDung.value = (await api.get('/auth/me')).data
@@ -1429,21 +1430,41 @@ onMounted(async () => {
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 :root {
-  --primary: #0d7c76;
-  --primary-dark: #095955;
-  --primary-light: #e0f2f1;
-  --accent: #f26440;
-  --accent-light: #ffebe5;
-  --bg-app: #f4f6f8;
+  --primary: #14b8a6;
+  --primary-dark: #0d9488;
+  --primary-light: #f0fdfa;
+  --accent: #f97316;
+  --accent-light: #fff7ed;
+  --bg-app: #f8fafc;
   --card-bg: #ffffff;
-  --text-main: #192a2e;
-  --text-sub: #607274;
-  --border-color: #e2e8f0;
-  --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
-  --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
-  --shadow-md: 0 8px 24px rgba(13,124,118,0.08);
+  --text-main: #1e293b;
+  --text-sub: #64748b;
+  --border-color: #f1f5f9;
+  --radius-sm: 12px;
+  --radius-md: 20px;
+  --radius-lg: 28px;
+  --shadow-sm: 0 4px 20px rgba(0,0,0,0.04);
+  --shadow-md: 0 12px 32px rgba(0,0,0,0.06);
+  --shadow-lg: 0 20px 48px rgba(0,0,0,0.08);
+  --input-bg: #f8fafc;
+  --input-bg-focus: #ffffff;
+}
+
+:root[data-theme="dark"] {
+  --bg-app: #0f172a;
+  --card-bg: #1e293b;
+  --text-main: #f8fafc;
+  --text-sub: #cbd5e1;
+  --border-color: #334155;
+  --primary-light: rgba(20, 184, 166, 0.15);
+  --accent-light: rgba(249, 115, 22, 0.15);
+  --shadow-sm: 0 4px 20px rgba(0,0,0,0.2);
+  --shadow-md: 0 10px 30px rgba(0,0,0,0.3);
+  --shadow-lg: 0 20px 40px rgba(0,0,0,0.4);
+  --input-bg: rgba(0,0,0,0.2);
+  --input-bg-focus: rgba(0,0,0,0.4);
+  --weather-bg: rgba(20, 184, 166, 0.1);
+  --weather-border: rgba(20, 184, 166, 0.2);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1452,6 +1473,7 @@ body {
   background-color: var(--bg-app);
   color: var(--text-main);
   -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.3s, color 0.3s;
 }
 
 button, input, select { font: inherit; outline: none; }
@@ -1461,34 +1483,17 @@ button { cursor: pointer; }
 .app-root {
   min-height: 100vh;
   display: flex;
-  justify-content: center;
-  background: #eef2f5;
+  background: var(--bg-app);
 }
 
 .app-container {
   width: 100%;
-  max-width: 1100px;
   min-height: 100vh;
-  background: var(--bg-app);
   display: flex;
   flex-direction: column;
   position: relative;
-  box-shadow: 0 0 40px rgba(0,0,0,0.06);
 }
 
-/* GIẢ LẬP KHUNG ĐIỆN THOẠI (MOBILE FRAME MODE) */
-.mobile-frame-mode {
-  padding: 24px 0;
-}
-.mobile-frame-mode .app-container {
-  max-width: 420px;
-  height: 860px;
-  min-height: 860px;
-  border-radius: 36px;
-  border: 10px solid #1e293b;
-  overflow: hidden;
-  box-shadow: 0 25px 60px rgba(0,0,0,0.25);
-}
 
 /* HEADER BAR */
 .app-header {
@@ -1552,7 +1557,7 @@ button { cursor: pointer; }
   display: flex;
   align-items: center;
   gap: 6px;
-  background: #f1f5f9;
+  background: var(--input-bg);
   border: 1px solid var(--border-color);
   padding: 4px 10px;
   border-radius: 20px;
@@ -1580,12 +1585,14 @@ button { cursor: pointer; }
   font-weight: 700;
 }
 
-/* MAIN CONTENT AREA */
 .app-main {
   flex: 1;
-  padding: 18px;
-  padding-bottom: 90px;
+  padding: 18px 40px;
+  padding-bottom: 30px;
   overflow-y: auto;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .tab-pane {
@@ -1596,13 +1603,19 @@ button { cursor: pointer; }
 
 /* EXPLORE TAB HERO CARD */
 .app-hero-card {
-  background: linear-gradient(135deg, var(--primary) 0%, #064e4b 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
   color: #fff;
-  padding: 24px;
+  padding: 32px;
   border-radius: var(--radius-lg);
+  border: 1px solid rgba(255,255,255,0.1);
   box-shadow: var(--shadow-md);
   position: relative;
   overflow: hidden;
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s;
+}
+.app-hero-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
 }
 .hero-badge {
   display: inline-block;
@@ -1628,17 +1641,23 @@ button { cursor: pointer; }
   max-width: 500px;
 }
 .hero-cta-btn {
-  background: var(--accent);
-  color: #fff;
-  border: 0;
-  padding: 10px 18px;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: 700;
+  background: var(--card-bg);
+  color: var(--primary);
+  border: none;
+  padding: 12px 24px;
+  border-radius: var(--radius-lg);
+  font-size: 14px;
+  font-weight: 800;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  box-shadow: 0 4px 12px rgba(242,100,64,0.3);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.hero-cta-btn:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+  color: var(--primary-dark);
 }
 
 .section-title-row {
@@ -1695,55 +1714,87 @@ button { cursor: pointer; }
 }
 .cities-carousel {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   overflow-x: auto;
-  padding-bottom: 6px;
-  scrollbar-width: thin;
+  padding: 10px 4px 14px 4px;
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+.cities-carousel::-webkit-scrollbar {
+  display: none; /* Hide scrollbar for Chrome, Safari and Opera */
 }
 .city-card-btn {
   background-color: var(--card-bg);
   background-size: cover;
   background-position: center;
-  border: 1px solid var(--border-color);
-  padding: 18px 16px;
+  border: none;
+  outline: none;
+  padding: 10px 8px;
   border-radius: var(--radius-md);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  min-width: 125px;
-  height: 120px;
+  min-width: 105px;
+  max-width: 115px;
+  height: 125px;
   color: #ffffff;
-  transition: all .25s;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+  box-shadow: var(--shadow-sm);
   position: relative;
   text-align: center;
+  overflow: hidden;
+  cursor: pointer;
+  flex-shrink: 0;
+  -webkit-appearance: none;
+  appearance: none;
 }
-.city-card-btn:hover, .city-card-btn.active {
-  border-color: #f59e0b;
-  transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.22);
+.city-card-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 60%, rgba(0,0,0,0.05) 100%);
+  z-index: 1;
+  border-radius: inherit;
+}
+.city-card-btn:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+.city-card-btn.active {
+  box-shadow: 0 0 0 2px var(--primary), 0 0 0 5px var(--primary-light), var(--shadow-sm);
+  transform: translateY(-2px);
 }
 .city-card-btn.active::after {
-  content: '● Đang chọn';
+  content: '✓';
   position: absolute;
-  top: 8px;
-  right: 8px;
-  font-size: 9px;
+  top: 6px;
+  right: 6px;
+  font-size: 10px;
   font-weight: 800;
-  background: var(--accent);
+  background: var(--primary);
   color: #fff;
-  padding: 2px 6px;
-  border-radius: 8px;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  z-index: 2;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.25);
 }
-.city-icon { font-size: 24px; margin-bottom: 2px; text-shadow: 0 2px 4px rgba(0,0,0,0.6); }
-.city-name { font-size: 14px; font-weight: 800; color: #ffffff; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
-.city-tag { font-size: 10px; color: #e2e8f0; margin-top: 2px; text-shadow: 0 1px 3px rgba(0,0,0,0.8); font-weight: 600; }
+.city-icon, .city-name, .city-tag {
+  position: relative;
+  z-index: 2;
+}
+.city-icon { font-size: 20px; margin-bottom: 2px; text-shadow: 0 2px 6px rgba(0,0,0,0.5); }
+.city-name { font-size: 13px; font-weight: 800; color: #ffffff; text-shadow: 0 2px 4px rgba(0,0,0,0.9); line-height: 1.2; margin-bottom: 2px; }
+.city-tag { font-size: 9.5px; color: rgba(255,255,255,0.88); text-shadow: 0 1px 3px rgba(0,0,0,0.8); font-weight: 500; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.25; }
 
 /* WEATHER WIDGET */
 .app-weather-widget {
-  background: #e8f4f3;
-  border: 1px solid #c2e2df;
+  background: var(--weather-bg, #e8f4f3);
+  border: 1px solid var(--weather-border, #c2e2df);
   padding: 16px 20px;
   border-radius: var(--radius-md);
 }
@@ -1761,12 +1812,13 @@ button { cursor: pointer; }
 .weather-forecast-strip {
   display: flex;
   justify-content: space-between;
-  border-top: 1px dashed #b2dfdb;
+  border-top: 1px dashed var(--weather-border, #b2dfdb);
   padding-top: 10px;
 }
 .forecast-item { text-align: center; font-size: 11px; }
 .forecast-item small { display: block; color: var(--text-sub); }
 .forecast-item span { font-size: 16px; margin: 2px 0; display: block; }
+
 
 /* PLACES EXPLORE GRID WITH PHOTOS */
 .filter-pills { display: flex; gap: 6px; }
@@ -1794,7 +1846,7 @@ button { cursor: pointer; }
 .explore-search-input {
   width: 100%;
   padding: 10px 38px 10px 14px;
-  background: var(--card-bg);
+  background: var(--input-bg);
   border: 1.5px solid var(--border-color);
   border-radius: var(--radius-md);
   font-size: 13px;
@@ -1841,11 +1893,11 @@ button { cursor: pointer; }
   display: flex;
   flex-direction: column;
   box-shadow: var(--shadow-sm);
-  transition: transform .2s, box-shadow .2s;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 .app-place-card:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-md);
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lg);
 }
 
 .place-img-cover {
@@ -1947,7 +1999,7 @@ button { cursor: pointer; }
   font-weight: 700;
   color: var(--text-sub);
   text-decoration: none;
-  background: #f1f5f9;
+  background: var(--input-bg);
   padding: 5px 8px;
   border-radius: 6px;
 }
@@ -1985,7 +2037,7 @@ button { cursor: pointer; }
 .app-input, .app-select {
   width: 100%;
   border: 1px solid var(--border-color);
-  background: #f8fafc;
+  background: var(--input-bg);
   padding: 10px 12px;
   border-radius: var(--radius-sm);
   font-size: 13px;
@@ -1993,13 +2045,13 @@ button { cursor: pointer; }
 }
 .app-input:focus, .app-select:focus {
   border-color: var(--primary);
-  background: #fff;
+  background: var(--input-bg-focus);
 }
 .stepper-input {
   display: flex;
   align-items: center;
   border: 1px solid var(--border-color);
-  background: #f8fafc;
+  background: var(--input-bg);
   border-radius: var(--radius-sm);
   overflow: hidden;
 }
@@ -2029,7 +2081,7 @@ button { cursor: pointer; }
 }
 .city-select-pill {
   border: 1px solid var(--border-color);
-  background: #f8fafc;
+  background: var(--input-bg);
   padding: 5px 12px;
   border-radius: 16px;
   font-size: 12px;
@@ -2045,8 +2097,8 @@ button { cursor: pointer; }
 .places-picker-box {
   margin-top: 16px;
   padding: 14px;
-  background: #f8fafc;
-  border: 1px dashed #cbd5e1;
+  background: var(--input-bg);
+  border: 1px dashed var(--border-color);
   border-radius: var(--radius-md);
 }
 .picker-top {
@@ -2139,7 +2191,7 @@ button { cursor: pointer; }
   background: transparent;
 }
 .app-chip {
-  background: #fff;
+  background: var(--input-bg);
   border: 1px solid var(--border-color);
   padding: 5px 10px;
   border-radius: 16px;
@@ -2161,8 +2213,8 @@ button { cursor: pointer; }
 .app-primary-btn {
   background: var(--primary);
   color: #fff;
-  border: 0;
-  padding: 12px 20px;
+  border: none;
+  padding: 14px 24px;
   border-radius: var(--radius-sm);
   font-size: 14px;
   font-weight: 700;
@@ -2170,9 +2222,14 @@ button { cursor: pointer; }
   align-items: center;
   justify-content: center;
   gap: 8px;
-  transition: background .2s;
+  box-shadow: 0 4px 15px rgba(20, 184, 166, 0.3);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
-.app-primary-btn:hover:not(:disabled) { background: var(--primary-dark); }
+.app-primary-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(20, 184, 166, 0.4);
+  background: var(--primary-dark);
+}
 .submit-plan-btn { width: 100%; margin-top: 18px; padding: 14px; }
 
 /* PLAN RESULTS */
@@ -2609,37 +2666,6 @@ button { cursor: pointer; }
 .auth-error-msg { font-size: 12px; color: #dc2626; margin: 0; }
 .auth-submit-btn { width: 100%; margin-top: 6px; }
 
-/* BOTTOM NAVIGATION BAR (FIXED BOTTOM FOR MOBILE) */
-.app-bottom-nav {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: #ffffff;
-  border-top: 1px solid var(--border-color);
-  display: flex;
-  justify-content: space-around;
-  padding: 8px 0;
-  z-index: 50;
-  box-shadow: 0 -4px 16px rgba(0,0,0,0.04);
-}
-.nav-item {
-  background: transparent;
-  border: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  color: #64748b;
-  flex: 1;
-  transition: all .2s;
-}
-.nav-icon { font-size: 18px; }
-.nav-label { font-size: 10px; font-weight: 700; }
-.nav-item.active {
-  color: var(--primary);
-}
-.nav-item.active .nav-icon { transform: scale(1.15); }
 
 /* MODALS */
 .modal-overlay {
