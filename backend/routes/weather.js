@@ -1,10 +1,12 @@
 const express = require('express')
 const axios = require('axios')
 
+const NodeCache = require('node-cache')
+
 const router = express.Router()
 
-// In-memory cache for weather to make it instant
-const weatherCache = new Map()
+// In-memory cache for weather (TTL 2 hours)
+const weatherCache = new NodeCache({ stdTTL: 7200, checkperiod: 600 })
 
 router.get('/', async (req, res) => {
   const destination = String(req.query.destination || '').trim()

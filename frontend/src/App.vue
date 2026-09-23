@@ -777,6 +777,7 @@ import SkeletonCard from './components/SkeletonCard.vue'
 import MapComponent from './components/MapComponent.vue'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
+import html2pdf from 'html2pdf.js'
 
 // Fix default icon issue for Leaflet in Vite
 delete L.Icon.Default.prototype._getIconUrl;
@@ -1386,7 +1387,30 @@ async function chiaSeChuyenDi(trip) {
 }
 
 function xuatPdf() {
-  window.print()
+  const element = document.querySelector('.plan-results-container')
+  if (!element) {
+    alert('Không tìm thấy nội dung lịch trình để xuất PDF!')
+    return
+  }
+  
+  // Clone element to remove interactive buttons
+  const clone = element.cloneNode(true)
+  const toolActions = clone.querySelector('.plan-tool-actions')
+  if (toolActions) toolActions.remove()
+  
+  // Also remove the "Chia tiền nhóm" or "Đổi lịch tránh mưa" buttons if any other remain
+  const printBtn = clone.querySelector('.app-primary-btn')
+  if (printBtn) printBtn.remove()
+  
+  const opt = {
+    margin: 10,
+    filename: `lich-trinh-${lichTrinh.value?.destination || 'chuyen-di'}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  }
+  
+  html2pdf().set(opt).from(clone).save()
 }
 
 function bieuTuongThoiTiet(code) {

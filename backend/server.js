@@ -1,4 +1,5 @@
 require('dotenv').config()
+const cron = require('node-cron')
 const dns = require('node:dns')
 try {
   dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1'])
@@ -100,8 +101,12 @@ async function startServer() {
     await mongoose.connect(MONGODB_URI)
     console.log('MongoDB connected')
     
-    // Kích hoạt toàn bộ chu trình cào & làm giàu ảnh thật ngầm (không chặn cổng server)
-    // runAutonomousDataPipeline()
+    // Cài đặt Cron Job tự động chạy pipeline mỗi tuần một lần (vào 2h sáng Chủ Nhật)
+    cron.schedule('0 2 * * 0', () => {
+      console.log('⏰ [CRON JOB] Đã đến lịch tự động cập nhật và làm giàu dữ liệu hàng tuần...');
+      runAutonomousDataPipeline();
+    });
+    console.log('✅ Cron Job đã được kích hoạt: Chạy tự động vào 2h sáng Chủ Nhật hàng tuần.');
   } catch (err) {
     console.warn(`MongoDB unavailable: ${err.message}`)
   }
