@@ -573,22 +573,74 @@
         <section v-if="activeTab === 'profile'" class="tab-pane">
           <!-- Nếu đã đăng nhập -->
           <div v-if="nguoiDung" class="profile-card">
-            <div class="profile-avatar-large">
-              {{ nguoiDung.name ? nguoiDung.name[0].toUpperCase() : 'U' }}
-            </div>
-            <h3>{{ nguoiDung.name }}</h3>
-            <p class="profile-email">{{ nguoiDung.email }}</p>
-            <div class="profile-stats-row">
-              <div class="stat-box">
-                <strong>{{ myTripsList.length }}</strong>
-                <small>Chuyến đi</small>
+            <!-- VIEW MODE -->
+            <div v-if="!isEditingProfile" class="profile-view-mode">
+              <div class="profile-avatar-large" :style="nguoiDung.avatar ? `background-image: url('${nguoiDung.avatar}'); background-size: cover; background-position: center; color: transparent;` : ''">
+                {{ !nguoiDung.avatar && nguoiDung.name ? nguoiDung.name[0].toUpperCase() : '' }}
               </div>
-              <div class="stat-box">
-                <strong>{{ favoritesList.length }}</strong>
-                <small>Yêu thích</small>
+              <h3>{{ nguoiDung.name }}</h3>
+              <p class="profile-level-badge">{{ nguoiDung.level || 'Thành viên mới' }}</p>
+              
+              <div class="profile-contact-info">
+                <p>✉️ {{ nguoiDung.email }}</p>
+                <p v-if="nguoiDung.phone">📞 {{ nguoiDung.phone }}</p>
+                <p v-if="nguoiDung.bio" class="profile-bio-text">"{{ nguoiDung.bio }}"</p>
+              </div>
+
+              <div class="profile-stats-row">
+                <div class="stat-box">
+                  <strong>{{ myTripsList.length }}</strong>
+                  <small>Chuyến đi</small>
+                </div>
+                <div class="stat-box">
+                  <strong>{{ favoritesList.length }}</strong>
+                  <small>Yêu thích</small>
+                </div>
+              </div>
+              <div class="profile-action-buttons">
+                <button class="app-primary-btn" @click="batDauSuaProfile">Chỉnh sửa hồ sơ</button>
+                <button class="logout-btn" @click="dangXuat">Đăng xuất</button>
               </div>
             </div>
-            <button class="logout-btn" @click="dangXuat">Đăng xuất</button>
+
+            <!-- EDIT MODE -->
+            <div v-else class="profile-edit-mode">
+              <h3>✏️ Cập nhật Hồ Sơ</h3>
+              <form @submit.prevent="luuProfile" class="profile-edit-form">
+                
+                <div style="text-align: center; margin-bottom: 20px;">
+                  <div class="profile-avatar-large" :style="editProfileForm.avatar ? `background-image: url('${editProfileForm.avatar}'); background-size: cover; background-position: center; color: transparent;` : ''">
+                    {{ !editProfileForm.avatar && editProfileForm.name ? editProfileForm.name[0].toUpperCase() : '' }}
+                  </div>
+                  <div class="app-field" style="max-width: 200px; margin: 0 auto; text-align: center;">
+                    <label style="cursor: pointer;" class="app-secondary-btn">
+                      📷 Đổi ảnh đại diện
+                      <input type="file" accept="image/*" @change="onAvatarFileChange" style="display: none;" />
+                    </label>
+                  </div>
+                </div>
+
+                <div class="app-field">
+                  <label>Họ và tên</label>
+                  <input v-model="editProfileForm.name" type="text" class="app-input" required />
+                </div>
+                <div class="app-field">
+                  <label>Số điện thoại</label>
+                  <input v-model="editProfileForm.phone" type="tel" class="app-input" placeholder="09xxxxxxxxx" />
+                </div>
+                <div class="app-field">
+                  <label>Tiểu sử ngắn</label>
+                  <textarea v-model="editProfileForm.bio" class="app-input" rows="3" placeholder="Chia sẻ một chút về sở thích du lịch của bạn..."></textarea>
+                </div>
+                
+                <div class="profile-action-buttons">
+                  <button type="button" class="app-secondary-btn" @click="huySuaProfile" :disabled="dangLuuProfile">Hủy</button>
+                  <button type="submit" class="app-primary-btn" :disabled="dangLuuProfile">
+                    {{ dangLuuProfile ? 'Đang lưu...' : 'Lưu thay đổi' }}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
 
           <!-- Nếu chưa đăng nhập -->
@@ -766,11 +818,30 @@
       </div>
     </div>
 
+    <!-- ==================== CROPPER MODAL (CẮT ẢNH AVATAR) ==================== -->
+    <div v-if="showCropperModal" class="modal-overlay" @click.self="closeCropperModal" style="z-index: 10000;">
+      <div class="modal-card" style="max-width: 500px; width: 100%;">
+        <div class="modal-header">
+          <h3>✂️ Cắt Ảnh Đại Diện</h3>
+          <button class="close-modal-btn" @click="closeCropperModal">✕</button>
+        </div>
+        <div class="modal-body" style="padding: 20px; text-align: center;">
+          <div style="width: 100%; background-color: #000; border-radius: 8px; overflow: hidden; display: flex; justify-content: center; align-items: center; min-height: 300px;">
+            <img ref="cropperImageRef" :src="cropperImageSrc" style="display: block; max-width: 100%; max-height: 60vh;" />
+          </div>
+          <div class="profile-action-buttons" style="margin-top: 20px;">
+            <button type="button" class="app-secondary-btn" @click="closeCropperModal">Hủy</button>
+            <button type="button" class="app-primary-btn" @click="cropAndSaveImage">Áp dụng</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
 <script setup>
-import { reactive, ref, computed, onMounted, watch, nextTick } from 'vue'
+import { reactive, ref, computed, onMounted, watch, nextTick, markRaw } from 'vue'
 import api from './services/api'
 import AppHeader from './components/layout/AppHeader.vue'
 import SkeletonCard from './components/SkeletonCard.vue'
@@ -778,7 +849,8 @@ import MapComponent from './components/MapComponent.vue'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import html2pdf from 'html2pdf.js'
-
+import Cropper from 'cropperjs'
+import 'cropperjs/dist/cropper.css'
 // Fix default icon issue for Leaflet in Vite
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -858,6 +930,142 @@ const authForm = reactive({ name: '', email: '', password: '' })
 const authError = ref('')
 const myTripsList = ref([])
 const favoritesList = ref([])
+
+// Profile Editing State
+const isEditingProfile = ref(false)
+const dangLuuProfile = ref(false)
+const avatarFile = ref(null)
+const editProfileForm = reactive({
+  name: '',
+  avatar: '',
+  phone: '',
+  bio: ''
+})
+
+// Cropper State
+const showCropperModal = ref(false)
+const cropperImageSrc = ref('')
+const cropperImageRef = ref(null)
+// Sử dụng biến độc lập bên ngoài hệ thống của Vue để đảm bảo nút Lưu luôn hoạt động 100%
+let myCropper = null 
+
+function onAvatarFileChange(e) {
+  if (e.target.files && e.target.files.length > 0) {
+    const file = e.target.files[0]
+    cropperImageSrc.value = URL.createObjectURL(file)
+    showCropperModal.value = true
+    
+    nextTick(() => {
+      setTimeout(() => {
+        initCropper()
+      }, 200) // Đợi 200ms để DOM và modal hiển thị hoàn toàn
+    })
+  }
+}
+
+function initCropper() {
+  if (!cropperImageRef.value) return;
+  if (myCropper) {
+    myCropper.destroy()
+  }
+  myCropper = new Cropper(cropperImageRef.value, {
+    aspectRatio: 1,
+    viewMode: 3, // Force image to fill container
+    dragMode: 'move', // Allow panning
+    autoCropArea: 1,
+    background: true,
+    minContainerWidth: 350,
+    minContainerHeight: 350,
+  })
+}
+
+function closeCropperModal() {
+  showCropperModal.value = false
+  if (myCropper) {
+    myCropper.destroy()
+    myCropper = null
+  }
+  cropperImageSrc.value = ''
+  
+  // Đặt lại input file để có thể chọn lại cùng 1 file
+  const fileInput = document.querySelector('input[type="file"]')
+  if (fileInput) fileInput.value = ''
+}
+
+function cropAndSaveImage() {
+  if (!myCropper) {
+    alert("Lỗi hệ thống: Công cụ cắt ảnh chưa được nạp. Vui lòng thử lại.");
+    return;
+  }
+
+  try {
+    const canvas = myCropper.getCroppedCanvas({ 
+      width: 400, 
+      height: 400,
+      fillColor: '#ffffff'
+    })
+    
+    if (!canvas) {
+      alert("Không thể cắt được ảnh này. Vui lòng chọn một ảnh khác.");
+      return;
+    }
+
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        alert("Lỗi xử lý file ảnh.");
+        return;
+      }
+      avatarFile.value = new File([blob], 'avatar.jpg', { type: 'image/jpeg' })
+      editProfileForm.avatar = URL.createObjectURL(blob)
+      closeCropperModal()
+    }, 'image/jpeg', 0.9)
+  } catch (err) {
+    alert("Lỗi cắt ảnh: " + err.message);
+  }
+}
+
+function batDauSuaProfile() {
+  if (nguoiDung.value) {
+    editProfileForm.name = nguoiDung.value.name || ''
+    editProfileForm.avatar = nguoiDung.value.avatar || ''
+    editProfileForm.phone = nguoiDung.value.phone || ''
+    editProfileForm.bio = nguoiDung.value.bio || ''
+    isEditingProfile.value = true
+  }
+}
+
+function huySuaProfile() {
+  isEditingProfile.value = false
+}
+
+async function luuProfile() {
+  dangLuuProfile.value = true
+  try {
+    let payload = editProfileForm
+    let headers = {}
+    
+    // Nếu có file ảnh, chuyển sang FormData
+    if (avatarFile.value) {
+      payload = new FormData()
+      payload.append('name', editProfileForm.name)
+      payload.append('phone', editProfileForm.phone)
+      payload.append('bio', editProfileForm.bio)
+      payload.append('avatarFile', avatarFile.value)
+      headers = { 'Content-Type': 'multipart/form-data' }
+    }
+
+    const res = await api.put('/auth/profile', payload, { headers })
+    nguoiDung.value = res.data.user
+    
+    // Xóa file đã chọn
+    avatarFile.value = null
+    isEditingProfile.value = false
+  } catch (e) {
+    alert('Lỗi lưu hồ sơ: ' + (e?.response?.data?.error || e.message))
+  } finally {
+    dangLuuProfile.value = false
+  }
+}
 
 // Tool Modals
 const hienBillSplitter = ref(false)
@@ -2651,6 +2859,34 @@ button { cursor: pointer; }
 }
 .stat-box strong { font-size: 18px; color: var(--primary); display: block; }
 .stat-box small { font-size: 11px; color: var(--text-sub); }
+
+.profile-level-badge {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+.profile-contact-info {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+.profile-contact-info p { margin: 4px 0; }
+.profile-bio-text {
+  font-style: italic;
+  color: var(--text-primary);
+  margin-top: 8px !important;
+}
+.profile-action-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 16px;
+}
 .logout-btn {
   background: #fee2e2;
   color: #dc2626;
@@ -2660,7 +2896,7 @@ button { cursor: pointer; }
   font-size: 12px;
   font-weight: 700;
 }
-
+.profile-edit-form { text-align: left; margin-top: 16px; }
 .auth-card {
   background: #fff;
   border: 1px solid var(--border-color);

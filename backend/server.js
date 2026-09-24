@@ -54,6 +54,9 @@ app.use('/api/auth', authRouter)
 app.use('/api/social', socialRouter)
 app.use('/api/weather', weatherRouter)
 
+const path = require('path')
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
+
 app.use((req, res) => {
   res.status(404).json({ error: `Không tìm thấy endpoint ${req.method} ${req.originalUrl}` })
 })
