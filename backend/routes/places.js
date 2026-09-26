@@ -17,7 +17,15 @@ const DESTINATION_ALIASES = {
   'Nha Trang': 'Khánh Hòa',
   'Quy Nhơn': 'Quảng Ngãi',
   'Đà Lạt': 'Lâm Đồng',
-  'Buôn Ma Thuột': 'Đắk Lắk'
+  'Buôn Ma Thuột': 'Đắk Lắk',
+  'Quảng Bình': 'Quảng Trị',
+  'Quảng Nam': 'Đà Nẵng',
+  'Bình Định': 'Quảng Ngãi',
+  'Phú Yên': 'Khánh Hòa',
+  'Ninh Thuận': 'Khánh Hòa',
+  'Bình Thuận': 'Lâm Đồng',
+  'Kon Tum': 'Gia Lai',
+  'Đắk Nông': 'Đắk Lắk'
 }
 
 // GET /api/places - Tìm kiếm địa điểm (Trả về ngay lập tức từ DB cache, tự động cào nếu điểm đến hoàn toàn mới)
@@ -49,8 +57,115 @@ router.get('/', async (req, res) => {
   const searchQ = q ? q.toLowerCase() : null
   let cleanDest = destination ? destination.trim() : null
   
+  // LUÔN áp dụng alias để lấy đúng bucket dữ liệu gốc (VD: Quảng Bình → lấy từ bucket Quảng Trị)
+  // Việc tách riêng cho chế độ trước sáp nhập sẽ xử lý ở bước sub-filter phía dưới
+  const mode = req.query.mode
   if (cleanDest && DESTINATION_ALIASES[cleanDest]) {
     cleanDest = DESTINATION_ALIASES[cleanDest]
+  }
+
+
+  function applyFilters(placesArray) {
+    let filtered = placesArray
+
+    // Lọc lại cho chế độ trước sáp nhập bằng text trên các trường đáng tin cậy
+    const reqMode = req.query.mode
+    const requestedDest = destination ? destination.trim() : null
+    
+    if (reqMode === 'pre-merged' && requestedDest) {
+      if (requestedDest !== cleanDest) {
+        // Lấy TỈNH CON (VD: Quảng Bình, Hội An, ...)
+        const reqStr = requestedDest.toLowerCase()
+        
+        // Mở rộng bộ từ khóa nhận diện cho các tỉnh con để không bị sót
+        const subProvinceKeywords = [reqStr]
+        if (reqStr === 'quảng bình') {
+          subProvinceKeywords.push('đồng hới', 'bố trạch', 'lệ thủy', 'phong nha', 'quảng trạch', 'tuyên hóa', 'minh hóa', 'quảng ninh')
+        } else if (reqStr === 'hội an') {
+          subProvinceKeywords.push('hội an', 'cù lao chàm')
+        }
+
+        filtered = filtered.filter(p => {
+          // Chỉ kiểm tra address, district và name (bỏ qua description vì crawler hay gắn bừa)
+          const str = ((p.name || '') + ' ' + (p.address || '') + ' ' + (p.district || '')).toLowerCase()
+          return subProvinceKeywords.some(kw => str.includes(kw))
+        })
+      } else {
+        // Lấy TỈNH CHÍNH (VD: Quảng Trị, Đà Nẵng, ...)
+        // Phải loại bỏ các địa điểm thuộc về tỉnh con
+        let aliasesToExclude = Object.keys(DESTINATION_ALIASES)
+          .filter(k => DESTINATION_ALIASES[k] === cleanDest)
+          .map(k => k.toLowerCase())
+        
+        // Mở rộng bộ từ khóa cần loại bỏ
+        if (aliasesToExclude.includes('quảng bình')) {
+          aliasesToExclude.push('đồng hới', 'bố trạch', 'lệ thủy', 'phong nha', 'quảng trạch', 'tuyên hóa', 'minh hóa', 'quảng ninh')
+        }
+        if (aliasesToExclude.includes('hội an')) {
+          aliasesToExclude.push('cù lao chàm')
+        }
+        
+        filtered = filtered.filter(p => {
+          const str = ((p.name || '') + ' ' + (p.address || '') + ' ' + (p.district || '')).toLowerCase()
+          const belongsToOther = aliasesToExclude.some(alias => str.includes(alias))
+          return !belongsToOther
+        })
+      }
+    }
+
+    // Bộ lọc chống nhiễu TOÀN DIỆN (Anti-Contamination Filter)
+    if (requestedDest || cleanDest) {
+      const destToCheck = (requestedDest || cleanDest).toLowerCase()
+
+      const majorCities = ['đà nẵng', 'huế', 'nha trang', 'đà lạt', 'hội an', 'quy nhơn', 'phú quốc', 'hà nội', 'sài gòn', 'hồ chí minh', 'quảng ngãi', 'quảng trị', 'quảng nam', 'quảng bình', 'khánh hòa', 'bình định', 'phú yên', 'ninh thuận', 'bình thuận', 'gia lai', 'kon tum', 'đắk lắk', 'đắk nông', 'lâm đồng', 'nghệ an', 'hà tĩnh', 'thanh hóa']
+      const PROVINCE_LANDMARKS = {
+        'đà nẵng': ['ngũ hành sơn', 'sơn trà', 'bà nà', 'cầu rồng', 'mỹ khê', 'bích họa đà nẵng', 'non nước', 'hải vân', 'linh ứng sơn trà', 'bãi bụt'],
+        'huế': ['thiên mụ', 'lăng cô', 'đại nội', 'kinh thành', 'huyền trân', 'lăng tự đức', 'lăng minh mạng', 'lăng khải định', 'chợ đông ba', 'sông hương'],
+        'quảng nam': ['hội an', 'cù lao chàm', 'mỹ sơn', 'phước kiến', 'trà quế'],
+        'quảng ngãi': ['lý sơn', 'quảng ngãi', 'sa huỳnh'],
+        'quảng trị': ['vịnh mốc', 'thành cổ quảng trị', 'hiền lương'],
+        'khánh hòa': ['vinpearl', 'ponagar'],
+        'bình định': ['eo gió', 'kỳ co', 'quy nhơn'],
+        'phú yên': ['gành đá đĩa', 'xép', 'phú yên'],
+        'ninh thuận': ['vĩnh hy', 'ninh thuận'],
+        'bình thuận': ['mũi né', 'phan thiết', 'bình thuận'],
+        'lâm đồng': ['đà lạt', 'langbiang'],
+        'gia lai': ['biển hồ', 'pleiku'],
+        'kon tum': ['kon tum', 'măng đen'],
+        'đắk lắk': ['buôn ma thuột', 'hồ lắk'],
+        'đắk nông': ['đắk nông', 'tà đùng'],
+        'nghệ an': ['cửa lò', 'vinh'],
+        'hà tĩnh': ['kẻ gỗ', 'hà tĩnh', 'thiên cầm'],
+        'thanh hóa': ['sầm sơn', 'thanh hóa']
+      }
+
+      const validSubProvinces = Object.keys(DESTINATION_ALIASES)
+        .filter(k => DESTINATION_ALIASES[k] === cleanDest)
+        .map(k => k.toLowerCase())
+
+      const contaminationKeywords = []
+      for (const city of majorCities) {
+        if (!destToCheck.includes(city) && !city.includes(destToCheck) && !validSubProvinces.includes(city)) {
+          contaminationKeywords.push(city)
+        }
+      }
+      for (const [province, landmarks] of Object.entries(PROVINCE_LANDMARKS)) {
+        if (!destToCheck.includes(province) && !province.includes(destToCheck)) {
+          contaminationKeywords.push(...landmarks)
+        }
+      }
+
+      filtered = filtered.filter(p => {
+        const fullStr = ((p.name || '') + ' ' + (p.address || '')).toLowerCase()
+        const isGarbage = contaminationKeywords.some(kw => fullStr.includes(kw))
+        return !isGarbage
+      })
+    }
+    
+    if (filterType) filtered = filtered.filter(p => p.type === filterType)
+    if (searchQ) filtered = filtered.filter(p => (p.name || '').toLowerCase().includes(searchQ))
+    
+    return filtered
   }
 
   // 1. Nếu RAM đã sẵn sàng, trả về 100% từ RAM siêu tốc
@@ -68,14 +183,12 @@ router.get('/', async (req, res) => {
       result = filtered
     }
     
-    if (filterType) result = result.filter(p => p.type === filterType)
-    if (searchQ) result = result.filter(p => (p.name || '').toLowerCase().includes(searchQ))
-    
+    result = applyFilters(result)
     result.sort((a, b) => (b.rating || 0) - (a.rating || 0))
     return res.json(result.slice(0, 500))
   }
 
-  // 2. Dự phòng: Khi RAM chưa tải xong (khoảng vài giây đầu khi mới bật server), đành phải gọi tạm MongoDB
+  // 2. Dự phòng: Khi RAM chưa tải xong
   try {
     let places = []
     const dbFilter = {}
@@ -83,14 +196,17 @@ router.get('/', async (req, res) => {
     if (searchQ) dbFilter.$text = { $search: searchQ }
     
     if (cleanDest) {
-      places = await Place.find({ ...dbFilter, destination: new RegExp(`^${cleanDest}$`, 'i') }).sort({ rating: -1 }).limit(500).lean()
+      places = await Place.find({ ...dbFilter, destination: new RegExp(`^${cleanDest}$`, 'i') }).sort({ rating: -1 }).limit(1000).lean()
       if (places.length === 0 && !filterType) {
-        places = await Place.find({ ...dbFilter, destination: new RegExp(cleanDest, 'i') }).sort({ rating: -1 }).limit(500).lean()
+        places = await Place.find({ ...dbFilter, destination: new RegExp(cleanDest, 'i') }).sort({ rating: -1 }).limit(1000).lean()
       }
     } else {
-      places = await Place.find(dbFilter).sort({ rating: -1 }).limit(500).lean()
+      places = await Place.find(dbFilter).sort({ rating: -1 }).limit(1000).lean()
     }
-    res.json(places)
+    
+    places = applyFilters(places)
+    places.sort((a, b) => (b.rating || 0) - (a.rating || 0))
+    res.json(places.slice(0, 500))
   } catch (err) {
     res.status(500).json({ error: err.message })
   }

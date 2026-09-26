@@ -3599,7 +3599,7 @@ async function taiDuLieuThanhPho() {
   loadingPlaces.value = true
   places.value = []
 
-  const placeParams = dest === ALL_DESTINATIONS ? {} : { destination: dest }
+  const placeParams = dest === ALL_DESTINATIONS ? { mode: provinceMode.value } : { destination: dest, mode: provinceMode.value }
   api.get('/places', { params: placeParams })
     .then(res => {
       if (currentId === reqIdCounter) {
