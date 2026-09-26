@@ -1,4 +1,5 @@
 const express = require('express')
+const mongoose = require('mongoose')
 const Place = require('../models/Place')
 const {
   crawlPlacesByAI,
@@ -13,15 +14,9 @@ const router = express.Router()
 
 const DESTINATION_ALIASES = {
   'Hội An': 'Đà Nẵng',
-  'Quảng Nam': 'Đà Nẵng',
   'Nha Trang': 'Khánh Hòa',
-  'Phú Yên': 'Khánh Hòa',
   'Quy Nhơn': 'Quảng Ngãi',
-  'Bình Định': 'Quảng Ngãi',
-  'Quảng Bình': 'Quảng Trị',
   'Đà Lạt': 'Lâm Đồng',
-  'Kon Tum': 'Gia Lai',
-  'Đắk Nông': 'Đắk Lắk',
   'Buôn Ma Thuột': 'Đắk Lắk'
 }
 
@@ -30,8 +25,8 @@ const DESTINATION_ALIASES = {
 let RAM_PLACES = []
 let isRamLoaded = false
 
-// Tải toàn bộ data lên RAM (chạy ngầm 1 lần khi import)
-setTimeout(async () => {
+// Tải toàn bộ data lên RAM (chạy khi mongoose kết nối thành công)
+async function loadRamPlaces() {
   try {
     console.log('⏳ [RAM CACHE] Đang kéo toàn bộ dữ liệu từ MongoDB lên RAM để tăng tốc 0ms...')
     RAM_PLACES = await Place.find({}).lean()
@@ -40,7 +35,13 @@ setTimeout(async () => {
   } catch (err) {
     console.error('❌ [RAM CACHE] Lỗi khi nạp dữ liệu:', err.message)
   }
-}, 2000)
+}
+
+if (mongoose.connection.readyState === 1) {
+  loadRamPlaces()
+} else {
+  mongoose.connection.once('connected', loadRamPlaces)
+}
 
 router.get('/', async (req, res) => {
   const { destination, type, q } = req.query
@@ -283,5 +284,87 @@ router.post('/enrich-photos', async (req, res) => {
   }
 })
 
+// GET /api/places/bus-operators - Tra cứu nhà xe giá rẻ & tối ưu chi phí di chuyển
+router.get('/bus-operators', (req, res) => {
+  try {
+    const { timKiemNhaXeVaToiUuChiPhi } = require('../services/busService')
+    const { origin = 'Hà Nội', destination = 'Đà Nẵng', people = 1 } = req.query
+    const result = timKiemNhaXeVaToiUuChiPhi({ origin, destination, people })
+    res.json(result)
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Lỗi khi tra cứu nhà xe' })
+  }
+})
+
+// GET /api/places/transit-tickets - Tra cứu vé máy bay, vé tàu hỏa Thống Nhất & Tàu Di Sản, vé xe khách
+router.get('/transit-tickets', async (req, res) => {
+  try {
+    const TransitTicket = require('../models/TransitTicket')
+    const { type, origin, destination } = req.query
+    const filter = {}
+    if (type && type !== 'all') filter.type = type
+    if (origin) filter.origin = new RegExp(origin.trim(), 'i')
+    if (destination) filter.destination = new RegExp(destination.trim(), 'i')
+
+    let tickets = await TransitTicket.find(filter).sort({ price: 1 }).lean()
+    if (tickets.length === 0) {
+      // Fallback từ seed data nếu DB chưa sẵn sàng
+      const { TRANSIT_TICKETS_SEED } = require('../scripts/runDeepCrawlerPipeline')
+      tickets = TRANSIT_TICKETS_SEED.filter(t => {
+        if (type && type !== 'all' && t.type !== type) return false
+        if (origin && !t.origin.toLowerCase().includes(origin.toLowerCase())) return false
+        if (destination && !t.destination.toLowerCase().includes(destination.toLowerCase())) return false
+        return true
+      })
+    }
+    res.json({
+      success: true,
+      total: tickets.length,
+      data: tickets
+    })
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Lỗi khi tra cứu vé di chuyển' })
+  }
+})
+
+// GET /api/places/quarantine - Kiểm tra danh sách bản ghi cách ly do thiếu tọa độ hoặc danh mục
+router.get('/quarantine', (req, res) => {
+  try {
+    const fs = require('fs')
+    const path = require('path')
+    const qFile = path.resolve(__dirname, '../data/quarantine_places.json')
+    if (fs.existsSync(qFile)) {
+      const data = JSON.parse(fs.readFileSync(qFile, 'utf-8'))
+      return res.json({ success: true, count: data.length, data })
+    }
+    res.json({ success: true, count: 0, data: [] })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// POST /api/places/run-crawler-pipeline - Kích hoạt AI Deep Crawler & Post-processing Pipeline
+router.post('/run-crawler-pipeline', async (req, res) => {
+  try {
+    const { runDeepCrawlerPipeline } = require('../scripts/runDeepCrawlerPipeline')
+    // Chạy ngầm trong background
+    runDeepCrawlerPipeline()
+      .then(async () => {
+        // Tự động nạp lại RAM cache sau khi pipeline xong
+        RAM_PLACES = await Place.find({}).lean()
+        console.log(`[RAM CACHE] Đã nạp lại ${RAM_PLACES.length} địa điểm sau khi Deep Crawler Pipeline hoàn tất.`)
+      })
+      .catch(e => console.error('[Pipeline Error]:', e.message))
+
+    res.json({
+      success: true,
+      message: '🚀 Đã kích hoạt AI Deep Crawler Pipeline (Source Targeting + Deduplication Levenshtein + Price Normalization) thành công trong background!'
+    })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 module.exports = router
+
 

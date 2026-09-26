@@ -1,0 +1,1756 @@
+[
+  {
+    "origin": "Hà Nội",
+    "destination": "Hải Phòng",
+    "distance_km": 110,
+    "duration_hours": 1.4,
+    "duration_text": "1 giờ 24 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 21.0285,
+      "lng": 105.8542,
+      "region": "Bắc Bộ"
+    },
+    "dest_coords": {
+      "lat": 20.8449,
+      "lng": 106.6881,
+      "region": "Bắc Bộ"
+    }
+  },
+  {
+    "origin": "Hà Nội",
+    "destination": "Cần Thơ",
+    "distance_km": 1610,
+    "duration_hours": 21,
+    "duration_text": "21 giờ",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 21.0285,
+      "lng": 105.8542,
+      "region": "Bắc Bộ"
+    },
+    "dest_coords": {
+      "lat": 10.0452,
+      "lng": 105.7469,
+      "region": "Tây Nam Bộ"
+    }
+  },
+  {
+    "origin": "Hà Nội",
+    "destination": "Thanh Hóa",
+    "distance_km": 159,
+    "duration_hours": 2.2,
+    "duration_text": "2 giờ 12 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 21.0285,
+      "lng": 105.8542,
+      "region": "Bắc Bộ"
+    },
+    "dest_coords": {
+      "lat": 19.8075,
+      "lng": 105.7765,
+      "type": "merged",
+      "center": "TP. Thanh Hóa"
+    }
+  },
+  {
+    "origin": "Hà Nội",
+    "destination": "Nghệ An",
+    "distance_km": 298,
+    "duration_hours": 4,
+    "duration_text": "4 giờ",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 21.0285,
+      "lng": 105.8542,
+      "region": "Bắc Bộ"
+    },
+    "dest_coords": {
+      "lat": 18.6734,
+      "lng": 105.6923,
+      "type": "merged",
+      "center": "TP. Vinh"
+    }
+  },
+  {
+    "origin": "Hà Nội",
+    "destination": "Hà Tĩnh",
+    "distance_km": 348,
+    "duration_hours": 4.6,
+    "duration_text": "4 giờ 36 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 21.0285,
+      "lng": 105.8542,
+      "region": "Bắc Bộ"
+    },
+    "dest_coords": {
+      "lat": 18.3434,
+      "lng": 105.9056,
+      "type": "merged",
+      "center": "TP. Hà Tĩnh"
+    }
+  },
+  {
+    "origin": "Hà Nội",
+    "destination": "Quảng Trị",
+    "distance_km": 599,
+    "duration_hours": 8,
+    "duration_text": "8 giờ",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 21.0285,
+      "lng": 105.8542,
+      "region": "Bắc Bộ"
+    },
+    "dest_coords": {
+      "lat": 16.8164,
+      "lng": 107.1008,
+      "type": "merged",
+      "center": "Đông Hà & Đồng Hới"
+    }
+  },
+  {
+    "origin": "Hà Nội",
+    "destination": "Huế",
+    "distance_km": 669,
+    "duration_hours": 8.9,
+    "duration_text": "8 giờ 54 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 21.0285,
+      "lng": 105.8542,
+      "region": "Bắc Bộ"
+    },
+    "dest_coords": {
+      "lat": 16.4637,
+      "lng": 107.5909,
+      "type": "merged",
+      "center": "TP. Huế"
+    }
+  },
+  {
+    "origin": "Hà Nội",
+    "destination": "Đà Nẵng",
+    "distance_km": 768,
+    "duration_hours": 10.2,
+    "duration_text": "10 giờ 12 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 21.0285,
+      "lng": 105.8542,
+      "region": "Bắc Bộ"
+    },
+    "dest_coords": {
+      "lat": 16.0544,
+      "lng": 108.2022,
+      "type": "merged",
+      "center": "Đà Nẵng & Hội An"
+    }
+  },
+  {
+    "origin": "Hà Nội",
+    "destination": "Quảng Ngãi",
+    "distance_km": 901,
+    "duration_hours": 11.7,
+    "duration_text": "11 giờ 42 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 21.0285,
+      "lng": 105.8542,
+      "region": "Bắc Bộ"
+    },
+    "dest_coords": {
+      "lat": 15.1205,
+      "lng": 108.7923,
+      "type": "merged",
+      "center": "Quảng Ngãi & Quy Nhơn"
+    }
+  },
+  {
+    "origin": "Hà Nội",
+    "destination": "Gia Lai",
+    "distance_km": 1095,
+    "duration_hours": 14.6,
+    "duration_text": "14 giờ 36 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 21.0285,
+      "lng": 105.8542,
+      "region": "Bắc Bộ"
+    },
+    "dest_coords": {
+      "lat": 13.9833,
+      "lng": 108,
+      "type": "merged",
+      "center": "Pleiku & Kon Tum"
+    }
+  },
+  {
+    "origin": "Hà Nội",
+    "destination": "Đắk Lắk",
+    "distance_km": 1273,
+    "duration_hours": 17.3,
+    "duration_text": "17 giờ 18 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 21.0285,
+      "lng": 105.8542,
+      "region": "Bắc Bộ"
+    },
+    "dest_coords": {
+      "lat": 12.6667,
+      "lng": 108.0333,
+      "type": "merged",
+      "center": "Buôn Ma Thuột & Gia Nghĩa"
+    }
+  },
+  {
+    "origin": "Hà Nội",
+    "destination": "Khánh Hòa",
+    "distance_km": 1272,
+    "duration_hours": 16.6,
+    "duration_text": "16 giờ 36 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 21.0285,
+      "lng": 105.8542,
+      "region": "Bắc Bộ"
+    },
+    "dest_coords": {
+      "lat": 12.2388,
+      "lng": 109.1967,
+      "type": "merged",
+      "center": "Nha Trang & Tuy Hòa"
+    }
+  },
+  {
+    "origin": "Hà Nội",
+    "destination": "Lâm Đồng",
+    "distance_km": 1398,
+    "duration_hours": 18.6,
+    "duration_text": "18 giờ 36 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 21.0285,
+      "lng": 105.8542,
+      "region": "Bắc Bộ"
+    },
+    "dest_coords": {
+      "lat": 11.9404,
+      "lng": 108.4583,
+      "type": "merged",
+      "center": "Đà Lạt & Phan Thiết"
+    }
+  },
+  {
+    "origin": "Hà Nội",
+    "destination": "Quảng Bình",
+    "distance_km": 493,
+    "duration_hours": 6.6,
+    "duration_text": "6 giờ 36 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": true,
+    "origin_coords": {
+      "lat": 21.0285,
+      "lng": 105.8542,
+      "region": "Bắc Bộ"
+    },
+    "dest_coords": {
+      "lat": 17.4691,
+      "lng": 106.6225,
+      "type": "pre-merged",
+      "center": "Đồng Hới"
+    }
+  },
+  {
+    "origin": "Hà Nội",
+    "destination": "Thừa Thiên Huế",
+    "distance_km": 669,
+    "duration_hours": 8.9,
+    "duration_text": "8 giờ 54 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": true,
+    "origin_coords": {
+      "lat": 21.0285,
+      "lng": 105.8542,
+      "region": "Bắc Bộ"
+    },
+    "dest_coords": {
+      "lat": 16.4637,
+      "lng": 107.5909,
+      "type": "pre-merged",
+      "center": "TP. Huế"
+    }
+  },
+  {
+    "origin": "Hà Nội",
+    "destination": "Quảng Nam",
+    "distance_km": 829,
+    "duration_hours": 10.9,
+    "duration_text": "10 giờ 54 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": true,
+    "origin_coords": {
+      "lat": 21.0285,
+      "lng": 105.8542,
+      "region": "Bắc Bộ"
+    },
+    "dest_coords": {
+      "lat": 15.5683,
+      "lng": 108.4756,
+      "type": "pre-merged",
+      "center": "Tam Kỳ & Hội An"
+    }
+  },
+  {
+    "origin": "Hà Nội",
+    "destination": "Bình Định",
+    "distance_km": 1077,
+    "duration_hours": 13.9,
+    "duration_text": "13 giờ 54 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": true,
+    "origin_coords": {
+      "lat": 21.0285,
+      "lng": 105.8542,
+      "region": "Bắc Bộ"
+    },
+    "dest_coords": {
+      "lat": 13.783,
+      "lng": 109.2197,
+      "type": "pre-merged",
+      "center": "Quy Nhơn"
+    }
+  },
+  {
+    "origin": "Hà Nội",
+    "destination": "Phú Yên",
+    "distance_km": 1160,
+    "duration_hours": 15.2,
+    "duration_text": "15 giờ 12 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": true,
+    "origin_coords": {
+      "lat": 21.0285,
+      "lng": 105.8542,
+      "region": "Bắc Bộ"
+    },
+    "dest_coords": {
+      "lat": 13.0882,
+      "lng": 109.309,
+      "type": "pre-merged",
+      "center": "Tuy Hòa"
+    }
+  },
+  {
+    "origin": "Hà Nội",
+    "destination": "Ninh Thuận",
+    "distance_km": 1368,
+    "duration_hours": 17.8,
+    "duration_text": "17 giờ 48 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": true,
+    "origin_coords": {
+      "lat": 21.0285,
+      "lng": 105.8542,
+      "region": "Bắc Bộ"
+    },
+    "dest_coords": {
+      "lat": 11.5643,
+      "lng": 108.9882,
+      "type": "pre-merged",
+      "center": "Phan Rang - Tháp Chàm"
+    }
+  },
+  {
+    "origin": "Hà Nội",
+    "destination": "Bình Thuận",
+    "distance_km": 1513,
+    "duration_hours": 19.5,
+    "duration_text": "19 giờ 30 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": true,
+    "origin_coords": {
+      "lat": 21.0285,
+      "lng": 105.8542,
+      "region": "Bắc Bộ"
+    },
+    "dest_coords": {
+      "lat": 10.9333,
+      "lng": 108.1,
+      "type": "pre-merged",
+      "center": "Phan Thiết"
+    }
+  },
+  {
+    "origin": "Hà Nội",
+    "destination": "Kon Tum",
+    "distance_km": 1049,
+    "duration_hours": 13.9,
+    "duration_text": "13 giờ 54 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": true,
+    "origin_coords": {
+      "lat": 21.0285,
+      "lng": 105.8542,
+      "region": "Bắc Bộ"
+    },
+    "dest_coords": {
+      "lat": 14.35,
+      "lng": 108,
+      "type": "pre-merged",
+      "center": "TP. Kon Tum"
+    }
+  },
+  {
+    "origin": "Hà Nội",
+    "destination": "Đắk Nông",
+    "distance_km": 1383,
+    "duration_hours": 18,
+    "duration_text": "18 giờ",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": true,
+    "origin_coords": {
+      "lat": 21.0285,
+      "lng": 105.8542,
+      "region": "Bắc Bộ"
+    },
+    "dest_coords": {
+      "lat": 12,
+      "lng": 107.6833,
+      "type": "pre-merged",
+      "center": "Gia Nghĩa"
+    }
+  },
+  {
+    "origin": "TP. Hồ Chí Minh",
+    "destination": "Hải Phòng",
+    "distance_km": 1519,
+    "duration_hours": 19.2,
+    "duration_text": "19 giờ 12 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 10.8231,
+      "lng": 106.6297,
+      "region": "Nam Bộ"
+    },
+    "dest_coords": {
+      "lat": 20.8449,
+      "lng": 106.6881,
+      "region": "Bắc Bộ"
+    }
+  },
+  {
+    "origin": "TP. Hồ Chí Minh",
+    "destination": "Cần Thơ",
+    "distance_km": 176,
+    "duration_hours": 2.4,
+    "duration_text": "2 giờ 24 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 10.8231,
+      "lng": 106.6297,
+      "region": "Nam Bộ"
+    },
+    "dest_coords": {
+      "lat": 10.0452,
+      "lng": 105.7469,
+      "region": "Tây Nam Bộ"
+    }
+  },
+  {
+    "origin": "TP. Hồ Chí Minh",
+    "destination": "Thanh Hóa",
+    "distance_km": 1328,
+    "duration_hours": 16.7,
+    "duration_text": "16 giờ 42 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 10.8231,
+      "lng": 106.6297,
+      "region": "Nam Bộ"
+    },
+    "dest_coords": {
+      "lat": 19.8075,
+      "lng": 105.7765,
+      "type": "merged",
+      "center": "TP. Thanh Hóa"
+    }
+  },
+  {
+    "origin": "TP. Hồ Chí Minh",
+    "destination": "Nghệ An",
+    "distance_km": 1195,
+    "duration_hours": 15,
+    "duration_text": "15 giờ",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 10.8231,
+      "lng": 106.6297,
+      "region": "Nam Bộ"
+    },
+    "dest_coords": {
+      "lat": 18.6734,
+      "lng": 105.6923,
+      "type": "merged",
+      "center": "TP. Vinh"
+    }
+  },
+  {
+    "origin": "TP. Hồ Chí Minh",
+    "destination": "Hà Tĩnh",
+    "distance_km": 1182,
+    "duration_hours": 15.1,
+    "duration_text": "15 giờ 6 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 10.8231,
+      "lng": 106.6297,
+      "region": "Nam Bộ"
+    },
+    "dest_coords": {
+      "lat": 18.3434,
+      "lng": 105.9056,
+      "type": "merged",
+      "center": "TP. Hà Tĩnh"
+    }
+  },
+  {
+    "origin": "TP. Hồ Chí Minh",
+    "destination": "Quảng Trị",
+    "distance_km": 947,
+    "duration_hours": 12,
+    "duration_text": "12 giờ",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 10.8231,
+      "lng": 106.6297,
+      "region": "Nam Bộ"
+    },
+    "dest_coords": {
+      "lat": 16.8164,
+      "lng": 107.1008,
+      "type": "merged",
+      "center": "Đông Hà & Đồng Hới"
+    }
+  },
+  {
+    "origin": "TP. Hồ Chí Minh",
+    "destination": "Huế",
+    "distance_km": 935,
+    "duration_hours": 12,
+    "duration_text": "12 giờ",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 10.8231,
+      "lng": 106.6297,
+      "region": "Nam Bộ"
+    },
+    "dest_coords": {
+      "lat": 16.4637,
+      "lng": 107.5909,
+      "type": "merged",
+      "center": "TP. Huế"
+    }
+  },
+  {
+    "origin": "TP. Hồ Chí Minh",
+    "destination": "Đà Nẵng",
+    "distance_km": 851,
+    "duration_hours": 10.8,
+    "duration_text": "10 giờ 48 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 10.8231,
+      "lng": 106.6297,
+      "region": "Nam Bộ"
+    },
+    "dest_coords": {
+      "lat": 16.0544,
+      "lng": 108.2022,
+      "type": "merged",
+      "center": "Đà Nẵng & Hội An"
+    }
+  },
+  {
+    "origin": "TP. Hồ Chí Minh",
+    "destination": "Quảng Ngãi",
+    "distance_km": 754,
+    "duration_hours": 9.7,
+    "duration_text": "9 giờ 42 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 10.8231,
+      "lng": 106.6297,
+      "region": "Nam Bộ"
+    },
+    "dest_coords": {
+      "lat": 15.1205,
+      "lng": 108.7923,
+      "type": "merged",
+      "center": "Quảng Ngãi & Quy Nhơn"
+    }
+  },
+  {
+    "origin": "TP. Hồ Chí Minh",
+    "destination": "Gia Lai",
+    "distance_km": 517,
+    "duration_hours": 6.9,
+    "duration_text": "6 giờ 54 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 10.8231,
+      "lng": 106.6297,
+      "region": "Nam Bộ"
+    },
+    "dest_coords": {
+      "lat": 13.9833,
+      "lng": 108,
+      "type": "merged",
+      "center": "Pleiku & Kon Tum"
+    }
+  },
+  {
+    "origin": "TP. Hồ Chí Minh",
+    "destination": "Đắk Lắk",
+    "distance_km": 348,
+    "duration_hours": 4.3,
+    "duration_text": "4 giờ 18 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 10.8231,
+      "lng": 106.6297,
+      "region": "Nam Bộ"
+    },
+    "dest_coords": {
+      "lat": 12.6667,
+      "lng": 108.0333,
+      "type": "merged",
+      "center": "Buôn Ma Thuột & Gia Nghĩa"
+    }
+  },
+  {
+    "origin": "TP. Hồ Chí Minh",
+    "destination": "Khánh Hòa",
+    "distance_km": 423,
+    "duration_hours": 5.1,
+    "duration_text": "5 giờ 6 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 10.8231,
+      "lng": 106.6297,
+      "region": "Nam Bộ"
+    },
+    "dest_coords": {
+      "lat": 12.2388,
+      "lng": 109.1967,
+      "type": "merged",
+      "center": "Nha Trang & Tuy Hòa"
+    }
+  },
+  {
+    "origin": "TP. Hồ Chí Minh",
+    "destination": "Lâm Đồng",
+    "distance_km": 297,
+    "duration_hours": 3.8,
+    "duration_text": "3 giờ 48 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 10.8231,
+      "lng": 106.6297,
+      "region": "Nam Bộ"
+    },
+    "dest_coords": {
+      "lat": 11.9404,
+      "lng": 108.4583,
+      "type": "merged",
+      "center": "Đà Lạt & Phan Thiết"
+    }
+  },
+  {
+    "origin": "TP. Hồ Chí Minh",
+    "destination": "Quảng Bình",
+    "distance_km": 1037,
+    "duration_hours": 13,
+    "duration_text": "13 giờ",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": true,
+    "origin_coords": {
+      "lat": 10.8231,
+      "lng": 106.6297,
+      "region": "Nam Bộ"
+    },
+    "dest_coords": {
+      "lat": 17.4691,
+      "lng": 106.6225,
+      "type": "pre-merged",
+      "center": "Đồng Hới"
+    }
+  },
+  {
+    "origin": "TP. Hồ Chí Minh",
+    "destination": "Thừa Thiên Huế",
+    "distance_km": 935,
+    "duration_hours": 12,
+    "duration_text": "12 giờ",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": true,
+    "origin_coords": {
+      "lat": 10.8231,
+      "lng": 106.6297,
+      "region": "Nam Bộ"
+    },
+    "dest_coords": {
+      "lat": 16.4637,
+      "lng": 107.5909,
+      "type": "pre-merged",
+      "center": "TP. Huế"
+    }
+  },
+  {
+    "origin": "TP. Hồ Chí Minh",
+    "destination": "Quảng Nam",
+    "distance_km": 819,
+    "duration_hours": 10.5,
+    "duration_text": "10 giờ 30 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": true,
+    "origin_coords": {
+      "lat": 10.8231,
+      "lng": 106.6297,
+      "region": "Nam Bộ"
+    },
+    "dest_coords": {
+      "lat": 15.5683,
+      "lng": 108.4756,
+      "type": "pre-merged",
+      "center": "Tam Kỳ & Hội An"
+    }
+  },
+  {
+    "origin": "TP. Hồ Chí Minh",
+    "destination": "Bình Định",
+    "distance_km": 629,
+    "duration_hours": 7.7,
+    "duration_text": "7 giờ 42 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": true,
+    "origin_coords": {
+      "lat": 10.8231,
+      "lng": 106.6297,
+      "region": "Nam Bộ"
+    },
+    "dest_coords": {
+      "lat": 13.783,
+      "lng": 109.2197,
+      "type": "pre-merged",
+      "center": "Quy Nhơn"
+    }
+  },
+  {
+    "origin": "TP. Hồ Chí Minh",
+    "destination": "Phú Yên",
+    "distance_km": 531,
+    "duration_hours": 6.5,
+    "duration_text": "6 giờ 30 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": true,
+    "origin_coords": {
+      "lat": 10.8231,
+      "lng": 106.6297,
+      "region": "Nam Bộ"
+    },
+    "dest_coords": {
+      "lat": 13.0882,
+      "lng": 109.309,
+      "type": "pre-merged",
+      "center": "Tuy Hòa"
+    }
+  },
+  {
+    "origin": "TP. Hồ Chí Minh",
+    "destination": "Ninh Thuận",
+    "distance_km": 322,
+    "duration_hours": 3.8,
+    "duration_text": "3 giờ 48 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": true,
+    "origin_coords": {
+      "lat": 10.8231,
+      "lng": 106.6297,
+      "region": "Nam Bộ"
+    },
+    "dest_coords": {
+      "lat": 11.5643,
+      "lng": 108.9882,
+      "type": "pre-merged",
+      "center": "Phan Rang - Tháp Chàm"
+    }
+  },
+  {
+    "origin": "TP. Hồ Chí Minh",
+    "destination": "Bình Thuận",
+    "distance_km": 176,
+    "duration_hours": 2.1,
+    "duration_text": "2 giờ 6 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": true,
+    "origin_coords": {
+      "lat": 10.8231,
+      "lng": 106.6297,
+      "region": "Nam Bộ"
+    },
+    "dest_coords": {
+      "lat": 10.9333,
+      "lng": 108.1,
+      "type": "pre-merged",
+      "center": "Phan Thiết"
+    }
+  },
+  {
+    "origin": "TP. Hồ Chí Minh",
+    "destination": "Kon Tum",
+    "distance_km": 555,
+    "duration_hours": 7.4,
+    "duration_text": "7 giờ 24 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": true,
+    "origin_coords": {
+      "lat": 10.8231,
+      "lng": 106.6297,
+      "region": "Nam Bộ"
+    },
+    "dest_coords": {
+      "lat": 14.35,
+      "lng": 108,
+      "type": "pre-merged",
+      "center": "TP. Kon Tum"
+    }
+  },
+  {
+    "origin": "TP. Hồ Chí Minh",
+    "destination": "Đắk Nông",
+    "distance_km": 228,
+    "duration_hours": 2.8,
+    "duration_text": "2 giờ 48 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": true,
+    "origin_coords": {
+      "lat": 10.8231,
+      "lng": 106.6297,
+      "region": "Nam Bộ"
+    },
+    "dest_coords": {
+      "lat": 12,
+      "lng": 107.6833,
+      "type": "pre-merged",
+      "center": "Gia Nghĩa"
+    }
+  },
+  {
+    "origin": "Đà Nẵng",
+    "destination": "Hải Phòng",
+    "distance_km": 803,
+    "duration_hours": 10.7,
+    "duration_text": "10 giờ 42 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 16.0544,
+      "lng": 108.2022,
+      "type": "merged",
+      "center": "Đà Nẵng & Hội An"
+    },
+    "dest_coords": {
+      "lat": 20.8449,
+      "lng": 106.6881,
+      "region": "Bắc Bộ"
+    }
+  },
+  {
+    "origin": "Đà Nẵng",
+    "destination": "Cần Thơ",
+    "distance_km": 1023,
+    "duration_hours": 13,
+    "duration_text": "13 giờ",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 16.0544,
+      "lng": 108.2022,
+      "type": "merged",
+      "center": "Đà Nẵng & Hội An"
+    },
+    "dest_coords": {
+      "lat": 10.0452,
+      "lng": 105.7469,
+      "region": "Tây Nam Bộ"
+    }
+  },
+  {
+    "origin": "Đà Nẵng",
+    "destination": "Thanh Hóa",
+    "distance_km": 613,
+    "duration_hours": 8.3,
+    "duration_text": "8 giờ 18 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 16.0544,
+      "lng": 108.2022,
+      "type": "merged",
+      "center": "Đà Nẵng & Hội An"
+    },
+    "dest_coords": {
+      "lat": 19.8075,
+      "lng": 105.7765,
+      "type": "merged",
+      "center": "TP. Thanh Hóa"
+    }
+  },
+  {
+    "origin": "Đà Nẵng",
+    "destination": "Nghệ An",
+    "distance_km": 474,
+    "duration_hours": 6.4,
+    "duration_text": "6 giờ 24 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 16.0544,
+      "lng": 108.2022,
+      "type": "merged",
+      "center": "Đà Nẵng & Hội An"
+    },
+    "dest_coords": {
+      "lat": 18.6734,
+      "lng": 105.6923,
+      "type": "merged",
+      "center": "TP. Vinh"
+    }
+  },
+  {
+    "origin": "Đà Nẵng",
+    "destination": "Hà Tĩnh",
+    "distance_km": 426,
+    "duration_hours": 5.8,
+    "duration_text": "5 giờ 48 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 16.0544,
+      "lng": 108.2022,
+      "type": "merged",
+      "center": "Đà Nẵng & Hội An"
+    },
+    "dest_coords": {
+      "lat": 18.3434,
+      "lng": 105.9056,
+      "type": "merged",
+      "center": "TP. Hà Tĩnh"
+    }
+  },
+  {
+    "origin": "Đà Nẵng",
+    "destination": "Quảng Trị",
+    "distance_km": 171,
+    "duration_hours": 2.3,
+    "duration_text": "2 giờ 18 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 16.0544,
+      "lng": 108.2022,
+      "type": "merged",
+      "center": "Đà Nẵng & Hội An"
+    },
+    "dest_coords": {
+      "lat": 16.8164,
+      "lng": 107.1008,
+      "type": "merged",
+      "center": "Đông Hà & Đồng Hới"
+    }
+  },
+  {
+    "origin": "Đà Nẵng",
+    "destination": "Huế",
+    "distance_km": 95,
+    "duration_hours": 1.4,
+    "duration_text": "1 giờ 24 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 16.0544,
+      "lng": 108.2022,
+      "type": "merged",
+      "center": "Đà Nẵng & Hội An"
+    },
+    "dest_coords": {
+      "lat": 16.4637,
+      "lng": 107.5909,
+      "type": "merged",
+      "center": "TP. Huế"
+    }
+  },
+  {
+    "origin": "Đà Nẵng",
+    "destination": "Quảng Ngãi",
+    "distance_km": 144,
+    "duration_hours": 1.6,
+    "duration_text": "1 giờ 36 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 16.0544,
+      "lng": 108.2022,
+      "type": "merged",
+      "center": "Đà Nẵng & Hội An"
+    },
+    "dest_coords": {
+      "lat": 15.1205,
+      "lng": 108.7923,
+      "type": "merged",
+      "center": "Quảng Ngãi & Quy Nhơn"
+    }
+  },
+  {
+    "origin": "Đà Nẵng",
+    "destination": "Gia Lai",
+    "distance_km": 338,
+    "duration_hours": 4.5,
+    "duration_text": "4 giờ 30 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 16.0544,
+      "lng": 108.2022,
+      "type": "merged",
+      "center": "Đà Nẵng & Hội An"
+    },
+    "dest_coords": {
+      "lat": 13.9833,
+      "lng": 108,
+      "type": "merged",
+      "center": "Pleiku & Kon Tum"
+    }
+  },
+  {
+    "origin": "Đà Nẵng",
+    "destination": "Đắk Lắk",
+    "distance_km": 516,
+    "duration_hours": 7.2,
+    "duration_text": "7 giờ 12 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 16.0544,
+      "lng": 108.2022,
+      "type": "merged",
+      "center": "Đà Nẵng & Hội An"
+    },
+    "dest_coords": {
+      "lat": 12.6667,
+      "lng": 108.0333,
+      "type": "merged",
+      "center": "Buôn Ma Thuột & Gia Nghĩa"
+    }
+  },
+  {
+    "origin": "Đà Nẵng",
+    "destination": "Khánh Hòa",
+    "distance_km": 500,
+    "duration_hours": 6.6,
+    "duration_text": "6 giờ 36 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 16.0544,
+      "lng": 108.2022,
+      "type": "merged",
+      "center": "Đà Nẵng & Hội An"
+    },
+    "dest_coords": {
+      "lat": 12.2388,
+      "lng": 109.1967,
+      "type": "merged",
+      "center": "Nha Trang & Tuy Hòa"
+    }
+  },
+  {
+    "origin": "Đà Nẵng",
+    "destination": "Lâm Đồng",
+    "distance_km": 626,
+    "duration_hours": 8.5,
+    "duration_text": "8 giờ 30 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 16.0544,
+      "lng": 108.2022,
+      "type": "merged",
+      "center": "Đà Nẵng & Hội An"
+    },
+    "dest_coords": {
+      "lat": 11.9404,
+      "lng": 108.4583,
+      "type": "merged",
+      "center": "Đà Lạt & Phan Thiết"
+    }
+  },
+  {
+    "origin": "Đà Nẵng",
+    "destination": "Quảng Bình",
+    "distance_km": 272,
+    "duration_hours": 3.7,
+    "duration_text": "3 giờ 42 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": true,
+    "origin_coords": {
+      "lat": 16.0544,
+      "lng": 108.2022,
+      "type": "merged",
+      "center": "Đà Nẵng & Hội An"
+    },
+    "dest_coords": {
+      "lat": 17.4691,
+      "lng": 106.6225,
+      "type": "pre-merged",
+      "center": "Đồng Hới"
+    }
+  },
+  {
+    "origin": "Đà Nẵng",
+    "destination": "Thừa Thiên Huế",
+    "distance_km": 95,
+    "duration_hours": 1.4,
+    "duration_text": "1 giờ 24 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": true,
+    "origin_coords": {
+      "lat": 16.0544,
+      "lng": 108.2022,
+      "type": "merged",
+      "center": "Đà Nẵng & Hội An"
+    },
+    "dest_coords": {
+      "lat": 16.4637,
+      "lng": 107.5909,
+      "type": "pre-merged",
+      "center": "TP. Huế"
+    }
+  },
+  {
+    "origin": "Đà Nẵng",
+    "destination": "Quảng Nam",
+    "distance_km": 65,
+    "duration_hours": 0.9,
+    "duration_text": "0 giờ 54 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": true,
+    "origin_coords": {
+      "lat": 16.0544,
+      "lng": 108.2022,
+      "type": "merged",
+      "center": "Đà Nẵng & Hội An"
+    },
+    "dest_coords": {
+      "lat": 15.5683,
+      "lng": 108.4756,
+      "type": "pre-merged",
+      "center": "Tam Kỳ & Hội An"
+    }
+  },
+  {
+    "origin": "Đà Nẵng",
+    "destination": "Bình Định",
+    "distance_km": 305,
+    "duration_hours": 3.9,
+    "duration_text": "3 giờ 54 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": true,
+    "origin_coords": {
+      "lat": 16.0544,
+      "lng": 108.2022,
+      "type": "merged",
+      "center": "Đà Nẵng & Hội An"
+    },
+    "dest_coords": {
+      "lat": 13.783,
+      "lng": 109.2197,
+      "type": "pre-merged",
+      "center": "Quy Nhơn"
+    }
+  },
+  {
+    "origin": "Đà Nẵng",
+    "destination": "Phú Yên",
+    "distance_km": 388,
+    "duration_hours": 5.1,
+    "duration_text": "5 giờ 6 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": true,
+    "origin_coords": {
+      "lat": 16.0544,
+      "lng": 108.2022,
+      "type": "merged",
+      "center": "Đà Nẵng & Hội An"
+    },
+    "dest_coords": {
+      "lat": 13.0882,
+      "lng": 109.309,
+      "type": "pre-merged",
+      "center": "Tuy Hòa"
+    }
+  },
+  {
+    "origin": "Đà Nẵng",
+    "destination": "Ninh Thuận",
+    "distance_km": 596,
+    "duration_hours": 7.7,
+    "duration_text": "7 giờ 42 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": true,
+    "origin_coords": {
+      "lat": 16.0544,
+      "lng": 108.2022,
+      "type": "merged",
+      "center": "Đà Nẵng & Hội An"
+    },
+    "dest_coords": {
+      "lat": 11.5643,
+      "lng": 108.9882,
+      "type": "pre-merged",
+      "center": "Phan Rang - Tháp Chàm"
+    }
+  },
+  {
+    "origin": "Đà Nẵng",
+    "destination": "Bình Thuận",
+    "distance_km": 741,
+    "duration_hours": 9.4,
+    "duration_text": "9 giờ 24 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": true,
+    "origin_coords": {
+      "lat": 16.0544,
+      "lng": 108.2022,
+      "type": "merged",
+      "center": "Đà Nẵng & Hội An"
+    },
+    "dest_coords": {
+      "lat": 10.9333,
+      "lng": 108.1,
+      "type": "pre-merged",
+      "center": "Phan Thiết"
+    }
+  },
+  {
+    "origin": "Đà Nẵng",
+    "destination": "Kon Tum",
+    "distance_km": 292,
+    "duration_hours": 3.8,
+    "duration_text": "3 giờ 48 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": true,
+    "origin_coords": {
+      "lat": 16.0544,
+      "lng": 108.2022,
+      "type": "merged",
+      "center": "Đà Nẵng & Hội An"
+    },
+    "dest_coords": {
+      "lat": 14.35,
+      "lng": 108,
+      "type": "pre-merged",
+      "center": "TP. Kon Tum"
+    }
+  },
+  {
+    "origin": "Đà Nẵng",
+    "destination": "Đắk Nông",
+    "distance_km": 626,
+    "duration_hours": 8,
+    "duration_text": "8 giờ",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": true,
+    "origin_coords": {
+      "lat": 16.0544,
+      "lng": 108.2022,
+      "type": "merged",
+      "center": "Đà Nẵng & Hội An"
+    },
+    "dest_coords": {
+      "lat": 12,
+      "lng": 107.6833,
+      "type": "pre-merged",
+      "center": "Gia Nghĩa"
+    }
+  },
+  {
+    "origin": "Huế",
+    "destination": "Hải Phòng",
+    "distance_km": 702,
+    "duration_hours": 9.4,
+    "duration_text": "9 giờ 24 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 16.4637,
+      "lng": 107.5909,
+      "type": "merged",
+      "center": "TP. Huế"
+    },
+    "dest_coords": {
+      "lat": 20.8449,
+      "lng": 106.6881,
+      "region": "Bắc Bộ"
+    }
+  },
+  {
+    "origin": "Huế",
+    "destination": "Cần Thơ",
+    "distance_km": 1107,
+    "duration_hours": 14.3,
+    "duration_text": "14 giờ 18 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 16.4637,
+      "lng": 107.5909,
+      "type": "merged",
+      "center": "TP. Huế"
+    },
+    "dest_coords": {
+      "lat": 10.0452,
+      "lng": 105.7469,
+      "region": "Tây Nam Bộ"
+    }
+  },
+  {
+    "origin": "Huế",
+    "destination": "Thanh Hóa",
+    "distance_km": 512,
+    "duration_hours": 6.9,
+    "duration_text": "6 giờ 54 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 16.4637,
+      "lng": 107.5909,
+      "type": "merged",
+      "center": "TP. Huế"
+    },
+    "dest_coords": {
+      "lat": 19.8075,
+      "lng": 105.7765,
+      "type": "merged",
+      "center": "TP. Thanh Hóa"
+    }
+  },
+  {
+    "origin": "Huế",
+    "destination": "Nghệ An",
+    "distance_km": 373,
+    "duration_hours": 5,
+    "duration_text": "5 giờ",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 16.4637,
+      "lng": 107.5909,
+      "type": "merged",
+      "center": "TP. Huế"
+    },
+    "dest_coords": {
+      "lat": 18.6734,
+      "lng": 105.6923,
+      "type": "merged",
+      "center": "TP. Vinh"
+    }
+  },
+  {
+    "origin": "Huế",
+    "destination": "Hà Tĩnh",
+    "distance_km": 325,
+    "duration_hours": 4.4,
+    "duration_text": "4 giờ 24 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 16.4637,
+      "lng": 107.5909,
+      "type": "merged",
+      "center": "TP. Huế"
+    },
+    "dest_coords": {
+      "lat": 18.3434,
+      "lng": 105.9056,
+      "type": "merged",
+      "center": "TP. Hà Tĩnh"
+    }
+  },
+  {
+    "origin": "Huế",
+    "destination": "Quảng Trị",
+    "distance_km": 70,
+    "duration_hours": 0.9,
+    "duration_text": "0 giờ 54 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 16.4637,
+      "lng": 107.5909,
+      "type": "merged",
+      "center": "TP. Huế"
+    },
+    "dest_coords": {
+      "lat": 16.8164,
+      "lng": 107.1008,
+      "type": "merged",
+      "center": "Đông Hà & Đồng Hới"
+    }
+  },
+  {
+    "origin": "Huế",
+    "destination": "Đà Nẵng",
+    "distance_km": 95,
+    "duration_hours": 1.4,
+    "duration_text": "1 giờ 24 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 16.4637,
+      "lng": 107.5909,
+      "type": "merged",
+      "center": "TP. Huế"
+    },
+    "dest_coords": {
+      "lat": 16.0544,
+      "lng": 108.2022,
+      "type": "merged",
+      "center": "Đà Nẵng & Hội An"
+    }
+  },
+  {
+    "origin": "Huế",
+    "destination": "Quảng Ngãi",
+    "distance_km": 228,
+    "duration_hours": 2.9,
+    "duration_text": "2 giờ 54 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 16.4637,
+      "lng": 107.5909,
+      "type": "merged",
+      "center": "TP. Huế"
+    },
+    "dest_coords": {
+      "lat": 15.1205,
+      "lng": 108.7923,
+      "type": "merged",
+      "center": "Quảng Ngãi & Quy Nhơn"
+    }
+  },
+  {
+    "origin": "Huế",
+    "destination": "Gia Lai",
+    "distance_km": 422,
+    "duration_hours": 5.7,
+    "duration_text": "5 giờ 42 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 16.4637,
+      "lng": 107.5909,
+      "type": "merged",
+      "center": "TP. Huế"
+    },
+    "dest_coords": {
+      "lat": 13.9833,
+      "lng": 108,
+      "type": "merged",
+      "center": "Pleiku & Kon Tum"
+    }
+  },
+  {
+    "origin": "Huế",
+    "destination": "Đắk Lắk",
+    "distance_km": 599,
+    "duration_hours": 8.5,
+    "duration_text": "8 giờ 30 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 16.4637,
+      "lng": 107.5909,
+      "type": "merged",
+      "center": "TP. Huế"
+    },
+    "dest_coords": {
+      "lat": 12.6667,
+      "lng": 108.0333,
+      "type": "merged",
+      "center": "Buôn Ma Thuột & Gia Nghĩa"
+    }
+  },
+  {
+    "origin": "Huế",
+    "destination": "Khánh Hòa",
+    "distance_km": 599,
+    "duration_hours": 7.8,
+    "duration_text": "7 giờ 48 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 16.4637,
+      "lng": 107.5909,
+      "type": "merged",
+      "center": "TP. Huế"
+    },
+    "dest_coords": {
+      "lat": 12.2388,
+      "lng": 109.1967,
+      "type": "merged",
+      "center": "Nha Trang & Tuy Hòa"
+    }
+  },
+  {
+    "origin": "Huế",
+    "destination": "Lâm Đồng",
+    "distance_km": 725,
+    "duration_hours": 9.8,
+    "duration_text": "9 giờ 48 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": false,
+    "origin_coords": {
+      "lat": 16.4637,
+      "lng": 107.5909,
+      "type": "merged",
+      "center": "TP. Huế"
+    },
+    "dest_coords": {
+      "lat": 11.9404,
+      "lng": 108.4583,
+      "type": "merged",
+      "center": "Đà Lạt & Phan Thiết"
+    }
+  },
+  {
+    "origin": "Huế",
+    "destination": "Quảng Bình",
+    "distance_km": 171,
+    "duration_hours": 2.3,
+    "duration_text": "2 giờ 18 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": true,
+    "origin_coords": {
+      "lat": 16.4637,
+      "lng": 107.5909,
+      "type": "merged",
+      "center": "TP. Huế"
+    },
+    "dest_coords": {
+      "lat": 17.4691,
+      "lng": 106.6225,
+      "type": "pre-merged",
+      "center": "Đồng Hới"
+    }
+  },
+  {
+    "origin": "Huế",
+    "destination": "Thừa Thiên Huế",
+    "distance_km": 0,
+    "duration_hours": 0,
+    "duration_text": "0 giờ",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": true,
+    "origin_coords": {
+      "lat": 16.4637,
+      "lng": 107.5909,
+      "type": "merged",
+      "center": "TP. Huế"
+    },
+    "dest_coords": {
+      "lat": 16.4637,
+      "lng": 107.5909,
+      "type": "pre-merged",
+      "center": "TP. Huế"
+    }
+  },
+  {
+    "origin": "Huế",
+    "destination": "Quảng Nam",
+    "distance_km": 156,
+    "duration_hours": 2.1,
+    "duration_text": "2 giờ 6 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": true,
+    "origin_coords": {
+      "lat": 16.4637,
+      "lng": 107.5909,
+      "type": "merged",
+      "center": "TP. Huế"
+    },
+    "dest_coords": {
+      "lat": 15.5683,
+      "lng": 108.4756,
+      "type": "pre-merged",
+      "center": "Tam Kỳ & Hội An"
+    }
+  },
+  {
+    "origin": "Huế",
+    "destination": "Bình Định",
+    "distance_km": 404,
+    "duration_hours": 5.1,
+    "duration_text": "5 giờ 6 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": true,
+    "origin_coords": {
+      "lat": 16.4637,
+      "lng": 107.5909,
+      "type": "merged",
+      "center": "TP. Huế"
+    },
+    "dest_coords": {
+      "lat": 13.783,
+      "lng": 109.2197,
+      "type": "pre-merged",
+      "center": "Quy Nhơn"
+    }
+  },
+  {
+    "origin": "Huế",
+    "destination": "Phú Yên",
+    "distance_km": 487,
+    "duration_hours": 6.3,
+    "duration_text": "6 giờ 18 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": true,
+    "origin_coords": {
+      "lat": 16.4637,
+      "lng": 107.5909,
+      "type": "merged",
+      "center": "TP. Huế"
+    },
+    "dest_coords": {
+      "lat": 13.0882,
+      "lng": 109.309,
+      "type": "pre-merged",
+      "center": "Tuy Hòa"
+    }
+  },
+  {
+    "origin": "Huế",
+    "destination": "Ninh Thuận",
+    "distance_km": 694,
+    "duration_hours": 9,
+    "duration_text": "9 giờ",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": true,
+    "origin_coords": {
+      "lat": 16.4637,
+      "lng": 107.5909,
+      "type": "merged",
+      "center": "TP. Huế"
+    },
+    "dest_coords": {
+      "lat": 11.5643,
+      "lng": 108.9882,
+      "type": "pre-merged",
+      "center": "Phan Rang - Tháp Chàm"
+    }
+  },
+  {
+    "origin": "Huế",
+    "destination": "Bình Thuận",
+    "distance_km": 839,
+    "duration_hours": 10.7,
+    "duration_text": "10 giờ 42 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": true,
+    "origin_coords": {
+      "lat": 16.4637,
+      "lng": 107.5909,
+      "type": "merged",
+      "center": "TP. Huế"
+    },
+    "dest_coords": {
+      "lat": 10.9333,
+      "lng": 108.1,
+      "type": "pre-merged",
+      "center": "Phan Thiết"
+    }
+  },
+  {
+    "origin": "Huế",
+    "destination": "Kon Tum",
+    "distance_km": 375,
+    "duration_hours": 5.1,
+    "duration_text": "5 giờ 6 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": true,
+    "origin_coords": {
+      "lat": 16.4637,
+      "lng": 107.5909,
+      "type": "merged",
+      "center": "TP. Huế"
+    },
+    "dest_coords": {
+      "lat": 14.35,
+      "lng": 108,
+      "type": "pre-merged",
+      "center": "TP. Kon Tum"
+    }
+  },
+  {
+    "origin": "Huế",
+    "destination": "Đắk Nông",
+    "distance_km": 710,
+    "duration_hours": 9.2,
+    "duration_text": "9 giờ 12 phút",
+    "source": "OpenStreetMap OSRM Live Routing",
+    "is_pre_merged": true,
+    "origin_coords": {
+      "lat": 16.4637,
+      "lng": 107.5909,
+      "type": "merged",
+      "center": "TP. Huế"
+    },
+    "dest_coords": {
+      "lat": 12,
+      "lng": 107.6833,
+      "type": "pre-merged",
+      "center": "Gia Nghĩa"
+    }
+  }
+]

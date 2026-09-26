@@ -8,7 +8,8 @@
     "crawl": "node scripts/crawl.js",
     "crawl:places": "node scripts/crawlPlacesWithImages.js",
     "crawl:google": "node scripts/crawlGoogleMapsPuppeteer.js",
-    "enrich:photos": "node scripts/enrichAllRealPhotos.js"
+    "enrich:photos": "node scripts/enrichAllRealPhotos.js",
+    "crawl:transit": "node scripts/crawlTransitData.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -20,7 +21,6 @@
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^7.5.0",
-    "multer": "^2.4.0",
     "node-cache": "^5.1.2",
     "node-cron": "^4.6.0",
     "puppeteer-core": "^25.10.0"

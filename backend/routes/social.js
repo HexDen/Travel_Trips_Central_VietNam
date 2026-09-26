@@ -85,4 +85,16 @@ router.get('/trips/shared/:token', async (req, res) => {
   res.json(trip)
 })
 
+// Xóa chuyến đi (chỉ chủ sở hữu mới được xóa)
+router.delete('/trips/:tripId', requireAuth, async (req, res) => {
+  try {
+    const trip = await Trip.findOne({ _id: req.params.tripId, owner: req.userId })
+    if (!trip) return res.status(404).json({ error: 'Chuyến đi không tồn tại hoặc không thuộc tài khoản của bạn' })
+    await Trip.deleteOne({ _id: req.params.tripId })
+    res.json({ success: true, message: 'Đã xóa chuyến đi thành công' })
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Không thể xóa chuyến đi' })
+  }
+})
+
 module.exports = router
