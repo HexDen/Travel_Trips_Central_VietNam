@@ -98,7 +98,13 @@
                 @keydown.space.prevent="chonDiemDenExplore(city.name)"
                 role="button"
                 tabindex="0"
-                :style="{ backgroundImage: `url(${city.image})` }"
+                :style="city.name === ALL_DESTINATIONS ? {
+                  background: 'linear-gradient(135deg, #0f766e 0%, #06b6d4 100%)'
+                } : {
+                  backgroundImage: `url(${city.image})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center'
+                }"
               >
                 <!-- SVG location pin thay emoji -->
                 <span class="city-pin-icon">
@@ -1951,17 +1957,17 @@ function toggleDark() {
 
 // Danh sách 11 Tỉnh/Thành phố Miền Trung & Tây Nguyên sau sáp nhập (Ảnh HD thực tế 100%)
 const centralCities = [
-  { name: 'Thanh Hóa', icon: '🏰', tag: 'Sầm Sơn & Pù Luông', image: 'https://images.unsplash.com/photo-1599707367072-cd6ada2bc375?w=800&auto=format&fit=crop&q=80', audio: '/music/thanhhoa.mp3' },
-  { name: 'Nghệ An', icon: '🌾', tag: 'Cửa Lò & Quê Bác', image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&auto=format&fit=crop&q=80', audio: '/music/nghean.mp3' },
-  { name: 'Hà Tĩnh', icon: '🌊', tag: 'Thiên Cầm & Ngã Ba Đồng Lộc', image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&auto=format&fit=crop&q=80', audio: '/music/hatinh.mp3' },
-  { name: 'Quảng Trị', icon: '⛰️', tag: 'Phong Nha, Thiên Đường & Vịnh Mốc', image: 'https://images.unsplash.com/photo-1528127269322-539801943592?w=800&auto=format&fit=crop&q=80', audio: '/music/quangtri.mp3' },
-  { name: 'Huế', icon: '👑', tag: 'Cố Đô Di Sản Triều Nguyễn', image: 'https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=800&auto=format&fit=crop&q=80', audio: '/music/hue.mp3' },
-  { name: 'Đà Nẵng', icon: '🌉', tag: 'Cầu Vàng, Phố Cổ Hội An & Mỹ Khê', image: 'https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?w=800&auto=format&fit=crop&q=80', audio: '/music/danang.mp3' },
-  { name: 'Quảng Ngãi', icon: '🏖️', tag: 'Đảo Lý Sơn & Eo Gió - Kỳ Co', image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800&auto=format&fit=crop&q=80', audio: '/music/quangngai.mp3' },
-  { name: 'Gia Lai', icon: '🐘', tag: 'Biển Hồ T’Nưng & Nhà Rông Kon Tum', image: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=800&auto=format&fit=crop&q=80', audio: '/music/gialai.mp3' },
-  { name: 'Đắk Lắk', icon: '☕', tag: 'Bảo Tàng Cà Phê & Thác Dray Nur', image: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=800&auto=format&fit=crop&q=80', audio: '/music/daklak.mp3' },
-  { name: 'Khánh Hòa', icon: '⛵', tag: 'Nha Trang, Vịnh Vĩnh Hy & Gành Đá Đĩa', image: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=800&auto=format&fit=crop&q=80', audio: '/music/khanhhoa.mp3' },
-  { name: 'Lâm Đồng', icon: '🌲', tag: 'Đà Lạt Ngàn Hoa & Thác Dambri', image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=80', audio: '/music/lamdong.mp3' }
+  { name: 'Thanh Hóa', icon: '🏰', tag: 'Sầm Sơn & Pù Luông', image: 'https://viptrip.vn/public/upload/news/bai-bien-sam-son_23-05-2024_713782758.jpg', audio: '/music/thanhhoa.mp3' },
+  { name: 'Nghệ An', icon: '🌾', tag: 'Cửa Lò & Quê Bác', image: 'https://farm8.staticflickr.com/7516/15964471348_7caca4ee9b_o.jpg', audio: '/music/nghean.mp3' },
+  { name: 'Hà Tĩnh', icon: '🌊', tag: 'Thiên Cầm & Ngã Ba Đồng Lộc', image: 'https://thiencam.net/wp-content/uploads/2017/04/thien-cam-ha-tinh.jpg', audio: '/music/hatinh.mp3' },
+  { name: 'Quảng Trị', icon: '⛰️', tag: 'Phong Nha, Thiên Đường & Vịnh Mốc', image: 'https://phongnhatourist.com/wp-content/uploads/2019/04/dong-thie-duong-2.jpg', audio: '/music/quangtri.mp3' },
+  { name: 'Huế', icon: '👑', tag: 'Cố Đô Di Sản Triều Nguyễn', image: 'https://sacotravel.com/wp-content/uploads/2023/07/Dai-Noi-Hue.jpg', audio: '/music/hue.mp3' },
+  { name: 'Đà Nẵng', icon: '🌉', tag: 'Cầu Vàng, Phố Cổ Hội An & Mỹ Khê', image: 'https://www.pullman-danang.com/wp-content/uploads/sites/86/2019/05/DJI_0004.jpg', audio: '/music/danang.mp3' },
+  { name: 'Quảng Ngãi', icon: '🏖️', tag: 'Đảo Lý Sơn & Eo Gió - Kỳ Co', image: 'https://statics.vinpearl.com/huyen-dao-ly-son_1742399346.jpg', audio: '/music/quangngai.mp3' },
+  { name: 'Gia Lai', icon: '🐘', tag: 'Biển Hồ T’Nưng & Nhà Rông Kon Tum', image: 'https://touring.vn/wp-content/uploads/2023/12/Bien-Ho_TNung-3-768x587.jpg', audio: '/music/gialai.mp3' },
+  { name: 'Đắk Lắk', icon: '☕', tag: 'Bảo Tàng Cà Phê & Thác Dray Nur', image: 'https://cdn.xanhsm.com/2024/12/131980d3-bao-tang-the-gioi-ca-phe-25.jpg', audio: '/music/daklak.mp3' },
+  { name: 'Khánh Hòa', icon: '⛵', tag: 'Nha Trang, Vịnh Vĩnh Hy & Gành Đá Đĩa', image: 'https://bomanhatrang.com/wp-content/uploads/2023/03/dia-diem-du-lich-nha-trang-thumbnail-1.jpg', audio: '/music/khanhhoa.mp3' },
+  { name: 'Lâm Đồng', icon: '🌲', tag: 'Đà Lạt Ngàn Hoa & Thác Dambri', image: 'https://cdn.tgdd.vn/Files/2023/10/25/1553008/top-22-dia-diem-du-lich-lam-dong-dep-nhat-dinh-khong-nen-bo-qua-202310251415581585.jpg', audio: '/music/lamdong.mp3' }
 ]
 
 const ALL_DESTINATIONS = 'Tất cả miền Trung'
@@ -1970,30 +1976,30 @@ const allDestinationsCard = {
   displayName: 'Tất cả',
   icon: '🔥',
   tag: 'Những điểm đến hot nhất miền Trung',
-  image: 'https://images.unsplash.com/photo-1528128673399-646f8c5f3f7a?w=800&auto=format&fit=crop&q=80',
+  image: '/images/mientrung-collage.jpg',
   audio: '/music/mientrung.mp3'
 }
 const destinationCards = [allDestinationsCard, ...centralCities]
 const preMergerCities = [
-  { name: 'Thanh Hóa', icon: '🏰', tag: 'Sầm Sơn & Pù Luông', image: 'https://images.unsplash.com/photo-1599707367072-cd6ada2bc375?w=800&auto=format&fit=crop&q=80', audio: '/music/thanhhoa.mp3' },
-  { name: 'Nghệ An', icon: '🌾', tag: 'Cửa Lò & Quê Bác', image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&auto=format&fit=crop&q=80', audio: '/music/nghean.mp3' },
-  { name: 'Hà Tĩnh', icon: '🌊', tag: 'Thiên Cầm & Ngã Ba Đồng Lộc', image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&auto=format&fit=crop&q=80', audio: '/music/hatinh.mp3' },
-  { name: 'Quảng Bình', icon: '🪨', tag: 'Phong Nha & Động Thiên Đường', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Paradise_Cave_Phong_Nha.jpg/800px-Paradise_Cave_Phong_Nha.jpg' },
-  { name: 'Quảng Trị', icon: '⛰️', tag: 'Thành Cổ & Cầu Hiền Lương', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Quang_Tri_Ancient_Citadel.jpg/800px-Quang_Tri_Ancient_Citadel.jpg', audio: '/music/quangtri.mp3' },
-  { name: 'Thừa Thiên Huế', icon: '👑', tag: 'Cố đô Đại Nội & Sông Hương', image: 'https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=800&auto=format&fit=crop&q=80', audio: '/music/hue.mp3' },
-  { name: 'Đà Nẵng', icon: '🌉', tag: 'Cầu Vàng Bà Nà & Biển Mỹ Khê', image: 'https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?w=800&auto=format&fit=crop&q=80', audio: '/music/danang.mp3' },
-  { name: 'Quảng Nam', icon: '🏮', tag: 'Phố Cổ Hội An & Cù Lao Chàm', image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&auto=format&fit=crop&q=80' },
-  { name: 'Quảng Ngãi', icon: '🏖️', tag: 'Cổng Tò Vò Đảo Lý Sơn', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Ly_Son_Island_Quang_Ngai.jpg/800px-Ly_Son_Island_Quang_Ngai.jpg', audio: '/music/quangngai.mp3' },
-  { name: 'Bình Định', icon: '🌊', tag: 'Kỳ Co & Eo Gió Quy Nhơn', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Eo_Gio_Quy_Nhon.jpg/800px-Eo_Gio_Quy_Nhon.jpg' },
-  { name: 'Phú Yên', icon: '🏝️', tag: 'Gành Đá Đĩa & Mũi Điện', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Ganh_Da_Dia_Phu_Yen.jpg/800px-Ganh_Da_Dia_Phu_Yen.jpg' },
-  { name: 'Khánh Hòa', icon: '⛵', tag: 'Vịnh Biển Nha Trang & Tháp Bà', image: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=800&auto=format&fit=crop&q=80', audio: '/music/khanhhoa.mp3' },
-  { name: 'Ninh Thuận', icon: '🌵', tag: 'Vịnh Vĩnh Hy & Po Klong Garai', image: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800&auto=format&fit=crop&q=80' },
-  { name: 'Bình Thuận', icon: '🏜️', tag: 'Đồi Cát Bay Mũi Né & Bàu Trắng', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Mui_Ne_Sand_Dunes.jpg/800px-Mui_Ne_Sand_Dunes.jpg' },
-  { name: 'Kon Tum', icon: '🏡', tag: 'Nhà Thờ Gỗ & Cầu Kon Klor', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Kon_Tum_Wooden_Church.jpg/800px-Kon_Tum_Wooden_Church.jpg' },
-  { name: 'Gia Lai', icon: '🐘', tag: 'Biển Hồ T’Nưng Pleiku', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Bien_Ho_Pleiku.jpg/800px-Bien_Ho_Pleiku.jpg', audio: '/music/gialai.mp3' },
-  { name: 'Đắk Lắk', icon: '☕', tag: 'Bảo Tàng Cà Phê & Buôn Đôn', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/World_Coffee_Museum_Buon_Ma_Thuot.jpg/800px-World_Coffee_Museum_Buon_Ma_Thuot.jpg', audio: '/music/daklak.mp3' },
-  { name: 'Đắk Nông', icon: '🌋', tag: 'Hồ Tà Đùng - Vịnh Hạ Long', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Ta_Dung_Lake.jpg/800px-Ta_Dung_Lake.jpg' },
-  { name: 'Lâm Đồng', icon: '🌲', tag: 'Đà Lạt Ngàn Hoa & Đồi Chè', image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=80', audio: '/music/lamdong.mp3' }
+  { name: 'Thanh Hóa', icon: '🏰', tag: 'Sầm Sơn & Pù Luông', image: 'https://viptrip.vn/public/upload/news/bai-bien-sam-son_23-05-2024_713782758.jpg', audio: '/music/thanhhoa.mp3' },
+  { name: 'Nghệ An', icon: '🌾', tag: 'Cửa Lò & Quê Bác', image: 'https://farm8.staticflickr.com/7516/15964471348_7caca4ee9b_o.jpg', audio: '/music/nghean.mp3' },
+  { name: 'Hà Tĩnh', icon: '🌊', tag: 'Thiên Cầm & Ngã Ba Đồng Lộc', image: 'https://thiencam.net/wp-content/uploads/2017/04/thien-cam-ha-tinh.jpg', audio: '/music/hatinh.mp3' },
+  { name: 'Quảng Bình', icon: '🪨', tag: 'Phong Nha & Động Thiên Đường', image: 'https://phongnhatourist.com/wp-content/uploads/2019/04/dong-thie-duong-2.jpg' },
+  { name: 'Quảng Trị', icon: '⛰️', tag: 'Thành Cổ & Cầu Hiền Lương', image: 'https://ik.imagekit.io/tvlk/blog/2023/05/thanh-co-quang-tri-3.jpg?tr=dpr-2,w-675', audio: '/music/quangtri.mp3' },
+  { name: 'Thừa Thiên Huế', icon: '👑', tag: 'Cố đô Đại Nội & Sông Hương', image: 'https://sacotravel.com/wp-content/uploads/2023/07/Dai-Noi-Hue.jpg', audio: '/music/hue.mp3' },
+  { name: 'Đà Nẵng', icon: '🌉', tag: 'Cầu Vàng Bà Nà & Biển Mỹ Khê', image: 'https://www.pullman-danang.com/wp-content/uploads/sites/86/2019/05/DJI_0004.jpg', audio: '/music/danang.mp3' },
+  { name: 'Quảng Nam', icon: '🏮', tag: 'Phố Cổ Hội An & Cù Lao Chàm', image: 'https://top1quangnam.com/wp-content/uploads/2021/12/hoi-an-15102019-2-1400x788.png' },
+  { name: 'Quảng Ngãi', icon: '🏖️', tag: 'Cổng Tò Vò Đảo Lý Sơn', image: 'https://statics.vinpearl.com/huyen-dao-ly-son_1742399346.jpg', audio: '/music/quangngai.mp3' },
+  { name: 'Bình Định', icon: '🌊', tag: 'Kỳ Co & Eo Gió Quy Nhơn', image: 'https://eholiday.vn/wp-content/uploads/2024/07/ky-co-1.jpg' },
+  { name: 'Phú Yên', icon: '🏝️', tag: 'Gành Đá Đĩa & Mũi Điện', image: 'https://static.vinwonders.com/production/ganh-da-dia-phu-yen-1.jpg' },
+  { name: 'Khánh Hòa', icon: '⛵', tag: 'Vịnh Biển Nha Trang & Tháp Bà', image: 'https://bomanhatrang.com/wp-content/uploads/2023/03/dia-diem-du-lich-nha-trang-thumbnail-1.jpg', audio: '/music/khanhhoa.mp3' },
+  { name: 'Ninh Thuận', icon: '🌵', tag: 'Vịnh Vĩnh Hy & Po Klong Garai', image: 'https://storage.googleapis.com/blogvxr-uploads/2025/07/8009d84a-vinh-vinh-hy-ninh-thuan-2455843-1250x715.jpg' },
+  { name: 'Bình Thuận', icon: '🏜️', tag: 'Đồi Cát Bay Mũi Né & Bàu Trắng', image: 'https://nhn.1cdn.vn/2023/07/03/doi-cat.jpg' },
+  { name: 'Kon Tum', icon: '🏡', tag: 'Nhà Thờ Gỗ & Cầu Kon Klor', image: 'https://innotour.vn/image/catalog/blog-du-lich/kon-tum/pics/nha-tho-go-kon-tum-4.jpg' },
+  { name: 'Gia Lai', icon: '🐘', tag: 'Biển Hồ T’Nưng Pleiku', image: 'https://touring.vn/wp-content/uploads/2023/12/Bien-Ho_TNung-3-768x587.jpg', audio: '/music/gialai.mp3' },
+  { name: 'Đắk Lắk', icon: '☕', tag: 'Bảo Tàng Cà Phê & Buôn Đôn', image: 'https://cdn.xanhsm.com/2024/12/131980d3-bao-tang-the-gioi-ca-phe-25.jpg', audio: '/music/daklak.mp3' },
+  { name: 'Đắk Nông', icon: '🌋', tag: 'Hồ Tà Đùng - Vịnh Hạ Long', image: 'https://tinviettravel.com/uploads/tours/images/tay_nguyen/ho-ta-dung-dak-nong.jpg' },
+  { name: 'Lâm Đồng', icon: '🌲', tag: 'Đà Lạt Ngàn Hoa & Đồi Chè', image: 'https://cdn.tgdd.vn/Files/2023/10/25/1553008/top-22-dia-diem-du-lich-lam-dong-dep-nhat-dinh-khong-nen-bo-qua-202310251415581585.jpg', audio: '/music/lamdong.mp3' }
 ]
 const provinceMode = ref('merged')
 const visibleCities = computed(() => provinceMode.value === 'merged' ? centralCities : preMergerCities)
