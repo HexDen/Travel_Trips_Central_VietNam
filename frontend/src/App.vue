@@ -3950,6 +3950,7 @@ function boQuaIntro() {
 
 /* ===== AI HINT BUBBLE — đồng bộ màu Teal chủ đạo sang trọng ===== */
 .ai-hint-bubble {
+  box-sizing: border-box;
   position: relative;
   display: flex;
   align-items: flex-start;
@@ -3972,6 +3973,22 @@ function boQuaIntro() {
   background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 60%);
   border-radius: inherit;
   pointer-events: none;
+}
+
+@media (max-width: 640px) {
+  .ai-hint-bubble {
+    padding: 16px 36px 16px 16px;
+    gap: 12px;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .ai-hint-body {
+    width: 100%;
+  }
+  .ai-hint-chips {
+    justify-content: center;
+  }
 }
 
 @keyframes bubbleIn {
@@ -6565,12 +6582,54 @@ button { cursor: pointer; }
 
 /* RESPONSIVE TRÊN MÁY TÍNH & MOBILE */
 @media (max-width: 640px) {
+  .app-main { padding: 12px 10px; min-width: 0; overflow-x: hidden; }
+  .tab-pane { min-width: 0; }
+  .planner-tab-bg { padding: 16px 12px 32px; width: 100%; box-sizing: border-box; }
+  .planner-form-container { margin: 0; padding: 16px; width: 100%; box-sizing: border-box; max-width: 100%; min-width: 0; }
   .app-form-grid { grid-template-columns: 1fr; }
+  .app-field, .origin-select-wrapper { min-width: 0; }
   .app-field.full-width { grid-column: span 1; }
   .hotel-main-info { flex-direction: column; }
   .hotel-side { text-align: left; }
   .places-app-grid { grid-template-columns: 1fr; }
+  .origin-quick-picks { flex-wrap: wrap; overflow-x: visible; }
 }
+
+@media (max-width: 480px) {
+  .app-main { padding: 10px 6px; }
+  .planner-tab-bg { padding: 12px 8px 24px; }
+  .planner-form-container { padding: 12px; }
+  .wizard-progress { padding: 8px 10px; margin-bottom: 16px; gap: 4px; }
+  .step-indicator { font-size: 0.75rem; padding: 4px 8px; }
+  .step-divider { margin: 0 2px; }
+  .ai-hint-bubble { padding: 12px; gap: 10px; border-radius: 12px; flex-direction: column; align-items: center; text-align: center; }
+  .ai-hint-robot { display: flex; justify-content: center; }
+  .ai-hint-robot img { width: 36px !important; height: 36px !important; }
+  .ai-hint-content p { font-size: 0.85rem; margin-bottom: 8px; }
+  .ai-chip { font-size: 0.75rem; padding: 4px 10px; }
+  .wizard-footer { flex-direction: column; gap: 12px; }
+  .wizard-footer button { width: 100%; justify-content: center; }
+  .origin-mode-switch button { padding: 4px 8px; font-size: 10px; }
+  .route-overview-banner.compact { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .rob-mid-compact { width: 100%; margin: 8px 0; }
+  .dbc-grid { grid-template-columns: 1fr; gap: 8px; }
+  .budget-quick-tags .quick-tag-chip { font-size: 11px; padding: 6px 10px; }
+  .act-meta-badges { gap: 3px; margin: 2px 0; }
+  .meta-tag-pill { padding: 1px 6px; font-size: 10px; }
+  .act-desc {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-size: 12.5px;
+    margin: 2px 0 5px;
+  }
+  .act-signature-box, .act-cost-box { padding: 4px 8px; margin: 4px 0; font-size: 11.5px; }
+  .eta-pill { padding: 2px 6px; font-size: 10px; }
+  .eta-metrics-row { gap: 4px; }
+  .transit-badge { padding: 4px 8px; font-size: 10.5px; }
+}
+
 
 @media print {
   .app-header, .app-bottom-nav, .plan-tool-actions, .app-map-box, .mode-toggle-btn {
@@ -9009,6 +9068,57 @@ button { cursor: pointer; }
   background: var(--primary);
   color: #fff;
   border-color: var(--primary);
+}
+
+/* ABSOLUTE MOBILE OVERRIDES - MUST BE AT END OF FILE */
+@media (max-width: 992px) {
+  .app-main { padding: 12px 10px !important; min-width: 0 !important; overflow-x: hidden !important; }
+  .tab-pane { min-width: 0 !important; }
+  .planner-tab-bg { padding: 16px 12px 32px !important; width: 100% !important; box-sizing: border-box !important; }
+  .planner-form-container { margin: 0 !important; padding: 16px !important; width: 100% !important; box-sizing: border-box !important; max-width: 100% !important; min-width: 0 !important; flex-shrink: 1 !important; }
+  .app-form-grid { grid-template-columns: 1fr !important; }
+  .app-field, .origin-select-wrapper { min-width: 0 !important; }
+  .app-field.full-width { grid-column: span 1 !important; }
+  .hotel-main-info { flex-direction: column !important; }
+  .hotel-side { text-align: left !important; }
+  .places-app-grid { grid-template-columns: 1fr !important; }
+  .origin-quick-picks { flex-wrap: wrap !important; overflow-x: visible !important; }
+}
+
+@media (max-width: 768px) {
+  .app-main { padding: 10px 6px !important; }
+  .planner-tab-bg { padding: 12px 8px 24px !important; }
+  .planner-form-container { padding: 12px !important; }
+  .wizard-progress { padding: 8px 10px !important; margin-bottom: 16px !important; gap: 4px !important; }
+  .step-indicator { font-size: 0.75rem !important; padding: 4px 8px !important; }
+  .step-divider { margin: 0 2px !important; }
+  .ai-hint-bubble { padding: 12px !important; gap: 10px !important; border-radius: 12px !important; flex-direction: column !important; align-items: center !important; text-align: center !important; }
+  .ai-hint-robot { display: flex !important; justify-content: center !important; }
+  .ai-hint-robot img { width: 36px !important; height: 36px !important; }
+  .ai-hint-content p { font-size: 0.85rem !important; margin-bottom: 8px !important; }
+  .ai-chip { font-size: 0.75rem !important; padding: 4px 10px !important; }
+  .wizard-footer { flex-direction: column !important; gap: 12px !important; }
+  .wizard-footer button { width: 100% !important; justify-content: center !important; }
+  .origin-mode-switch button { padding: 4px 8px !important; font-size: 10px !important; }
+  .route-overview-banner.compact { flex-direction: column !important; align-items: flex-start !important; gap: 8px !important; }
+  .rob-mid-compact { width: 100% !important; margin: 8px 0 !important; }
+  .dbc-grid { grid-template-columns: 1fr !important; gap: 8px !important; }
+  .transit-vehicles-grid { grid-template-columns: 1fr !important; }
+  .budget-quick-tags .quick-tag-chip { font-size: 11px !important; padding: 6px 10px !important; }
+  .act-meta-badges { gap: 3px !important; margin: 2px 0 !important; }
+  .meta-tag-pill { padding: 1px 6px !important; font-size: 10px !important; line-height: 1.2 !important; height: auto !important; }
+  .act-desc {
+    display: -webkit-box !important;
+    -webkit-line-clamp: 3 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    font-size: 12.5px !important;
+    margin: 2px 0 5px !important;
+  }
+  .act-signature-box, .act-cost-box { padding: 4px 8px !important; margin: 4px 0 !important; font-size: 11.5px !important; }
+  .eta-pill { padding: 2px 6px !important; font-size: 10px !important; }
+  .eta-metrics-row { gap: 4px !important; }
+  .transit-badge { padding: 4px 8px !important; font-size: 10.5px !important; }
 }
 
 </style>
