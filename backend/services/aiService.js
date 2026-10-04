@@ -172,7 +172,8 @@ const LOCAL_CONTEXT_MAP = {
   'Thanh Hóa': 'Sầm Sơn, Pù Luông, Thành Nhà Hồ, Suối Cá Thần; Đặc sản: Nem chua, Chả tôm, Bánh khoái tép',
   'Nghệ An': 'Cửa Lò, Kim Liên Quê Bác, Đồi chè Thanh Chương; Đặc sản: Cháo lươn, Súp lươn bánh mướt, Mực nhảy',
   'Hà Tĩnh': 'Thiên Cầm, Ngã ba Đồng Lộc, Chùa Hương Tích; Đặc sản: Kẹo cu đơ, Mực nhảy Vũng Áng, Ram mướt',
-  'Quảng Trị': 'Phong Nha, Thiên Đường, Suối Moọc, Thành Cổ, Vịnh Mốc; Đặc sản: Bánh canh cá lóc, Bún hến Mai Xá',
+  'Quảng Bình': 'Vườn Quốc gia Phong Nha - Kẻ Bàng, Động Thiên Đường, Suối Nước Moọc, Biển Nhật Lệ, Hang Sơn Đoòng; Đặc sản: Cháo canh, Bánh xèo Quảng Hòa',
+  'Quảng Trị': 'Thành Cổ Quảng Trị, Địa đạo Vịnh Mốc, Cầu Hiền Lương, Thánh địa La Vang, Biển Cửa Việt; Đặc sản: Bánh canh cá lóc, Bún hến Mai Xá',
   'Huế': 'Đại Nội Hoàng Thành, Chùa Thiên Mụ, Lăng Khải Định, Lăng Tự Đức; Đặc sản: Bún bò Huế, Cơm hến, Bánh bèo nậm lọc',
   'Đà Nẵng': 'Bà Nà Hills, Cầu Vàng, Biển Mỹ Khê, Sơn Trà, Cầu Rồng, Phố cổ Hội An; Đặc sản: Mì Quảng, Bánh tráng thịt heo, Cao lầu',
   'Quảng Ngãi': 'Đảo Lý Sơn, Cổng Tò Vò, Eo Gió, Kỳ Co; Đặc sản: Don Quảng Ngãi, Ram bắp, Bánh xèo tôm nhảy',
@@ -235,11 +236,11 @@ QUY TẮC BẮT BUỘC:
 2. ĐỊA CHỈ RÕ RÀNG (ADDRESS): BẮT BUỘC mọi hoạt động và khách sạn đều phải có trường "address" cụ thể (Số nhà, Tên đường, Quận/Huyện, Tỉnh/TP).
 3. KHÁCH SẠN (HOTEL): ƯU TIÊN CHỌN KHÁCH SẠN BÌNH DÂN, GIÁ RẺ. Có trường "hotel_recommendation" gồm: name, address, rating, price_per_night, description. Ngày 1 lúc 14:00 có mốc "Nhận phòng", ngày cuối lúc 12:00 có mốc "Trả phòng".
 4. NHÃN PHÂN LOẠI (CATEGORY): Mỗi hoạt động có type ('breakfast' | 'lunch' | 'dinner' | 'checkin' | 'attraction' | 'cafe' | 'checkout') và label ('Ăn sáng' | 'Ăn trưa' | 'Ăn tối' | 'Nhận phòng' | 'Tham quan / Check-in' | 'Cafe & Chill' | 'Trả phòng').
-5. ĐẶC SẢN & ĐỊA DANH CHÍNH XÁC: Nêu rõ tên món đặc sản + tên quán ăn cụ thể tại ${diaDiem}. TUYỆT ĐỐI KHÔNG dùng tên chung chung.
-6. MỖI NGÀY MỘT CỤM (CLUSTER-PER-DAY): Để tiết kiệm sức khỏe di chuyển, BẮT BUỘC Ngày 1 chỉ được lấy các địa điểm ở "Cụm Khu Vực 1", Ngày 2 chỉ lấy ở "Cụm Khu Vực 2"... TUYỆT ĐỐI KHÔNG trộn lẫn điểm của Cụm 1 sang Cụm 2 trong cùng một ngày!
-7. TỐI ƯU KHOẢNG CÁCH & PHÍ DI CHUYỂN: Các địa điểm trong cùng MỘT NGÀY bắt buộc phải nằm gần nhau. BẮT BUỘC phải ghi chú tên điểm xuất phát, khoảng cách, THỜI GIAN DI CHUYỂN, và phí di chuyển ước tính vào cuối nội dung "activity" (Buổi sáng bắt buộc tính từ KHÁCH SẠN). (Ví dụ: "... (Từ khách sạn di chuyển ~5km, đi xe khoảng 10 phút, phí taxi ước tính 75.000đ)").
-8. MÔ TẢ GIÁ TRỊ THỰC TẾ (ACTIVITY): Viết 1 câu súc tích làm nổi bật nét hấp dẫn và giá trị thực tế của địa điểm (ví dụ: "Nổi tiếng với bún bò cay nồng và nem lụi nướng than hoa" hoặc "Khu trưng bày mẫu vật sinh thái biển phong phú thích hợp check-in sáng sớm"). TUYỆT ĐỐI KHÔNG dùng câu mẫu rập khuôn rỗng tuếch kiểu: "Thưởng thức/tham quan: Địa điểm ẩm thực đặc sản chất lượng cao trên Google Maps tại...".
-${nganSach <= 500000 ? `9. ĐẶC BIỆT - NGÂN SÁCH TỐI GIẢN / SINH TỒN (${nganSach.toLocaleString('vi-VN')} VND): Ngân sách du khách rất eo hẹp! BẮT BUỘC chỉ chọn các điểm tham quan MIỄN PHÍ VÉ (bãi biển công cộng, cầu, công viên, phố cổ tản bộ, đèo, chùa chiền không thu phí), quán ăn vỉa hè bình dân giá rẻ (bánh mì 15-20k, mì vỉa hè, xôi), và khách sạn/homestay/dorm giá rẻ nhất có thể. Không xếp điểm check-in tốn vé đắt đỏ hay hải sản cao cấp!` : ''}
+5. ĐẶC SẢN & DANH THẮNG NỔI TIẾNG NHẤT: BẮT BUỘC chọn các điểm tham quan biểu tượng, nổi tiếng nhất của ${diaDiem} nhưng phải có chi phí thấp hoặc miễn phí. TUYỆT ĐỐI KHÔNG gợi ý các điểm không có thật. Nêu rõ tên món đặc sản + tên quán ăn cụ thể.
+6. MỖI NGÀY MỘT CỤM VÀ RẤT GẦN NHAU: Để tiết kiệm chi phí và sức khỏe, các địa điểm trong cùng 1 ngày BẮT BUỘC phải nằm rất gần nhau (cách nhau dưới 10-15km). Ngày 1 đi Cụm 1, Ngày 2 đi Cụm 2... KHÔNG di chuyển zic-zac xa xôi!
+7. TỐI ƯU KHOẢNG CÁCH & PHÍ DI CHUYỂN: BẮT BUỘC phải ghi chú tên điểm xuất phát, khoảng cách, THỜI GIAN DI CHUYỂN, và phí di chuyển vào cuối nội dung "activity" (Buổi sáng bắt buộc tính từ KHÁCH SẠN).
+8. MÔ TẢ GIÁ TRỊ THỰC TẾ (ACTIVITY): Viết 1 câu súc tích làm nổi bật nét hấp dẫn và giá trị thực tế của địa điểm. TUYỆT ĐỐI KHÔNG dùng câu mẫu rập khuôn.
+${nganSach <= 500000 ? `9. ĐẶC BIỆT - NGÂN SÁCH TỐI GIẢN / SINH TỒN (${nganSach.toLocaleString('vi-VN')} VND): Ngân sách du khách rất eo hẹp! BẮT BUỘC chỉ chọn các điểm tham quan MIỄN PHÍ VÉ (bãi biển, phố cổ, di tích mở), quán ăn vỉa hè bình dân giá rẻ nhất có thể!` : ''}
 
 ĐỊNH DẠNG ĐẦU RA (CHỈ TRẢ VỀ JSON DUY NHẤT):
 {

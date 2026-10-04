@@ -51,20 +51,7 @@
           <div class="explore-section" v-reveal>
             <div class="section-title-row">
               <h3>Điểm đến nổi tiếng</h3>
-              <div class="province-mode-wrapper">
-                <div class="province-mode-switch" role="group" aria-label="Chế độ địa giới">
-                  <button type="button" :class="{ active: provinceMode === 'merged' }" @click="doiCheDoTinhThanh('merged')">Sau sáp nhập</button>
-                  <button type="button" :class="{ active: provinceMode === 'pre-merged' }" @click="doiCheDoTinhThanh('pre-merged')">Trước sáp nhập</button>
-                </div>
-                <div class="province-tooltip-trigger" tabindex="0">
-                  <span class="tooltip-icon">ℹ️</span>
-                  <div class="province-tooltip-popover">
-                    <strong>Địa giới hành chính:</strong>
-                    <p>• <b>Sau sáp nhập</b>: Xem theo địa giới mới nhất (Huế thành phố trực thuộc Trung ương, Đà Nẵng, Quảng Nam...).</p>
-                    <p>• <b>Trước sáp nhập</b>: Xem theo các tỉnh thành truyền thống cũ để dễ tra cứu điểm du lịch quen thuộc.</p>
-                  </div>
-                </div>
-              </div>
+
               <div class="city-music-toolbar">
                 <button
                   type="button"
@@ -327,10 +314,7 @@
               <div class="app-field full-width">
                 <div class="field-label-between">
                   <label>🚩 Điểm bắt đầu (Khởi hành)</label>
-                  <div class="province-mode-switch planner-mode-switch origin-mode-switch" role="group">
-                    <button type="button" :class="{ active: originProvinceMode === 'merged' }" @click="originProvinceMode = 'merged'">Sau sáp nhập</button>
-                    <button type="button" :class="{ active: originProvinceMode === 'pre-merged' }" @click="originProvinceMode = 'pre-merged'">Trước sáp nhập</button>
-                  </div>
+
                   <span class="route-origin-tag" v-if="formDuLieu.diemKhoiHanh">Xuất phát: <b>{{ formDuLieu.diemKhoiHanh }}</b></span>
                 </div>
                 <div class="origin-select-wrapper">
@@ -383,20 +367,7 @@
               <!-- Chọn Thành phố -->
               <div class="app-field full-width">
                 <label>Điểm đến du lịch</label>
-                <div class="province-mode-wrapper">
-                  <div class="province-mode-switch planner-mode-switch" role="group" aria-label="Chế độ địa giới">
-                    <button type="button" :class="{ active: provinceMode === 'merged' }" @click="doiCheDoTinhThanh('merged')">Sau sáp nhập</button>
-                    <button type="button" :class="{ active: provinceMode === 'pre-merged' }" @click="doiCheDoTinhThanh('pre-merged')">Trước sáp nhập</button>
-                  </div>
-                  <div class="province-tooltip-trigger" tabindex="0">
-                    <span class="tooltip-icon">ℹ️</span>
-                    <div class="province-tooltip-popover">
-                      <strong>Địa giới hành chính:</strong>
-                      <p>• <b>Sau sáp nhập</b>: Xem theo địa giới mới nhất (Huế thành phố trực thuộc Trung ương, Đà Nẵng, Quảng Nam...).</p>
-                      <p>• <b>Trước sáp nhập</b>: Xem theo các tỉnh thành truyền thống cũ để dễ tra cứu điểm du lịch quen thuộc.</p>
-                    </div>
-                  </div>
-                </div>
+
                 <div class="quick-city-selector">
                   <div
                     v-for="c in visibleCities"
@@ -942,6 +913,16 @@
                   </button>
                 </div>
               </div>
+              
+              <!-- Tự nhập điểm đến -->
+              <div class="custom-place-input-row" style="margin-top: 16px;">
+                <span class="row-label">Thêm địa điểm / quán khác (Tự nhập):</span>
+                <div style="display:flex; gap:8px;">
+                  <input type="text" v-model="customPlaceText" placeholder="Nhập tên địa điểm bạn muốn đi..." class="enhanced-input" style="flex:1; padding:10px 14px;" @keyup.enter="addCustomPlace" />
+                  <button class="app-primary-btn" @click="addCustomPlace" type="button" style="padding: 10px 20px; font-size:13px; white-space:nowrap;">+ Thêm</button>
+                </div>
+              </div>
+
             </div>
 
             <!-- ĐÓNG BƯỚC 3 -->
@@ -1083,7 +1064,7 @@
             </div>
 
             <!-- TÓM TẮT PHƯƠNG ÁN XE KHÁCH TỐI ƯU CHI PHÍ -->
-            <div v-if="lichTrinh.transit_summary || formDuLieu.nhaXeDaChon" class="trip-transit-summary-card">
+            <div v-if="(lichTrinh.transit_summary || formDuLieu.nhaXeDaChon) && !['xe máy', 'ô tô'].includes((formDuLieu.phuongTien || '').toLowerCase())" class="trip-transit-summary-card">
               <div class="ttsc-main">
                 <div class="ttsc-left">
                   <span class="ttsc-icon">🚌</span>
@@ -2623,6 +2604,15 @@ watch(
 const dangTao = ref(false)
 const lichTrinh = ref(null)
 const selectedPlaces = ref([])
+const customPlaceText = ref('')
+
+function addCustomPlace() {
+  const val = customPlaceText.value.trim()
+  if (val && !selectedPlaces.value.includes(val)) {
+    selectedPlaces.value.push(val)
+  }
+  customPlaceText.value = ''
+}
 const selectedDay = ref(1)
 const places = ref([])
 const loadingPlaces = ref(false)
@@ -3940,8 +3930,8 @@ function boQuaIntro() {
 /* Hiệu ứng Parallax Zoom cho toàn bộ app */
 .app-root {
   width: 100%;
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100vh;
+  overflow-x: hidden;
   transition: transform 2.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 .app-root.app-intro-zoom {
@@ -4318,7 +4308,6 @@ button { cursor: pointer; }
   flex: 1;
   padding: 18px 40px;
   padding-bottom: 30px;
-  overflow-y: auto;
   max-width: 1400px;
   margin: 0 auto;
   width: 100%;
@@ -9119,6 +9108,34 @@ button { cursor: pointer; }
   .eta-pill { padding: 2px 6px !important; font-size: 10px !important; }
   .eta-metrics-row { gap: 4px !important; }
   .transit-badge { padding: 4px 8px !important; font-size: 10.5px !important; }
+
+  /* Bổ sung fix overflow nghiêm trọng trên Mobile cho Planner */
+  .planner-form-container, .wizard-step-content, .bus-operators-box {
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+  }
+  .planner-form-container * {
+    box-sizing: border-box !important;
+  }
+  .wizard-progress { 
+    flex-wrap: wrap !important; 
+    justify-content: center !important; 
+  }
+  .bic-actions-row, .bic-price-line { 
+    flex-direction: column !important; 
+    align-items: stretch !important; 
+    width: 100% !important; 
+    gap: 8px !important; 
+  }
+  .bpl-right, .bpl-left { width: 100% !important; }
+  .bpl-total-badge { white-space: normal !important; display: block !important; }
+  .quick-city-selector { flex-wrap: wrap !important; gap: 6px !important; }
+  .city-select-pill { flex: 1 1 30% !important; text-align: center !important; padding: 6px !important; white-space: normal !important; }
+  .stepper-input { width: 100% !important; justify-content: space-between !important; }
+  .bus-item-card, .tv-card { min-width: 0 !important; width: 100% !important; word-wrap: break-word !important; }
+  .app-field label { white-space: normal !important; }
+  .app-field .field-label-between { flex-direction: column !important; align-items: flex-start !important; gap: 4px !important; }
 }
 
 </style>
