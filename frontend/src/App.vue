@@ -588,8 +588,7 @@
               <!-- PHONG CÁCH NHẬN PHÒNG -->
               <div class="input-group full-width-group">
                 <div class="input-label-row">
-                  <span class="step-number-inline">5</span>
-                  <label>Phong cách nhận phòng khách sạn</label>
+                  <label style="font-size: 1.05rem; font-weight: 700; color: #1e293b;">Phong cách nhận phòng khách sạn</label>
                 </div>
                 <div class="checkin-preference-options" style="display: flex; gap: 12px; margin-top: 12px; flex-wrap: wrap;">
                   <label :class="['pref-card', { active: formDuLieu.hotel_checkin_preference === 'checkin_first' }]" style="flex: 1; min-width: 200px; cursor: pointer; padding: 16px; border-radius: 12px; border: 2px solid; transition: all 0.2s; display: flex; align-items: flex-start; gap: 12px;" :style="{ borderColor: formDuLieu.hotel_checkin_preference === 'checkin_first' ? '#10b981' : '#e2e8f0', backgroundColor: formDuLieu.hotel_checkin_preference === 'checkin_first' ? '#ecfdf5' : '#f8fafc' }">
@@ -2674,7 +2673,7 @@ watch(
     if (transitRouteInfo.value?.operators?.length > 0) {
       const currentId = formDuLieu.nhaXeDaChon?.id
       const found = transitRouteInfo.value.operators.find(b => b.id === currentId)
-      formDuLieu.nhaXeDaChon = found || transitRouteInfo.value.operators[0]
+      formDuLieu.nhaXeDaChon = found || null
     } else {
       formDuLieu.nhaXeDaChon = null
     }
@@ -3761,7 +3760,7 @@ async function taoLichTrinh() {
         origin: formDuLieu.diemKhoiHanh,
         destination: formDuLieu.diemDen,
         estimated_distance_km: transitRouteInfo.value.estimatedDistanceKm,
-        selected_bus: formDuLieu.nhaXeDaChon || transitRouteInfo.value.cheapestOperator,
+        selected_bus: formDuLieu.nhaXeDaChon,
         comparison: transitRouteInfo.value.vehicleComparison,
         available_operators: transitRouteInfo.value.operators
       }
