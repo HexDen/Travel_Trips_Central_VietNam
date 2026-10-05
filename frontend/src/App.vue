@@ -585,6 +585,24 @@
                 </div>
               </div>
 
+              <!-- PHONG CÁCH NHẬN PHÒNG -->
+              <div class="input-group full-width-group">
+                <div class="input-label-row">
+                  <span class="step-number-inline">5</span>
+                  <label>Phong cách nhận phòng khách sạn</label>
+                </div>
+                <div class="checkin-preference-options" style="display: flex; gap: 16px; margin-top: 8px;">
+                  <label style="cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 0.95rem; color: #334155;">
+                    <input type="radio" v-model="formDuLieu.hotel_checkin_preference" value="checkin_first" style="accent-color: #059669;" />
+                    <span>Cất đồ/Nhận phòng trước rồi mới đi chơi</span>
+                  </label>
+                  <label style="cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 0.95rem; color: #334155;">
+                    <input type="radio" v-model="formDuLieu.hotel_checkin_preference" value="play_first" style="accent-color: #059669;" />
+                    <span>Đi chơi luôn, tối muộn mới về nhận phòng</span>
+                  </label>
+                </div>
+              </div>
+
               <!-- TỐI ƯU CHI PHÍ GIÁ XE & GỢI Ý NHÀ XE GIÁ RẺ -->
               <div class="bus-optimization-section full-width">
                 <div class="bos-header">
@@ -1307,6 +1325,10 @@
                                   <h4 class="place-name" :title="act.place" @click="panToActivity(act)">{{ act.place }}</h4>
                                 </div>
                                 <div class="act-actions-group">
+                                  <!-- Nút Đổi Vị Trí (Kéo/Thả ảo) -->
+                                  <button @click.stop="moveActivity(day, actIndex, -1)" v-if="actIndex > 0" class="act-change-btn" title="Chuyển lên" style="background:#f1f5f9; color:#475569; padding: 6px;">▲</button>
+                                  <button @click.stop="moveActivity(day, actIndex, 1)" v-if="actIndex < day.activities.length - 1" class="act-change-btn" title="Chuyển xuống" style="background:#f1f5f9; color:#475569; padding: 6px;">▼</button>
+                                  
                                   <button
                                     type="button"
                                     class="act-change-btn"
@@ -2181,6 +2203,7 @@ const formDuLieu = reactive({
   ngayKetThuc: '',
   phuongTien: 'xe khách',
   yeuCauKhachSan: '',
+  hotel_checkin_preference: 'checkin_first',
   nhaXeDaChon: null
 })
 
@@ -3263,6 +3286,17 @@ function lamSachMoTa(text, act) {
 }
 
 function getTravelEstimate(act, day, actIndex) {
+  // ... (giữ nguyên logic nếu có)
+  return 0; // fallback if needed
+}
+
+function moveActivity(day, actIndex, direction) {
+  const newIndex = actIndex + direction;
+  if (newIndex < 0 || newIndex >= day.activities.length) return;
+  const temp = day.activities[actIndex];
+  day.activities[actIndex] = day.activities[newIndex];
+  day.activities[newIndex] = temp;
+}
   // 1. Dữ liệu có cấu trúc từ backend
   if (act.travel_from && act.travel_duration_mins) {
     const dist = Number(act.travel_distance_km || 1);
@@ -3660,6 +3694,7 @@ async function taoLichTrinh() {
       end_date: formDuLieu.ngayKetThuc,
       transportation: formDuLieu.phuongTien,
       hotel_request: formDuLieu.yeuCauKhachSan,
+      hotel_checkin_preference: formDuLieu.hotel_checkin_preference,
       selected_bus: formDuLieu.nhaXeDaChon
     })
     lichTrinh.value = res.data

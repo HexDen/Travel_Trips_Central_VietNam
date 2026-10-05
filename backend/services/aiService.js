@@ -257,6 +257,7 @@ THÔNG TIN CHUYẾN ĐI:
 - Ngày khởi hành: ${ngayBatDau || 'Chưa định ngày'} đến ${ngayKetThuc || 'Chưa định ngày'}
 - Phương tiện: ${duLieu.transportation || 'linh hoạt'}
 - Yêu cầu khách sạn: ${duLieu.hotel_request || 'tiêu chuẩn, vị trí thuận tiện'}
+- Phong cách nhận phòng: ${duLieu.hotel_checkin_preference === 'play_first' ? 'ĐI CHƠI LUÔN, nhận phòng vào buổi tối muộn (19:00 - 20:00)' : 'NHẬN PHÒNG/Cất đồ sớm nhất có thể (13:00 - 14:00) rồi mới đi chơi'}
 - Sở thích: ${soThich.join(', ') || 'khám phá ẩm thực đặc sản, check-in cảnh đẹp'}
 ${goiYDbText}${mustVisitText}
 QUY TẮC BẮT BUỘC:
