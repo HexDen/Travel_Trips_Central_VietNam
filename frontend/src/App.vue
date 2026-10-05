@@ -591,14 +591,22 @@
                   <span class="step-number-inline">5</span>
                   <label>Phong cách nhận phòng khách sạn</label>
                 </div>
-                <div class="checkin-preference-options" style="display: flex; gap: 16px; margin-top: 8px;">
-                  <label style="cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 0.95rem; color: #334155;">
-                    <input type="radio" v-model="formDuLieu.hotel_checkin_preference" value="checkin_first" style="accent-color: #059669;" />
-                    <span>Cất đồ/Nhận phòng trước rồi mới đi chơi</span>
+                <div class="checkin-preference-options" style="display: flex; gap: 12px; margin-top: 12px; flex-wrap: wrap;">
+                  <label :class="['pref-card', { active: formDuLieu.hotel_checkin_preference === 'checkin_first' }]" style="flex: 1; min-width: 200px; cursor: pointer; padding: 16px; border-radius: 12px; border: 2px solid; transition: all 0.2s; display: flex; align-items: flex-start; gap: 12px;" :style="{ borderColor: formDuLieu.hotel_checkin_preference === 'checkin_first' ? '#10b981' : '#e2e8f0', backgroundColor: formDuLieu.hotel_checkin_preference === 'checkin_first' ? '#ecfdf5' : '#f8fafc' }">
+                    <input type="radio" v-model="formDuLieu.hotel_checkin_preference" value="checkin_first" style="display: none;" />
+                    <span style="font-size: 1.5rem; line-height: 1;">🏨</span>
+                    <div>
+                      <strong style="display: block; color: #0f172a; font-size: 0.95rem; margin-bottom: 4px;">Cất đồ / Nhận phòng trước</strong>
+                      <span style="color: #475569; font-size: 0.85rem; line-height: 1.4; display: block;">Nhận phòng sớm nhất có thể rồi mới bắt đầu đi chơi.</span>
+                    </div>
                   </label>
-                  <label style="cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 0.95rem; color: #334155;">
-                    <input type="radio" v-model="formDuLieu.hotel_checkin_preference" value="play_first" style="accent-color: #059669;" />
-                    <span>Đi chơi luôn, tối muộn mới về nhận phòng</span>
+                  <label :class="['pref-card', { active: formDuLieu.hotel_checkin_preference === 'play_first' }]" style="flex: 1; min-width: 200px; cursor: pointer; padding: 16px; border-radius: 12px; border: 2px solid; transition: all 0.2s; display: flex; align-items: flex-start; gap: 12px;" :style="{ borderColor: formDuLieu.hotel_checkin_preference === 'play_first' ? '#10b981' : '#e2e8f0', backgroundColor: formDuLieu.hotel_checkin_preference === 'play_first' ? '#ecfdf5' : '#f8fafc' }">
+                    <input type="radio" v-model="formDuLieu.hotel_checkin_preference" value="play_first" style="display: none;" />
+                    <span style="font-size: 1.5rem; line-height: 1;">🎢</span>
+                    <div>
+                      <strong style="display: block; color: #0f172a; font-size: 0.95rem; margin-bottom: 4px;">Đi chơi luôn</strong>
+                      <span style="color: #475569; font-size: 0.85rem; line-height: 1.4; display: block;">Chơi đến tối muộn mới về khách sạn nhận phòng.</span>
+                    </div>
                   </label>
                 </div>
               </div>
@@ -1016,6 +1024,19 @@
 
           <!-- KẾT QUẢ LỊCH TRÌNH CHI TIẾT -->
           <div v-if="lichTrinh" class="plan-results-container">
+            
+            <!-- LIVE MODE BANNER -->
+            <div v-if="liveModeActive" class="live-budget-banner" style="position: sticky; top: 20px; z-index: 100; background: #0f172a; color: white; padding: 16px 20px; border-radius: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3); border: 1px solid #334155; align-items: center;">
+              <div>
+                <div style="font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Đang trong chuyến đi</div>
+                <strong style="font-size: 1.2rem; color: #10b981;">🚀 Live Mode</strong>
+              </div>
+              <div style="text-align: right; font-size: 0.95rem;">
+                Dự kiến ban đầu: <span style="color: #cbd5e1;">{{ dinhDangTien(lichTrinh.total_budget) }}đ</span><br>
+                Đã chi tiêu thực tế: <span style="color: #fca5a5; font-weight: bold;">{{ dinhDangTien(actualTotalSpent) }}đ</span><br>
+                Ngân sách còn lại: <span style="color: #6ee7b7; font-weight: bold; font-size: 1.1rem;">{{ dinhDangTien(lichTrinh.total_budget - actualTotalSpent) }}đ</span>
+              </div>
+            </div>
             <!-- Personality Completion Banner (Khi AI tạo lịch trình xong) -->
             <transition name="fade-slide">
               <div v-if="hienCompletionBanner" class="ai-completion-banner">
@@ -1059,6 +1080,9 @@
               </div>
 
               <div class="plan-tool-actions">
+                <button class="tool-btn" @click="liveModeActive = !liveModeActive" title="Bật chế độ theo dõi thực tế chuyến đi" style="background: #10b981; color: white; border: none; font-weight: bold; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
+                  🚀 {{ liveModeActive ? 'Tắt Live Mode' : 'Bắt đầu chuyến đi' }}
+                </button>
                 <button class="tool-btn ai-opt-highlight-btn" @click="toiUuCungDuongToanBo" title="Sắp xếp toàn bộ điểm đến theo vòng cung tối ưu di chuyển">
                   ⚡ AI Tối ưu thứ tự điểm đến
                 </button>
@@ -1347,7 +1371,24 @@
                                   >
                                     🗺️ Chỉ đường ↗
                                   </a>
+                                  
+                                  <!-- LIVE MODE: Nút Check-in -->
+                                  <button
+                                    v-if="liveModeActive"
+                                    type="button"
+                                    @click.stop="xacNhanCheckIn(day.day - 1, actIndex, act)"
+                                    style="background: #10b981; color: white; border: none; padding: 4px 10px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.85rem;"
+                                    title="Check-in và nhập chi phí"
+                                  >
+                                    {{ completedActivities[`${day.day - 1}-${actIndex}`] ? '↩ Hủy' : '✅ Đã tới' }}
+                                  </button>
                                 </div>
+                              </div>
+                              
+                              <!-- LIVE MODE: Hiển thị trạng thái đã check-in -->
+                              <div v-if="liveModeActive && completedActivities[`${day.day - 1}-${actIndex}`]" style="margin-top: 8px; padding: 10px; background: #ecfdf5; border: 1px dashed #34d399; border-radius: 8px; font-size: 0.9rem; color: #065f46; display: flex; align-items: center; justify-content: space-between;">
+                                <span><strong style="color: #059669;">Hoàn thành lúc:</strong> {{ new Date().toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'}) }}</span>
+                                <span><strong>Thực chi:</strong> <span style="color: #dc2626;">{{ dinhDangTien(actualExpenses[`${day.day - 1}-${actIndex}`]) }}đ</span></span>
                               </div>
 
                               <!-- Cảnh báo xung đột thời gian mở cửa -->
@@ -2641,6 +2682,25 @@ watch(
   { immediate: true }
 )
 const dangTao = ref(false)
+const liveModeActive = ref(false)
+const completedActivities = ref({}) 
+const actualExpenses = ref({}) 
+const actualTotalSpent = computed(() => {
+  return Object.values(actualExpenses.value).reduce((a, b) => a + Number(b || 0), 0)
+})
+function xacNhanCheckIn(dayIndex, actIndex, act) {
+  const key = `${dayIndex}-${actIndex}`
+  if (completedActivities.value[key]) {
+    delete completedActivities.value[key]
+    delete actualExpenses.value[key]
+    return
+  }
+  const amt = prompt(`Chúc mừng bạn đã đến: ${act.place} 🎉\nChi phí bạn đã tiêu ở đây là bao nhiêu? (VND)`, "0")
+  if (amt !== null) {
+    completedActivities.value[key] = true
+    actualExpenses.value[key] = Number(amt.replace(/[^\d]/g, '')) || 0
+  }
+}
 const taoPlanError = ref('')
 const lichTrinh = ref(null)
 const selectedPlaces = ref([])
@@ -3285,11 +3345,6 @@ function lamSachMoTa(text, act) {
   return cleaned;
 }
 
-function getTravelEstimate(act, day, actIndex) {
-  // ... (giữ nguyên logic nếu có)
-  return 0; // fallback if needed
-}
-
 function moveActivity(day, actIndex, direction) {
   const newIndex = actIndex + direction;
   if (newIndex < 0 || newIndex >= day.activities.length) return;
@@ -3297,6 +3352,8 @@ function moveActivity(day, actIndex, direction) {
   day.activities[actIndex] = day.activities[newIndex];
   day.activities[newIndex] = temp;
 }
+
+function getTravelEstimate(act, day, actIndex) {
   // 1. Dữ liệu có cấu trúc từ backend
   if (act.travel_from && act.travel_duration_mins) {
     const dist = Number(act.travel_distance_km || 1);
