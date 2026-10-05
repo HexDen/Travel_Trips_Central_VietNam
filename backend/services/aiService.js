@@ -81,6 +81,16 @@ function clusterPlaces(places, numClusters) {
 }
 
 async function taoLichTrinh(duLieu) {
+  const nganSach = Number(duLieu.budget) || 0;
+  const nguoi = Number(duLieu.people) || 1;
+  const ngay = Number(duLieu.days) || 1;
+  const budgetPerPersonPerDay = nganSach / (nguoi * ngay);
+  
+  if (budgetPerPersonPerDay < 500000) {
+    const requiredBudget = 500000 * nguoi * ngay;
+    throw new Error(`Ngân sách quá thấp! Để duy trì các chi phí cơ bản (khách sạn, ăn uống, di chuyển) trong ${ngay} ngày cho ${nguoi} người, bạn cần tối thiểu ${requiredBudget.toLocaleString('vi-VN')}đ (tương đương 500.000đ/người/ngày). Vui lòng tăng ngân sách lên nhé!`);
+  }
+
   const geminiKey = getGeminiKey()
   let diemDen = duLieu.destination || 'Đà Nẵng'
   if (DESTINATION_ALIASES[diemDen]) {
@@ -726,9 +736,26 @@ function boSungDuLieuLichTrinh(lichTrinh, duLieu, diaDiemDatabase) {
   // Bổ sung địa chỉ và tọa độ từ DB nếu AI chưa điền cho activity
   const diaDiemList = diaDiemDatabase || []
   const placeDataMap = new Map(diaDiemList.map(p => [p.name.toLowerCase().trim(), p]))
+  
+  let validatedHotelRec = lichTrinh.hotel_recommendation || defaultHotel;
+  if (validatedHotelRec && validatedHotelRec.name) {
+    const hName = validatedHotelRec.name.toLowerCase().trim();
+    if (placeDataMap.has(hName) && placeDataMap.get(hName).estimated_cost) {
+      validatedHotelRec.price_per_night = placeDataMap.get(hName).estimated_cost;
+    } else {
+      const nguoi = Math.max(1, Number(duLieu.people) || 1);
+      const ngay = Math.max(1, Number(duLieu.days) || 1);
+      const budgetPerDay = nganSach / (nguoi * ngay);
+      const minRealisticPrice = budgetPerDay > 1000000 ? 500000 : 200000;
+      if (!validatedHotelRec.price_per_night || validatedHotelRec.price_per_night < minRealisticPrice) {
+        validatedHotelRec.price_per_night = Math.round(nganSach * 0.35 / ngay);
+        if (validatedHotelRec.price_per_night < 150000) validatedHotelRec.price_per_night = 150000;
+      }
+    }
+  }
 
   const updatedDays = (lichTrinh.days || []).map(day => {
-    let prevNode = lichTrinh.hotel_recommendation || defaultHotel;
+    let prevNode = validatedHotelRec;
     const activities = (day.activities || []).map(act => {
       let addr = act.address
       let lat = act.latitude || null
@@ -866,7 +893,7 @@ function boSungDuLieuLichTrinh(lichTrinh, duLieu, diaDiemDatabase) {
     selected_places: duLieu.selected_places || lichTrinh.selected_places || [],
     transportation: lichTrinh.transportation || duLieu.transportation || 'linh hoạt',
     hotel_request: lichTrinh.hotel_request || duLieu.hotel_request || '',
-    hotel_recommendation: lichTrinh.hotel_recommendation || defaultHotel,
+    hotel_recommendation: validatedHotelRec,
     budget_breakdown: lichTrinh.budget_breakdown || taoPhanBoNganSach(nganSach),
     daysList: updatedDays,
     days: updatedDays

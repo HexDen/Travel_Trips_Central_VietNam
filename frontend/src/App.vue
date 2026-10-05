@@ -845,6 +845,8 @@
               <div v-if="thongBaoCrawl" class="crawl-alert-banner">
                 <span>{{ thongBaoCrawl }}</span>
               </div>
+              
+              <div class="places-scroll-container">
 
               <!-- Nhóm Thắng cảnh -->
               <div v-if="attractionsList.length" class="picker-row">
@@ -912,6 +914,7 @@
                     <span>{{ p.name }}</span>
                   </button>
                 </div>
+              </div>
               </div>
               
               <!-- Tự nhập điểm đến -->
@@ -3687,7 +3690,7 @@ async function taoLichTrinh() {
     }, 7500)
   } catch (e) {
     const msg = e?.response?.data?.error || e.message;
-    taoPlanError.value = 'Quá trình tạo lịch trình gặp sự cố: ' + msg;
+    taoPlanError.value = msg.includes('Ngân sách quá thấp') ? msg : 'Quá trình tạo lịch trình gặp sự cố: ' + msg;
   } finally {
     dangTao.value = false
     if (loadingMessageTimer) {
@@ -5135,13 +5138,23 @@ button { cursor: pointer; }
 }
 .picker-row { margin-bottom: 16px; }
 .row-label { font-size: 12px; font-weight: 800; color: var(--text-main); display: block; margin-bottom: 7px; }
+.places-scroll-container {
+  max-height: 250px;
+  overflow-y: auto;
+  padding-right: 8px;
+  margin-bottom: 12px;
+}
+.places-scroll-container::-webkit-scrollbar { width: 6px; }
+.places-scroll-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+.places-scroll-container::-webkit-scrollbar-track { background: transparent; }
+
 .chips-wrap { 
   display: flex; 
   flex-wrap: wrap; 
   overflow-x: hidden; 
+  align-content: flex-start;
   gap: 8px; 
   padding-bottom: 8px; 
-  scroll-behavior: smooth;
 }
 .chips-wrap::-webkit-scrollbar {
   height: 4px;
@@ -6593,7 +6606,7 @@ button { cursor: pointer; }
   .planner-form-container { margin: 0; padding: 16px; width: 100%; box-sizing: border-box; max-width: 100%; min-width: 0; }
   .app-form-grid { grid-template-columns: 1fr; }
   .app-field, .origin-select-wrapper { min-width: 0; }
-  .app-field.full-width { grid-column: span 1; }
+  .app-field.full-width, .bus-optimization-section { grid-column: span 1; }
   .hotel-main-info { flex-direction: column; }
   .hotel-side { text-align: left; }
   .places-app-grid { grid-template-columns: 1fr; }
@@ -6686,8 +6699,22 @@ button { cursor: pointer; }
   gap: 16px;
   align-items: stretch;
 }
-.wizard-footer button {
+.wizard-footer .app-primary-btn {
   flex: 1;
+}
+.wizard-footer .app-secondary-btn {
+  flex: 0 0 auto;
+  min-width: 120px;
+  background: #e2e8f0;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-weight: 600;
+}
+.wizard-footer .app-secondary-btn:hover:not(:disabled) {
+  background: #cbd5e1;
+  color: #0f172a;
 }
 .app-secondary-btn {
   background: var(--input-bg);
@@ -7586,6 +7613,8 @@ button { cursor: pointer; }
   padding: 20px;
   margin-top: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  min-width: 0;
+  grid-column: span 2;
 }
 .bos-header {
   display: flex;
@@ -7638,12 +7667,25 @@ button { cursor: pointer; }
 
 /* Grid So Sánh Phương Tiện */
 .transit-vehicles-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  display: flex;
+  overflow-x: auto;
   gap: 12px;
   margin-bottom: 20px;
+  padding-bottom: 8px;
+  scroll-snap-type: x mandatory;
+  min-width: 0;
 }
+.transit-vehicles-grid::-webkit-scrollbar { height: 8px; }
+.transit-vehicles-grid::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
+.transit-vehicles-grid::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+.transit-vehicles-grid {
+  scrollbar-width: thin;
+  scrollbar-color: #94a3b8 #f1f5f9;
+}
+
 .tv-card {
+  flex: 0 0 240px;
+  scroll-snap-align: start;
   background: var(--bg-soft, #f8fafc);
   border: 1.5px solid var(--border-color, #e2e8f0);
   border-radius: 14px;
@@ -7750,11 +7792,31 @@ button { cursor: pointer; }
   color: var(--text-muted);
 }
 .bus-operators-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  display: flex;
+  overflow-x: auto;
   gap: 14px;
+  padding-bottom: 8px;
+  scroll-snap-type: x mandatory;
+  min-width: 0;
+}
+.bus-operators-grid::-webkit-scrollbar {
+  height: 8px;
+}
+.bus-operators-grid::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 4px;
+}
+.bus-operators-grid::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+.bus-operators-grid {
+  scrollbar-width: thin;
+  scrollbar-color: #94a3b8 #f1f5f9;
 }
 .bus-item-card {
+  flex: 0 0 320px;
+  scroll-snap-align: start;
   background: var(--bg-soft, #f8fafc);
   border: 1.5px solid var(--border-color, #e2e8f0);
   border-radius: 14px;
@@ -8085,9 +8147,7 @@ button { cursor: pointer; }
   .transit-vehicles-grid {
     grid-template-columns: 1fr 1fr;
   }
-  .bus-operators-grid {
-    grid-template-columns: 1fr;
-  }
+
   .ttsc-main {
     flex-direction: column;
     align-items: flex-start;
@@ -9083,7 +9143,7 @@ button { cursor: pointer; }
   .planner-form-container { margin: 0 !important; padding: 16px !important; width: 100% !important; box-sizing: border-box !important; max-width: 100% !important; min-width: 0 !important; flex-shrink: 1 !important; }
   .app-form-grid { grid-template-columns: 1fr !important; }
   .app-field, .origin-select-wrapper { min-width: 0 !important; }
-  .app-field.full-width { grid-column: span 1 !important; }
+  .app-field.full-width, .bus-optimization-section { grid-column: span 1 !important; }
   .hotel-main-info { flex-direction: column !important; }
   .hotel-side { text-align: left !important; }
   .places-app-grid { grid-template-columns: 1fr !important; }
