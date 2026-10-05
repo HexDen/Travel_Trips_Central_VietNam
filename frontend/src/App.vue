@@ -3909,6 +3909,7 @@ let introTimeout2 = null;
 function playIntroSplash() {
   showIntroSplash.value = true
   introSplitting.value = false
+  document.body.style.overflow = 'hidden'
   
   clearTimeout(introTimeout1)
   clearTimeout(introTimeout2)
@@ -3918,6 +3919,7 @@ function playIntroSplash() {
     introSplitting.value = true
     introTimeout2 = setTimeout(() => {
       showIntroSplash.value = false
+      document.body.style.overflow = ''
     }, 2500)
   }, 7500)
 }
@@ -3930,6 +3932,7 @@ function boQuaIntro() {
   introSplitting.value = true
   setTimeout(() => {
     showIntroSplash.value = false
+    document.body.style.overflow = ''
   }, 800)
 }
 </script>
@@ -4374,6 +4377,12 @@ button { cursor: pointer; }
 @media (max-width: 768px) {
   .hero-content {
     opacity: 1;
+  }
+  .app-hero-card {
+    background: linear-gradient(rgba(0, 0, 0, 0.1), rgba(15, 30, 20, 0.95)), url('/images/mientrung-hero.jpg') no-repeat top center;
+    background-size: 100% auto;
+    background-color: #0f1e14;
+    min-height: 320px;
   }
 }
 
@@ -8853,6 +8862,15 @@ button { cursor: pointer; }
 }
 .cinematic-enhance {
   filter: contrast(1.15) saturate(1.2) brightness(1.05);
+}
+
+@media (max-width: 768px) {
+  .intro-video {
+    object-fit: contain;
+  }
+  .video-half {
+    background: #000;
+  }
 }
 .film-grain {
   position: absolute;
