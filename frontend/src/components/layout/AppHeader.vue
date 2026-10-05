@@ -491,12 +491,38 @@ button:focus-visible {
 /* ==================== RESPONSIVE LAYOUT (MOBILE & TABLET) ==================== */
 @media (max-width: 820px) {
   .header-inner {
-    padding: 10px 16px;
+    padding: 10px 12px;
     flex-wrap: wrap;
   }
   
   .brand-tagline {
     display: none; /* Rút gọn trên màn hình hẹp */
+  }
+
+  .header-brand {
+    gap: 8px;
+  }
+  
+  .brand-title {
+    font-size: 1.15rem;
+  }
+
+  .login-header-btn {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    gap: 4px;
+    white-space: nowrap;
+  }
+
+  .login-header-btn .btn-icon {
+    width: 14px;
+    height: 14px;
+  }
+  
+  .theme-toggle-btn {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
   }
 
   .desktop-nav {
