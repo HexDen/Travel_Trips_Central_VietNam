@@ -928,6 +928,11 @@
             <!-- ĐÓNG BƯỚC 3 -->
             </div>
 
+            <!-- LỖI KHI TẠO LỊCH TRÌNH -->
+            <div v-if="taoPlanError" class="crawl-alert-banner" style="background:#fef2f2; border:1px solid #fca5a5; color:#991b1b; margin-top:16px; font-weight:600;">
+              ⚠ {{ taoPlanError }}
+            </div>
+
             <!-- WIZARD FOOTER NAVIGATION -->
             <div class="wizard-footer">
               <button 
@@ -2564,13 +2569,21 @@ function chonDiemKhoiHanh(city) {
 const transitTab = ref('bus') // 'bus' hoặc 'train'
 
 function chonNhaXe(bus) {
-  formDuLieu.nhaXeDaChon = bus
-  formDuLieu.phuongTien = 'xe khách'
+  if (formDuLieu.nhaXeDaChon?.id === bus.id) {
+    formDuLieu.nhaXeDaChon = null
+  } else {
+    formDuLieu.nhaXeDaChon = bus
+    formDuLieu.phuongTien = 'xe khách'
+  }
 }
 
 function chonTauHoa(train) {
-  formDuLieu.tauDaChon = train
-  formDuLieu.phuongTien = 'tàu hỏa'
+  if (formDuLieu.tauDaChon?.id === train.id) {
+    formDuLieu.tauDaChon = null
+  } else {
+    formDuLieu.tauDaChon = train
+    formDuLieu.phuongTien = 'tàu hỏa'
+  }
 }
 
 function chonPhuongTienTuSoSanh(v) {
@@ -2602,6 +2615,7 @@ watch(
   { immediate: true }
 )
 const dangTao = ref(false)
+const taoPlanError = ref('')
 const lichTrinh = ref(null)
 const selectedPlaces = ref([])
 const customPlaceText = ref('')
@@ -3621,6 +3635,7 @@ async function taoLichTrinh() {
   dangTao.value = true
   lichTrinh.value = null
   hienCompletionBanner.value = false
+  taoPlanError.value = ''
 
   // Kích hoạt luân phiên loading message có tính cách AI (Mục 6)
   currentLoadingMessageIndex.value = 0
@@ -3671,7 +3686,8 @@ async function taoLichTrinh() {
       personalityToast.value = null
     }, 7500)
   } catch (e) {
-    alert('Lỗi khi lập lịch: ' + (e?.response?.data?.error || e.message))
+    const msg = e?.response?.data?.error || e.message;
+    taoPlanError.value = 'Quá trình tạo lịch trình gặp sự cố: ' + msg;
   } finally {
     dangTao.value = false
     if (loadingMessageTimer) {
@@ -5121,8 +5137,8 @@ button { cursor: pointer; }
 .row-label { font-size: 12px; font-weight: 800; color: var(--text-main); display: block; margin-bottom: 7px; }
 .chips-wrap { 
   display: flex; 
-  flex-wrap: nowrap; 
-  overflow-x: auto; 
+  flex-wrap: wrap; 
+  overflow-x: hidden; 
   gap: 8px; 
   padding-bottom: 8px; 
   scroll-behavior: smooth;

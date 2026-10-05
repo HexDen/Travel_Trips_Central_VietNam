@@ -337,6 +337,20 @@ Trong đợt cập nhật gần nhất, hệ thống đã hoàn thiện và kh�
    - **Mô tả hoạt động:** Trái tim của ứng dụng, giúp cá nhân hóa chuyến đi chỉ với một cú click chuột.
    - **Cách thức hoạt động:** Khi người dùng nhập Điểm đến, Số ngày (1-7), Ngân sách và Sở thích, Backend sẽ tổng hợp và gửi một **Cấu trúc Prompt (Câu lệnh)** tối ưu tới lõi **Google Gemini 2.5 Flash**. AI sẽ tiến hành phân tích không gian địa lý, lựa chọn địa điểm phù hợp trong bán kính di chuyển, phân bổ logic theo buổi (Sáng - Trưa - Tối) và tính toán chi tiêu dự kiến. Kết quả được trả về dưới định dạng JSON chuẩn hóa và hiển thị thành dòng thời gian (Timeline) đẹp mắt chỉ trong thời gian ~1.9 giây.
 
+6. **Thuật Toán Phân Bổ Ngân Sách Động (Dynamic Budget AI Prompting):**
+   - **Mô tả hoạt động:** Hệ thống không còn gán cứng tiêu chí "giá rẻ" cho mọi lịch trình.
+   - **Cách thức hoạt động:** AI tự động đánh giá mức chi tiêu bình quân (Ngân sách / Số người / Số ngày). Nếu ngân sách cao (>2 triệu/người/ngày), AI sẽ tự động điều chỉnh cấu trúc JSON để ép buộc chọn các Resort, Khách sạn 4-5 sao, nhà hàng cao cấp, quán ăn sang trọng. Ngược lại, nếu ngân sách thấp, AI sẽ tập trung vào khách sạn bình dân 300k, homestay và các điểm tham quan miễn phí. Đảm bảo trải nghiệm chuyến đi khớp 100% với túi tiền.
+
+7. **Tối Ưu Tuyến Đường Bằng Thuật Toán Phân Cụm Địa Lý (Geographic Clustering):**
+   - **Mô tả hoạt động:** Tránh tình trạng AI lên lịch trình di chuyển "zic-zac" xa xôi.
+   - **Cách thức hoạt động:** Dữ liệu trước khi gửi cho Gemini AI sẽ được chạy qua thuật toán `clusterPlaces` (tương tự K-Means++) để chia thành các Cụm Khu vực (các địa điểm cách nhau dưới 10-15km). AI bị ép buộc quy tắc "Mỗi ngày 1 cụm", giúp tối ưu thời gian di chuyển và bảo vệ sức khỏe cho du khách. Đồng thời chuẩn hóa toàn bộ dữ liệu địa lý của các tỉnh đã sáp nhập (Ví dụ: tách bạch Quảng Bình - Quảng Trị).
+
+8. **Nâng Cấp Trải Nghiệm Người Dùng (UI/UX Smart Enhancements):**
+   - **Custom Input:** Bổ sung ô nhập liệu tự do ở bước "Sở thích", cho phép du khách tự gõ tên địa điểm/quán ăn ngoài danh sách gợi ý.
+   - **Responsive Layout:** Cải thiện cấu trúc hiển thị danh sách thẻ địa điểm (Chips) dạng tự động xuống dòng (Wrap), khắc phục triệt để lỗi khó kéo ngang trên Desktop.
+   - **Logic Tương tác:** Tính năng Toggle Hủy chọn (Deselect) cho Phương tiện di chuyển; Tự động ẩn thẻ Gợi ý Vé xe khách/Tàu hỏa nếu người dùng chọn Xe máy/Ô tô cá nhân.
+   - **Graceful Error Handling:** Tích hợp Banners báo lỗi AI đẹp mắt, thân thiện ngay trên Form thay thế cho các Alert hệ thống khô cứng khi mất kết nối.
+
 ---
 
 ## 6. Hướng Dẫn Cài Đặt & Khởi Chạy

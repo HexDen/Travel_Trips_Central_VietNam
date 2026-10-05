@@ -194,6 +194,24 @@ function buildPrompt(duLieu, diaDiemDatabase) {
   const selectedPlaces = Array.isArray(duLieu.selected_places) ? duLieu.selected_places : []
   const contextRegion = LOCAL_CONTEXT_MAP[diaDiem] || `Toàn bộ danh lam thắng cảnh và đặc sản nổi bật tại ${diaDiem}`
 
+  const budgetPerPersonPerDay = nganSach / (nguoi * ngay)
+  let phanKhuc = 'BÌNH DÂN, GIÁ RẺ, TIẾT KIỆM CHI PHÍ'
+  let ksMota = 'khách sạn giá rẻ'
+  let ksGia = 350000
+  let ksLoai = 'khách sạn / homestay bình dân'
+  
+  if (budgetPerPersonPerDay >= 2000000) {
+    phanKhuc = 'SANG TRỌNG, CAO CẤP, DỊCH VỤ 4-5 SAO, SANG CHẢNH'
+    ksMota = 'khách sạn/resort cao cấp, sang trọng'
+    ksGia = 2500000
+    ksLoai = 'khách sạn 4-5 sao / resort cao cấp'
+  } else if (budgetPerPersonPerDay >= 1000000) {
+    phanKhuc = 'TIÊU CHUẨN 3-4 SAO, THOẢI MÁI, CHẤT LƯỢNG TỐT'
+    ksMota = 'khách sạn chất lượng tốt, tiện nghi'
+    ksGia = 800000
+    ksLoai = 'khách sạn 3-4 sao'
+  }
+
   let goiYDbText = ''
   if (diaDiemDatabase && diaDiemDatabase.length > 0) {
     const listHotels = diaDiemDatabase.filter(p => p.type === 'hotel').slice(0, 4).map(p => `${p.name} (${p.address || diaDiem}, giá: ${p.estimated_cost || 850000}đ)`).join('; ')
@@ -234,9 +252,9 @@ ${goiYDbText}${mustVisitText}
 QUY TẮC BẮT BUỘC:
 1. TUYỆT ĐỐI KHÔNG ĐƯỢC LẶP LẠI ĐỊA ĐIỂM: Mọi thắng cảnh, quán ăn sáng, quán ăn trưa, quán ăn tối trong suốt toàn bộ ${ngay} ngày BẮT BUỘC PHẢI KHÁC NHAU 100%. Không được xếp lại cùng 1 địa điểm ở các ngày khác nhau.
 2. ĐỊA CHỈ RÕ RÀNG (ADDRESS): BẮT BUỘC mọi hoạt động và khách sạn đều phải có trường "address" cụ thể (Số nhà, Tên đường, Quận/Huyện, Tỉnh/TP).
-3. KHÁCH SẠN (HOTEL): ƯU TIÊN CHỌN KHÁCH SẠN BÌNH DÂN, GIÁ RẺ. Có trường "hotel_recommendation" gồm: name, address, rating, price_per_night, description. Ngày 1 lúc 14:00 có mốc "Nhận phòng", ngày cuối lúc 12:00 có mốc "Trả phòng".
+3. KHÁCH SẠN (HOTEL): ƯU TIÊN CHỌN KHÁCH SẠN PHÂN KHÚC: ${phanKhuc}. Có trường "hotel_recommendation" gồm: name, address, rating, price_per_night, description. Ngày 1 lúc 14:00 có mốc "Nhận phòng", ngày cuối lúc 12:00 có mốc "Trả phòng".
 4. NHÃN PHÂN LOẠI (CATEGORY): Mỗi hoạt động có type ('breakfast' | 'lunch' | 'dinner' | 'checkin' | 'attraction' | 'cafe' | 'checkout') và label ('Ăn sáng' | 'Ăn trưa' | 'Ăn tối' | 'Nhận phòng' | 'Tham quan / Check-in' | 'Cafe & Chill' | 'Trả phòng').
-5. ĐẶC SẢN & DANH THẮNG NỔI TIẾNG NHẤT: BẮT BUỘC chọn các điểm tham quan biểu tượng, nổi tiếng nhất của ${diaDiem} nhưng phải có chi phí thấp hoặc miễn phí. TUYỆT ĐỐI KHÔNG gợi ý các điểm không có thật. Nêu rõ tên món đặc sản + tên quán ăn cụ thể.
+5. ĐẶC SẢN & DANH THẮNG NỔI TIẾNG NHẤT: BẮT BUỘC chọn các điểm tham quan biểu tượng, quán ăn nổi tiếng nhất của ${diaDiem} PHÙ HỢP VỚI PHÂN KHÚC ${phanKhuc}. TUYỆT ĐỐI KHÔNG gợi ý các điểm không có thật. Nêu rõ tên món đặc sản + tên quán ăn cụ thể.
 6. MỖI NGÀY MỘT CỤM VÀ RẤT GẦN NHAU: Để tiết kiệm chi phí và sức khỏe, các địa điểm trong cùng 1 ngày BẮT BUỘC phải nằm rất gần nhau (cách nhau dưới 10-15km). Ngày 1 đi Cụm 1, Ngày 2 đi Cụm 2... KHÔNG di chuyển zic-zac xa xôi!
 7. TỐI ƯU KHOẢNG CÁCH & PHÍ DI CHUYỂN: BẮT BUỘC phải ghi chú tên điểm xuất phát, khoảng cách, THỜI GIAN DI CHUYỂN, và phí di chuyển vào cuối nội dung "activity" (Buổi sáng bắt buộc tính từ KHÁCH SẠN).
 8. MÔ TẢ GIÁ TRỊ THỰC TẾ (ACTIVITY): Viết 1 câu súc tích làm nổi bật nét hấp dẫn và giá trị thực tế của địa điểm. TUYỆT ĐỐI KHÔNG dùng câu mẫu rập khuôn.
@@ -250,11 +268,11 @@ ${nganSach <= 500000 ? `9. ĐẶC BIỆT - NGÂN SÁCH TỐI GIẢN / SINH TỒN
   "transportation": "${duLieu.transportation || 'linh hoạt'}",
   "hotel_request": "${duLieu.hotel_request || ''}",
   "hotel_recommendation": {
-    "name": "Tên khách sạn / homestay bình dân cụ thể tại ${diaDiem}",
+    "name": "Tên ${ksLoai} cụ thể tại ${diaDiem}",
     "address": "Địa chỉ cụ thể của khách sạn",
     "rating": 4.5,
-    "price_per_night": 350000,
-    "description": "Mô tả điểm cộng của khách sạn giá rẻ"
+    "price_per_night": ${ksGia},
+    "description": "Mô tả điểm cộng của ${ksMota}"
   },
   "budget_breakdown": {
     "hotel": number,
