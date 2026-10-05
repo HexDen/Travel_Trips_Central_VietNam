@@ -1725,20 +1725,25 @@
             </button>
           </div>
 
-          <!-- Danh sách Địa điểm yêu thích -->
-          <div v-if="nguoiDung && favoritesList.length" class="favorites-section">
-            <h3>Địa điểm đã lưu yêu thích ({{ favoritesList.length }})</h3>
+          <div v-if="nguoiDung && favoritesList.length" class="favorites-section" style="margin-top: 32px; text-align: left;">
+            <h3 style="margin-bottom: 20px; color: #0f172a;">Địa điểm đã lưu yêu thích ({{ favoritesList.length }})</h3>
             <div class="places-app-grid">
               <article v-for="place in favoritesList" :key="place._id" class="app-place-card" v-reveal>
-                <div class="place-card-top">
-                  <span class="place-card-type">{{ getPlaceTypeLabel(place.type) }}</span>
-                  <button class="heart-action-btn active" @click="doiYeuThich(place._id)">♥</button>
+                <div class="place-img-cover" :style="{ backgroundImage: `url(${getPlaceImage(place)})` }">
+                  <span :class="['place-card-type', 'type-' + place.type]">
+                    {{ getPlaceTypeLabel(place.type) }}
+                  </span>
+                  <button class="heart-action-btn active" @click.stop="doiYeuThich(place._id)" title="Bỏ yêu thích">
+                    ♥
+                  </button>
                 </div>
-                <h4>{{ place.name }}</h4>
-                <p class="place-card-desc">{{ place.description }}</p>
-                <p class="place-card-address" v-if="place.address">📍 {{ place.address }}</p>
-                <div class="place-card-bottom">
-                  <a class="place-maps-btn" :href="chiDuongUrl(place.name, place.address)" target="_blank">🗺️ Chỉ đường</a>
+                <div class="place-card-content">
+                  <h4>{{ place.name }}</h4>
+                  <p class="place-card-desc">{{ place.description }}</p>
+                  <p class="place-card-address" v-if="place.address">📍 {{ place.address }}</p>
+                  <div class="place-card-bottom">
+                    <a class="place-maps-btn" :href="chiDuongUrl(place.name, place.address)" target="_blank">🗺️ Chỉ đường</a>
+                  </div>
                 </div>
               </article>
             </div>
