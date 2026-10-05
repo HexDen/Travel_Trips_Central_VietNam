@@ -1646,23 +1646,74 @@
         <!-- ==================== TAB 5: TÀI KHOẢN & YÊU THÍCH (PROFILE) ==================== -->
         <section v-if="activeTab === 'profile'" class="tab-pane">
           <!-- Nếu đã đăng nhập -->
-          <div v-if="nguoiDung" class="profile-card">
-            <div class="profile-avatar-large">
-              {{ nguoiDung.name ? nguoiDung.name[0].toUpperCase() : 'U' }}
+          <div v-if="nguoiDung" class="profile-card-premium">
+            <div class="profile-cover">
+              <button class="edit-profile-btn" @click="editProfile" v-if="!editProfileMode">
+                ✏️ Chỉnh sửa hồ sơ
+              </button>
             </div>
-            <h3>{{ nguoiDung.name }}</h3>
-            <p class="profile-email">{{ nguoiDung.email }}</p>
-            <div class="profile-stats-row">
-              <div class="stat-box">
-                <strong>{{ myTripsList.length }}</strong>
-                <small>Chuyến đi</small>
-              </div>
-              <div class="stat-box">
-                <strong>{{ favoritesList.length }}</strong>
-                <small>Yêu thích</small>
+            <div class="profile-avatar-premium">
+              <img v-if="nguoiDung.avatar" :src="nguoiDung.avatar" alt="Avatar" class="avatar-img" />
+              <div v-else class="avatar-placeholder">{{ nguoiDung.name ? nguoiDung.name[0].toUpperCase() : 'U' }}</div>
+              
+              <div class="level-badge" :style="{ backgroundColor: userLevelInfo.color }" :title="`Hoàn thành ${nguoiDung.completed_trips || 0} chuyến đi`">
+                {{ userLevelInfo.icon }} {{ userLevelInfo.title }}
               </div>
             </div>
-            <button class="logout-btn" @click="dangXuat">Đăng xuất</button>
+            
+            <div class="profile-info-premium" v-if="!editProfileMode">
+              <h3 class="profile-name">{{ nguoiDung.name }} <span v-if="nguoiDung.role === 'admin'" class="admin-badge">Admin</span></h3>
+              <p class="profile-email">{{ nguoiDung.email }}</p>
+              <p class="profile-bio" v-if="nguoiDung.bio">"{{ nguoiDung.bio }}"</p>
+              
+              <div class="profile-stats-grid">
+                <div class="stat-box-premium">
+                  <div class="stat-icon">🗺️</div>
+                  <strong>{{ myTripsList.length }}</strong>
+                  <small>Đã lên lịch</small>
+                </div>
+                <div class="stat-box-premium">
+                  <div class="stat-icon">✅</div>
+                  <strong>{{ nguoiDung.completed_trips || 0 }}</strong>
+                  <small>Hoàn thành</small>
+                </div>
+                <div class="stat-box-premium">
+                  <div class="stat-icon">❤️</div>
+                  <strong>{{ favoritesList.length }}</strong>
+                  <small>Yêu thích</small>
+                </div>
+                <div class="stat-box-premium">
+                  <div class="stat-icon">🏆</div>
+                  <strong>{{ nguoiDung.points || 0 }}</strong>
+                  <small>Điểm số</small>
+                </div>
+              </div>
+              <button class="logout-btn-premium" @click="dangXuat">Đăng xuất</button>
+            </div>
+            
+            <div class="profile-edit-form" v-else>
+              <h3>Chỉnh sửa hồ sơ</h3>
+              <div class="edit-field">
+                <label>Tên hiển thị</label>
+                <input type="text" v-model="profileForm.name" class="app-input" />
+              </div>
+              <div class="edit-field">
+                <label>Ảnh đại diện (Tải lên từ thiết bị)</label>
+                <input type="file" accept="image/*" @change="handleAvatarUpload" class="app-input" style="padding: 8px;" />
+                <div v-if="profileForm.avatar && profileForm.avatar.startsWith('data:image')" style="margin-top: 10px; display: flex; align-items: center; gap: 10px;">
+                   <img :src="profileForm.avatar" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #10b981;" />
+                   <span style="font-size: 0.85rem; color: #10b981; font-weight: 600;">Đã đính kèm ảnh mới</span>
+                </div>
+              </div>
+              <div class="edit-field">
+                <label>Giới thiệu bản thân</label>
+                <textarea v-model="profileForm.bio" class="app-input" rows="3" placeholder="Sở thích du lịch của bạn là gì?"></textarea>
+              </div>
+              <div class="edit-actions">
+                <button class="cancel-edit-btn" @click="editProfileMode = false">Hủy</button>
+                <button class="save-edit-btn" @click="saveProfile">💾 Lưu thay đổi</button>
+              </div>
+            </div>
           </div>
 
           <!-- Nếu chưa đăng nhập -->
@@ -3953,6 +4004,73 @@ async function dangNhapHoacDangKy() {
     authError.value = e?.response?.data?.error || e.message
   }
 }
+
+const editProfileMode = ref(false)
+const profileForm = reactive({ name: '', avatar: '', bio: '' })
+
+function editProfile() {
+  profileForm.name = nguoiDung.value.name || ''
+  profileForm.avatar = nguoiDung.value.avatar || ''
+  profileForm.bio = nguoiDung.value.bio || ''
+  editProfileMode.value = true
+}
+
+function handleAvatarUpload(event) {
+  const file = event.target.files[0]
+  if (!file) return
+  
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    const img = new Image()
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      const MAX_WIDTH = 300
+      const MAX_HEIGHT = 300
+      let width = img.width
+      let height = img.height
+
+      if (width > height) {
+        if (width > MAX_WIDTH) {
+          height *= MAX_WIDTH / width
+          width = MAX_WIDTH
+        }
+      } else {
+        if (height > MAX_HEIGHT) {
+          width *= MAX_HEIGHT / height
+          height = MAX_HEIGHT
+        }
+      }
+      canvas.width = width
+      canvas.height = height
+      const ctx = canvas.getContext('2d')
+      ctx.drawImage(img, 0, 0, width, height)
+      
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.8)
+      profileForm.avatar = dataUrl
+    }
+    img.src = e.target.result
+  }
+  reader.readAsDataURL(file)
+}
+
+async function saveProfile() {
+  try {
+    const res = await api.put('/auth/update-profile', profileForm)
+    nguoiDung.value = res.data
+    editProfileMode.value = false
+  } catch(e) {
+    alert('Lỗi cập nhật hồ sơ: ' + (e.response?.data?.error || e.message))
+  }
+}
+
+const userLevelInfo = computed(() => {
+  if (!nguoiDung.value) return { title: 'Người mới', icon: '🌱', color: '#94a3b8' }
+  const trips = nguoiDung.value.completed_trips || 0
+  if (trips >= 10) return { title: 'Chuyên gia du lịch', icon: '👑', color: '#f59e0b' }
+  if (trips >= 5) return { title: 'Dân phượt chính hiệu', icon: '🚀', color: '#3b82f6' }
+  if (trips >= 2) return { title: 'Tín đồ mê xê dịch', icon: '🎒', color: '#10b981' }
+  return { title: 'Tân binh', icon: '🌱', color: '#8b5cf6' }
+})
 
 function dangXuat() {
   localStorage.removeItem('travel_token')
@@ -6555,44 +6673,197 @@ button { cursor: pointer; }
 }
 
 /* PROFILE & AUTH TAB */
-.profile-card {
+/* PROFILE & AUTH TAB PREMIUM */
+.profile-card-premium {
   background: #fff;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 10px 40px -10px rgba(0,0,0,0.1);
+  margin-bottom: 24px;
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: 24px;
-  text-align: center;
 }
-.profile-avatar-large {
-  width: 60px;
-  height: 60px;
-  background: var(--accent);
-  color: #fff;
+.profile-cover {
+  height: 120px;
+  background: linear-gradient(135deg, #0ea5e9, #10b981);
+  position: relative;
+}
+.edit-profile-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(255,255,255,0.2);
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition: 0.2s;
+}
+.edit-profile-btn:hover { background: rgba(255,255,255,0.3); }
+.profile-avatar-premium {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  margin: -50px auto 16px;
   border-radius: 50%;
-  display: grid;
-  place-content: center;
-  font-size: 24px;
-  font-weight: 800;
-  margin: 0 auto 10px;
-}
-.profile-email { font-size: 12px; color: var(--text-sub); margin-bottom: 16px; }
-.profile-stats-row {
+  border: 4px solid white;
+  background: white;
   display: flex;
   justify-content: center;
-  gap: 30px;
-  border-block: 1px solid var(--border-color);
-  padding: 12px 0;
+  align-items: center;
+}
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  background: var(--primary);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 2.5rem;
+  font-weight: 800;
+}
+.level-badge {
+  position: absolute;
+  bottom: -5px;
+  background: #8b5cf6;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  border: 2px solid white;
+  white-space: nowrap;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+.profile-info-premium {
+  padding: 0 24px 24px;
+  text-align: center;
+}
+.profile-name {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+.admin-badge {
+  background: #ef4444;
+  color: white;
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  vertical-align: middle;
+}
+.profile-email {
+  color: #64748b;
+  font-size: 0.95rem;
+  margin-bottom: 12px;
+}
+.profile-bio {
+  color: #475569;
+  font-style: italic;
+  font-size: 0.95rem;
+  margin-bottom: 24px;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.profile-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  background: #f8fafc;
+  padding: 20px;
+  border-radius: 16px;
+  margin-bottom: 24px;
+}
+.stat-box-premium {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.stat-box-premium .stat-icon {
+  font-size: 1.5rem;
+  margin-bottom: 4px;
+}
+.stat-box-premium strong {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+.stat-box-premium small {
+  color: #64748b;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+.logout-btn-premium {
+  background: white;
+  color: #ef4444;
+  border: 1px solid #ef4444;
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.logout-btn-premium:hover {
+  background: #fef2f2;
+}
+
+.profile-edit-form {
+  padding: 0 24px 24px;
+  text-align: left;
+}
+.profile-edit-form h3 {
+  margin-bottom: 20px;
+  text-align: center;
+}
+.edit-field {
   margin-bottom: 16px;
 }
-.stat-box strong { font-size: 18px; color: var(--primary); display: block; }
-.stat-box small { font-size: 11px; color: var(--text-sub); }
-.logout-btn {
-  background: #fee2e2;
-  color: #dc2626;
-  border: 0;
-  padding: 8px 18px;
-  border-radius: 20px;
-  font-size: 12px;
+.edit-field label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 6px;
+}
+.edit-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+.cancel-edit-btn {
+  flex: 1;
+  background: white;
+  border: 1px solid #cbd5e1;
+  color: #64748b;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.save-edit-btn {
+  flex: 2;
+  background: #10b981;
+  border: none;
+  color: white;
+  padding: 12px;
+  border-radius: 8px;
   font-weight: 700;
+  cursor: pointer;
 }
 
 .auth-card {
