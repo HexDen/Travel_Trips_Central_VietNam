@@ -1223,10 +1223,10 @@
             </div>
 
             <!-- BỐ CỤC LỊCH TRÌNH: SPLIT VIEW / TIMELINE / MAP EXPANDED -->
-            <div :class="['itinerary-split-container', `mode-${itineraryViewMode}`]">
+            <div :class="['itinerary-split-container', liveModeActive ? 'mode-split' : `mode-${itineraryViewMode}`]">
               <!-- Cột Trái: Dòng thời gian từng ngày (Timeline) (Hiển thị khi Timeline hoặc Split View) -->
               <transition name="view-fade">
-                <div v-show="itineraryViewMode !== 'map'" class="app-timeline-wrap">
+                <div v-show="itineraryViewMode !== 'map' && !liveModeActive" class="app-timeline-wrap">
                   <article
                     v-for="(day, dayIdx) in lichTrinh.daysList"
                     :key="day.day"
@@ -1519,6 +1519,49 @@
                 </div>
               </transition>
 
+              <!-- MÀN HÌNH LIVE MODE BÊN TRÁI -->
+              <transition name="view-fade">
+                <div v-if="liveModeActive" class="live-tracker-sidebar" style="width: 100%; display: flex; flex-direction: column; gap: 16px; padding: 24px; background: white; border-radius: 12px; box-shadow: 0 4px 20px -2px rgba(0,0,0,0.1); overflow-y: auto; z-index: 10;">
+                  <div v-if="currentLiveActivity" style="display: flex; flex-direction: column; gap: 20px;">
+                    <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 20px; border-radius: 16px; position: relative; overflow: hidden;">
+                      <div style="position: absolute; top: -20px; right: -20px; opacity: 0.1; font-size: 100px;">🎯</div>
+                      <h3 style="font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; opacity: 0.9; display: flex; align-items: center; justify-content: space-between;">
+                        <span>Điểm đến tiếp theo</span>
+                        <span style="background: rgba(255,255,255,0.25); padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; font-weight: 700;">{{ currentLiveActivity.globalIndex }} / {{ currentLiveActivity.totalActivities }}</span>
+                      </h3>
+                      <h2 style="font-size: 1.8rem; font-weight: 800; margin-bottom: 8px; line-height: 1.2;">{{ currentLiveActivity.act.place }}</h2>
+                      <p style="font-size: 1.05rem; opacity: 0.95; margin-bottom: 16px;">{{ currentLiveActivity.act.activity }}</p>
+                      
+                      <div style="display: flex; gap: 12px; align-items: center; background: rgba(255,255,255,0.2); padding: 10px 16px; border-radius: 8px; font-weight: 600;">
+                        <span>🕒 Dự kiến: {{ currentLiveActivity.act.time }}</span>
+                      </div>
+                    </div>
+
+                    <div style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                      <h4 style="color: #64748b; font-size: 0.85rem; text-transform: uppercase; margin-bottom: 8px;">Thông tin hữu ích</h4>
+                      <ul style="list-style: none; padding: 0; margin: 0; color: #334155; font-size: 0.95rem; line-height: 1.6;">
+                        <li v-if="currentLiveActivity.act.price_range">💵 Giá tham khảo: <b>{{ currentLiveActivity.act.price_range }}</b></li>
+                        <li v-else-if="currentLiveActivity.act.estimated_cost">💵 Dự kiến chi: <b>{{ dinhDangTien(currentLiveActivity.act.estimated_cost) }}đ</b></li>
+                        <li v-if="currentLiveActivity.act.address">📍 Địa chỉ: {{ currentLiveActivity.act.address }}</li>
+                      </ul>
+                    </div>
+
+                    <button @click="xacNhanCheckIn(currentLiveActivity.dayIndex, currentLiveActivity.actIndex, currentLiveActivity.act)" style="background: #10b981; color: white; border: none; padding: 18px; border-radius: 12px; font-size: 1.2rem; font-weight: 800; box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.4); cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 10px;">
+                      ✅ ĐÃ TỚI NƠI / CHECK-IN
+                    </button>
+                    
+                    <a :href="chiDuongUrl(currentLiveActivity.act.place, currentLiveActivity.act.address)" target="_blank" rel="noreferrer" style="background: white; color: #0284c7; border: 2px solid #0284c7; padding: 14px; border-radius: 12px; font-size: 1rem; font-weight: 700; text-align: center; text-decoration: none; display: block;">
+                      🗺️ Chỉ đường Google Maps
+                    </a>
+                  </div>
+                  <div v-else style="text-align: center; padding: 40px 20px; color: #10b981;">
+                    <div style="font-size: 4rem; margin-bottom: 16px;">🎉</div>
+                    <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 8px;">CHÚC MỪNG!</h2>
+                    <p>Bạn đã hoàn thành toàn bộ lịch trình chuyến đi. Thật tuyệt vời!</p>
+                  </div>
+                </div>
+              </transition>
+
               <!-- Cột Phải: Bản đồ cố định Sticky (Hiển thị khi Split hoặc Map View) -->
               <transition name="view-fade">
                 <div
@@ -1656,6 +1699,27 @@
 
     </div>
 
+
+    <!-- ==================== POPUP MODAL XÁC NHẬN CHECK-IN ==================== -->
+    <transition name="fade">
+      <div v-if="hienModalCheckIn" class="modal-overlay" @click.self="hienModalCheckIn = false" style="z-index: 1000;">
+        <div class="modal-card" style="max-width: 400px; padding: 24px; text-align: center; border-radius: 16px;">
+          <div style="font-size: 3rem; margin-bottom: 16px;">🎉</div>
+          <h3 style="font-size: 1.4rem; font-weight: 800; color: #0f172a; margin-bottom: 8px;">Chúc mừng bạn đã đến nơi!</h3>
+          <p style="color: #64748b; font-size: 1.1rem; font-weight: 600; margin-bottom: 24px;">{{ checkInTempData?.place }}</p>
+          
+          <div style="text-align: left; margin-bottom: 24px;">
+            <label style="display: block; font-size: 0.95rem; color: #475569; font-weight: 600; margin-bottom: 8px;">Chi phí bạn đã tiêu ở đây là bao nhiêu? (VND)</label>
+            <input type="number" v-model="checkInTempCost" class="app-input" placeholder="0" style="width: 100%; font-size: 1.1rem; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1;" @keyup.enter="luuCheckIn">
+          </div>
+          
+          <div style="display: flex; gap: 12px;">
+            <button @click="hienModalCheckIn = false" style="flex: 1; padding: 12px; border-radius: 8px; font-weight: 600; border: 1px solid #cbd5e1; background: white; color: #64748b; cursor: pointer;">Để sau</button>
+            <button @click="luuCheckIn" style="flex: 2; padding: 12px; border-radius: 8px; font-weight: 700; border: none; background: #10b981; color: white; cursor: pointer; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">Hoàn thành</button>
+          </div>
+        </div>
+      </div>
+    </transition>
 
     <!-- ==================== POPUP MODAL ĐĂNG NHẬP NHANH ==================== -->
     <transition name="auth-fade">
@@ -2684,6 +2748,37 @@ const dangTao = ref(false)
 const liveModeActive = ref(false)
 const completedActivities = ref({}) 
 const actualExpenses = ref({}) 
+const hienModalCheckIn = ref(false)
+const checkInTempData = ref(null)
+const checkInTempCost = ref(0)
+const currentLiveActivity = computed(() => {
+  if (!lichTrinh.value || !lichTrinh.value.daysList) return null;
+  
+  let totalActivities = 0;
+  for (let d = 0; d < lichTrinh.value.daysList.length; d++) {
+    totalActivities += lichTrinh.value.daysList[d].activities.length;
+  }
+  
+  let globalIndex = 0;
+  for (let d = 0; d < lichTrinh.value.daysList.length; d++) {
+    const day = lichTrinh.value.daysList[d];
+    for (let a = 0; a < day.activities.length; a++) {
+      globalIndex++;
+      if (!completedActivities.value[`${day.day - 1}-${a}`]) {
+        return { 
+          dayIndex: day.day - 1, 
+          actIndex: a, 
+          dayData: day, 
+          act: day.activities[a],
+          globalIndex,
+          totalActivities
+        };
+      }
+    }
+  }
+  return null;
+})
+
 const actualTotalSpent = computed(() => {
   return Object.values(actualExpenses.value).reduce((a, b) => a + Number(b || 0), 0)
 })
@@ -2694,11 +2789,19 @@ function xacNhanCheckIn(dayIndex, actIndex, act) {
     delete actualExpenses.value[key]
     return
   }
-  const amt = prompt(`Chúc mừng bạn đã đến: ${act.place} 🎉\nChi phí bạn đã tiêu ở đây là bao nhiêu? (VND)`, "0")
-  if (amt !== null) {
-    completedActivities.value[key] = true
-    actualExpenses.value[key] = Number(amt.replace(/[^\d]/g, '')) || 0
+  
+  checkInTempData.value = { key, place: act.place }
+  checkInTempCost.value = ''
+  hienModalCheckIn.value = true
+}
+
+function luuCheckIn() {
+  if (checkInTempData.value) {
+    completedActivities.value[checkInTempData.value.key] = true
+    actualExpenses.value[checkInTempData.value.key] = Number(checkInTempCost.value) || 0
   }
+  hienModalCheckIn.value = false
+  checkInTempData.value = null
 }
 const taoPlanError = ref('')
 const lichTrinh = ref(null)
