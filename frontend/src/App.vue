@@ -815,6 +815,29 @@
                 </select>
               </div>
 
+              <!-- TÙY CHỌN TỰ TÚC PHƯƠNG TIỆN ĐẾN -->
+              <div class="self-transit-card" :class="{ 'is-active': formDuLieu.tuTucPhuongTien }">
+                <label class="stc-label">
+                  <input
+                    type="checkbox"
+                    v-model="formDuLieu.tuTucPhuongTien"
+                    class="stc-checkbox"
+                  />
+                  <span class="stc-custom-indicator">
+                    <AppIcon name="check" size="14" v-if="formDuLieu.tuTucPhuongTien" />
+                  </span>
+                  <div class="stc-content">
+                    <div class="stc-title-row">
+                      <strong><AppIcon name="bike" size="16" /> Tự túc phương tiện đến điểm hẹn</strong>
+                      <span class="stc-badge" v-if="formDuLieu.tuTucPhuongTien">Không tính vé xe khứ hồi</span>
+                    </div>
+                    <p class="stc-desc">
+                      Tích chọn nếu bạn đi xe máy cá nhân hoặc đã tự đặt vé xe/máy bay từ trước. Hệ thống sẽ KHÔNG trừ tiền vé xe khách liên tỉnh vào ngân sách, dành trọn vẹn chi phí cho ăn uống và khách sạn!
+                    </p>
+                  </div>
+                </label>
+              </div>
+
               <div class="app-field">
                 <div class="field-label-between">
                   <label>Yêu cầu khách sạn</label>
@@ -1520,6 +1543,9 @@
                   </div>
                   <div class="oba-actions-bar">
                     <span class="oba-act-title"><AppIcon name="sparkles" size="14" /> Giải pháp xử lý ngay:</span>
+                    <button v-if="!formDuLieu.tuTucPhuongTien" type="button" class="oba-action-btn btn-self-transit" @click="formDuLieu.tuTucPhuongTien = true; dongBoChiPhiLichTrinh()">
+                      <AppIcon name="bike" size="14" /> Bật "Tự túc xe đến" (Cắt vé xe khứ hồi)
+                    </button>
                     <button v-if="!formDuLieu.freePlacesOnly" type="button" class="oba-action-btn btn-free" @click="kichHoatCheDoFreePlaces">
                       <AppIcon name="leaf" size="14" /> 1. Bật chế độ 100% Điểm Miễn Phí (Cắt vé về 0đ)
                     </button>
@@ -1667,8 +1693,34 @@
               </div>
             </div>
 
-            <!-- TÓM TẮT PHƯƠNG ÁN XE KHÁCH TỐI ƯU CHI PHÍ -->
-            <div v-if="(lichTrinh.transit_summary || formDuLieu.nhaXeDaChon) && !['xe máy', 'ô tô'].includes((formDuLieu.phuongTien || '').toLowerCase())" class="trip-transit-summary-card">
+            <!-- THẺ TỰ TÚC PHƯƠNG TIỆN ĐẾN (KHI ĐANG BẬT TỰ TÚC) -->
+            <div v-if="formDuLieu.tuTucPhuongTien" class="trip-transit-summary-card is-self-transit">
+              <div class="ttsc-main">
+                <div class="ttsc-left">
+                  <span class="ttsc-icon self-icon"><AppIcon name="bike" size="24" /></span>
+                  <div>
+                    <div class="ttsc-badge self-badge">CHẾ ĐỘ TỰ TÚC PHƯƠNG TIỆN ĐẾN ĐIỂM HẸN</div>
+                    <h3>Tự túc xe cá nhân / Tự đặt vé di chuyển</h3>
+                    <p class="ttsc-meta">
+                      <span>Tuyến: <b>{{ formDuLieu.diemKhoiHanh }} ➔ {{ lichTrinh.destination || formDuLieu.diemDen }}</b></span> ·
+                      <span>Vé liên tỉnh: <b>0đ (Đã trừ khỏi ngân sách)</b></span> ·
+                      <span>Nhiên liệu di chuyển nội tỉnh: <b>~{{ dinhDangTien(lichTrinh.budget_breakdown?.transportation || 120000) }}đ</b></span>
+                    </p>
+                    <p class="ttsc-desc-inline">
+                      Ngân sách không bị trừ vé xe khách khứ hồi, dành trọn vẹn chi phí cho ẩm thực và phòng nghỉ chất lượng!
+                    </p>
+                  </div>
+                </div>
+                <div class="ttsc-right">
+                  <button type="button" class="ttsc-switch-btn" @click="formDuLieu.tuTucPhuongTien = false; dongBoChiPhiLichTrinh()">
+                    <AppIcon name="bus" size="15" /> Tính vé xe khách khứ hồi
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- TÓM TẮT PHƯƠNG ÁN XE KHÁCH TỐI ƯU CHI PHÍ (KHI ĐI XE KHÁCH) -->
+            <div v-else-if="(lichTrinh.transit_summary || formDuLieu.nhaXeDaChon) && !['xe máy', 'ô tô'].includes((formDuLieu.phuongTien || '').toLowerCase())" class="trip-transit-summary-card">
               <div class="ttsc-main">
                 <div class="ttsc-left">
                   <span class="ttsc-icon"><AppIcon name="bus" size="24" /></span>
@@ -1683,6 +1735,9 @@
                     <p class="ttsc-schedule" v-if="formDuLieu.nhaXeDaChon">
                       <AppIcon name="clock" size="14" /> Giờ chạy: <b>{{ formDuLieu.nhaXeDaChon.depart_times }}</b> ({{ formDuLieu.nhaXeDaChon.duration }}) · Đón: {{ formDuLieu.nhaXeDaChon.pickup }}
                     </p>
+                    <div class="ttsc-included-note">
+                      <AppIcon name="check" size="13" /> Đã cộng dồn vé xe khứ hồi (<b>{{ dinhDangTien(lichTrinh.budget_breakdown?.transportation || 0) }}đ</b>) vào tổng dự toán chi phí.
+                    </div>
                   </div>
                 </div>
                 <div class="ttsc-right">
@@ -1691,15 +1746,18 @@
                     <strong class="ttsc-price">{{ dinhDangTien(formDuLieu.nhaXeDaChon?.price || 350000) }}đ</strong>
                     <small>/vé/người</small>
                     <div class="ttsc-total-calc" v-if="formDuLieu.soNguoi > 1">
-                      Tổng {{ formDuLieu.soNguoi }} người: <b>{{ dinhDangTien((formDuLieu.nhaXeDaChon?.price || 350000) * formDuLieu.soNguoi) }}đ</b>
+                      Tổng {{ formDuLieu.soNguoi }} người (khứ hồi): <b>{{ dinhDangTien((formDuLieu.nhaXeDaChon?.price || 350000) * formDuLieu.soNguoi * 2) }}đ</b>
                     </div>
                   </div>
                   <div class="ttsc-actions-group" style="display: flex; gap: 8px; flex-direction: column; width: 100%;">
                     <a href="https://futabus.vn/" target="_blank" rel="noreferrer" class="ttsc-book-btn" style="background: var(--primary); color: white; padding: 10px 16px; border-radius: 8px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s;">
                       <AppIcon name="ticket" size="16" /> Đặt vé Web/App
                     </a>
-                    <a :href="`tel:${formDuLieu.nhaXeDaChon?.hotline || '19006067'}`" class="ttsc-call-btn" style="background: rgba(5, 150, 105, 0.1); color: var(--primary); padding: 10px 16px; border-radius: 8px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--primary);">
-                      <AppIcon name="phone" size="16" /> Tổng đài: {{ formDuLieu.nhaXeDaChon?.hotline || '1900 6067' }}
+                    <button type="button" class="ttsc-toggle-self-btn" @click="formDuLieu.tuTucPhuongTien = true; dongBoChiPhiLichTrinh()">
+                      <AppIcon name="bike" size="14" /> Đổi sang Tự túc xe đến
+                    </button>
+                    <a :href="`tel:${formDuLieu.nhaXeDaChon?.hotline || '19006067'}`" class="ttsc-call-btn" style="background: rgba(5, 150, 105, 0.1); color: var(--primary); padding: 8px 14px; border-radius: 8px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--primary); font-size: 12px;">
+                      <AppIcon name="phone" size="14" /> Tổng đài: {{ formDuLieu.nhaXeDaChon?.hotline || '1900 6067' }}
                     </a>
                   </div>
                 </div>
@@ -3119,7 +3177,8 @@ const formDuLieu = reactive({
   phuongTien: 'xe khách',
   yeuCauKhachSan: '',
   nhaXeDaChon: null,
-  freePlacesOnly: false
+  freePlacesOnly: false,
+  tuTucPhuongTien: false
 })
 
 // Dark Mode State
@@ -3893,7 +3952,7 @@ const tripFeasibility = computed(() => {
       recommendation: {
         minBudget: minFeasibleBudget,
         suggestedDays: maxFeasibleDays,
-        advice: `Bạn nên tăng ngân sách lên tối thiểu ${dinhDangTien(minFeasibleBudget)}đ, hoặc rút ngắn chuyến đi xuống ${maxFeasibleDays} ngày, hoặc chọn chế độ chỉ tham quan điểm miễn phí vé.`
+        advice: `Bạn nên tăng ngân sách lên tối thiểu ${dinhDangTien(minFeasibleBudget)}đ, bật tùy chọn "Tự túc phương tiện đến", hoặc rút ngắn chuyến đi xuống ${maxFeasibleDays} ngày, hoặc chọn chế độ chỉ tham quan điểm miễn phí vé.`
       }
     }
   }
@@ -5249,39 +5308,124 @@ function dongBoChiPhiLichTrinh() {
   const people = Number(plan.people) || Number(formDuLieu.soNguoi) || 2
   const days = Math.max(1, plan.daysList?.length || plan.days?.length || formDuLieu.soNgay || 5)
 
-  // 1. Chi phí khách sạn chính xác (khắc phục lỗi 90k * 2 người * 5 đêm = 900k)
+  // 1. Chi phí khách sạn chính xác (đã tối ưu theo ngân sách và loại phòng)
   const realHotel = tinhChiPhiKhachSan(plan)
 
-  // 2. Chi phí vé xe di chuyển liên tỉnh khứ hồi + di chuyển nội tỉnh
-  const busPrice = Number(formDuLieu.nhaXeDaChon?.price || plan.transit_summary?.selected_bus?.price || 320000)
-  const roundTripBus = busPrice * people * 2
-  const localTransport = days * 75000 * Math.max(1, Math.ceil(people / 2))
+  // 2. Chi phí vé xe di chuyển:
+  // - Nếu bật "Tự túc xe đến" (formDuLieu.tuTucPhuongTien): KHÔNG tính vé xe liên tỉnh, chỉ tính xăng xe máy / nội tỉnh nhẹ nhàng
+  // - Nếu không tự túc xe: Vẫn cộng dồn giá xe đầy đủ (khứ hồi + di chuyển nội tỉnh) để phản ánh hợp lý chi phí
+  const isSelfTransit = formDuLieu.tuTucPhuongTien !== undefined
+    ? Boolean(formDuLieu.tuTucPhuongTien)
+    : Boolean(plan.self_transit)
+  formDuLieu.tuTucPhuongTien = isSelfTransit
+  plan.self_transit = isSelfTransit
+  let roundTripBus = 0
+  let localTransport = days * 75000 * Math.max(1, Math.ceil(people / 2))
+
+  if (isSelfTransit) {
+    roundTripBus = 0
+    localTransport = days * 40000 * Math.max(1, Math.ceil(people / 2))
+  } else {
+    const busPrice = Number(formDuLieu.nhaXeDaChon?.price || plan.transit_summary?.selected_bus?.price || 320000)
+    roundTripBus = busPrice * people * 2
+  }
   const realTransit = roundTripBus + localTransport
 
-  // 3. Chi phí các hoạt động (ăn uống + vé tham quan)
-  let realFood = 0
+  // 3. Chi phí vé tham quan ban đầu
   let realTickets = 0
   const allDays = plan.daysList || plan.days || []
+  if (!formDuLieu.freePlacesOnly && !plan.free_places_only) {
+    allDays.forEach(d => {
+      (d.activities || []).forEach(a => {
+        const c = Number(a.estimated_cost) || 0
+        if (['attraction', 'checkin'].includes(a.type)) {
+          realTickets += c * people
+        }
+      })
+    })
+  } else {
+    realTickets = 0
+  }
+
+  // 4. THUẬT TOÁN CO GIÃN CHI PHÍ ĂN UỐNG ĐỘNG (DYNAMIC FOOD BUDGET SCALING)
+  // Lấy ngân sách mục tiêu người dùng chọn (mặc định 3.5 triệu)
+  const userTargetBudget = Number(plan.target_budget || formDuLieu.nganSach || 3500000)
+
+  // Lưu trữ danh sách bữa ăn và tính tổng tiền ăn thô ban đầu
+  const foodActivities = []
+  let rawFoodTotal = 0
   allDays.forEach(d => {
     (d.activities || []).forEach(a => {
-      const c = Number(a.estimated_cost) || 0
-      if (['breakfast', 'lunch', 'dinner', 'restaurant'].includes(a.type)) {
-        realFood += c * people
-      } else if (['attraction', 'checkin'].includes(a.type)) {
-        realTickets += c * people
+      if (['breakfast', 'lunch', 'dinner', 'restaurant', 'cafe'].includes(a.type)) {
+        if (a._raw_cost === undefined) {
+          a._raw_cost = Number(a.estimated_cost) || (a.type === 'breakfast' ? 45000 : a.type === 'cafe' ? 30000 : 150000)
+        }
+        foodActivities.push(a)
+        rawFoodTotal += (Number(a._raw_cost) || 0) * people
       }
     })
   })
 
-  if (realFood === 0) {
-    realFood = days * people * 140000
-  }
-  if (formDuLieu.freePlacesOnly || plan.free_places_only) {
-    realTickets = 0
+  // Tính số tiền còn lại dành cho ăn uống sau khi trừ Khách sạn + Xe cộ + Vé tham quan (giữ ~5% quỹ dự phòng)
+  const fixedCosts = realHotel + realTransit + realTickets
+  const reserveTarget = Math.round(userTargetBudget * 0.05)
+  const availableBudgetForFood = Math.max(0, userTargetBudget - fixedCosts - reserveTarget)
+  const minSurvivalFood = days * people * 80000 // Tối thiểu 80k/người/ngày cho 3 bữa bình dân
+
+  let realFood = 0
+  if (foodActivities.length > 0) {
+    if (availableBudgetForFood >= minSurvivalFood && rawFoodTotal > availableBudgetForFood) {
+      // Co giãn tỷ lệ từng bữa ăn xuống để tổng chi phí tự động khống chế dưới ngân sách mục tiêu
+      const scaleRatio = availableBudgetForFood / Math.max(1, rawFoodTotal)
+      foodActivities.forEach(a => {
+        let scaled = (a._raw_cost || a.estimated_cost) * scaleRatio
+        if (a.type === 'breakfast') {
+          scaled = Math.max(25000, Math.min(45000, Math.round(scaled / 5000) * 5000))
+        } else if (a.type === 'cafe') {
+          scaled = Math.max(20000, Math.min(35000, Math.round(scaled / 5000) * 5000))
+        } else {
+          scaled = Math.max(35000, Math.min(100000, Math.round(scaled / 5000) * 5000))
+        }
+        a.estimated_cost = scaled
+      })
+      realFood = foodActivities.reduce((sum, a) => sum + (Number(a.estimated_cost) * people), 0)
+
+      // Cân chỉnh vi mô để đảm bảo không bị vượt quá do làm tròn số
+      if (realFood + fixedCosts + reserveTarget > userTargetBudget && availableBudgetForFood > 0) {
+        const excess = (realFood + fixedCosts + reserveTarget) - userTargetBudget
+        const trimPerAct = Math.ceil(excess / (foodActivities.length * people))
+        foodActivities.forEach(a => {
+          const floor = a.type === 'breakfast' ? 20000 : a.type === 'cafe' ? 15000 : 30000
+          a.estimated_cost = Math.max(floor, a.estimated_cost - trimPerAct)
+        })
+        realFood = foodActivities.reduce((sum, a) => sum + (Number(a.estimated_cost) * people), 0)
+      }
+    } else if (availableBudgetForFood < minSurvivalFood) {
+      // Khi ngân sách quá eo hẹp không đủ cả mức ăn tối thiểu (ví dụ < 2 triệu có vé xe)
+      foodActivities.forEach(a => {
+        const floor = a.type === 'breakfast' ? 25000 : a.type === 'cafe' ? 20000 : 35000
+        a.estimated_cost = floor
+      })
+      realFood = foodActivities.reduce((sum, a) => sum + (Number(a.estimated_cost) * people), 0)
+    } else {
+      // Ngân sách dư dả, phục hồi về giá menu nguyên bản
+      foodActivities.forEach(a => {
+        if (a._raw_cost !== undefined) a.estimated_cost = a._raw_cost
+      })
+      realFood = rawFoodTotal
+    }
+  } else {
+    realFood = Math.min(availableBudgetForFood, days * people * 140000)
   }
 
+  // 5. Tính toán tổng dự toán cuối cùng
   const subtotal = realHotel + realTransit + realFood + realTickets
-  const realReserve = Math.round(subtotal * 0.08)
+  let realReserve = 0
+  if (userTargetBudget >= subtotal) {
+    realReserve = Math.min(Math.round(subtotal * 0.05), userTargetBudget - subtotal)
+  } else {
+    realReserve = Math.round(subtotal * 0.03)
+  }
   const realTotal = subtotal + realReserve
 
   if (!plan.budget_breakdown) plan.budget_breakdown = {}
@@ -5291,13 +5435,13 @@ function dongBoChiPhiLichTrinh() {
   plan.budget_breakdown.tickets = realTickets
   plan.budget_breakdown.reserve = realReserve
 
-  // Bảo toàn ngân sách mong muốn của người dùng và phát hiện BÁO ĐỎ vượt ngân sách (Yêu cầu 1)
-  const userTargetBudget = Number(plan.target_budget || formDuLieu.nganSach || 3000000)
   plan.target_budget = userTargetBudget
   plan.user_budget = userTargetBudget
   plan.calculated_total = realTotal
   plan.total_budget = realTotal
+  plan.self_transit = isSelfTransit
 
+  // Ngưỡng phát hiện Báo Đỏ: Chỉ kích hoạt khi thực tế vượt quá 5% sau khi đã co giãn tối đa
   const isOver = realTotal > userTargetBudget * 1.05
   plan.is_over_budget = isOver
   plan.over_amount = Math.max(0, realTotal - userTargetBudget)
@@ -5311,7 +5455,9 @@ function dongBoChiPhiLichTrinh() {
   plan.budget_audit.fit_status = isOver ? 'over' : (realTotal < userTargetBudget * 0.75 ? 'under' : 'optimal')
   if (isOver) {
     plan.budget_audit.fit_message = `CẢNH BÁO BÁO ĐỎ: Kế hoạch thực tế (${dinhDangTien(realTotal)}đ) vượt quá khả năng tài chính bạn đã chọn (${dinhDangTien(userTargetBudget)}đ) khoảng +${dinhDangTien(plan.over_amount)}đ (+${plan.over_percent}%)!`
-    plan.budget_audit.advice = 'Khuyến nghị: Vé xe và khách sạn đã chiếm phần lớn ngân sách. Bạn nên bật "100% Điểm Miễn Phí" hoặc giảm bớt số ngày để vừa vặn tài chính.'
+    plan.budget_audit.advice = isSelfTransit
+      ? 'Khuyến nghị: Bạn nên bật "100% Điểm Miễn Phí" hoặc giảm bớt số ngày để vừa vặn tài chính.'
+      : 'Khuyến nghị: Vé xe khứ hồi chiếm phần lớn ngân sách. Bạn có thể bật "Tự túc phương tiện đến" hoặc tăng ngân sách để chuyến đi thoải mái hơn.'
   }
   if (!plan.budget_audit.audit_breakdown) plan.budget_audit.audit_breakdown = {}
   plan.budget_audit.audit_breakdown.hotel = realHotel
@@ -5535,6 +5681,13 @@ watch(selectedDay, () => {
 watch(lichTrinh, () => {
   renderLeafletMap();
 }, { deep: true });
+
+watch(() => formDuLieu.tuTucPhuongTien, (val) => {
+  if (lichTrinh.value) {
+    lichTrinh.value.self_transit = Boolean(val)
+    dongBoChiPhiLichTrinh()
+  }
+});
 
 // ==================== PHẦN 2: XÁC NHẬN LƯU TRƯỚC KHI CHUYỂN TAB ====================
 // Wrapper để chuyển tab có kiểm tra lưu lịch trình chưa lưu
@@ -5839,7 +5992,9 @@ async function taoLichTrinh() {
       end_date: formDuLieu.ngayKetThuc,
       transportation: formDuLieu.phuongTien,
       hotel_request: formDuLieu.yeuCauKhachSan,
-      selected_bus: formDuLieu.nhaXeDaChon
+      selected_bus: formDuLieu.nhaXeDaChon,
+      self_transit: Boolean(formDuLieu.tuTucPhuongTien),
+      tu_tuc_phuong_tien: Boolean(formDuLieu.tuTucPhuongTien)
     })
     lichTrinh.value = res.data
     // Đảm bảo gắn thông tin di chuyển tối ưu chi phí
@@ -8178,10 +8333,123 @@ button { cursor: pointer; }
 .app-form-grid > .bus-optimization-section,
 .app-form-grid > .route-overview-banner,
 .app-form-grid > .ai-hint-bubble,
+.app-form-grid > .self-transit-card,
 .bus-optimization-section {
   grid-column: 1 / -1 !important;
   width: 100% !important;
   box-sizing: border-box !important;
+}
+
+/* ==================== TÙY CHỌN TỰ TÚC PHƯƠNG TIỆN ĐẾN (STEP 2 FORM) ==================== */
+.self-transit-card {
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  background: var(--card-bg, #ffffff);
+  border: 1.5px solid var(--border-color, #e2e8f0);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-top: 4px;
+  margin-bottom: 8px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+.self-transit-card:hover {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.03);
+}
+.self-transit-card.is-active {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(6, 182, 212, 0.05));
+  border-color: #10b981;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.15);
+}
+:root[data-theme="dark"] .self-transit-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+:root[data-theme="dark"] .self-transit-card:hover {
+  background: rgba(16, 185, 129, 0.08);
+}
+:root[data-theme="dark"] .self-transit-card.is-active {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.16), rgba(6, 182, 212, 0.1));
+  border-color: #10b981;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.25);
+}
+.stc-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+  user-select: none;
+  width: 100%;
+}
+.stc-checkbox {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.stc-custom-indicator {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  border-radius: 7px;
+  border: 2px solid var(--border-color, #cbd5e1);
+  background: var(--input-bg, #ffffff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  margin-top: 2px;
+  transition: all 0.2s ease;
+}
+.self-transit-card.is-active .stc-custom-indicator {
+  border-color: #10b981;
+  background: #10b981;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.4);
+}
+:root[data-theme="dark"] .stc-custom-indicator {
+  border-color: #475569;
+  background: #0f172a;
+}
+.stc-content {
+  flex: 1;
+}
+.stc-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.stc-title-row strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-color, #0f172a);
+}
+:root[data-theme="dark"] .stc-title-row strong {
+  color: #f1f5f9;
+}
+.stc-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #10b981;
+  color: #ffffff;
+  letter-spacing: 0.02em;
+}
+.stc-desc {
+  margin: 5px 0 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-muted, #64748b);
+}
+:root[data-theme="dark"] .stc-desc {
+  color: #94a3b8;
 }
 .app-field label { font-size: 11px; font-weight: 700; color: var(--text-sub); }
 .field-label-between { display: flex; justify-content: space-between; align-items: center; }
@@ -11949,6 +12217,68 @@ button { cursor: pointer; }
   transform: translateY(-1px);
 }
 
+/* Thẻ Transit Tự túc & các nút chuyển đổi chế độ */
+.trip-transit-summary-card.is-self-transit {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(6, 182, 212, 0.06));
+  border-color: rgba(16, 185, 129, 0.4);
+}
+:root[data-theme="dark"] .trip-transit-summary-card.is-self-transit {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.16), rgba(6, 182, 212, 0.1));
+  border-color: rgba(16, 185, 129, 0.5);
+}
+.ttsc-icon.self-icon {
+  background: #ecfdf5;
+  color: #059669;
+}
+:root[data-theme="dark"] .ttsc-icon.self-icon {
+  background: #064e3b;
+  color: #34d399;
+}
+.ttsc-badge.self-badge {
+  color: #059669;
+}
+.ttsc-desc-inline {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  margin: 6px 0 0 0;
+  line-height: 1.45;
+}
+.ttsc-included-note {
+  font-size: 12px;
+  color: #059669;
+  font-weight: 600;
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+:root[data-theme="dark"] .ttsc-included-note {
+  color: #34d399;
+}
+.ttsc-switch-btn,
+.ttsc-toggle-self-btn {
+  background: transparent;
+  color: var(--primary, #0d9488);
+  border: 1.5px solid var(--primary, #0d9488);
+  padding: 8px 14px;
+  border-radius: 9px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.ttsc-switch-btn:hover,
+.ttsc-toggle-self-btn:hover {
+  background: rgba(13, 148, 136, 0.1);
+  transform: translateY(-1px);
+}
+
+
 @media (max-width: 768px) {
   .bos-header {
     flex-direction: column;
@@ -13806,6 +14136,15 @@ button { cursor: pointer; }
   display: inline-flex;
   align-items: center;
   gap: 6px;
+}
+.oba-action-btn.btn-self-transit {
+  background: linear-gradient(135deg, #059669, #10b981);
+  color: #ffffff;
+  box-shadow: 0 3px 10px rgba(16, 185, 129, 0.35);
+}
+.oba-action-btn.btn-self-transit:hover {
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.5);
 }
 .oba-action-btn.btn-free {
   background: linear-gradient(135deg, #059669, #10b981);

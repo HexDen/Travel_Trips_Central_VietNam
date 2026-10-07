@@ -137,7 +137,8 @@ async function taoLichTrinh(duLieu) {
       people: duLieu.people || 1
     })
 
-    if (result.budget_breakdown && transitData.cheapestBusTotal) {
+    const isSelfTransit = Boolean(duLieu.self_transit || duLieu.tu_tuc_phuong_tien || duLieu.tuTucPhuongTien);
+    if (!isSelfTransit && result.budget_breakdown && transitData.cheapestBusTotal) {
       result.budget_breakdown.transportation = (result.budget_breakdown.transportation || 0) + transitData.cheapestBusTotal;
       result.total_budget = (result.total_budget || 0) + transitData.cheapestBusTotal;
     }
@@ -145,7 +146,8 @@ async function taoLichTrinh(duLieu) {
     return {
       ...result,
       origin: duLieu.origin || duLieu.diemKhoiHanh || 'Hà Nội',
-      transit_summary: transitData
+      transit_summary: transitData,
+      self_transit: isSelfTransit
     }
   } catch (transitErr) {
     console.warn('Lỗi bổ sung transit:', transitErr.message)
