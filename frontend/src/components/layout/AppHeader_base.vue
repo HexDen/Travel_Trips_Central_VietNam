@@ -168,12 +168,25 @@ defineEmits(['update:activeTab', 'openAuth', 'toggleDark'])
   top: 0;
   z-index: 50;
   width: 100%;
+  /* Removed background and backdrop-filter to prevent containing block for fixed child */
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03);
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.app-header::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid rgba(226, 232, 240, 0.8);
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03);
-  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  z-index: -1;
+}
+
+:global(:root[data-theme="dark"]) .app-header::before {
+  background: rgba(15, 23, 42, 0.85);
+  border-bottom-color: rgba(51, 65, 85, 0.8);
 }
 
 .header-inner {
@@ -429,8 +442,6 @@ button:focus-visible {
 
 /* ==================== DARK THEME OVERRIDES ==================== */
 :root[data-theme="dark"] .app-header {
-  background: rgba(15, 23, 42, 0.88);
-  border-bottom-color: rgba(255, 255, 255, 0.08);
   box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.35);
 }
 
@@ -491,7 +502,7 @@ button:focus-visible {
 /* ==================== RESPONSIVE LAYOUT (MOBILE & TABLET) ==================== */
 @media (max-width: 820px) {
   .header-inner {
-    padding: 10px 16px;
+    padding: 10px 12px;
     flex-wrap: wrap;
   }
   
@@ -499,19 +510,80 @@ button:focus-visible {
     display: none; /* Rút gọn trên màn hình hẹp */
   }
 
+  .header-brand {
+    gap: 8px;
+  }
+  
+  .brand-title {
+    font-size: 1.15rem;
+  }
+
+  .login-header-btn {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    gap: 4px;
+    white-space: nowrap;
+  }
+
+  .login-header-btn .btn-icon {
+    width: 14px;
+    height: 14px;
+  }
+  
+  .theme-toggle-btn {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+  }
+
   .desktop-nav {
-    order: 3;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
     width: 100%;
+    margin-top: 0;
+    padding: 10px 16px 20px; /* Safe area cho iPhone */
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(226, 232, 240, 0.8);
+    border-radius: 20px 20px 0 0;
     justify-content: space-around;
-    border-radius: 16px;
-    padding: 4px;
-    margin-top: 4px;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+    z-index: 100;
+  }
+  
+  :global(:root[data-theme="dark"]) .desktop-nav {
+    background: rgba(30, 41, 59, 0.95);
+    border-top-color: rgba(51, 65, 85, 0.8);
   }
 
   .nav-item {
     flex: 1;
-    padding: 8px 10px;
-    font-size: 0.82rem;
+    padding: 8px 0;
+    font-size: 0.75rem;
+    flex-direction: column;
+    gap: 4px;
+    background: transparent;
+    border-radius: 12px;
+  }
+  
+  .nav-item.active {
+    background: rgba(13, 148, 136, 0.1);
+    color: var(--primary, #0d7c76);
+    box-shadow: none;
+  }
+  
+  :global(:root[data-theme="dark"]) .nav-item.active {
+    background: rgba(20, 184, 166, 0.15);
+    color: #38bdf8;
+    box-shadow: none;
+  }
+
+  .nav-item .nav-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 0;
   }
 }
 

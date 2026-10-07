@@ -86,20 +86,6 @@ router.post('/chat', async (req, res) => {
   }
 })
 
-// General chat endpoint for floating chatbot
-router.post('/chat-general', async (req, res) => {
-  try {
-    const { message } = req.body
-    if (!message) return res.status(400).json({ error: 'message bắt buộc' })
-
-    const reply = await dichVuAI.taoPhanHoiChat({ message, trip: null })
-    res.json({ reply })
-  } catch (err) {
-    console.error('Lỗi chat-general:', err)
-    res.status(500).json({ error: err.message || 'Lỗi hệ thống' })
-  }
-})
-
 // Parse natural language prompt into structured trip requirements
 router.post('/parse-prompt', async (req, res) => {
   try {

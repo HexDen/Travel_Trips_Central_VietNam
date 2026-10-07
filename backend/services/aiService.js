@@ -257,13 +257,13 @@ THÔNG TIN CHUYẾN ĐI:
 - Ngày khởi hành: ${ngayBatDau || 'Chưa định ngày'} đến ${ngayKetThuc || 'Chưa định ngày'}
 - Phương tiện: ${duLieu.transportation || 'linh hoạt'}
 - Yêu cầu khách sạn: ${duLieu.hotel_request || 'tiêu chuẩn, vị trí thuận tiện'}
-- Phong cách nhận phòng: ${duLieu.hotel_checkin_preference === 'play_first' ? 'ĐI CHƠI LUÔN, BẮT BUỘC xếp lịch Nhận phòng khách sạn vào BUỔI TỐI MUỘN của Ngày 1 (ví dụ 19:00 - 20:00)' : 'CẤT ĐỒ TRƯỚC, BẮT BUỘC xếp lịch Nhận phòng/Gửi đồ tại khách sạn là HOẠT ĐỘNG ĐẦU TIÊN CỦA NGÀY 1 (ví dụ 08:00 - 10:00 sáng), SAU ĐÓ mới đi chơi'}
+- Phong cách nhận phòng: ${duLieu.hotel_checkin_preference === 'play_first' ? 'ĐI CHƠI TRƯỚC, BẮT BUỘC xếp lịch Nhận phòng khách sạn vào ĐÚNG 14:00 CHIỀU của Ngày 1 (sau khi ăn trưa xong)' : 'CẤT ĐỒ TRƯỚC, BẮT BUỘC xếp lịch Nhận phòng/Gửi đồ tại khách sạn là HOẠT ĐỘNG ĐẦU TIÊN CỦA NGÀY 1 (ví dụ 08:00 - 10:00 sáng), SAU ĐÓ mới đi chơi'}
 - Sở thích: ${soThich.join(', ') || 'khám phá ẩm thực đặc sản, check-in cảnh đẹp'}
 ${goiYDbText}${mustVisitText}
 QUY TẮC BẮT BUỘC:
 1. TUYỆT ĐỐI KHÔNG ĐƯỢC LẶP LẠI ĐỊA ĐIỂM: Mọi thắng cảnh, quán ăn sáng, quán ăn trưa, quán ăn tối trong suốt toàn bộ ${ngay} ngày BẮT BUỘC PHẢI KHÁC NHAU 100%. Không được xếp lại cùng 1 địa điểm ở các ngày khác nhau.
 2. ĐỊA CHỈ RÕ RÀNG (ADDRESS): BẮT BUỘC mọi hoạt động và khách sạn đều phải có trường "address" cụ thể (Số nhà, Tên đường, Quận/Huyện, Tỉnh/TP).
-3. KHÁCH SẠN (HOTEL): ƯU TIÊN CHỌN KHÁCH SẠN PHÂN KHÚC: ${phanKhuc}. Có trường "hotel_recommendation" gồm: name, address, rating, price_per_night, description. ${duLieu.hotel_checkin_preference === 'play_first' ? 'Ngày 1 CÓ MỤC "Nhận phòng" Ở CUỐI NGÀY' : 'Ngày 1 CÓ MỤC "Nhận phòng" Ở ĐẦU TIÊN'}, ngày cuối lúc 12:00 có mốc "Trả phòng".
+3. KHÁCH SẠN (HOTEL): ƯU TIÊN CHỌN KHÁCH SẠN PHÂN KHÚC: ${phanKhuc}. Có trường "hotel_recommendation" gồm: name, address, rating, price_per_night, description. ${duLieu.hotel_checkin_preference === 'play_first' ? 'Ngày 1 CÓ MỤC "Nhận phòng" vào lúc 14:00 chiều' : 'Ngày 1 CÓ MỤC "Nhận phòng" Ở ĐẦU TIÊN'}, ngày cuối lúc 12:00 có mốc "Trả phòng".
 4. NHÃN PHÂN LOẠI (CATEGORY): Mỗi hoạt động có type ('breakfast' | 'lunch' | 'dinner' | 'checkin' | 'attraction' | 'cafe' | 'checkout') và label ('Ăn sáng' | 'Ăn trưa' | 'Ăn tối' | 'Nhận phòng' | 'Tham quan / Check-in' | 'Cafe & Chill' | 'Trả phòng').
 5. ĐẶC SẢN & DANH THẮNG NỔI TIẾNG NHẤT: BẮT BUỘC chọn các điểm tham quan biểu tượng, quán ăn nổi tiếng nhất của ${diaDiem} PHÙ HỢP VỚI PHÂN KHÚC ${phanKhuc}. TUYỆT ĐỐI KHÔNG gợi ý các điểm không có thật. Nêu rõ tên món đặc sản + tên quán ăn cụ thể.
 6. MỖI NGÀY MỘT CỤM VÀ RẤT GẦN NHAU: Để tiết kiệm chi phí và sức khỏe, các địa điểm trong cùng 1 ngày BẮT BUỘC phải nằm rất gần nhau (cách nhau dưới 10-15km). Ngày 1 đi Cụm 1, Ngày 2 đi Cụm 2... KHÔNG di chuyển zic-zac xa xôi!

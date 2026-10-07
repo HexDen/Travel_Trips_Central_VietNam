@@ -2418,33 +2418,44 @@
             <button class="app-primary-btn small-btn" @click="startPlannerTransition">+ Tạo chuyến mới</button>
           </div>
 
-          <div v-if="!nguoiDung" class="auth-prompt-card">
-            <span class="prompt-icon">🔒</span>
-            <h3>Đăng nhập để xem các chuyến đi đã lưu</h3>
-            <p>Lịch trình du lịch được đồng bộ và lưu an toàn trên đám mây để bạn xem lại bất cứ lúc nào.</p>
-            <button class="app-primary-btn" @click="hienAuthModal = true">Đăng nhập / Đăng ký</button>
+          <!-- Nếu có chuyến đi đã lưu (cả tài khoản và lưu trên máy) -->
+          <div v-if="myTripsList.length" class="my-trips-container">
+            <div v-if="!nguoiDung" class="guest-saved-trips-banner">
+              <span>💡 Bạn đang xem <b>{{ myTripsList.length }} chuyến đi</b> được lưu trên thiết bị này.</span>
+              <button class="gstb-login-btn" @click="hienAuthModal = true">Đăng nhập để đồng bộ đám mây ☁️</button>
+            </div>
+
+            <div class="my-trips-grid">
+              <article v-for="trip in myTripsList" :key="trip._id" class="my-trip-card">
+                <div class="trip-top">
+                  <span class="trip-dest">{{ trip.destination }}</span>
+                  <span class="trip-date">{{ dinhDangNgayNgan(trip.created_at) }}</span>
+                </div>
+                <h3>Chuyến đi {{ trip.days?.length || (trip.daysList?.length) || 0 }} ngày tại {{ trip.destination }}</h3>
+                <p>Dự toán: <b>{{ dinhDangTien(trip.total_budget) }}đ</b> · {{ trip.people || 1 }} người</p>
+                <div class="trip-actions">
+                  <button class="open-trip-btn" @click="xemChiTietChuyenDi(trip)">📋 Xem chi tiết</button>
+                  <button class="share-trip-btn" @click="chiaSeChuyenDi(trip)">🔗 Chia sẻ</button>
+                  <button
+                    class="delete-trip-btn"
+                    @click="xoaChuyenDi(trip)"
+                    title="Xóa chuyến đi này"
+                  >
+                    🗑️
+                  </button>
+                </div>
+              </article>
+            </div>
           </div>
 
-          <div v-else-if="myTripsList.length" class="my-trips-grid">
-            <article v-for="trip in myTripsList" :key="trip._id" class="my-trip-card">
-              <div class="trip-top">
-                <span class="trip-dest">{{ trip.destination }}</span>
-                <span class="trip-date">{{ dinhDangNgayNgan(trip.created_at) }}</span>
-              </div>
-              <h3>Chuyến đi {{ trip.days?.length || 0 }} ngày tại {{ trip.destination }}</h3>
-              <p>Dự toán: <b>{{ dinhDangTien(trip.total_budget) }}đ</b> · {{ trip.people || 1 }} người</p>
-              <div class="trip-actions">
-                <button class="open-trip-btn" @click="moLaiLichTrinh(trip)">Xem chi tiết ↗</button>
-                <button class="share-trip-btn" @click="chiaSeChuyenDi(trip)">🔗 Chia sẻ</button>
-                <button
-                  class="delete-trip-btn"
-                  @click="xoaChuyenDi(trip)"
-                  title="Xóa chuyến đi này"
-                >
-                  🗑️
-                </button>
-              </div>
-            </article>
+          <div v-else-if="!nguoiDung" class="auth-prompt-card">
+            <span class="prompt-icon">🔒</span>
+            <h3>Đăng nhập hoặc lưu lịch trình đầu tiên</h3>
+            <p>Sau khi lên lịch trình, bạn có thể bấm "Lưu lại lịch trình này" để xem lại bất cứ lúc nào.</p>
+            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 12px;">
+              <button class="app-primary-btn" @click="hienAuthModal = true">Đăng nhập / Đăng ký</button>
+              <button class="app-secondary-btn" @click="activeTab = 'planner'">+ Lên lịch trình mới</button>
+            </div>
           </div>
 
           <div v-else class="empty-state-box">
@@ -2459,74 +2470,23 @@
         <!-- ==================== TAB 5: TÀI KHOẢN & YÊU THÍCH (PROFILE) ==================== -->
         <section v-if="activeTab === 'profile'" class="tab-pane">
           <!-- Nếu đã đăng nhập -->
-          <div v-if="nguoiDung" class="profile-card-premium">
-            <div class="profile-cover">
-              <button class="edit-profile-btn" @click="editProfile" v-if="!editProfileMode">
-                ✏️ Chỉnh sửa hồ sơ
-              </button>
+          <div v-if="nguoiDung" class="profile-card">
+            <div class="profile-avatar-large">
+              {{ nguoiDung.name ? nguoiDung.name[0].toUpperCase() : 'U' }}
             </div>
-            <div class="profile-avatar-premium">
-              <img v-if="nguoiDung.avatar" :src="nguoiDung.avatar" alt="Avatar" class="avatar-img" />
-              <div v-else class="avatar-placeholder">{{ nguoiDung.name ? nguoiDung.name[0].toUpperCase() : 'U' }}</div>
-              
-              <div class="level-badge" :style="{ backgroundColor: userLevelInfo.color }" :title="`Hoàn thành ${nguoiDung.completed_trips || 0} chuyến đi`">
-                {{ userLevelInfo.icon }} {{ userLevelInfo.title }}
+            <h3>{{ nguoiDung.name }}</h3>
+            <p class="profile-email">{{ nguoiDung.email }}</p>
+            <div class="profile-stats-row">
+              <div class="stat-box">
+                <strong>{{ myTripsList.length }}</strong>
+                <small>Chuyến đi</small>
               </div>
-            </div>
-            
-            <div class="profile-info-premium" v-if="!editProfileMode">
-              <h3 class="profile-name">{{ nguoiDung.name }} <span v-if="nguoiDung.role === 'admin'" class="admin-badge">Admin</span></h3>
-              <p class="profile-email">{{ nguoiDung.email }}</p>
-              <p class="profile-bio" v-if="nguoiDung.bio">"{{ nguoiDung.bio }}"</p>
-              
-              <div class="profile-stats-grid">
-                <div class="stat-box-premium">
-                  <div class="stat-icon">🗺️</div>
-                  <strong>{{ myTripsList.length }}</strong>
-                  <small>Đã lên lịch</small>
-                </div>
-                <div class="stat-box-premium">
-                  <div class="stat-icon">✅</div>
-                  <strong>{{ nguoiDung.completed_trips || 0 }}</strong>
-                  <small>Hoàn thành</small>
-                </div>
-                <div class="stat-box-premium">
-                  <div class="stat-icon">❤️</div>
-                  <strong>{{ favoritesList.length }}</strong>
-                  <small>Yêu thích</small>
-                </div>
-                <div class="stat-box-premium">
-                  <div class="stat-icon">🏆</div>
-                  <strong>{{ nguoiDung.points || 0 }}</strong>
-                  <small>Điểm số</small>
-                </div>
-              </div>
-              <button class="logout-btn-premium" @click="dangXuat">Đăng xuất</button>
-            </div>
-            
-            <div class="profile-edit-form" v-else>
-              <h3>Chỉnh sửa hồ sơ</h3>
-              <div class="edit-field">
-                <label>Tên hiển thị</label>
-                <input type="text" v-model="profileForm.name" class="app-input" />
-              </div>
-              <div class="edit-field">
-                <label>Ảnh đại diện (Tải lên từ thiết bị)</label>
-                <input type="file" accept="image/*" @change="handleAvatarUpload" class="app-input" style="padding: 8px;" />
-                <div v-if="profileForm.avatar && profileForm.avatar.startsWith('data:image')" style="margin-top: 10px; display: flex; align-items: center; gap: 10px;">
-                   <img :src="profileForm.avatar" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #10b981;" />
-                   <span style="font-size: 0.85rem; color: #10b981; font-weight: 600;">Đã đính kèm ảnh mới</span>
-                </div>
-              </div>
-              <div class="edit-field">
-                <label>Giới thiệu bản thân</label>
-                <textarea v-model="profileForm.bio" class="app-input" rows="3" placeholder="Sở thích du lịch của bạn là gì?"></textarea>
-              </div>
-              <div class="edit-actions">
-                <button class="cancel-edit-btn" @click="editProfileMode = false">Hủy</button>
-                <button class="save-edit-btn" @click="saveProfile">💾 Lưu thay đổi</button>
+              <div class="stat-box">
+                <strong>{{ favoritesList.length }}</strong>
+                <small>Yêu thích</small>
               </div>
             </div>
+            <button class="logout-btn" @click="dangXuat">Đăng xuất</button>
           </div>
 
           <!-- Nếu chưa đăng nhập -->
@@ -2539,19 +2499,25 @@
           </div>
 
           <!-- Danh sách Địa điểm yêu thích -->
-          <div v-if="nguoiDung && favoritesList.length" class="favorites-section">
-            <h3>Địa điểm đã lưu yêu thích ({{ favoritesList.length }})</h3>
+          <div v-if="nguoiDung && favoritesList.length" class="favorites-section" style="margin-top: 32px; text-align: left;">
+            <h3 style="margin-bottom: 20px; color: #0f172a;">Địa điểm đã lưu yêu thích ({{ favoritesList.length }})</h3>
             <div class="places-app-grid">
               <article v-for="place in favoritesList" :key="place._id" class="app-place-card" v-reveal>
-                <div class="place-card-top">
-                  <span class="place-card-type">{{ getPlaceTypeLabel(place.type) }}</span>
-                  <button class="heart-action-btn active" @click="doiYeuThich(place._id)">♥</button>
+                <div class="place-img-cover" :style="{ backgroundImage: `url(${getPlaceImage(place)})` }">
+                  <span :class="['place-card-type', 'type-' + place.type]">
+                    {{ getPlaceTypeLabel(place.type) }}
+                  </span>
+                  <button class="heart-action-btn active" @click.stop="doiYeuThich(place._id)" title="Bỏ yêu thích">
+                    ♥
+                  </button>
                 </div>
-                <h4>{{ place.name }}</h4>
-                <p class="place-card-desc">{{ place.description }}</p>
-                <p class="place-card-address" v-if="place.address">📍 {{ place.address }}</p>
-                <div class="place-card-bottom">
-                  <a class="place-maps-btn" :href="chiDuongUrl(place.name, place.address)" target="_blank">🗺️ Chỉ đường</a>
+                <div class="place-card-content">
+                  <h4>{{ place.name }}</h4>
+                  <p class="place-card-desc">{{ place.description }}</p>
+                  <p class="place-card-address" v-if="place.address">📍 {{ place.address }}</p>
+                  <div class="place-card-bottom">
+                    <a class="place-maps-btn" :href="chiDuongUrl(place.name, place.address)" target="_blank">🗺️ Chỉ đường</a>
+                  </div>
                 </div>
               </article>
             </div>
@@ -4276,8 +4242,6 @@ watch(
   { immediate: true }
 )
 const dangTao = ref(false)
-const modalDeleteVisible = ref(false)
-const deleteTarget = ref(null)
 const taoPlanError = ref('')
 const lichTrinh = ref(null)
 const selectedPlaces = ref([])
@@ -6068,127 +6032,6 @@ function moTaThoiTiet(code) {
   if (code <= 67 || code <= 82) return 'Có mưa rào'
   return 'Dông bão'
 }
-
-
-// --- TRIPS LOGIC INJECTED ---
-const selectedTrips = ref([])
-const isSelectAllTrips = computed(() => myTripsList.value.length > 0 && selectedTrips.value.length === myTripsList.value.length)
-
-function toggleTripSelection(id) {
-  const idx = selectedTrips.value.indexOf(id)
-  if (idx > -1) selectedTrips.value.splice(idx, 1)
-  else selectedTrips.value.push(id)
-}
-
-function toggleSelectAllTrips() {
-  if (isSelectAllTrips.value) {
-    selectedTrips.value = []
-  } else {
-    selectedTrips.value = myTripsList.value.map(t => t._id)
-  }
-}
-
-function promptDeleteSelected() {
-  if (!selectedTrips.value.length) return
-  deleteTarget.value = 'selected'
-  modalDeleteVisible.value = true
-}
-
-function promptDeleteTrip(trip) {
-  if (trip === 'all') {
-    deleteTarget.value = 'all'
-  } else {
-    deleteTarget.value = trip
-  }
-  modalDeleteVisible.value = true
-}
-
-async function executeDeleteTrips() {
-  try {
-    let idsToDelete = []
-    if (deleteTarget.value === 'all') {
-      idsToDelete = myTripsList.value.map(t => t._id)
-    } else if (deleteTarget.value === 'selected') {
-      idsToDelete = [...selectedTrips.value]
-    } else if (deleteTarget.value?._id) {
-      idsToDelete = [deleteTarget.value._id]
-    }
-
-    if (!idsToDelete.length) return
-
-    await api.post('/trips/delete-multiple', { tripIds: idsToDelete })
-    
-    // Xóa khỏi UI
-    myTripsList.value = myTripsList.value.filter(t => !idsToDelete.includes(t._id))
-    selectedTrips.value = []
-    modalDeleteVisible.value = false
-    deleteTarget.value = null
-    
-    if (xemTripChiTiet.value && idsToDelete.includes(xemTripChiTiet.value._id)) {
-      xemTripChiTiet.value = null
-      hienModalChiTietTrip.value = false
-    }
-  } catch (err) {
-    console.error('Lỗi xóa chuyến đi:', err)
-    alert('Không thể xóa chuyến đi. Vui lòng thử lại.')
-  }
-}
-
-// --- PROFILE LOGIC INJECTED ---
-const isEditingProfile = ref(false)
-const profileForm = reactive({
-  name: '',
-  bio: '',
-  avatar: ''
-})
-
-const userStats = computed(() => {
-  return {
-    points: nguoiDung.value?.points || 0,
-    completedTrips: nguoiDung.value?.completed_trips || 0,
-    savedTrips: myTripsList.value?.length || 0,
-    favoritePlaces: favoritesList.value?.length || 0
-  }
-})
-
-function editProfile() {
-  profileForm.name = nguoiDung.value?.name || ''
-  profileForm.bio = nguoiDung.value?.bio || ''
-  profileForm.avatar = nguoiDung.value?.avatar || ''
-  isEditingProfile.value = true
-}
-
-function handleAvatarUpload(e) {
-  const file = e.target.files[0]
-  if (!file) return
-  if (file.size > 2 * 1024 * 1024) {
-    alert('Kích thước ảnh tối đa 2MB')
-    return
-  }
-  const reader = new FileReader()
-  reader.onload = (event) => {
-    profileForm.avatar = event.target.result
-  }
-  reader.readAsDataURL(file)
-}
-
-async function saveProfile() {
-  try {
-    const res = await api.put('/auth/update-profile', {
-      name: profileForm.name,
-      bio: profileForm.bio,
-      avatar: profileForm.avatar
-    })
-    nguoiDung.value = res.data
-    localStorage.setItem('user', JSON.stringify(res.data))
-    isEditingProfile.value = false
-  } catch (err) {
-    console.error('Lỗi cập nhật hồ sơ:', err)
-    alert(err.response?.data?.error || 'Không thể cập nhật hồ sơ')
-  }
-}
-
-
 
 onMounted(async () => {
   // Restore Dark Mode
@@ -14600,293 +14443,4 @@ button { cursor: pointer; }
 .tdm-act-cost.free-tag {
   color: #10b981;
 }
-
-/* User Profile & Trips CSS */
-.profile-card-premium {
-  background: #fff;
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: 0 10px 40px -10px rgba(0,0,0,0.1);
-  margin-bottom: 24px;
-  border: 1px solid var(--border-color);
-}
-.profile-cover {
-  height: 120px;
-  background: linear-gradient(135deg, #0ea5e9, #10b981);
-  position: relative;
-}
-.edit-profile-btn {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  background: rgba(255,255,255,0.2);
-  color: white;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  backdrop-filter: blur(4px);
-  transition: 0.2s;
-}
-.edit-profile-btn:hover { background: rgba(255,255,255,0.3); }
-.profile-avatar-premium {
-  position: relative;
-  width: 100px;
-  height: 100px;
-  margin: -50px auto 16px;
-  border-radius: 50%;
-  border: 4px solid white;
-  background: white;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-.avatar-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
-}
-.avatar-placeholder {
-  width: 100%;
-  height: 100%;
-  background: var(--primary);
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 2.5rem;
-  font-weight: 800;
-}
-.level-badge {
-  position: absolute;
-  bottom: -5px;
-  background: #8b5cf6;
-  color: white;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 800;
-  border: 2px solid white;
-  white-space: nowrap;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}
-.profile-info-premium {
-  padding: 0 24px 24px;
-  text-align: center;
-}
-.profile-name {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: #0f172a;
-  margin-bottom: 4px;
-}
-.admin-badge {
-  background: #ef4444;
-  color: white;
-  font-size: 0.7rem;
-  padding: 2px 6px;
-  border-radius: 4px;
-  vertical-align: middle;
-}
-.profile-email {
-  color: #64748b;
-  font-size: 0.95rem;
-  margin-bottom: 12px;
-}
-.profile-bio {
-  color: #475569;
-  font-style: italic;
-  font-size: 0.95rem;
-  margin-bottom: 24px;
-  max-width: 400px;
-  margin-left: auto;
-  margin-right: auto;
-}
-.profile-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  background: #f8fafc;
-  padding: 20px;
-  border-radius: 16px;
-  margin-bottom: 24px;
-}
-.stat-box-premium {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-.stat-box-premium .stat-icon {
-  font-size: 1.5rem;
-  margin-bottom: 4px;
-}
-.stat-box-premium strong {
-  font-size: 1.4rem;
-  font-weight: 800;
-  color: #0f172a;
-}
-.stat-box-premium small {
-  color: #64748b;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  font-weight: 700;
-}
-.logout-btn-premium {
-  background: white;
-  color: #ef4444;
-  border: 1px solid #ef4444;
-  padding: 10px 24px;
-  border-radius: 8px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: 0.2s;
-}
-.logout-btn-premium:hover {
-  background: #fef2f2;
-}
-
-.profile-edit-form {
-  padding: 0 24px 24px;
-  text-align: left;
-}
-.profile-edit-form h3 {
-  margin-bottom: 20px;
-  text-align: center;
-}
-.edit-field {
-  margin-bottom: 16px;
-}
-.edit-field label {
-  display: block;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #475569;
-  margin-bottom: 6px;
-}
-.edit-actions {
-  display: flex;
-  gap: 12px;
-  margin-top: 24px;
-}
-.cancel-edit-btn {
-  flex: 1;
-  background: white;
-  border: 1px solid #cbd5e1;
-  color: #64748b;
-  padding: 12px;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-}
-.save-edit-btn {
-  flex: 2;
-  background: #10b981;
-  border: none;
-  color: white;
-  padding: 12px;
-  border-radius: 8px;
-  font-weight: 700;
-  cursor: pointer;
-}
-.my-trips-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 14px;
-}
-.my-trip-card {
-  background: #fff;
-  border: 1px solid var(--border-color);
-  padding: 16px;
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
-}
-.trip-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-.trip-dest { font-size: 11px; font-weight: 800; color: var(--primary); background: var(--primary-light); padding: 2px 8px; border-radius: 8px; }
-.trip-date { font-size: 11px; color: var(--text-sub); }
-.my-trip-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
-.my-trip-card p { font-size: 12px; color: var(--text-sub); margin-bottom: 12px; }
-.trip-actions { display: flex; gap: 8px; }
-.open-trip-btn {
-  flex: 1;
-  background: var(--primary);
-  color: #fff;
-  border: 0;
-  padding: 8px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 700;
-}
-.share-trip-btn {
-  background: #f1f5f9;
-  border: 1px solid var(--border-color);
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.share-trip-btn:hover {
-  background: #e2e8f0;
-}
-.delete-trip-btn {
-  background: #fff1f2;
-  border: 1px solid #fecdd3;
-  color: #e11d48;
-  padding: 8px 10px;
-  border-radius: 6px;
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  flex-shrink: 0;
-  line-height: 1;
-}
-.delete-trip-btn:hover {
-  background: #e11d48;
-  color: #fff;
-  border-color: #e11d48;
-  transform: scale(1.08);
-  box-shadow: 0 3px 10px rgba(225, 29, 72, 0.35);
-}
-[data-theme="dark"] .delete-trip-btn {
-  background: rgba(225, 29, 72, 0.12);
-  border-color: rgba(225, 29, 72, 0.3);
-  color: #fb7185;
-}
-[data-theme="dark"] .delete-trip-btn:hover {
-  background: #e11d48;
-  color: #fff;
-}
-/* CHAT TAB */
-.chat-pane {
-  display: flex;
-  flex-direction: column;
-  height: calc(100vh - 180px);
-}
-.chat-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: #fff;
-  padding: 12px 16px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-color);
-}
-.ai-avatar-badge {
-  width: 36px;
-  height: 36px;
-  background: var(--primary-light);
-  border-radius: 50%;
-  display: grid;
-  place-content: center;
-  font-size: 18px;
-}
-.chat-header h3 { font-size: 14px; font-weight: 800; }
-.ai-status { font-size: 11px; color: #16a34a; font-weight: 600; }
-
 </style>
