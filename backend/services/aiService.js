@@ -258,6 +258,7 @@ THÔNG TIN CHUYẾN ĐI:
 - Tổng ngân sách: ${nganSach} VND
 - Ngày khởi hành: ${ngayBatDau || 'Chưa định ngày'} đến ${ngayKetThuc || 'Chưa định ngày'}
 - Phương tiện: ${duLieu.transportation || 'linh hoạt'}
+${(duLieu.selected_hotel || duLieu.khachSanDaChon) ? `- KHÁCH SẠN ĐÃ CHỌN BỞI DU KHÁCH: "${(duLieu.selected_hotel || duLieu.khachSanDaChon).name}" (Địa chỉ: ${(duLieu.selected_hotel || duLieu.khachSanDaChon).address || diaDiem}, Loại phòng: ${(duLieu.selected_room || duLieu.phongDaChon)?.name || 'Phòng Tiêu Chuẩn'}, Giá: ${(duLieu.selected_room || duLieu.phongDaChon)?.price || (duLieu.selected_hotel || duLieu.khachSanDaChon).price_from || (duLieu.selected_hotel || duLieu.khachSanDaChon).estimated_cost || 750000} VND/đêm). BẮT BUỘC dùng khách sạn này cho "hotel_recommendation" và toàn bộ các mốc Nhận phòng / Về khách sạn nghỉ ngơi!` : ''}
 - Yêu cầu khách sạn: ${duLieu.hotel_request || 'tiêu chuẩn, vị trí thuận tiện'}
 - Phong cách nhận phòng: ${duLieu.hotel_checkin_preference === 'play_first' ? 'ĐI CHƠI TRƯỚC, BẮT BUỘC xếp lịch Nhận phòng khách sạn vào ĐÚNG 14:00 CHIỀU của Ngày 1 (sau khi ăn trưa xong)' : 'CẤT ĐỒ TRƯỚC, BẮT BUỘC xếp lịch Nhận phòng/Gửi đồ tại khách sạn là HOẠT ĐỘNG ĐẦU TIÊN CỦA NGÀY 1 (ví dụ 08:00 - 10:00 sáng), SAU ĐÓ mới đi chơi'}
 - Sở thích: ${soThich.join(', ') || 'khám phá ẩm thực đặc sản, check-in cảnh đẹp'}
@@ -513,14 +514,32 @@ async function taoLichTrinhThongMinh(duLieu, diaDiemDatabase) {
     hotels.sort((a, b) => (a.estimated_cost || 9999999) - (b.estimated_cost || 9999999));
   }
 
-  const hotelChon = hotels[0] || {
-    name: `Khách sạn nghỉ dưỡng trung tâm ${diemDen}`,
-    address: `Đường trung tâm thành phố ${diemDen}`,
-    rating: 4.8,
-    estimated_cost: 850000,
-    description: `Khách sạn vị trí đắc địa gần trung tâm ${diemDen}, tiện nghi hiện đại và phòng ốc thoáng đãng.`,
-    latitude: centroid ? centroid.latitude : null,
-    longitude: centroid ? centroid.longitude : null
+  let hotelChon = null
+  if (duLieu.selected_hotel || duLieu.khachSanDaChon) {
+    const selH = duLieu.selected_hotel || duLieu.khachSanDaChon
+    const selR = duLieu.selected_room || duLieu.phongDaChon
+    hotelChon = {
+      name: selH.name,
+      address: selH.address || `Trung tâm ${diemDen}`,
+      rating: selH.rating || 4.8,
+      estimated_cost: Number(selR?.price || selH.price_from || selH.estimated_cost || 850000),
+      price_per_night: Number(selR?.price || selH.price_from || selH.estimated_cost || 850000),
+      room_name: selR?.name || 'Phòng Tiêu Chuẩn',
+      description: selR ? `${selH.name} (${selR.name})` : (selH.description || `Khách sạn nghỉ dưỡng tại ${diemDen}`),
+      latitude: selH.latitude || (centroid ? centroid.latitude : null),
+      longitude: selH.longitude || (centroid ? centroid.longitude : null),
+      image: selH.image || null
+    }
+  } else {
+    hotelChon = hotels[0] || {
+      name: `Khách sạn nghỉ dưỡng trung tâm ${diemDen}`,
+      address: `Đường trung tâm thành phố ${diemDen}`,
+      rating: 4.8,
+      estimated_cost: 850000,
+      description: `Khách sạn vị trí đắc địa gần trung tâm ${diemDen}, tiện nghi hiện đại và phòng ốc thoáng đãng.`,
+      latitude: centroid ? centroid.latitude : null,
+      longitude: centroid ? centroid.longitude : null
+    }
   }
 
   // Danh sách các địa điểm đã đi để TUYỆT ĐỐI KHÔNG LẶP LẠI
@@ -741,7 +760,22 @@ function boSungDuLieuLichTrinh(lichTrinh, duLieu, diaDiemDatabase) {
   const placeDataMap = new Map(diaDiemList.map(p => [p.name.toLowerCase().trim(), p]))
   
   let validatedHotelRec = lichTrinh.hotel_recommendation || defaultHotel;
-  if (validatedHotelRec && validatedHotelRec.name) {
+  if (duLieu.selected_hotel || duLieu.khachSanDaChon) {
+    const selH = duLieu.selected_hotel || duLieu.khachSanDaChon;
+    const selR = duLieu.selected_room || duLieu.phongDaChon;
+    const priceNight = Number(selR?.price || selH.price_from || selH.estimated_cost || 850000);
+    validatedHotelRec = {
+      name: selH.name,
+      address: selH.address || `Trung tâm ${duLieu.destination || 'thành phố'}`,
+      rating: selH.rating || 4.8,
+      price_per_night: priceNight,
+      room_name: selR?.name || 'Phòng Tiêu Chuẩn',
+      description: selR ? `${selH.name} - ${selR.name}` : (selH.description || `Khách sạn nghỉ dưỡng`),
+      image: selH.image || null,
+      latitude: selH.latitude || null,
+      longitude: selH.longitude || null
+    };
+  } else if (validatedHotelRec && validatedHotelRec.name) {
     const hName = validatedHotelRec.name.toLowerCase().trim();
     if (placeDataMap.has(hName) && placeDataMap.get(hName).estimated_cost) {
       validatedHotelRec.price_per_night = placeDataMap.get(hName).estimated_cost;

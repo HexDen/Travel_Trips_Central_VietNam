@@ -181,14 +181,14 @@
                   <p class="shb-text">{{ currentSpotlight.bestSeason }}</p>
                 </div>
 
-                <!-- Nút CTA chuyển sang lên lịch trình ngay -->
-                <div class="spotlight-actions">
+                <!-- Nút CTA chuyển sang lên lịch trình ngay (Ẩn hoàn toàn khi ở Tất cả miền Trung theo Yêu cầu 3) -->
+                <div class="spotlight-actions" v-if="formDuLieu.diemDen !== ALL_DESTINATIONS">
                   <button
                     type="button"
                     class="spotlight-cta-btn"
                     @click="chuyenSangLenLichTrinh(formDuLieu.diemDen)"
                   >
-                    <span><AppIcon name="sparkles" :size="16" /> Lên lịch trình đến {{ formDuLieu.diemDen === ALL_DESTINATIONS ? 'Miền Trung' : formDuLieu.diemDen }} ngay</span>
+                    <span><AppIcon name="sparkles" :size="16" /> Lên lịch trình đến {{ formDuLieu.diemDen }} ngay</span>
                     <strong>→</strong>
                   </button>
                 </div>
@@ -319,6 +319,14 @@
                     <p class="place-card-desc">{{ place.description }}</p>
                     <p v-if="place.address" class="place-card-address"><AppIcon name="pin" :size="14" /> {{ place.address }}</p>
                     <div class="place-card-bottom">
+                      <button
+                        v-if="place.type === 'hotel'"
+                        type="button"
+                        class="view-hotel-rooms-card-btn"
+                        @click.stop="moModalXemPhong(place)"
+                      >
+                        <AppIcon name="eye" :size="13" /> Xem phòng
+                      </button>
                       <button class="add-to-plan-btn" @click="themVaoLichTrinhVaMoPlanner(place.name)">
                         + Lên lịch trình
                       </button>
@@ -405,9 +413,9 @@
             <div class="wizard-progress">
               <div :class="['step-indicator', { active: currentPlannerStep >= 1 }]">1. Điểm đến</div>
               <div class="step-divider"></div>
-              <div :class="['step-indicator', { active: currentPlannerStep >= 2 }]">2. Tài chính</div>
+              <div :class="['step-indicator', { active: currentPlannerStep >= 2 }]">2. Tài chính & Địa điểm</div>
               <div class="step-divider"></div>
-              <div :class="['step-indicator', { active: currentPlannerStep >= 3 }]">3. Sở thích</div>
+              <div :class="['step-indicator', { active: currentPlannerStep >= 3 }]">3. Di chuyển & Lưu trú</div>
             </div>
 
             <!-- BƯỚC 1: ĐIỂM ĐẾN & THỜI GIAN -->
@@ -740,67 +748,6 @@
                   </div>
                 </div>
 
-                <!-- DỰ TOÁN CHI PHÍ THÔNG MINH (DYNAMIC BUDGET BREAKDOWN) -->
-                <div class="dynamic-budget-card">
-                  <div class="dbc-header">
-                    <div class="dbc-title-group">
-                      <span class="dbc-icon"><AppIcon name="barchart" :size="16" /></span>
-                      <div>
-                        <strong>Dự toán phân bổ thông minh theo ngân sách</strong>
-                        <small>AI tự động tính toán chi phí ước tính theo số người ({{ formDuLieu.soNguoi }} người) & số ngày ({{ formDuLieu.soNgay }} ngày)</small>
-                      </div>
-                    </div>
-                    <span class="dbc-total-badge">{{ dinhDangTien(formDuLieu.nganSach) }}đ</span>
-                  </div>
-
-                  <!-- Thanh tiến trình phân bổ 4 tỷ lệ màu sắc -->
-                  <div class="dbc-progress-bar">
-                    <div class="dbc-seg seg-hotel" :style="{ width: dynamicBudget.hotelPercent + '%' }" title="Khách sạn 35%"></div>
-                    <div class="dbc-seg seg-food" :style="{ width: dynamicBudget.foodPercent + '%' }" title="Ăn uống 35%"></div>
-                    <div class="dbc-seg seg-transit" :style="{ width: dynamicBudget.transportPercent + '%' }" title="Di chuyển & Vé 20%"></div>
-                    <div class="dbc-seg seg-reserve" :style="{ width: dynamicBudget.reservePercent + '%' }" title="Dự phòng 10%"></div>
-                  </div>
-
-                  <!-- Grid 4 danh mục chi phí cụ thể -->
-                  <div class="dbc-grid">
-                    <div class="dbc-item">
-                      <div class="dbc-item-top">
-                        <span class="dbc-dot dot-hotel"></span>
-                        <span class="dbc-cat"><AppIcon name="hotel" :size="13" /> Khách sạn (~35%)</span>
-                      </div>
-                      <strong class="dbc-amount">{{ dinhDangTien(dynamicBudget.hotel) }}đ</strong>
-                      <small class="dbc-sub">{{ dynamicBudget.hotelDesc }}</small>
-                    </div>
-
-                    <div class="dbc-item">
-                      <div class="dbc-item-top">
-                        <span class="dbc-dot dot-food"></span>
-                        <span class="dbc-cat"><AppIcon name="utensils" :size="13" /> Ăn uống (~35%)</span>
-                      </div>
-                      <strong class="dbc-amount">{{ dinhDangTien(dynamicBudget.food) }}đ</strong>
-                      <small class="dbc-sub">{{ dynamicBudget.foodDesc }}</small>
-                    </div>
-
-                    <div class="dbc-item">
-                      <div class="dbc-item-top">
-                        <span class="dbc-dot dot-transit"></span>
-                        <span class="dbc-cat"><AppIcon name="car" :size="13" /> Di chuyển & Vé (~20%)</span>
-                      </div>
-                      <strong class="dbc-amount">{{ dinhDangTien(dynamicBudget.transportAndTickets) }}đ</strong>
-                      <small class="dbc-sub">{{ dynamicBudget.transitDesc }}</small>
-                    </div>
-
-                    <div class="dbc-item">
-                      <div class="dbc-item-top">
-                        <span class="dbc-dot dot-reserve"></span>
-                        <span class="dbc-cat"><AppIcon name="shield" :size="13" /> Dự phòng (~10%)</span>
-                      </div>
-                      <strong class="dbc-amount">{{ dinhDangTien(dynamicBudget.reserve) }}đ</strong>
-                      <small class="dbc-sub">{{ dynamicBudget.reserveDesc }}</small>
-                    </div>
-                  </div>
-                </div>
-
                 <!-- Lời khuyên tính cách AI theo ngân sách -->
                 <div :class="['personality-budget-card', thongDiepNganSach.type]">
                   <div class="pbc-header">
@@ -814,503 +761,1034 @@
                 </div>
               </div>
 
-
-              <!-- TỐI ƯU CHI PHÍ GIÁ XE & GỢI Ý NHÀ XE GIÁ RẺ -->
-              <div class="bus-optimization-section full-width">
-                <div class="bos-header">
+              <!-- BỘ CHỌN ĐỊA ĐIỂM & ĐẶC SẢN NỔI TIẾNG THEO THÀNH PHỐ (ĐƯA VÀO BƯỚC 2 THEO YÊU CẦU 2 - FULL WIDTH) -->
+              <div class="places-picker-box full-width" style="margin-top: 16px;">
+                <div class="picker-top">
                   <div>
-                    <span class="bos-kicker"><AppIcon name="bus" :size="16" /> TỐI ƯU CHI PHÍ GIÁ XE & DI CHUYỂN</span>
-                    <h3>Gợi ý nhà xe giá rẻ tuyến {{ formDuLieu.diemKhoiHanh }} ➔ {{ formDuLieu.diemDen }}</h3>
+                    <small class="picker-kicker">GỢI Ý ĐỊA PHƯƠNG — BẤM ĐỂ CHỌN ĐIỂM YÊU THÍCH</small>
+                    <h4>Bạn muốn ghé địa danh & quán ngon nào tại {{ formDuLieu.diemDen }}?</h4>
                   </div>
-                  <div class="bos-badges-group">
-                    <span class="bos-dist-badge">Cự ly: ~{{ transitRouteInfo.estimatedDistanceKm || transitRouteInfo.distanceKm || 350 }} km</span>
-                    <span class="bos-crawler-badge" title="Tự động cập nhật giá vé từ các nhà xe và đường sắt">
-                      <AppIcon name="bot" :size="14" /> Cào dữ liệu vé xe & vé tàu: Sẵn sàng
+                  <span v-if="selectedPlaces.length" class="badge-selected-count">
+                    <AppIcon name="check" size="14" /> Đã chọn {{ selectedPlaces.length }} điểm
+                  </span>
+                </div>
+
+                <!-- THANH TÌM KIẾM ĐỊA ĐIỂM & MÓN ĂN NHANH (TỐI GIẢN GIAO DIỆN) -->
+                <div class="place-picker-search-bar">
+                  <span class="pps-icon"><AppIcon name="search" size="16" /></span>
+                  <input
+                    v-model="searchPlacePickerQuery"
+                    type="text"
+                    :placeholder="'Tìm kiếm địa điểm, di tích, món ăn, cafe tại ' + (formDuLieu.diemDen === ALL_DESTINATIONS ? 'Miền Trung' : formDuLieu.diemDen) + '...'"
+                    class="pps-input"
+                  />
+                  <button
+                    v-if="searchPlacePickerQuery"
+                    type="button"
+                    class="pps-clear-btn"
+                    @click="searchPlacePickerQuery = ''"
+                    title="Xóa tìm kiếm"
+                  ><AppIcon name="x" size="14" /></button>
+                </div>
+
+                <!-- CÁC TAB PHÂN LOẠI DANH MỤC GỌN GÀNG (LOẠI BỎ KHÁCH SẠN VÌ ĐÃ CÓ BƯỚC 3 CHUYÊN BIỆT) -->
+                <div class="place-picker-tabs">
+                  <button
+                    type="button"
+                    :class="['ppt-btn', { active: placePickerActiveTab === 'all' }]"
+                    @click="placePickerActiveTab = 'all'"
+                  >
+                    Tất cả ({{ totalFilteredPlacesCount }})
+                  </button>
+                  <button
+                    type="button"
+                    :class="['ppt-btn', { active: placePickerActiveTab === 'attraction' }]"
+                    @click="placePickerActiveTab = 'attraction'"
+                  >
+                    <AppIcon name="landmark" size="15" /> Thắng cảnh ({{ filteredAttractions.length }})
+                  </button>
+                  <button
+                    type="button"
+                    :class="['ppt-btn', { active: placePickerActiveTab === 'restaurant' }]"
+                    @click="placePickerActiveTab = 'restaurant'"
+                  >
+                    <AppIcon name="utensils" size="15" /> Đặc sản ({{ filteredRestaurants.length }})
+                  </button>
+                  <button
+                    type="button"
+                    :class="['ppt-btn', { active: placePickerActiveTab === 'cafe' }]"
+                    @click="placePickerActiveTab = 'cafe'"
+                  >
+                    <AppIcon name="coffee" size="15" /> Cafe ({{ filteredCafes.length }})
+                  </button>
+                  <button
+                    v-if="selectedPlaces.length"
+                    type="button"
+                    :class="['ppt-btn ppt-selected-tab', { active: placePickerActiveTab === 'selected' }]"
+                    @click="placePickerActiveTab = 'selected'"
+                  >
+                    <AppIcon name="star" size="15" filled color="#f59e0b" /> Đã chọn ({{ selectedPlaces.length }})
+                  </button>
+                </div>
+
+                <!-- KHAY ĐỊA ĐIỂM ĐÃ CHỌN (TIỆN LỢI & DỄ QUẢN LÝ) -->
+                <div v-if="selectedPlaces.length" class="selected-places-tray">
+                  <div class="spt-header">
+                    <span class="spt-title"><AppIcon name="pin" size="15" /> Danh sách bạn đã chọn ({{ selectedPlaces.length }} địa điểm):</span>
+                    <button type="button" class="spt-clear-all" @click="clearAllSelectedPlaces">Xóa tất cả</button>
+                  </div>
+                  <div class="spt-chips">
+                    <span v-for="name in selectedPlaces" :key="name" class="spt-chip">
+                      {{ name }}
+                      <button type="button" @click="removeSelectedPlace(name)" title="Bỏ chọn"><AppIcon name="x" size="12" /></button>
                     </span>
                   </div>
                 </div>
 
-                <!-- So sánh chi phí các phương tiện -->
-                <div class="transit-vehicles-grid" v-reveal>
-                  <div
-                    v-for="v in transitRouteInfo.vehicleComparison"
-                    :key="v.type"
-                    :class="['tv-card', {
-                      active: (v.type === 'bus' && formDuLieu.phuongTien === 'xe khách') ||
-                              (v.type === 'flight' && formDuLieu.phuongTien === 'máy bay') ||
-                              (v.type === 'train' && formDuLieu.phuongTien === 'tàu hỏa') ||
-                              (v.type === 'motorbike' && formDuLieu.phuongTien === 'xe máy'),
-                      'highlight-cheapest': v.is_cheapest
-                    }]"
-                    @click="chonPhuongTienTuSoSanh(v)"
-                    role="button"
-                    tabindex="0"
-                  >
-                    <div class="tv-top">
-                      <span class="tv-icon"><AppIcon :name="v.icon" :size="20" /></span>
-                      <span v-if="v.is_cheapest" class="tv-badge cheapest"><AppIcon name="sparkles" :size="12" /> Rẻ nhất</span>
-                      <span v-else-if="v.is_fastest" class="tv-badge fastest"><AppIcon name="sparkles" :size="12" /> Nhanh nhất</span>
-                    </div>
-                    <div class="tv-title">{{ v.name }}</div>
-                    <div class="tv-price-row">
-                      <strong>{{ dinhDangTien(v.estimated_cost_per_person) }}đ</strong>
-                      <small>/người</small>
-                    </div>
-                    <div class="tv-total" v-if="formDuLieu.soNguoi > 1">
-                      Tổng {{ formDuLieu.soNguoi }} người: <b>{{ dinhDangTien(v.estimated_cost_per_person * formDuLieu.soNguoi) }}đ</b>
-                    </div>
-                    <div class="tv-duration"><AppIcon name="clock" :size="13" /> {{ v.duration }}</div>
-                    <p class="tv-advantage">{{ v.advantage }}</p>
-                  </div>
+                <!-- Thông báo AI Crawler -->
+                <div v-if="thongBaoCrawl" class="crawl-alert-banner">
+                  <span>{{ thongBaoCrawl }}</span>
                 </div>
 
-                <!-- Nút chuyển tab Xem Vé Xe Khách vs Vé Tàu Hỏa -->
-                <div class="transit-tabs-header">
-                  <button
-                    type="button"
-                    :class="['transit-subtab-btn', { active: transitTab === 'bus' }]"
-                    @click="transitTab = 'bus'; formDuLieu.phuongTien = 'xe khách'"
-                  >
-                    <AppIcon name="bus" :size="15" /> Vé Xe Khách Giá Rẻ ({{ transitRouteInfo.operators?.length || 0 }})
-                  </button>
-                  <button
-                    type="button"
-                    :class="['transit-subtab-btn', { active: transitTab === 'train' }]"
-                    @click="transitTab = 'train'; formDuLieu.phuongTien = 'tàu hỏa'"
-                  >
-                    <AppIcon name="train" :size="15" /> Vé Tàu Hỏa Thống Nhất ({{ transitRouteInfo.trains?.length || 3 }})
-                  </button>
-                </div>
-
-                <!-- TAB 1: Danh sách gợi ý nhà xe giá rẻ -->
-                <div v-show="transitTab === 'bus'" class="bus-operators-box">
-                  <div class="bob-title-row">
-                    <h4>Top nhà xe giá rẻ & uy tín khuyên dùng</h4>
-                    <small>Bấm "Chọn xe này" để đưa vào dự toán chi phí tự động</small>
-                  </div>
-
-                  <div class="bus-operators-grid">
-                    <div
-                      v-for="bus in transitRouteInfo.operators"
-                      :key="bus.id"
-                      :class="['bus-item-card', { selected: formDuLieu.nhaXeDaChon && formDuLieu.nhaXeDaChon.id === bus.id }]"
+                <!-- Nhóm Thắng cảnh -->
+                <div
+                  v-if="filteredAttractions.length && (placePickerActiveTab === 'all' || placePickerActiveTab === 'attraction')"
+                  class="picker-row"
+                >
+                  <div class="picker-row-header">
+                    <span class="row-label"><AppIcon name="camera" size="16" /> Thắng cảnh & Di tích ({{ filteredAttractions.length }}):</span>
+                    <button
+                      v-if="!searchPlacePickerQuery && filteredAttractions.length > 8 && placePickerActiveTab === 'all'"
+                      type="button"
+                      class="picker-expand-toggle-btn"
+                      @click="togglePickerExpand('attraction')"
                     >
-                      <div class="bic-header">
-                        <div>
-                          <div class="bic-name-row">
-                            <span class="bic-name">{{ bus.name }}</span>
-                            <span class="bic-tag" v-if="bus.badge">{{ bus.badge }}</span>
-                          </div>
-                          <span class="bic-type">{{ bus.type }}</span>
-                        </div>
-                        <div class="bic-rating">
-                          <AppIcon name="star" :size="13" filled color="#f59e0b" /> {{ bus.rating }} <small>({{ bus.reviews }} đánh giá)</small>
-                        </div>
-                      </div>
-
-                      <div class="bic-specs">
-                        <div class="bic-spec">
-                          <span><AppIcon name="clock" :size="13" /> Thời gian:</span>
-                          <b>{{ bus.duration }}</b>
-                        </div>
-                        <div class="bic-spec-times">
-                          <span class="bst-label"><AppIcon name="clock" :size="13" /> Giờ xuất bến:</span>
-                          <div class="bst-chips">
-                            <span
-                              v-for="timeStr in (bus.depart_times ? bus.depart_times.split(',') : [])"
-                              :key="timeStr"
-                              class="bst-chip"
-                            >
-                              {{ timeStr.trim() }}
-                            </span>
-                          </div>
-                        </div>
-                        <div class="bic-spec">
-                          <span><AppIcon name="pin" :size="13" /> Điểm đón ➔ trả:</span>
-                          <small :title="bus.pickup + ' ➔ ' + bus.dropoff">{{ bus.pickup }} ➔ {{ bus.dropoff }}</small>
-                        </div>
-                      </div>
-
-                      <div class="bic-footer-clean">
-                        <!-- Hàng 1: Giá vé niêm yết & Tổng chi phí đoàn -->
-                        <div class="bic-price-line">
-                          <div class="bpl-left">
-                            <span class="bpl-label">Giá vé:</span>
-                            <strong class="bpl-unit">{{ dinhDangTien(bus.price) }}đ</strong>
-                            <small class="bpl-sub">/người</small>
-                          </div>
-                          <div class="bpl-right" v-if="formDuLieu.soNguoi > 1">
-                            <span class="bpl-total-badge">
-                              Tổng {{ formDuLieu.soNguoi }} vé: <b>{{ dinhDangTien(bus.price * formDuLieu.soNguoi) }}đ</b>
-                            </span>
-                          </div>
-                        </div>
-
-                        <!-- Hàng 2: Hai nút hành động chia đều 50/50 -->
-                        <div class="bic-actions-row">
-                          <a :href="`tel:${bus.hotline}`" class="bic-action-call" title="Gọi tổng đài đặt vé">
-                            <AppIcon name="phone" :size="14" /> {{ bus.hotline }}
-                          </a>
-                          <button
-                            type="button"
-                            :class="['bic-action-select', { active: formDuLieu.nhaXeDaChon && formDuLieu.nhaXeDaChon.id === bus.id }]"
-                            @click="chonNhaXe(bus)"
-                          >
-                            <AppIcon v-if="formDuLieu.nhaXeDaChon && formDuLieu.nhaXeDaChon.id === bus.id" name="check" :size="14" />
-                            {{ formDuLieu.nhaXeDaChon && formDuLieu.nhaXeDaChon.id === bus.id ? 'Đã chọn xe' : 'Chọn xe này' }}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+                      {{ isPickerExpanded.attraction ? '▲ Thu gọn' : `▼ Xem thêm (+${filteredAttractions.length - 8} địa điểm)` }}
+                    </button>
                   </div>
-                </div>
-
-                <!-- TAB 2: Danh sách vé tàu hỏa Thống Nhất (Đường Sắt Việt Nam) -->
-                <div v-show="transitTab === 'train'" class="train-operators-box">
-                  <div class="bob-title-row">
-                    <h4>Lịch trình & Giá vé Tàu Hỏa (Tổng công ty Đường sắt Việt Nam)</h4>
-                    <small>Trải nghiệm ngắm cảnh biển Lăng Cô, đèo Hải Vân và các cung đường di sản</small>
-                  </div>
-
-                  <div class="bus-operators-grid">
-                    <div
-                      v-for="train in transitRouteInfo.trains"
-                      :key="train.id"
-                      :class="['bus-item-card train-card', { selected: formDuLieu.tauDaChon && formDuLieu.tauDaChon.id === train.id }]"
+                  <div class="chips-wrap">
+                    <button
+                      v-for="p in getVisiblePlaces(filteredAttractions, 'attraction')"
+                      :key="p.name"
+                      type="button"
+                      :class="['app-chip', { active: isPlaceSelected(p.name) }]"
+                      @click="togglePlaceSelection(p.name)"
                     >
-                      <div class="bic-header">
-                        <div>
-                          <div class="bic-name-row">
-                            <span class="bic-name">{{ train.name }}</span>
-                            <span class="bic-tag train-tag" v-if="train.badge">{{ train.badge }}</span>
-                          </div>
-                          <span class="bic-type">{{ train.type }}</span>
-                        </div>
-                        <div class="bic-rating">
-                          <AppIcon name="star" :size="13" filled color="#f59e0b" /> {{ train.rating }} <small>(Tàu Thống Nhất)</small>
-                        </div>
-                      </div>
+                      <span class="chip-status"><AppIcon :name="isPlaceSelected(p.name) ? 'check' : 'plus'" size="12" /></span>
+                      <span>{{ p.name }}</span>
+                    </button>
+                  </div>
+                </div>
 
-                      <div class="bic-specs">
-                        <div class="bic-spec">
-                          <span><AppIcon name="clock" :size="13" /> Thời gian:</span>
-                          <b>{{ train.duration }}</b>
+                <!-- Nhóm Món ngon -->
+                <div
+                  v-if="filteredRestaurants.length && (placePickerActiveTab === 'all' || placePickerActiveTab === 'restaurant')"
+                  class="picker-row"
+                >
+                  <div class="picker-row-header">
+                    <span class="row-label"><AppIcon name="utensils" size="16" /> Quán đặc sản & Ẩm thực ({{ filteredRestaurants.length }}):</span>
+                    <button
+                      v-if="!searchPlacePickerQuery && filteredRestaurants.length > 8 && placePickerActiveTab === 'all'"
+                      type="button"
+                      class="picker-expand-toggle-btn"
+                      @click="togglePickerExpand('restaurant')"
+                    >
+                      {{ isPickerExpanded.restaurant ? '▲ Thu gọn' : `▼ Xem thêm (+${filteredRestaurants.length - 8} quán)` }}
+                    </button>
+                  </div>
+                  <div class="chips-wrap">
+                    <button
+                      v-for="p in getVisiblePlaces(filteredRestaurants, 'restaurant')"
+                      :key="p.name"
+                      type="button"
+                      :class="['app-chip', { active: isPlaceSelected(p.name) }]"
+                      @click="togglePlaceSelection(p.name)"
+                    >
+                      <span class="chip-status"><AppIcon :name="isPlaceSelected(p.name) ? 'check' : 'plus'" size="12" /></span>
+                      <span>{{ p.name }}</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Nhóm Cafe -->
+                <div
+                  v-if="filteredCafes.length && (placePickerActiveTab === 'all' || placePickerActiveTab === 'cafe')"
+                  class="picker-row"
+                >
+                  <div class="picker-row-header">
+                    <span class="row-label"><AppIcon name="coffee" size="16" /> Quán Cafe & Check-in ({{ filteredCafes.length }}):</span>
+                    <button
+                      v-if="!searchPlacePickerQuery && filteredCafes.length > 8 && placePickerActiveTab === 'all'"
+                      type="button"
+                      class="picker-expand-toggle-btn"
+                      @click="togglePickerExpand('cafe')"
+                    >
+                      {{ isPickerExpanded.cafe ? '▲ Thu gọn' : `▼ Xem thêm (+${filteredCafes.length - 8} quán cafe)` }}
+                    </button>
+                  </div>
+                  <div class="chips-wrap">
+                    <button
+                      v-for="p in getVisiblePlaces(filteredCafes, 'cafe')"
+                      :key="p.name"
+                      type="button"
+                      :class="['app-chip', { active: isPlaceSelected(p.name) }]"
+                      @click="togglePlaceSelection(p.name)"
+                    >
+                      <span class="chip-status"><AppIcon :name="isPlaceSelected(p.name) ? 'check' : 'plus'" size="12" /></span>
+                      <span>{{ p.name }}</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Khi không tìm thấy kết quả tìm kiếm -->
+                <div v-if="searchPlacePickerQuery && totalFilteredPlacesCount === 0" class="empty-search-places">
+                  <AppIcon name="search" size="28" />
+                  <p>Không tìm thấy địa điểm nào khớp với từ khóa "<b>{{ searchPlacePickerQuery }}</b>".</p>
+                  <button type="button" class="app-secondary-btn" @click="searchPlacePickerQuery = ''">Xóa tìm kiếm</button>
+                </div>
+                
+                <!-- Tự nhập điểm đến -->
+                <div class="custom-place-input-row" style="margin-top: 16px;">
+                  <span class="row-label">Thêm địa điểm / quán khác (Tự nhập):</span>
+                  <div style="display:flex; gap:8px;">
+                    <input type="text" v-model="customPlaceText" placeholder="Nhập tên địa điểm bạn muốn đi..." class="enhanced-input" style="flex:1; padding:10px 14px;" @keyup.enter="addCustomPlace" />
+                    <button class="app-primary-btn" @click="addCustomPlace" type="button" style="padding: 10px 20px; font-size:13px; white-space:nowrap; display:inline-flex; align-items:center; gap:4px;"><AppIcon name="plus" size="14" /> Thêm</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- BƯỚC 3: DI CHUYỂN VÀ LƯU TRÚ (PHƯƠNG TIỆN & VÉ XE SONG SONG VỚI KHÁCH SẠN) -->
+            <div v-show="currentPlannerStep === 3" class="wizard-step-content step3-container">
+              <!-- THANH CHUYỂN TÙY CHỌN SONG SONG: DI CHUYỂN VS LƯU TRÚ (YÊU CẦU 3) -->
+              <div class="step3-subtabs-nav">
+                <button
+                  type="button"
+                  :class="['step3-subtab-btn', { active: step3ActiveSubtab === 'transit' }]"
+                  @click="step3ActiveSubtab = 'transit'"
+                >
+                  <span class="ssb-icon-wrap"><AppIcon name="bus" :size="18" /></span>
+                  <div class="ssb-text">
+                    <strong>1. Phương tiện & Vé di chuyển</strong>
+                    <small>
+                      {{ formDuLieu.tuTucPhuongTien ? 'Tự túc phương tiện (0đ)' : (formDuLieu.nhaXeDaChon ? (formDuLieu.nhaXeDaChon.name + (formDuLieu.gioXuatPhatChon ? ' (' + formDuLieu.gioXuatPhatChon + ')' : '')) : (formDuLieu.tauDaChon ? formDuLieu.tauDaChon.name : 'Xe khách, tàu hỏa, máy bay')) }}
+                    </small>
+                  </div>
+                  <span v-if="daXongPhuongTien" class="ssb-check-badge">
+                    <AppIcon name="check" :size="12" />
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  :class="['step3-subtab-btn', { active: step3ActiveSubtab === 'hotel' }]"
+                  @click="step3ActiveSubtab = 'hotel'"
+                >
+                  <span class="ssb-icon-wrap"><AppIcon name="hotel" :size="18" /></span>
+                  <div class="ssb-text">
+                    <strong>2. Khách sạn & Phòng nghỉ</strong>
+                    <small>
+                      {{ formDuLieu.tuTucKhachSan ? 'Tự túc nơi ở (0đ)' : (formDuLieu.khachSanDaChon ? (formDuLieu.khachSanDaChon.name + (formDuLieu.phongDaChon ? ' (' + formDuLieu.phongDaChon.name + ')' : '')) : 'Chọn khách sạn & xem phòng') }}
+                    </small>
+                  </div>
+                  <span v-if="daXongKhachSan" class="ssb-check-badge">
+                    <AppIcon name="check" :size="12" />
+                  </span>
+                </button>
+              </div>
+
+              <!-- PHẦN 1: PHƯƠNG TIỆN & VÉ XE (GIAO DIỆN HÌNH 2 + ĐẦY ĐỦ OPTION GIỜ & ĐIỂM ĐÓN THẢ) -->
+              <div v-show="step3ActiveSubtab === 'transit'" class="transit-subtab-pane">
+                <!-- THÔNG BÁO BẮT BUỘC: BƯỚC 1 CHỌN PHƯƠNG TIỆN (YÊU CẦU 4) -->
+                <div class="step3-mandatory-notice transit-notice">
+                  <div class="smn-icon"><AppIcon name="bus" :size="20" /></div>
+                  <div class="smn-text">
+                    <strong>LƯU Ý BẮT BUỘC: BƯỚC 1 - LỰA CHỌN PHƯƠNG TIỆN HOẶC VÉ XE</strong>
+                    <p>Vui lòng chọn vé xe/tàu xuất phát bên dưới, hoặc tích chọn <b>"Tự túc phương tiện đến"</b> nếu bạn đi xe máy hoặc tự túc vé. Sau khi chọn, hệ thống sẽ tự động chuyển sang bước chọn Khách sạn.</p>
+                  </div>
+                </div>
+                <div class="bus-optimization-section full-width" style="margin-top: 0;">
+                  <div class="bos-header">
+                    <div>
+                      <span class="bos-kicker"><AppIcon name="bus" :size="16" /> TỐI ƯU CHI PHÍ GIÁ XE & DI CHUYỂN</span>
+                      <h3>Gợi ý nhà xe giá rẻ tuyến {{ formDuLieu.diemKhoiHanh }} ➔ {{ formDuLieu.diemDen }}</h3>
+                    </div>
+                    <div class="bos-badges-group">
+                      <span class="bos-dist-badge">Cự ly: ~{{ transitRouteInfo.estimatedDistanceKm || transitRouteInfo.distanceKm || 350 }} km</span>
+                      <span class="bos-crawler-badge" title="Tự động cập nhật giá vé từ các nhà xe và đường sắt">
+                        <AppIcon name="bot" :size="14" /> Cào dữ liệu vé xe & vé tàu: Sẵn sàng
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- So sánh chi phí các phương tiện -->
+                  <div class="transit-vehicles-grid" v-reveal>
+                    <div
+                      v-for="v in transitRouteInfo.vehicleComparison"
+                      :key="v.type"
+                      :class="['tv-card', {
+                        active: (v.type === 'bus' && formDuLieu.phuongTien === 'xe khách') ||
+                                (v.type === 'flight' && formDuLieu.phuongTien === 'máy bay') ||
+                                (v.type === 'train' && formDuLieu.phuongTien === 'tàu hỏa') ||
+                                (v.type === 'motorbike' && formDuLieu.phuongTien === 'xe máy'),
+                        'highlight-cheapest': v.is_cheapest
+                      }]"
+                      @click="chonPhuongTienTuSoSanh(v)"
+                      role="button"
+                      tabindex="0"
+                    >
+                      <div class="tv-top">
+                        <span class="tv-icon"><AppIcon :name="v.icon" :size="20" /></span>
+                        <span v-if="v.is_cheapest" class="tv-badge cheapest"><AppIcon name="sparkles" :size="12" /> Rẻ nhất</span>
+                        <span v-else-if="v.is_fastest" class="tv-badge fastest"><AppIcon name="sparkles" :size="12" /> Nhanh nhất</span>
+                      </div>
+                      <div class="tv-title">{{ v.name }}</div>
+                      <div class="tv-price-row">
+                        <strong>{{ dinhDangTien(v.estimated_cost_per_person) }}đ</strong>
+                        <small>/người</small>
+                      </div>
+                      <div class="tv-total" v-if="formDuLieu.soNguoi > 1">
+                        Tổng {{ formDuLieu.soNguoi }} người: <b>{{ dinhDangTien(v.estimated_cost_per_person * formDuLieu.soNguoi) }}đ</b>
+                      </div>
+                      <div class="tv-duration"><AppIcon name="clock" :size="13" /> {{ v.duration }}</div>
+                      <p class="tv-advantage">{{ v.advantage }}</p>
+                    </div>
+                  </div>
+
+                  <!-- Nút chuyển tab Xem Vé Xe Khách vs Vé Tàu Hỏa -->
+                  <div class="transit-tabs-header">
+                    <button
+                      type="button"
+                      :class="['transit-subtab-btn', { active: transitTab === 'bus' }]"
+                      @click="transitTab = 'bus'; formDuLieu.phuongTien = 'xe khách'"
+                    >
+                      <AppIcon name="bus" :size="15" /> Vé Xe Khách Giá Rẻ ({{ transitRouteInfo.operators?.length || 0 }})
+                    </button>
+                    <button
+                      type="button"
+                      :class="['transit-subtab-btn', { active: transitTab === 'train' }]"
+                      @click="transitTab = 'train'; formDuLieu.phuongTien = 'tàu hỏa'"
+                    >
+                      <AppIcon name="train" :size="15" /> Vé Tàu Hỏa Thống Nhất ({{ transitRouteInfo.trains?.length || 3 }})
+                    </button>
+                  </div>
+
+                  <!-- TAB 1: Danh sách gợi ý nhà xe giá rẻ (Hình 2) -->
+                  <div v-show="transitTab === 'bus'" class="bus-operators-box">
+                    <div class="bob-title-row">
+                      <h4>Top nhà xe giá rẻ & uy tín khuyên dùng</h4>
+                      <small>Bấm vào khung giờ xuất bến mong muốn hoặc bấm "Chọn xe này" để đưa vào lịch trình</small>
+                    </div>
+
+                    <div class="bus-operators-grid">
+                      <div
+                        v-for="bus in transitRouteInfo.operators"
+                        :key="bus.id"
+                        :class="['bus-item-card', { selected: formDuLieu.nhaXeDaChon && formDuLieu.nhaXeDaChon.id === bus.id }]"
+                      >
+                        <div class="bic-header">
+                          <div>
+                            <div class="bic-name-row">
+                              <span class="bic-name">{{ bus.name }}</span>
+                              <span class="bic-tag" v-if="bus.badge">{{ bus.badge }}</span>
+                            </div>
+                            <span class="bic-type">{{ bus.type }}</span>
+                          </div>
+                          <div class="bic-rating">
+                            <AppIcon name="star" :size="13" filled color="#f59e0b" /> {{ bus.rating }} <small>({{ bus.reviews }} đánh giá)</small>
+                          </div>
                         </div>
-                        <div class="bic-spec-times">
-                          <span class="bst-label"><AppIcon name="clock" :size="13" /> Giờ xuất phát:</span>
-                          <div class="bst-chips">
-                            <span
-                              v-for="timeStr in (train.depart_times ? train.depart_times.split(',') : [])"
-                              :key="timeStr"
-                              class="bst-chip train-time-chip"
+
+                        <div class="bic-specs">
+                          <div class="bic-spec">
+                            <span><AppIcon name="clock" :size="13" /> Thời gian:</span>
+                            <b>{{ bus.duration }}</b>
+                          </div>
+                          <!-- GIỜ XUẤT BẾN ĐẦY ĐỦ OPTION BẤM CHỌN TRỰC TIẾP (YÊU CẦU 2) -->
+                          <div class="bic-spec-times">
+                            <span class="bst-label"><AppIcon name="clock" :size="13" /> Chọn giờ xuất bến:</span>
+                            <div class="bst-chips">
+                              <button
+                                type="button"
+                                v-for="timeStr in (bus.depart_times ? bus.depart_times.split(',') : [])"
+                                :key="timeStr"
+                                :class="['bst-chip', { active: formDuLieu.nhaXeDaChon && formDuLieu.nhaXeDaChon.id === bus.id && formDuLieu.gioXuatPhatChon === timeStr.trim() }]"
+                                @click="chonGioXuatPhatBus(bus, timeStr.trim())"
+                                :title="'Chọn chuyến lúc ' + timeStr.trim()"
+                              >
+                                {{ timeStr.trim() }}
+                              </button>
+                            </div>
+                          </div>
+                          <!-- ĐIỂM ĐÓN THẢ ĐẦY ĐỦ VÀ RÕ RÀNG (YÊU CẦU 2) -->
+                          <div class="bic-spec bic-spec-points">
+                            <div class="bsp-item">
+                              <span class="bsp-label"><AppIcon name="pin" :size="13" /> Điểm đón:</span>
+                              <span class="bsp-val" :title="bus.pickup">{{ bus.pickup }}</span>
+                            </div>
+                            <div class="bsp-item">
+                              <span class="bsp-label"><AppIcon name="flag" :size="13" /> Điểm trả:</span>
+                              <span class="bsp-val" :title="bus.dropoff">{{ bus.dropoff }}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="bic-footer-clean">
+                          <!-- Giá vé niêm yết & Tổng chi phí đoàn -->
+                          <div class="bic-price-line">
+                            <div class="bpl-left">
+                              <span class="bpl-label">Giá vé:</span>
+                              <strong class="bpl-unit">{{ dinhDangTien(bus.price) }}đ</strong>
+                              <small class="bpl-sub">/người</small>
+                            </div>
+                            <div class="bpl-right" v-if="formDuLieu.soNguoi > 1">
+                              <span class="bpl-total-badge">
+                                Tổng {{ formDuLieu.soNguoi }} vé: <b>{{ dinhDangTien(bus.price * formDuLieu.soNguoi) }}đ</b>
+                              </span>
+                            </div>
+                          </div>
+
+                          <!-- Hai nút hành động gọi điện & chọn xe -->
+                          <div class="bic-actions-row">
+                            <a :href="`tel:${bus.hotline}`" class="bic-action-call" title="Gọi tổng đài đặt vé">
+                              <AppIcon name="phone" :size="14" /> {{ bus.hotline }}
+                            </a>
+                            <button
+                              type="button"
+                              :class="['bic-action-select', { active: formDuLieu.nhaXeDaChon && formDuLieu.nhaXeDaChon.id === bus.id }]"
+                              @click="chonNhaXe(bus)"
                             >
-                              {{ timeStr.trim() }}
-                            </span>
+                              <AppIcon v-if="formDuLieu.nhaXeDaChon && formDuLieu.nhaXeDaChon.id === bus.id" name="check" :size="14" />
+                              {{ formDuLieu.nhaXeDaChon && formDuLieu.nhaXeDaChon.id === bus.id ? (formDuLieu.gioXuatPhatChon ? 'Đã chọn (' + formDuLieu.gioXuatPhatChon + ')' : 'Đã chọn xe') : 'Chọn xe này' }}
+                            </button>
                           </div>
-                        </div>
-                        <div class="bic-spec">
-                          <span><AppIcon name="train" :size="13" /> Ga đi ➔ Ga đến:</span>
-                          <small :title="train.depart_station + ' ➔ ' + train.arrive_station">{{ train.depart_station }} ➔ {{ train.arrive_station }}</small>
-                        </div>
-                      </div>
-
-                      <div class="bic-footer-clean">
-                        <!-- Hàng 1: Giá vé tàu -->
-                        <div class="bic-price-line">
-                          <div class="bpl-left">
-                            <span class="bpl-label">Giá vé tàu:</span>
-                            <strong class="bpl-unit train-price-color">{{ dinhDangTien(train.price) }}đ</strong>
-                            <small class="bpl-sub">/người</small>
-                          </div>
-                          <div class="bpl-right" v-if="formDuLieu.soNguoi > 1">
-                            <span class="bpl-total-badge train-total-badge">
-                              Tổng {{ formDuLieu.soNguoi }} vé: <b>{{ dinhDangTien(train.price * formDuLieu.soNguoi) }}đ</b>
-                            </span>
-                          </div>
-                        </div>
-
-                        <!-- Hàng 2: Hai nút hành động đặt vé và chọn tàu -->
-                        <div class="bic-actions-row">
-                          <a :href="train.booking_url" target="_blank" rel="noopener noreferrer" class="bic-action-call train-call" title="Đặt vé trực tuyến tại dsvn.vn">
-                            <AppIcon name="ticket" :size="14" /> Đặt tại dsvn.vn ↗
-                          </a>
-                          <button
-                            type="button"
-                            :class="['bic-action-select train-select-btn', { active: formDuLieu.tauDaChon && formDuLieu.tauDaChon.id === train.id }]"
-                            @click="chonTauHoa(train)"
-                          >
-                            <AppIcon v-if="formDuLieu.tauDaChon && formDuLieu.tauDaChon.id === train.id" name="check" :size="14" />
-                            {{ formDuLieu.tauDaChon && formDuLieu.tauDaChon.id === train.id ? 'Đã chọn tàu' : 'Chọn tàu này' }}
-                          </button>
                         </div>
                       </div>
                     </div>
                   </div>
+
+                  <!-- TAB 2: Danh sách vé tàu hỏa Thống Nhất -->
+                  <div v-show="transitTab === 'train'" class="train-operators-box">
+                    <div class="bob-title-row">
+                      <h4>Lịch trình & Giá vé Tàu Hỏa (Tổng công ty Đường sắt Việt Nam)</h4>
+                      <small>Trải nghiệm ngắm cảnh biển Lăng Cô, đèo Hải Vân và các cung đường di sản</small>
+                    </div>
+
+                    <div class="bus-operators-grid">
+                      <div
+                        v-for="train in transitRouteInfo.trains"
+                        :key="train.id"
+                        :class="['bus-item-card train-card', { selected: formDuLieu.tauDaChon && formDuLieu.tauDaChon.id === train.id }]"
+                      >
+                        <div class="bic-header">
+                          <div>
+                            <div class="bic-name-row">
+                              <span class="bic-name">{{ train.name }}</span>
+                              <span class="bic-tag train-tag" v-if="train.badge">{{ train.badge }}</span>
+                            </div>
+                            <span class="bic-type">{{ train.type }}</span>
+                          </div>
+                          <div class="bic-rating">
+                            <AppIcon name="star" :size="13" filled color="#f59e0b" /> {{ train.rating }} <small>(Tàu Thống Nhất)</small>
+                          </div>
+                        </div>
+
+                        <div class="bic-specs">
+                          <div class="bic-spec">
+                            <span><AppIcon name="clock" :size="13" /> Thời gian:</span>
+                            <b>{{ train.duration }}</b>
+                          </div>
+                          <div class="bic-spec-times">
+                            <span class="bst-label"><AppIcon name="clock" :size="13" /> Chọn giờ xuất phát:</span>
+                            <div class="bst-chips">
+                              <button
+                                type="button"
+                                v-for="timeStr in (train.depart_times ? train.depart_times.split(',') : [])"
+                                :key="timeStr"
+                                :class="['bst-chip train-time-chip', { active: formDuLieu.tauDaChon && formDuLieu.tauDaChon.id === train.id && formDuLieu.gioXuatPhatChon === timeStr.trim() }]"
+                                @click="chonGioXuatPhatTau(train, timeStr.trim())"
+                              >
+                                {{ timeStr.trim() }}
+                              </button>
+                            </div>
+                          </div>
+                          <div class="bic-spec bic-spec-points">
+                            <div class="bsp-item">
+                              <span class="bsp-label"><AppIcon name="train" :size="13" /> Ga đi:</span>
+                              <span class="bsp-val">{{ train.depart_station }}</span>
+                            </div>
+                            <div class="bsp-item">
+                              <span class="bsp-label"><AppIcon name="flag" :size="13" /> Ga đến:</span>
+                              <span class="bsp-val">{{ train.arrive_station }}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="bic-footer-clean">
+                          <!-- Giá vé tàu -->
+                          <div class="bic-price-line">
+                            <div class="bpl-left">
+                              <span class="bpl-label">Giá vé tàu:</span>
+                              <strong class="bpl-unit train-price-color">{{ dinhDangTien(train.price) }}đ</strong>
+                              <small class="bpl-sub">/người</small>
+                            </div>
+                            <div class="bpl-right" v-if="formDuLieu.soNguoi > 1">
+                              <span class="bpl-total-badge train-total-badge">
+                                Tổng {{ formDuLieu.soNguoi }} vé: <b>{{ dinhDangTien(train.price * formDuLieu.soNguoi) }}đ</b>
+                              </span>
+                            </div>
+                          </div>
+
+                          <!-- Hai nút hành động đặt vé và chọn tàu -->
+                          <div class="bic-actions-row">
+                            <a :href="train.booking_url" target="_blank" rel="noopener noreferrer" class="bic-action-call train-call" title="Đặt vé trực tuyến tại dsvn.vn">
+                              <AppIcon name="ticket" :size="14" /> Đặt tại dsvn.vn ↗
+                            </a>
+                            <button
+                              type="button"
+                              :class="['bic-action-select train-select-btn', { active: formDuLieu.tauDaChon && formDuLieu.tauDaChon.id === train.id }]"
+                              @click="chonTauHoa(train)"
+                            >
+                              <AppIcon v-if="formDuLieu.tauDaChon && formDuLieu.tauDaChon.id === train.id" name="check" :size="14" />
+                              {{ formDuLieu.tauDaChon && formDuLieu.tauDaChon.id === train.id ? (formDuLieu.gioXuatPhatChon ? 'Đã chọn (' + formDuLieu.gioXuatPhatChon + ')' : 'Đã chọn tàu') : 'Chọn tàu này' }}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- GỢI Ý TỐI ƯU HÀNH TRÌNH HOÀN HẢO NẾU CHƯA CÓ VÉ PHÙ HỢP (YÊU CẦU 2) -->
+                  <div class="transit-smart-fallback-card">
+                    <div class="tsf-header">
+                      <span class="tsf-icon"><AppIcon name="sparkles" :size="18" /></span>
+                      <div>
+                        <strong>Gợi ý tối ưu hành trình thông minh: Tuyến {{ formDuLieu.diemKhoiHanh }} ➔ {{ formDuLieu.diemDen }}</strong>
+                        <small>Nếu các nhà xe trên chưa khớp với khung giờ của bạn, AI đề xuất 3 giải pháp di chuyển tối ưu:</small>
+                      </div>
+                    </div>
+                    <div class="tsf-options-grid">
+                      <div class="tsf-option-card">
+                        <div class="toc-badge"><AppIcon name="plane" :size="13" /> Máy bay nội địa</div>
+                        <h4>Tiết kiệm tối đa thời gian</h4>
+                        <p>Bay thẳng đến Sân bay Quốc tế Đà Nẵng / Cam Ranh / Phú Bài chỉ mất 1h15 - 1h30 bay. Bảo toàn 100% thể lực cho ngày đầu tiên!</p>
+                      </div>
+                      <div class="tsf-option-card">
+                        <div class="toc-badge"><AppIcon name="train" :size="13" /> Tàu hỏa Thống Nhất</div>
+                        <h4>Ngắm trọn cung đường di sản</h4>
+                        <p>Lựa chọn tàu giường nằm SE1/SE3 khởi hành tối, đến nơi vào sáng hôm sau. Ngắm cảnh đèo Hải Vân và biển Lăng Cô ngoạn mục.</p>
+                      </div>
+                      <div class="tsf-option-card">
+                        <div class="toc-badge"><AppIcon name="bike" :size="13" /> Tự túc xe máy / ô tô</div>
+                        <h4>Chủ động 100% thời gian</h4>
+                        <p>Tự do dừng chân check-in các cung đường ven biển, tiết kiệm toàn bộ chi phí vé xe liên tỉnh cho đoàn.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- TÙY CHỌN TỰ TÚC PHƯƠNG TIỆN ĐẾN -->
+                  <div class="self-transit-card" :class="{ 'is-active': formDuLieu.tuTucPhuongTien }" style="margin-top: 16px;">
+                    <label class="stc-label">
+                      <input
+                        type="checkbox"
+                        :checked="formDuLieu.tuTucPhuongTien"
+                        @change="toggleTuTucPhuongTien"
+                        class="stc-checkbox"
+                      />
+                      <span class="stc-custom-indicator">
+                        <AppIcon name="check" size="14" v-if="formDuLieu.tuTucPhuongTien" />
+                      </span>
+                      <div class="stc-content">
+                        <div class="stc-title-row">
+                          <strong><AppIcon name="bike" size="16" /> Tự túc phương tiện đến điểm hẹn</strong>
+                          <span class="stc-badge" v-if="formDuLieu.tuTucPhuongTien">Không tính vé xe khứ hồi (0đ)</span>
+                        </div>
+                        <p class="stc-desc">
+                          Tích chọn nếu bạn đi xe máy cá nhân hoặc đã tự đặt vé xe/máy bay từ trước. Hệ thống sẽ KHÔNG trừ tiền vé xe khách liên tỉnh vào ngân sách, dành trọn vẹn chi phí cho ăn uống và khách sạn!
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+
+                  <!-- THANH TIẾP TỤC SANG BƯỚC KHÁCH SẠN (YÊU CẦU 4) -->
+                  <div class="transit-bottom-next-bar">
+                    <div class="tbn-status">
+                      <span v-if="formDuLieu.tuTucPhuongTien" class="tbn-badge self">✓ Đã chọn: Tự túc phương tiện (0đ vé)</span>
+                      <span v-else-if="formDuLieu.nhaXeDaChon" class="tbn-badge bus">✓ Đã chọn xe: {{ formDuLieu.nhaXeDaChon.name }} ({{ formDuLieu.gioXuatPhatChon || 'chuyến đi' }})</span>
+                      <span v-else-if="formDuLieu.tauDaChon" class="tbn-badge train">✓ Đã chọn tàu: {{ formDuLieu.tauDaChon.name }}</span>
+                      <span v-else class="tbn-badge pending">Chưa chọn phương tiện hoặc vé xe</span>
+                    </div>
+                    <button
+                      type="button"
+                      class="tbn-btn-next"
+                      @click="chuyenSangChonKhachSan"
+                    >
+                      {{ daXongPhuongTien ? 'Tiếp tục: Sang chọn Khách Sạn & Phòng nghỉ ➔' : 'Tự túc phương tiện & Sang chọn Khách Sạn ➔' }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- PHẦN 2: CHỌN KHÁCH SẠN VÀ XEM PHÒNG (GIAO DIỆN HÌNH 3, 4, 5 - YÊU CẦU 3) -->
+              <div v-show="step3ActiveSubtab === 'hotel'" class="hotel-subtab-pane">
+                <!-- THÔNG BÁO BẮT BUỘC: BƯỚC 2 CHỌN KHÁCH SẠN HOẶC TỰ TÚC NƠI Ở (YÊU CẦU 4) -->
+                <div class="step3-mandatory-notice hotel-notice">
+                  <div class="smn-icon"><AppIcon name="hotel" :size="20" /></div>
+                  <div class="smn-text">
+                    <strong>BƯỚC 2: CHỌN KHÁCH SẠN LƯU TRÚ HOẶC TỰ TÚC NƠI Ở</strong>
+                    <p>Chọn 1 khách sạn bên dưới để xem phòng và đặt phòng, hoặc tích chọn <b>"Tự túc nơi ở"</b> nếu bạn ở nhà người thân, homestay riêng hoặc cắm trại dã ngoại.</p>
+                  </div>
                 </div>
 
-                <!-- TÙY CHỌN TỰ TÚC PHƯƠNG TIỆN ĐẾN -->
-                <div class="self-transit-card" :class="{ 'is-active': formDuLieu.tuTucPhuongTien }" style="margin-top: 16px;">
+                <!-- TÙY CHỌN TỰ TÚC NƠI Ở / KHÁCH SẠN (YÊU CẦU 4) -->
+                <div class="self-transit-card self-hotel-card" :class="{ 'is-active': formDuLieu.tuTucKhachSan }" style="margin-bottom: 20px;">
                   <label class="stc-label">
                     <input
                       type="checkbox"
-                      v-model="formDuLieu.tuTucPhuongTien"
+                      :checked="formDuLieu.tuTucKhachSan"
+                      @change="toggleTuTucKhachSan"
                       class="stc-checkbox"
                     />
                     <span class="stc-custom-indicator">
-                      <AppIcon name="check" size="14" v-if="formDuLieu.tuTucPhuongTien" />
+                      <AppIcon name="check" size="14" v-if="formDuLieu.tuTucKhachSan" />
                     </span>
                     <div class="stc-content">
                       <div class="stc-title-row">
-                        <strong><AppIcon name="bike" size="16" /> Tự túc phương tiện đến điểm hẹn</strong>
-                        <span class="stc-badge" v-if="formDuLieu.tuTucPhuongTien">Không tính vé xe khứ hồi</span>
+                        <strong><AppIcon name="home" size="16" /> Tự túc nơi ở / Đã có chỗ nghỉ riêng</strong>
+                        <span class="stc-badge" v-if="formDuLieu.tuTucKhachSan">Không tính tiền phòng (0đ)</span>
                       </div>
                       <p class="stc-desc">
-                        Tích chọn nếu bạn đi xe máy cá nhân hoặc đã tự đặt vé xe/máy bay từ trước. Hệ thống sẽ KHÔNG trừ tiền vé xe khách liên tỉnh vào ngân sách, dành trọn vẹn chi phí cho ăn uống và khách sạn!
+                        Tích chọn nếu bạn ở nhờ nhà người quen, homestay tự đặt trước hoặc cắm trại dã ngoại. Hệ thống sẽ KHÔNG trừ chi phí khách sạn vào ngân sách (0đ), dành trọn vẹn chi phí cho ăn uống và vé tham quan!
                       </p>
                     </div>
                   </label>
                 </div>
+
+                <!-- CẢNH BÁO TÀI CHÍNH NẾU TIỀN PHÒNG VƯỢT QUÁ NGÂN SÁCH + ĐỀ XUẤT NHIỀU PHƯƠNG ÁN (YÊU CẦU 3) -->
+                <div v-if="hotelBudgetAlert && !formDuLieu.tuTucKhachSan" :class="['hotel-feasibility-alert', hotelBudgetAlert.type]">
+                  <div class="hfa-top">
+                    <span class="hfa-icon"><AppIcon name="alertcircle" :size="20" /></span>
+                    <div class="hfa-text">
+                      <strong>{{ hotelBudgetAlert.title }}</strong>
+                      <p>{{ hotelBudgetAlert.message }}</p>
+                    </div>
+                  </div>
+                  <div class="hfa-actions">
+                    <button type="button" class="hfa-btn hfa-btn-upgrade" @click="apDungNangNganSachKhachSan">
+                      <AppIcon name="sparkles" :size="14" /> Đề xuất 1: Nâng ngân sách lên {{ dinhDangTien(hotelBudgetAlert.suggestedBudget) }}đ
+                    </button>
+                    <button type="button" class="hfa-btn hfa-btn-cheaper" @click="chonPhongTietKiemHon">
+                      <AppIcon name="hotel" :size="14" /> Đề xuất 2: Chọn phòng tiết kiệm hơn
+                    </button>
+                    <button type="button" v-if="formDuLieu.soDem > 1" class="hfa-btn hfa-btn-shorten" @click="giamSoDemKhachSan">
+                      <AppIcon name="moon" :size="14" /> Đề xuất 3: Rút ngắn xuống {{ formDuLieu.soDem - 1 }} đêm
+                    </button>
+                  </div>
+                </div>
+
+                <!-- THẺ TỔNG KẾT KHÁCH SẠN & PHÒNG ĐÃ CHỌN -->
+                <div v-if="formDuLieu.khachSanDaChon && !formDuLieu.tuTucKhachSan" class="selected-hotel-banner">
+                  <div class="shb-left">
+                    <img :src="formDuLieu.khachSanDaChon.image" class="shb-thumb" :alt="formDuLieu.khachSanDaChon.name" />
+                    <div>
+                      <span class="shb-badge">ĐÃ CHỌN LƯU TRÚ CHO LỊCH TRÌNH</span>
+                      <h4 class="shb-name">{{ formDuLieu.khachSanDaChon.name }}</h4>
+                      <p class="shb-room">
+                        Phòng: <b>{{ formDuLieu.phongDaChon?.name || 'Tiêu chuẩn' }}</b>
+                        <span class="shb-size-tag" v-if="formDuLieu.phongDaChon?.size">({{ formDuLieu.phongDaChon.size }})</span>
+                      </p>
+                      <p class="shb-meta"><AppIcon name="pin" :size="12" /> {{ formDuLieu.khachSanDaChon.address }}</p>
+                    </div>
+                  </div>
+                  <div class="shb-right">
+                    <div class="shb-price-box">
+                      <span class="shb-rate">{{ dinhDangTien(formDuLieu.phongDaChon?.price || formDuLieu.khachSanDaChon.price_from) }}đ <small>/ đêm</small></span>
+                      <small class="shb-total">Tổng {{ formDuLieu.soDem }} đêm ({{ soPhongCan }} phòng): <b>{{ dinhDangTien(tongChiPhiKhachSanChon) }}đ</b></small>
+                    </div>
+                    <div class="shb-btns">
+                      <button type="button" class="shb-btn-change" @click="moModalXemPhong(formDuLieu.khachSanDaChon)">
+                        <AppIcon name="eye" :size="14" /> Xem / Đổi phòng
+                      </button>
+                      <button type="button" class="shb-btn-clear" @click="huyChonKhachSan" title="Hủy lựa chọn khách sạn này">
+                        <AppIcon name="x" :size="14" /> Bỏ chọn
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- DANH SÁCH KHÁCH SẠN HÀNG ĐẦU THEO ĐỊA ĐIỂM (GIAO DIỆN HÌNH 3 & YÊU CẦU 5) -->
+                <div class="hotel-catalog-box">
+                  <div class="hcb-header">
+                    <div>
+                      <span class="hcb-kicker"><AppIcon name="hotel" :size="15" /> CHỖ NGHỈ ĐỀ XUẤT</span>
+                      <h3>Khách sạn & Khu nghỉ dưỡng tại {{ formDuLieu.diemDen }}</h3>
+                    </div>
+                    <span class="hcb-count">{{ filteredSortedHotels.length }} khách sạn phù hợp</span>
+                  </div>
+
+                  <!-- THANH SẮP XẾP GIÁ CẢ & SỐ SAO (YÊU CẦU 5) -->
+                  <div class="hotel-sort-toolbar">
+                    <div class="hst-group">
+                      <span class="hst-label"><AppIcon name="sliders" :size="13" /> Sắp xếp:</span>
+                      <button
+                        type="button"
+                        :class="['hst-btn', { active: hotelSortBy === 'default' }]"
+                        @click="hotelSortBy = 'default'"
+                      >
+                        Khuyên dùng
+                      </button>
+                      <button
+                        type="button"
+                        :class="['hst-btn', { active: hotelSortBy === 'price_asc' }]"
+                        @click="hotelSortBy = 'price_asc'"
+                      >
+                        Giá tăng dần ↑
+                      </button>
+                      <button
+                        type="button"
+                        :class="['hst-btn', { active: hotelSortBy === 'price_desc' }]"
+                        @click="hotelSortBy = 'price_desc'"
+                      >
+                        Giá giảm dần ↓
+                      </button>
+                      <button
+                        type="button"
+                        :class="['hst-btn', { active: hotelSortBy === 'rating_desc' }]"
+                        @click="hotelSortBy = 'rating_desc'"
+                      >
+                        Đánh giá cao ★
+                      </button>
+                    </div>
+
+                    <div class="hst-group hst-stars-group">
+                      <span class="hst-label">Hạng sao:</span>
+                      <button
+                        type="button"
+                        :class="['hst-star-btn', { active: hotelStarFilter === 'all' }]"
+                        @click="hotelStarFilter = 'all'"
+                      >
+                        Tất cả
+                      </button>
+                      <button
+                        type="button"
+                        :class="['hst-star-btn', { active: hotelStarFilter === '5' }]"
+                        @click="hotelStarFilter = '5'"
+                      >
+                        5★
+                      </button>
+                      <button
+                        type="button"
+                        :class="['hst-star-btn', { active: hotelStarFilter === '4' }]"
+                        @click="hotelStarFilter = '4'"
+                      >
+                        4★
+                      </button>
+                      <button
+                        type="button"
+                        :class="['hst-star-btn', { active: hotelStarFilter === '3' }]"
+                        @click="hotelStarFilter = '3'"
+                      >
+                        3★
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- GRID KHÁCH SẠN VỚI NÚT "XEM PHÒNG" MÀU VÀNG (CHUẨN HÌNH 3) -->
+                  <div class="hotel-catalog-grid">
+                    <div
+                      v-for="hotel in displayedHotels"
+                      :key="hotel.id"
+                      :class="['hotel-catalog-card', { active: formDuLieu.khachSanDaChon?.id === hotel.id && !formDuLieu.tuTucKhachSan }]"
+                      @click="moModalXemPhong(hotel)"
+                      role="button"
+                      tabindex="0"
+                    >
+                      <div class="hcc-image-wrap">
+                        <img :src="hotel.image" :alt="hotel.name" class="hcc-image" loading="lazy" />
+                        <span class="hcc-dest-badge">{{ hotel.destination }}</span>
+                        <span v-if="formDuLieu.khachSanDaChon?.id === hotel.id && !formDuLieu.tuTucKhachSan" class="hcc-selected-tag">✓ Đang chọn</span>
+                      </div>
+                      <div class="hcc-content">
+                        <h4 class="hcc-title">{{ hotel.name }}</h4>
+                        <div class="hcc-stars">
+                          <span v-for="s in Number(hotel.stars || 4)" :key="s" class="star-icon">★</span>
+                          <small class="hcc-rating-num">({{ hotel.rating || '4.8' }} • {{ hotel.reviews_count || 120 }} đánh giá)</small>
+                        </div>
+                        <div class="hcc-bottom-row">
+                          <div class="hcc-price-info">
+                            <span class="hcc-price-label">Giá từ:</span>
+                            <strong class="hcc-price-val">{{ dinhDangTien(hotel.price_from || hotel.price || 650000) }}đ <small>/ đêm</small></strong>
+                          </div>
+                          <!-- NÚT "XEM PHÒNG" MÀU VÀNG (HÌNH 3) -->
+                          <button type="button" class="hcc-btn-view" @click.stop="moModalXemPhong(hotel)">
+                            <AppIcon name="eye" :size="13" /> Xem phòng
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- CHỨC NĂNG THU GỌN VÀ XEM THÊM KHÁCH SẠN (YÊU CẦU 5) -->
+                  <div v-if="filteredSortedHotels.length > 4" class="hotel-pagination-actions">
+                    <button
+                      v-if="hotelDisplayLimit < filteredSortedHotels.length"
+                      type="button"
+                      class="hpa-btn hpa-btn-more"
+                      @click="xemThemKhachSan"
+                    >
+                      <AppIcon name="chevron-down" :size="15" /> Xem thêm (+{{ Math.min(8, filteredSortedHotels.length - hotelDisplayLimit) }} khách sạn)
+                    </button>
+                    <button
+                      v-if="hotelDisplayLimit < filteredSortedHotels.length"
+                      type="button"
+                      class="hpa-btn hpa-btn-all"
+                      @click="xemTatCaKhachSan"
+                    >
+                      Xem tất cả ({{ filteredSortedHotels.length }})
+                    </button>
+                    <button
+                      v-if="hotelDisplayLimit >= filteredSortedHotels.length"
+                      type="button"
+                      class="hpa-btn hpa-btn-collapse"
+                      @click="thuGonKhachSan"
+                    >
+                      <AppIcon name="chevron-up" :size="15" /> Thu gọn (chỉ hiện 4 khách sạn)
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- KHỐI XÁC NHẬN SẴN SÀNG LÊN LỊCH TRÌNH (ĐẨY XUỐNG KHI HOÀN THÀNH VÉ XE & KHÁCH SẠN - YÊU CẦU 4) -->
+              <div id="step3-ready-generate" class="step3-ready-box" :class="{ 'is-ready': daXongBuoc3 }">
+                <div class="srb-header">
+                  <div class="srb-icon-wrap">
+                    <AppIcon :name="daXongBuoc3 ? 'check' : 'sparkles'" :size="24" />
+                  </div>
+                  <div class="srb-title-text">
+                    <h4>{{ daXongBuoc3 ? '🎉 Đã hoàn tất lựa chọn Di chuyển & Lưu trú!' : 'Tiến trình chuẩn bị chuyến đi' }}</h4>
+                    <p>{{ daXongBuoc3 ? 'Mọi thông tin phương tiện và nơi ở đã sẵn sàng. Hãy bấm nút Tạo Lịch Trình bên dưới để AI lên kế hoạch chi tiết!' : 'Vui lòng hoàn thành chọn Vé xe / Phương tiện và Khách sạn / Tự túc nơi ở.' }}</p>
+                  </div>
+                </div>
+
+                <div class="srb-checklist-grid">
+                  <div class="srb-item" :class="{ done: daXongPhuongTien }">
+                    <span class="srb-item-indicator"><AppIcon :name="daXongPhuongTien ? 'check' : 'bus'" :size="15" /></span>
+                    <div class="srb-item-info">
+                      <small>1. Di chuyển:</small>
+                      <strong>
+                        {{ formDuLieu.tuTucPhuongTien ? 'Tự túc phương tiện (0đ)' : (formDuLieu.nhaXeDaChon ? (formDuLieu.nhaXeDaChon.name + (formDuLieu.gioXuatPhatChon ? ' - ' + formDuLieu.gioXuatPhatChon : '')) : (formDuLieu.tauDaChon ? formDuLieu.tauDaChon.name : 'Chưa chọn phương tiện')) }}
+                      </strong>
+                    </div>
+                    <button v-if="!daXongPhuongTien" type="button" class="srb-btn-goto" @click="step3ActiveSubtab = 'transit'">Chọn ngay</button>
+                  </div>
+
+                  <div class="srb-item" :class="{ done: daXongKhachSan }">
+                    <span class="srb-item-indicator"><AppIcon :name="daXongKhachSan ? 'check' : 'hotel'" :size="15" /></span>
+                    <div class="srb-item-info">
+                      <small>2. Lưu trú:</small>
+                      <strong>
+                        {{ formDuLieu.tuTucKhachSan ? 'Tự túc nơi ở (0đ)' : (formDuLieu.khachSanDaChon ? (formDuLieu.khachSanDaChon.name + (formDuLieu.phongDaChon ? ' (' + formDuLieu.phongDaChon.name + ')' : '')) : 'Chưa chọn khách sạn') }}
+                      </strong>
+                    </div>
+                    <button v-if="!daXongKhachSan" type="button" class="srb-btn-goto" @click="step3ActiveSubtab = 'hotel'">Chọn ngay</button>
+                  </div>
+                </div>
+
+                <div v-if="daXongBuoc3" class="srb-action-row">
+                  <button
+                    type="button"
+                    class="srb-btn-generate"
+                    @click="taoLichTrinh"
+                    :disabled="dangTao"
+                  >
+                    <span v-if="dangTao" class="btn-spinner"></span>
+                    <span v-else style="display:inline-flex; align-items:center; gap:8px;">
+                      <AppIcon name="sparkles" :size="18" /> Tạo Lịch Trình AI Ngay
+                    </span>
+                  </button>
+                </div>
               </div>
             </div>
 
-            <!-- BƯỚC 3: SỞ THÍCH & ĐỊA ĐIỂM -->
-            <div v-show="currentPlannerStep === 3" class="wizard-step-content">
-            <!-- BỘ CHỌN ĐỊA ĐIỂM & ĐẶC SẢN NỔI TIẾNG THEO THÀNH PHỐ -->
-            <div class="places-picker-box" style="margin-top:0">
-              <div class="picker-top">
-                <div>
-                  <small class="picker-kicker">GỢI Ý ĐỊA PHƯƠNG — BẤM ĐỂ CHỌN</small>
-                  <h4>Bạn muốn ghé địa điểm & quán ngon nào tại {{ formDuLieu.diemDen }}?</h4>
-                </div>
-                <span v-if="selectedPlaces.length" class="badge-selected-count">
-                  <AppIcon name="check" size="14" /> Đã chọn {{ selectedPlaces.length }} điểm
-                </span>
-              </div>
+            <!-- MODAL XEM CHI TIẾT KHÁCH SẠN & CHỌN PHÒNG ĐƯỢC TELEPORT RA BODY (GIAO DIỆN HÌNH 4 & HÌNH 5) -->
+            <Teleport to="body">
+              <transition name="modal-fade">
+                <div v-if="showHotelDetailModal && activeHotelModal" class="hotel-detail-modal-overlay" @click.self="dongModalXemPhong">
+                  <div class="hotel-detail-modal" role="dialog" aria-modal="true">
+                    <!-- THANH TÌM KIẾM / ĐIỀU KIỆN ĐẶT PHÒNG Ở ĐẦU (HÌNH 4) -->
+                    <div class="hdm-top-bar">
+                      <div class="hdm-tb-left">
+                        <span class="hdm-tb-chip"><AppIcon name="calendar" :size="14" /> {{ formDuLieu.ngayBatDau || '10-10-2026' }} ➔ {{ formDuLieu.ngayKetThuc || '11-10-2026' }}</span>
+                        <span class="hdm-tb-chip"><AppIcon name="bed" :size="14" /> {{ soPhongCan }} phòng</span>
+                        <span class="hdm-tb-chip"><AppIcon name="user" :size="14" /> {{ formDuLieu.soNguoi }} người lớn</span>
+                        <button type="button" class="hdm-tb-btn-edit" @click="dongModalXemPhong(); currentPlannerStep = 1">
+                          <AppIcon name="edit" :size="13" /> Đổi tìm kiếm
+                        </button>
+                      </div>
+                      <div class="hdm-tb-right">
+                        <button
+                          type="button"
+                          class="hdm-btn-choose-room-top"
+                          @click="dongModalXemPhong"
+                        >
+                          ✕ Đóng
+                        </button>
+                        <button type="button" class="hdm-btn-close-modal" @click="dongModalXemPhong" title="Đóng">
+                          <AppIcon name="x" :size="18" />
+                        </button>
+                      </div>
+                    </div>
 
-              <!-- THANH TÌM KIẾM ĐỊA ĐIỂM & MÓN ĂN NHANH (TỐI GIẢN GIAO DIỆN) -->
-              <div class="place-picker-search-bar">
-                <span class="pps-icon"><AppIcon name="search" size="16" /></span>
-                <input
-                  v-model="searchPlacePickerQuery"
-                  type="text"
-                  :placeholder="'Tìm kiếm địa điểm, di tích, món ăn, cafe tại ' + (formDuLieu.diemDen === ALL_DESTINATIONS ? 'Miền Trung' : formDuLieu.diemDen) + '...'"
-                  class="pps-input"
-                />
-                <button
-                  v-if="searchPlacePickerQuery"
-                  type="button"
-                  class="pps-clear-btn"
-                  @click="searchPlacePickerQuery = ''"
-                  title="Xóa tìm kiếm"
-                ><AppIcon name="x" size="14" /></button>
-              </div>
+                    <div class="hdm-scroll-body">
+                      <!-- HERO GALLERY: THUMBNAILS BÊN TRÁI + ẢNH CHÍNH Ở GIỮA/PHẢI (HÌNH 4) -->
+                      <div class="hdm-gallery-section">
+                        <div class="hdm-thumbnails-col">
+                          <div
+                            v-for="(img, idx) in (activeHotelModal.gallery || [activeHotelModal.image])"
+                            :key="idx"
+                            :class="['hdm-thumb-item', { active: activeHotelImageIdx === idx }]"
+                            @click="activeHotelImageIdx = idx"
+                          >
+                            <img :src="img" :alt="'Thumbnail ' + (idx + 1)" />
+                          </div>
+                        </div>
+                        <div class="hdm-main-photo-wrap">
+                          <img :src="(activeHotelModal.gallery && activeHotelModal.gallery[activeHotelImageIdx]) || activeHotelModal.image" :alt="activeHotelModal.name" class="hdm-main-photo" />
+                          <div class="hdm-photo-overlay-info">
+                            <h3>{{ activeHotelModal.name }}</h3>
+                            <div class="hdm-stars">
+                              <span v-for="s in Number(activeHotelModal.stars || 4)" :key="s" class="star-icon">★</span>
+                              <span>{{ activeHotelModal.rating || '4.8' }} sao</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
 
-              <!-- CÁC TAB PHÂN LOẠI DANH MỤC GỌN GÀNG -->
-              <div class="place-picker-tabs">
-                <button
-                  type="button"
-                  :class="['ppt-btn', { active: placePickerActiveTab === 'all' }]"
-                  @click="placePickerActiveTab = 'all'"
-                >
-                  Tất cả ({{ totalFilteredPlacesCount }})
-                </button>
-                <button
-                  type="button"
-                  :class="['ppt-btn', { active: placePickerActiveTab === 'attraction' }]"
-                  @click="placePickerActiveTab = 'attraction'"
-                >
-                  <AppIcon name="landmark" size="15" /> Thắng cảnh ({{ filteredAttractions.length }})
-                </button>
-                <button
-                  type="button"
-                  :class="['ppt-btn', { active: placePickerActiveTab === 'restaurant' }]"
-                  @click="placePickerActiveTab = 'restaurant'"
-                >
-                  <AppIcon name="utensils" size="15" /> Đặc sản ({{ filteredRestaurants.length }})
-                </button>
-                <button
-                  type="button"
-                  :class="['ppt-btn', { active: placePickerActiveTab === 'hotel' }]"
-                  @click="placePickerActiveTab = 'hotel'"
-                >
-                  <AppIcon name="hotel" size="15" /> Khách sạn ({{ filteredHotels.length }})
-                </button>
-                <button
-                  type="button"
-                  :class="['ppt-btn', { active: placePickerActiveTab === 'cafe' }]"
-                  @click="placePickerActiveTab = 'cafe'"
-                >
-                  <AppIcon name="coffee" size="15" /> Cafe ({{ filteredCafes.length }})
-                </button>
-                <button
-                  v-if="selectedPlaces.length"
-                  type="button"
-                  :class="['ppt-btn ppt-selected-tab', { active: placePickerActiveTab === 'selected' }]"
-                  @click="placePickerActiveTab = 'selected'"
-                >
-                  <AppIcon name="star" size="15" filled color="#f59e0b" /> Đã chọn ({{ selectedPlaces.length }})
-                </button>
-              </div>
+                      <!-- 3 CỘT THÔNG TIN: GIỚI THIỆU | VỊ TRÍ | TIỆN NGHI (HÌNH 4) -->
+                      <div class="hdm-info-3cols">
+                        <!-- CỘT 1: GIỚI THIỆU -->
+                        <div class="hdm-col hdm-col-intro">
+                          <h4 class="hdm-sec-title">Giới thiệu</h4>
+                          <p class="hdm-desc-text">{{ activeHotelModal.description }}</p>
+                        </div>
 
-              <!-- KHAY ĐỊA ĐIỂM ĐÃ CHỌN (TIỆN LỢI & DỄ QUẢN LÝ) -->
-              <div v-if="selectedPlaces.length" class="selected-places-tray">
-                <div class="spt-header">
-                  <span class="spt-title"><AppIcon name="pin" size="15" /> Danh sách bạn đã chọn ({{ selectedPlaces.length }} địa điểm):</span>
-                  <button type="button" class="spt-clear-all" @click="clearAllSelectedPlaces">Xóa tất cả</button>
-                </div>
-                <div class="spt-chips">
-                  <span v-for="name in selectedPlaces" :key="name" class="spt-chip">
-                    {{ name }}
-                    <button type="button" @click="removeSelectedPlace(name)" title="Bỏ chọn"><AppIcon name="x" size="12" /></button>
-                  </span>
-                </div>
-              </div>
+                        <!-- CỘT 2: VỊ TRÍ -->
+                        <div class="hdm-col hdm-col-location">
+                          <h4 class="hdm-sec-title">Vị trí</h4>
+                          <div class="hdm-location-card">
+                            <div class="hlc-pin-row">
+                              <span class="hlc-pin-icon"><AppIcon name="pin" :size="18" /></span>
+                              <div class="hlc-addr-text">{{ activeHotelModal.address }}</div>
+                            </div>
+                            <a
+                              :href="'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(activeHotelModal.name + ' ' + activeHotelModal.address)"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              class="hlc-map-btn"
+                            >
+                              <AppIcon name="map" :size="14" /> Xem vị trí trên Google Maps ↗
+                            </a>
+                          </div>
+                        </div>
 
-              <!-- Thông báo AI Crawler -->
-              <div v-if="thongBaoCrawl" class="crawl-alert-banner">
-                <span>{{ thongBaoCrawl }}</span>
-              </div>
+                        <!-- CỘT 3: TIỆN NGHI -->
+                        <div class="hdm-col hdm-col-amenities">
+                          <div class="hdm-amenities-top">
+                            <h4 class="hdm-sec-title">Tiện nghi</h4>
+                            <span class="hdm-see-more">Xem thêm ›</span>
+                          </div>
+                          <ul class="hdm-amenities-checklist">
+                            <li v-for="(amenity, aIdx) in (activeHotelModal.amenities || [])" :key="aIdx">
+                              <span class="hdm-check-icon">✓</span>
+                              <span>{{ amenity }}</span>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
 
-              <!-- Nhóm Thắng cảnh -->
-              <div
-                v-if="filteredAttractions.length && (placePickerActiveTab === 'all' || placePickerActiveTab === 'attraction')"
-                class="picker-row"
-              >
-                <div class="picker-row-header">
-                  <span class="row-label"><AppIcon name="camera" size="16" /> Thắng cảnh & Di tích ({{ filteredAttractions.length }}):</span>
-                  <button
-                    v-if="!searchPlacePickerQuery && filteredAttractions.length > 8 && placePickerActiveTab === 'all'"
-                    type="button"
-                    class="picker-expand-toggle-btn"
-                    @click="togglePickerExpand('attraction')"
-                  >
-                    {{ isPickerExpanded.attraction ? '▲ Thu gọn' : `▼ Xem thêm (+${filteredAttractions.length - 8} địa điểm)` }}
-                  </button>
-                </div>
-                <div class="chips-wrap">
-                  <button
-                    v-for="p in getVisiblePlaces(filteredAttractions, 'attraction')"
-                    :key="p.name"
-                    type="button"
-                    :class="['app-chip', { active: isPlaceSelected(p.name) }]"
-                    @click="togglePlaceSelection(p.name)"
-                  >
-                    <span class="chip-status"><AppIcon :name="isPlaceSelected(p.name) ? 'check' : 'plus'" size="12" /></span>
-                    <span>{{ p.name }}</span>
-                  </button>
-                </div>
-              </div>
+                      <!-- DANH SÁCH BẢNG PHÒNG TRỐNG & ĐẶT PHÒNG (HÌNH 5) -->
+                      <div class="hdm-rooms-table-section">
+                        <div class="hrt-section-header">
+                          <h3>Chọn loại phòng phù hợp</h3>
+                          <small>Giá niêm yết đã bao gồm thuế, phí và các quyền lợi đi kèm</small>
+                        </div>
 
-              <!-- Nhóm Món ngon -->
-              <div
-                v-if="filteredRestaurants.length && (placePickerActiveTab === 'all' || placePickerActiveTab === 'restaurant')"
-                class="picker-row"
-              >
-                <div class="picker-row-header">
-                  <span class="row-label"><AppIcon name="utensils" size="16" /> Quán đặc sản & Ẩm thực ({{ filteredRestaurants.length }}):</span>
-                  <button
-                    v-if="!searchPlacePickerQuery && filteredRestaurants.length > 8 && placePickerActiveTab === 'all'"
-                    type="button"
-                    class="picker-expand-toggle-btn"
-                    @click="togglePickerExpand('restaurant')"
-                  >
-                    {{ isPickerExpanded.restaurant ? '▲ Thu gọn' : `▼ Xem thêm (+${filteredRestaurants.length - 8} quán)` }}
-                  </button>
-                </div>
-                <div class="chips-wrap">
-                  <button
-                    v-for="p in getVisiblePlaces(filteredRestaurants, 'restaurant')"
-                    :key="p.name"
-                    type="button"
-                    :class="['app-chip', { active: isPlaceSelected(p.name) }]"
-                    @click="togglePlaceSelection(p.name)"
-                  >
-                    <span class="chip-status"><AppIcon :name="isPlaceSelected(p.name) ? 'check' : 'plus'" size="12" /></span>
-                    <span>{{ p.name }}</span>
-                  </button>
-                </div>
-              </div>
+                        <div class="hrt-table-wrapper">
+                          <div class="hrt-table-head">
+                            <div class="hrt-cell th-room">Loại phòng</div>
+                            <div class="hrt-cell th-perks">Đề xuất cho bạn</div>
+                            <div class="hrt-cell th-guests">Số lượng</div>
+                            <div class="hrt-cell th-price">Giá / Phòng / Đêm</div>
+                            <div class="hrt-cell th-count">Phòng</div>
+                            <div class="hrt-cell th-action">Thao tác</div>
+                          </div>
 
-              <!-- Nhóm Khách sạn -->
-              <div
-                v-if="filteredHotels.length && (placePickerActiveTab === 'all' || placePickerActiveTab === 'hotel')"
-                class="picker-row"
-              >
-                <div class="picker-row-header">
-                  <span class="row-label"><AppIcon name="hotel" size="16" /> Khách sạn & Homestay ({{ filteredHotels.length }}):</span>
-                  <button
-                    v-if="!searchPlacePickerQuery && filteredHotels.length > 8 && placePickerActiveTab === 'all'"
-                    type="button"
-                    class="picker-expand-toggle-btn"
-                    @click="togglePickerExpand('hotel')"
-                  >
-                    {{ isPickerExpanded.hotel ? '▲ Thu gọn' : `▼ Xem thêm (+${filteredHotels.length - 8} nơi lưu trú)` }}
-                  </button>
-                </div>
-                <div class="chips-wrap">
-                  <button
-                    v-for="p in getVisiblePlaces(filteredHotels, 'hotel')"
-                    :key="p.name"
-                    type="button"
-                    :class="['app-chip', { active: isPlaceSelected(p.name) }]"
-                    @click="togglePlaceSelection(p.name)"
-                  >
-                    <span class="chip-status"><AppIcon :name="isPlaceSelected(p.name) ? 'check' : 'plus'" size="12" /></span>
-                    <span>{{ p.name }}</span>
-                  </button>
-                </div>
-              </div>
+                          <div
+                            v-for="room in (activeHotelModal.rooms || [])"
+                            :key="room.id"
+                            class="hrt-room-row"
+                          >
+                            <!-- Cột 1: Thông tin phòng + ảnh + diện tích (HÌNH 5) -->
+                            <div class="hrt-cell td-room">
+                              <h4 class="room-title">{{ room.name }}</h4>
+                              <div class="room-media-box">
+                                <img :src="room.image" :alt="room.name" class="room-photo" />
+                                <span class="room-size-badge"><AppIcon name="maximize" :size="11" /> {{ room.size }}</span>
+                              </div>
+                              <small class="room-bed-type"><AppIcon name="bed" :size="12" /> {{ room.bed }}</small>
+                            </div>
 
-              <!-- Nhóm Cafe -->
-              <div
-                v-if="filteredCafes.length && (placePickerActiveTab === 'all' || placePickerActiveTab === 'cafe')"
-                class="picker-row"
-              >
-                <div class="picker-row-header">
-                  <span class="row-label"><AppIcon name="coffee" size="16" /> Quán Cafe & Check-in ({{ filteredCafes.length }}):</span>
-                  <button
-                    v-if="!searchPlacePickerQuery && filteredCafes.length > 8 && placePickerActiveTab === 'all'"
-                    type="button"
-                    class="picker-expand-toggle-btn"
-                    @click="togglePickerExpand('cafe')"
-                  >
-                    {{ isPickerExpanded.cafe ? '▲ Thu gọn' : `▼ Xem thêm (+${filteredCafes.length - 8} quán cafe)` }}
-                  </button>
-                </div>
-                <div class="chips-wrap">
-                  <button
-                    v-for="p in getVisiblePlaces(filteredCafes, 'cafe')"
-                    :key="p.name"
-                    type="button"
-                    :class="['app-chip', { active: isPlaceSelected(p.name) }]"
-                    @click="togglePlaceSelection(p.name)"
-                  >
-                    <span class="chip-status"><AppIcon :name="isPlaceSelected(p.name) ? 'check' : 'plus'" size="12" /></span>
-                    <span>{{ p.name }}</span>
-                  </button>
-                </div>
-              </div>
+                            <!-- Cột 2: Đề xuất cho bạn (Perks) -->
+                            <div class="hrt-cell td-perks">
+                              <div class="deal-badge-row" v-if="room.deal_tag">
+                                <span class="deal-pill">🎁 {{ room.deal_tag }}</span>
+                              </div>
+                              <div class="perk-policy-row" v-if="room.free_cancellation">
+                                <span class="perk-icon-info">ⓘ</span>
+                                <span>{{ room.cancellation_policy }}</span>
+                              </div>
+                              <div class="perk-policy-row perk-breakfast" v-if="room.breakfast_included">
+                                <span class="perk-icon-check">✓</span>
+                                <span>Đã bao gồm bữa sáng</span>
+                              </div>
+                            </div>
 
-              <!-- Khi không tìm thấy kết quả tìm kiếm -->
-              <div v-if="searchPlacePickerQuery && totalFilteredPlacesCount === 0" class="empty-search-places">
-                <AppIcon name="search" size="28" />
-                <p>Không tìm thấy địa điểm nào khớp với từ khóa "<b>{{ searchPlacePickerQuery }}</b>".</p>
-                <button type="button" class="app-secondary-btn" @click="searchPlacePickerQuery = ''">Xóa tìm kiếm</button>
-              </div>
-              
-              <!-- Tự nhập điểm đến -->
-              <div class="custom-place-input-row" style="margin-top: 16px;">
-                <span class="row-label">Thêm địa điểm / quán khác (Tự nhập):</span>
-                <div style="display:flex; gap:8px;">
-                  <input type="text" v-model="customPlaceText" placeholder="Nhập tên địa điểm bạn muốn đi..." class="enhanced-input" style="flex:1; padding:10px 14px;" @keyup.enter="addCustomPlace" />
-                  <button class="app-primary-btn" @click="addCustomPlace" type="button" style="padding: 10px 20px; font-size:13px; white-space:nowrap; display:inline-flex; align-items:center; gap:4px;"><AppIcon name="plus" size="14" /> Thêm</button>
+                            <!-- Cột 3: Số khách -->
+                            <div class="hrt-cell td-guests">
+                              <span class="guest-counter">{{ room.max_guests }} <AppIcon name="user" :size="14" /></span>
+                            </div>
+
+                            <!-- Cột 4: Giá / Phòng / Đêm -->
+                            <div class="hrt-cell td-price">
+                              <div class="saving-ribbon" v-if="room.is_deal">Siêu tiết kiệm 🎁</div>
+                              <strong class="room-nightly-price">{{ dinhDangTien(room.price) }}đ <small>/ đêm</small></strong>
+                              <span class="tax-note">Đã bao gồm thuế & phí: {{ dinhDangTien(room.tax_included_price) }}đ</span>
+                            </div>
+
+                            <!-- Cột 5: Số phòng -->
+                            <div class="hrt-cell td-count">
+                              <span class="room-qty-box">{{ soPhongCan }}</span>
+                            </div>
+
+                            <!-- Cột 6: Thao tác (Nút Đặt ngay màu đỏ - HÌNH 5) -->
+                            <div class="hrt-cell td-action">
+                              <button
+                                type="button"
+                                class="btn-book-room-red"
+                                @click="chonPhongTuModal(activeHotelModal, room)"
+                              >
+                                {{ (formDuLieu.khachSanDaChon?.id === activeHotelModal.id && formDuLieu.phongDaChon?.id === room.id) ? '✓ Đang chọn' : 'Đặt ngay' }}
+                              </button>
+                              <span class="room-urgency-note">Chỉ còn {{ room.available_rooms || 3 }} phòng!</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-
-            </div>
-
-            <!-- ĐÓNG BƯỚC 3 -->
-            </div>
+              </transition>
+            </Teleport>
 
             <!-- LỖI KHI TẠO LỊCH TRÌNH -->
             <div v-if="taoPlanError" class="crawl-alert-banner" style="background:#fef2f2; border:1px solid #fca5a5; color:#991b1b; margin-top:16px; font-weight:600; display:flex; align-items:center; gap:8px;">
@@ -2245,14 +2723,23 @@
                               Giá phòng: <b>{{ dinhDangTien(lichTrinh.hotel_recommendation.price_per_night || 850000) }}đ</b>
                               <small>{{ (lichTrinh.hotel_recommendation.price_per_night || 850000) <= 300000 ? '/đêm/người' : '/đêm/phòng' }}</small>
                             </span>
-                            <a
-                              :href="chiDuongUrl(lichTrinh.hotel_recommendation.name, lichTrinh.hotel_recommendation.address)"
-                              target="_blank"
-                              rel="noreferrer"
-                              class="dhsc-map-btn"
-                            >
-                              <AppIcon name="map" size="13" /> Chỉ đường tới KS ↗
-                            </a>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                              <button
+                                type="button"
+                                class="dhsc-room-view-btn"
+                                @click.stop="moModalXemPhong(lichTrinh.hotel_recommendation)"
+                              >
+                                <AppIcon name="eye" size="13" /> Chi tiết phòng
+                              </button>
+                              <a
+                                :href="chiDuongUrl(lichTrinh.hotel_recommendation.name, lichTrinh.hotel_recommendation.address)"
+                                target="_blank"
+                                rel="noreferrer"
+                                class="dhsc-map-btn"
+                              >
+                                <AppIcon name="map" size="13" /> Chỉ đường tới KS ↗
+                              </a>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -2509,77 +2996,22 @@
         <!-- ==================== TAB 5: TÀI KHOẢN & YÊU THÍCH (PROFILE) ==================== -->
         <section v-if="activeTab === 'profile'" class="tab-pane">
           <!-- Nếu đã đăng nhập -->
-          <div v-if="nguoiDung" class="profile-card-premium">
-            <div class="profile-cover">
-              <button class="edit-profile-btn" @click="editProfile" v-if="!editProfileMode">
-                <AppIcon name="pencil" size="14" /> Chỉnh sửa hồ sơ
-              </button>
-            </div>
-            <div class="profile-avatar-premium">
-              <img v-if="nguoiDung.avatar" :src="nguoiDung.avatar" alt="Avatar" class="avatar-img" />
-              <div v-else class="avatar-placeholder">{{ nguoiDung.name ? nguoiDung.name[0].toUpperCase() : 'U' }}</div>
-              
-              <div class="level-badge" :style="{ backgroundColor: userLevelInfo?.color || '#10b981' }" :title="`Hoàn thành ${nguoiDung.completed_trips || 0} chuyến đi`">
-                <AppIcon :name="userLevelInfo?.icon || 'sprout'" size="14" /> {{ userLevelInfo?.title || 'Thành viên' }}
-              </div>
-            </div>
-            
-            <div class="profile-info-premium" v-if="!editProfileMode">
-              <h3 class="profile-name">{{ nguoiDung.name }} <span v-if="nguoiDung.role === 'admin'" class="admin-badge">Admin</span></h3>
-              <p class="profile-email">{{ nguoiDung.email }}</p>
-              <p class="profile-bio" v-if="nguoiDung.bio">"{{ nguoiDung.bio }}"</p>
-              
-              <div class="profile-stats-grid">
-                <div class="stat-box-premium">
-                  <div class="stat-icon"><AppIcon name="map" size="20" /></div>
-                  <strong>{{ myTripsList.length }}</strong>
-                  <small>Đã lên lịch</small>
-                </div>
-                <div class="stat-box-premium">
-                  <div class="stat-icon"><AppIcon name="checkcircle2" size="20" /></div>
-                  <strong>{{ nguoiDung.completed_trips || 0 }}</strong>
-                  <small>Hoàn thành</small>
-                </div>
-                <div class="stat-box-premium">
-                  <div class="stat-icon"><AppIcon name="heart" size="20" filled color="#ef4444" /></div>
-                  <strong>{{ favoritesList.length }}</strong>
-                  <small>Yêu thích</small>
-                </div>
-                <div class="stat-box-premium">
-                  <div class="stat-icon"><AppIcon name="trophy" size="20" /></div>
-                  <strong>{{ nguoiDung.points || 0 }}</strong>
-                  <small>Điểm số</small>
-                </div>
-              </div>
-              <button class="logout-btn-premium" @click="dangXuat">Đăng xuất</button>
-            </div>
-            
-            <div class="profile-edit-form" v-else>
-              <h3>Chỉnh sửa hồ sơ</h3>
-              <div class="edit-field">
-                <label>Tên hiển thị</label>
-                <input type="text" v-model="profileForm.name" class="app-input" />
-              </div>
-              <div class="edit-field">
-                <label>Ảnh đại diện (Tải lên từ thiết bị)</label>
-                <input type="file" accept="image/*" @change="handleAvatarUpload" class="app-input" style="padding: 8px;" />
-                <div v-if="profileForm.avatar && profileForm.avatar.startsWith('data:image')" style="margin-top: 10px; display: flex; align-items: center; gap: 10px;">
-                   <img :src="profileForm.avatar" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #10b981;" />
-                   <span style="font-size: 0.85rem; color: #10b981; font-weight: 600;">Đã đính kèm ảnh mới</span>
-                </div>
-              </div>
-              <div class="edit-field">
-                <label>Giới thiệu bản thân</label>
-                <textarea v-model="profileForm.bio" class="app-input" rows="3" placeholder="Sở thích du lịch của bạn là gì?"></textarea>
-              </div>
-              <div class="edit-actions">
-                <button class="cancel-edit-btn" @click="editProfileMode = false">Hủy</button>
-                <button class="save-edit-btn" @click="saveProfile"><AppIcon name="save" size="14" /> Lưu thay đổi</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Nếu chưa đăng nhập -->
+          
+          <UserProfile v-if="nguoiDung"
+            :nguoiDung="nguoiDung"
+            :userLevelInfo="userLevelInfo"
+            :myTripsCount="myTripsList.length"
+            :favoritesCount="favoritesList.length"
+            :isEditingProfile="isEditingProfile"
+            :profileForm="profileForm"
+            @editProfile="editProfile"
+            @dangXuat="dangXuat"
+            @saveProfile="saveProfile"
+            @cancelEdit="isEditingProfile = false"
+            @handleAvatarUpload="handleAvatarUpload"
+            @updateForm="(key, value) => { profileForm[key] = value }"
+          />
+          
           <div v-else class="auth-card" style="text-align: center; padding: 40px 20px;">
             <h2 style="margin-bottom: 12px;">Bạn chưa đăng nhập</h2>
             <p style="color: var(--text-sub); margin-bottom: 24px;">Hãy đăng nhập để lưu trữ chuyến đi và quản lý tài khoản nhé!</p>
@@ -2588,24 +3020,9 @@
             </button>
           </div>
 
-          <!-- Danh sách Địa điểm yêu thích -->
-          <div v-if="nguoiDung && favoritesList.length" class="favorites-section">
-            <h3>Địa điểm đã lưu yêu thích ({{ favoritesList.length }})</h3>
-            <div class="places-app-grid">
-              <article v-for="place in favoritesList" :key="place._id" class="app-place-card" v-reveal>
-                <div class="place-card-top">
-                  <span class="place-card-type">{{ getPlaceTypeLabel(place.type) }}</span>
-                  <button class="heart-action-btn active" @click="doiYeuThich(place._id)"><AppIcon name="heart" size="16" filled color="#ef4444" /></button>
-                </div>
-                <h4>{{ place.name }}</h4>
-                <p class="place-card-desc">{{ place.description }}</p>
-                <p class="place-card-address" v-if="place.address"><AppIcon name="pin" size="14" /> {{ place.address }}</p>
-                <div class="place-card-bottom">
-                  <a class="place-maps-btn" :href="chiDuongUrl(place.name, place.address)" target="_blank"><AppIcon name="map" size="14" /> Chỉ đường</a>
-                </div>
-              </article>
-            </div>
-          </div>
+          
+          <!-- Danh sách địa điểm yêu thích (Mới) -->
+          <FavoritePlaces :favoritesList="favoritesList" @doiYeuThich="doiYeuThich" :getPlaceImage="getPlaceImage" />
         </section>
 
       </main>
@@ -3123,6 +3540,8 @@
 </template>
 
 <script setup>
+import FavoritePlaces from './components/FavoritePlaces.vue';
+import UserProfile from './components/UserProfile.vue';
 import { reactive, ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import api from './services/api'
 import AppHeader from './components/layout/AppHeader.vue'
@@ -3133,6 +3552,7 @@ import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import html2pdf from 'html2pdf.js'
 import { getBusOperatorsForRoute, getEstimatedDistance } from './services/busService'
+import { getHotelsForDestination } from './services/hotelService'
 
 // Fix default icon issue for Leaflet in Vite
 delete L.Icon.Default.prototype._getIconUrl;
@@ -3175,7 +3595,7 @@ const ALL_DESTINATIONS = 'Tất cả miền Trung'
 
 const formDuLieu = reactive({
   diemKhoiHanh: 'Hà Nội',
-  diemDen: 'Đà Nẵng',
+  diemDen: ALL_DESTINATIONS,
   soNgay: 0,
   soDem: 0,
   nganSach: 3500000,
@@ -3186,8 +3606,13 @@ const formDuLieu = reactive({
   phuongTien: 'xe khách',
   yeuCauKhachSan: '',
   nhaXeDaChon: null,
+  gioXuatPhatChon: '',
+  tauDaChon: null,
+  khachSanDaChon: null,
+  phongDaChon: null,
   freePlacesOnly: false,
-  tuTucPhuongTien: false
+  tuTucPhuongTien: false,
+  tuTucKhachSan: false
 })
 
 // Dark Mode State
@@ -3221,6 +3646,30 @@ const centralCities = [
 
 // DỮ LIỆU ĐIỂM ĐẾN NỔI BẬT: ẢNH HD THỰC TẾ 100%, 5 THUMBNAILS GALLERY ĐÚNG DANH THẮNG & THÔNG TIN DU LỊCH CHI TIẾT
 const PROVINCE_SPOTLIGHTS = {
+  [ALL_DESTINATIONS]: {
+    title: 'Miền Trung Việt Nam - Dải Đất Di Sản & Thiên Đường Biển Đảo',
+    subtitle: 'Nơi hội tụ các Di sản Thế giới UNESCO, những vịnh biển quyến rũ bậc nhất hành tinh và đại ngàn Tây Nguyên hùng vĩ',
+    badge: 'UNESCO Heritage Trail',
+    esgText: 'ESG: 82 | LEI: 80',
+    certText: 'Con Đường Di Sản Miền Trung Tuyệt Mỹ',
+    description: 'Miền Trung là dải đất quyến rũ bậc nhất Việt Nam trải dài từ Thanh Hóa đến Bình Thuận và vươn rộng lên đại ngàn Tây Nguyên. Nơi đây quy tụ quần thể di tích Cố Đô Huế trầm mặc, Phố Cổ Hội An lung linh hoa đăng, kỳ quan hang động Phong Nha - Kẻ Bàng hùng vĩ, thành phố đáng sống Đà Nẵng bên bãi biển Mỹ Khê, vịnh biển ngọc Nha Trang, Ghềnh Đá Đĩa Phú Yên kỳ thú và thiên đường ngàn hoa Đà Lạt mát lành quanh năm.',
+    specialties: [
+      'Bún bò Huế & Cơm hến sông Hương',
+      'Mì Quảng ếch & Cơm gà phố Hội',
+      'Nem nướng Ninh Hòa & Bún chả cá Nha Trang',
+      'Lẩu gà lá é & Bánh tráng nướng Đà Lạt',
+      'Cua Huỳnh Đế Lý Sơn & Bò một nắng Krông Pa'
+    ],
+    bestSeason: 'Tháng 1 - Tháng 8 (Khí hậu khô ráo chan hòa nắng ấm, biển lặng sóng xanh ngọc bích, lý tưởng cho mọi chuyến du lịch trải nghiệm)',
+    heroImage: '/images/mientrung-collage.jpg',
+    gallery: [
+      { name: 'Cầu Vàng Bà Nà Hills (Đà Nẵng)', image: 'https://www.pullman-danang.com/wp-content/uploads/sites/86/2019/05/DJI_0004.jpg' },
+      { name: 'Phố Cổ Hội An lung linh (Quảng Nam)', image: 'https://top1quangnam.com/wp-content/uploads/2021/12/hoi-an-15102019-2-1400x788.png' },
+      { name: 'Đại Nội Cố Đô Huế (Thừa Thiên Huế)', image: 'https://sacotravel.com/wp-content/uploads/2023/07/Dai-Noi-Hue.jpg' },
+      { name: 'Động Phong Nha Kẻ Bàng (Quảng Bình)', image: 'https://phongnhatourist.com/wp-content/uploads/2019/04/dong-thie-duong-2.jpg' },
+      { name: 'Vịnh Biển Nha Trang trong xanh (Khánh Hòa)', image: 'https://bomanhatrang.com/wp-content/uploads/2023/03/dia-diem-du-lich-nha-trang-thumbnail-1.jpg' }
+    ]
+  },
   'Đà Nẵng': {
     title: 'Đà Nẵng - Thành phố đáng sống bên sông Hàn & Biển Mỹ Khê',
     subtitle: 'Kỳ quan Cầu Vàng Bà Nà Hills, Bán đảo Sơn Trà & Di sản Phố Cổ Hội An kề cận',
@@ -3448,11 +3897,11 @@ watch(() => formDuLieu.diemDen, () => {
 })
 
 const currentSpotlight = computed(() => {
-  const dest = formDuLieu.diemDen || 'Đà Nẵng'
+  const dest = formDuLieu.diemDen || ALL_DESTINATIONS
   if (dest === ALL_DESTINATIONS) {
-    return PROVINCE_SPOTLIGHTS['Đà Nẵng']
+    return PROVINCE_SPOTLIGHTS[ALL_DESTINATIONS]
   }
-  return PROVINCE_SPOTLIGHTS[dest] || PROVINCE_SPOTLIGHTS['Đà Nẵng']
+  return PROVINCE_SPOTLIGHTS[dest] || PROVINCE_SPOTLIGHTS[ALL_DESTINATIONS] || PROVINCE_SPOTLIGHTS['Đà Nẵng']
 })
 
 const activeHeroImage = computed(() => {
@@ -4330,18 +4779,28 @@ const transitTab = ref('bus') // 'bus' hoặc 'train'
 function chonNhaXe(bus) {
   if (formDuLieu.nhaXeDaChon?.id === bus.id) {
     formDuLieu.nhaXeDaChon = null
+    formDuLieu.gioXuatPhatChon = ''
   } else {
     formDuLieu.nhaXeDaChon = bus
     formDuLieu.phuongTien = 'xe khách'
+    const times = bus.depart_times ? bus.depart_times.split(',').map(s => s.trim()) : []
+    if (times.length && !formDuLieu.gioXuatPhatChon) {
+      formDuLieu.gioXuatPhatChon = times[0]
+    }
   }
 }
 
 function chonTauHoa(train) {
   if (formDuLieu.tauDaChon?.id === train.id) {
     formDuLieu.tauDaChon = null
+    formDuLieu.gioXuatPhatChon = ''
   } else {
     formDuLieu.tauDaChon = train
     formDuLieu.phuongTien = 'tàu hỏa'
+    const times = train.depart_times ? train.depart_times.split(',').map(s => s.trim()) : []
+    if (times.length && !formDuLieu.gioXuatPhatChon) {
+      formDuLieu.gioXuatPhatChon = times[0]
+    }
   }
 }
 
@@ -4357,6 +4816,398 @@ function chonPhuongTienTuSoSanh(v) {
   } else if (v.type === 'motorbike') {
     formDuLieu.phuongTien = 'xe máy'
   }
+}
+
+// ==================== BƯỚC 3: DI CHUYỂN & LƯU TRÚ (TRANSIT & HOTEL SELECTION) ====================
+const step3ActiveSubtab = ref('transit') // 'transit' | 'hotel'
+
+const daXongPhuongTien = computed(() => {
+  return Boolean(formDuLieu.nhaXeDaChon || formDuLieu.tauDaChon || formDuLieu.tuTucPhuongTien)
+})
+
+const daXongKhachSan = computed(() => {
+  return Boolean(formDuLieu.khachSanDaChon || formDuLieu.tuTucKhachSan)
+})
+
+const daXongBuoc3 = computed(() => {
+  return daXongPhuongTien.value && daXongKhachSan.value
+})
+
+function cuonXuongTaoLichTrinh() {
+  nextTick(() => {
+    const el = document.getElementById('step3-ready-generate')
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+  })
+}
+
+function toggleTuTucPhuongTien() {
+  formDuLieu.tuTucPhuongTien = !formDuLieu.tuTucPhuongTien
+  if (formDuLieu.tuTucPhuongTien) {
+    formDuLieu.nhaXeDaChon = null
+    formDuLieu.tauDaChon = null
+    personalityToast.value = {
+      icon: '🏍️',
+      title: 'Đã chọn Tự túc phương tiện!',
+      desc: 'Hệ thống chuyển sang Bước 2: Chọn Khách sạn & Lưu trú.'
+    }
+    setTimeout(() => { personalityToast.value = null }, 3500)
+    step3ActiveSubtab.value = 'hotel'
+  }
+}
+
+function chuyenSangChonKhachSan() {
+  if (!formDuLieu.nhaXeDaChon && !formDuLieu.tauDaChon && !formDuLieu.tuTucPhuongTien) {
+    formDuLieu.tuTucPhuongTien = true
+    personalityToast.value = {
+      icon: 'ℹ️',
+      title: 'Tự động chọn tự túc phương tiện',
+      desc: 'Bạn chưa chọn vé xe, hệ thống đã chuyển sang chế độ tự túc.'
+    }
+    setTimeout(() => { personalityToast.value = null }, 3500)
+  }
+  step3ActiveSubtab.value = 'hotel'
+  nextTick(() => {
+    window.scrollTo({ top: 300, behavior: 'smooth' })
+  })
+}
+
+function toggleTuTucKhachSan() {
+  formDuLieu.tuTucKhachSan = !formDuLieu.tuTucKhachSan
+  if (formDuLieu.tuTucKhachSan) {
+    formDuLieu.khachSanDaChon = null
+    formDuLieu.phongDaChon = null
+    personalityToast.value = {
+      icon: '🏡',
+      title: 'Đã chọn Tự túc nơi ở!',
+      desc: 'Hệ thống tính 0đ chi phí khách sạn. Bạn đã hoàn tất chuẩn bị!'
+    }
+    setTimeout(() => { personalityToast.value = null }, 3500)
+    cuonXuongTaoLichTrinh()
+  }
+}
+
+function chonGioXuatPhatBus(bus, timeStr) {
+  formDuLieu.nhaXeDaChon = bus
+  formDuLieu.gioXuatPhatChon = timeStr
+  formDuLieu.phuongTien = 'xe khách'
+  formDuLieu.tuTucPhuongTien = false
+  personalityToast.value = {
+    icon: '🚌',
+    title: `Đã chọn chuyến ${timeStr}!`,
+    desc: `${bus.name} — Xuất bến lúc ${timeStr}. Tự động chuyển sang chọn khách sạn...`
+  }
+  setTimeout(() => { personalityToast.value = null }, 3500)
+  setTimeout(() => {
+    step3ActiveSubtab.value = 'hotel'
+  }, 700)
+}
+
+function chonGioXuatPhatTau(train, timeStr) {
+  formDuLieu.tauDaChon = train
+  formDuLieu.gioXuatPhatChon = timeStr
+  formDuLieu.phuongTien = 'tàu hỏa'
+  formDuLieu.tuTucPhuongTien = false
+  personalityToast.value = {
+    icon: '🚆',
+    title: `Đã chọn giờ tàu ${timeStr}!`,
+    desc: `${train.name} — Xuất phát lúc ${timeStr}. Tự động chuyển sang chọn khách sạn...`
+  }
+  setTimeout(() => { personalityToast.value = null }, 3500)
+  setTimeout(() => {
+    step3ActiveSubtab.value = 'hotel'
+  }, 700)
+}
+
+// Danh sách khách sạn theo điểm đến hiện tại
+const availableHotels = computed(() => {
+  return getHotelsForDestination(formDuLieu.diemDen || 'Đà Nẵng', places.value || [])
+})
+
+// State Sắp xếp, Bộ lọc và Thu gọn/Xem thêm Khách sạn (Yêu cầu 5)
+const hotelSortBy = ref('default') // 'default' | 'price_asc' | 'price_desc' | 'rating_desc'
+const hotelStarFilter = ref('all') // 'all' | '5' | '4' | '3'
+const hotelDisplayLimit = ref(4)
+
+const filteredSortedHotels = computed(() => {
+  let list = [...availableHotels.value]
+  if (hotelStarFilter.value !== 'all') {
+    const target = Number(hotelStarFilter.value)
+    list = list.filter(h => Number(h.stars || 4) === target)
+  }
+  if (hotelSortBy.value === 'price_asc') {
+    list.sort((a, b) => (Number(a.price_from || a.price) || 0) - (Number(b.price_from || b.price) || 0))
+  } else if (hotelSortBy.value === 'price_desc') {
+    list.sort((a, b) => (Number(b.price_from || b.price) || 0) - (Number(a.price_from || a.price) || 0))
+  } else if (hotelSortBy.value === 'rating_desc') {
+    list.sort((a, b) => (Number(b.rating) || 0) - (Number(a.rating) || 0))
+  }
+  return list
+})
+
+const displayedHotels = computed(() => {
+  return filteredSortedHotels.value.slice(0, hotelDisplayLimit.value)
+})
+
+function xemThemKhachSan() {
+  hotelDisplayLimit.value += 8
+}
+
+function xemTatCaKhachSan() {
+  hotelDisplayLimit.value = filteredSortedHotels.value.length
+}
+
+function thuGonKhachSan() {
+  hotelDisplayLimit.value = 4
+}
+
+// Reset limit khi đổi điểm đến hoặc đổi bộ lọc sao
+watch([() => formDuLieu.diemDen, hotelStarFilter], () => {
+  hotelDisplayLimit.value = 4
+})
+
+// Số phòng cần thiết (2 người/phòng)
+const soPhongCan = computed(() => {
+  return Math.max(1, Math.ceil((Number(formDuLieu.soNguoi) || 1) / 2))
+})
+
+// Tổng chi phí phòng khách sạn đã chọn
+const tongChiPhiKhachSanChon = computed(() => {
+  if (formDuLieu.tuTucKhachSan || !formDuLieu.khachSanDaChon || !formDuLieu.phongDaChon) return 0
+  const nights = formDuLieu.soDem !== undefined && formDuLieu.soDem !== null
+    ? Number(formDuLieu.soDem)
+    : Math.max(1, (Number(formDuLieu.soNgay) || 1) - 1)
+  if (nights <= 0) return 0
+  const price = Number(formDuLieu.phongDaChon.price || formDuLieu.khachSanDaChon.price_from || 0)
+  return price * nights * soPhongCan.value
+})
+
+// Cảnh báo tính khả thi tài chính của phòng khách sạn đối với ngân sách chuyến đi
+const hotelBudgetAlert = computed(() => {
+  const cost = tongChiPhiKhachSanChon.value
+  if (!cost || cost === 0) return null
+  const budget = Number(formDuLieu.nganSach) || 0
+  if (budget < cost) {
+    const dailyEst = Math.max(1, formDuLieu.soNgay) * Math.max(1, formDuLieu.soNguoi) * 350000
+    const suggested = Math.round((cost + dailyEst) / 100000) * 100000
+    return {
+      type: 'critical',
+      title: 'Ngân sách không đủ chi trả tiền khách sạn',
+      message: `Chi phí lưu trú ${formDuLieu.soDem} đêm (${dinhDangTien(cost)}đ) đã vượt quá tổng ngân sách chuyến đi (${dinhDangTien(budget)}đ).`,
+      suggestedBudget: suggested,
+      diff: cost - budget
+    }
+  }
+  if (cost > budget * 0.65) {
+    const suggested = Math.round((cost / 0.45) / 100000) * 100000
+    return {
+      type: 'warning',
+      title: 'Tiền khách sạn chiếm tỷ trọng quá lớn (>65%)',
+      message: `Tiền phòng (${dinhDangTien(cost)}đ) chiếm ${Math.round((cost / budget) * 100)}% ngân sách, chỉ còn lại ${dinhDangTien(budget - cost)}đ cho ăn uống, vé tham quan và di chuyển.`,
+      suggestedBudget: suggested,
+      diff: 0
+    }
+  }
+  return null
+})
+
+function apDungNangNganSachKhachSan() {
+  if (hotelBudgetAlert.value?.suggestedBudget) {
+    const old = formDuLieu.nganSach
+    formDuLieu.nganSach = hotelBudgetAlert.value.suggestedBudget
+    personalityToast.value = {
+      icon: '💰',
+      title: 'Đã nâng ngân sách chuyến đi!',
+      desc: `${dinhDangTien(old)}đ → ${dinhDangTien(formDuLieu.nganSach)}đ. Vừa vặn tiền phòng và chi tiêu thoải mái!`
+    }
+    setTimeout(() => { personalityToast.value = null }, 5000)
+  }
+}
+
+function chonPhongTietKiemHon() {
+  if (availableHotels.value?.length) {
+    const sorted = [...availableHotels.value].sort((a, b) => (a.price_from || 0) - (b.price_from || 0))
+    if (sorted[0]) {
+      moModalXemPhong(sorted[0])
+    }
+  }
+}
+
+function giamSoDemKhachSan() {
+  if (formDuLieu.soDem > 1) {
+    formDuLieu.soDem -= 1
+    personalityToast.value = {
+      icon: '🌙',
+      title: 'Đã giảm 1 đêm lưu trú!',
+      desc: `Số đêm lưu trú hiện tại: ${formDuLieu.soDem} đêm.`
+    }
+    setTimeout(() => { personalityToast.value = null }, 4000)
+  }
+}
+
+// State Modal Chi tiết Khách sạn & Xem phòng (Ảnh 4 & 5)
+const showHotelDetailModal = ref(false)
+const activeHotelModal = ref(null)
+const activeHotelImageIdx = ref(0)
+const isHotelModalFullscreen = ref(false)
+
+function moModalXemPhong(hotel) {
+  if (!hotel) return
+
+  // Chuẩn hóa và làm giàu dữ liệu hotel để phòng ngừa mọi trường hợp dữ liệu rỗng/thiếu
+  const fallbackImg = hotel.image || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&auto=format&fit=crop&q=80'
+  
+  let gallery = []
+  if (Array.isArray(hotel.gallery) && hotel.gallery.length > 0) {
+    gallery = [...hotel.gallery]
+  } else if (hotel.image) {
+    gallery = [hotel.image]
+  }
+  
+  // Đảm bảo gallery có ít nhất 4 ảnh để khớp layout screenshot 4
+  const defaultSampleImages = [
+    'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1590490360182-c33d57733427?w=800&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1584132967334-10e028bd69f7?w=800&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=800&auto=format&fit=crop&q=80'
+  ]
+  while (gallery.length < 4) {
+    gallery.push(defaultSampleImages[gallery.length % defaultSampleImages.length])
+  }
+
+  const basePrice = Number(hotel.price_from || hotel.price) || 750000
+  let rooms = []
+  if (Array.isArray(hotel.rooms) && hotel.rooms.length > 0) {
+    rooms = hotel.rooms.map((r, idx) => ({
+      ...r,
+      image: r.image || gallery[idx % gallery.length] || fallbackImg,
+      price: Number(r.price) || basePrice,
+      tax_included_price: Number(r.tax_included_price) || Math.round((Number(r.price) || basePrice) * 1.15)
+    }))
+  } else {
+    // Tự sinh 3 hạng phòng chuẩn Screenshot 5 nếu khách sạn chưa có phòng
+    rooms = [
+      {
+        id: `${hotel.id || 'h'}-std`,
+        name: 'Phòng Tiêu Chuẩn Giường Đôi',
+        size: '20 m²',
+        bed: '1 Giường đôi lớn (Queen Bed)',
+        image: gallery[0] || fallbackImg,
+        max_guests: 2,
+        is_deal: true,
+        deal_tag: 'Siêu tiết kiệm',
+        free_cancellation: true,
+        cancellation_policy: 'Miễn phí hủy phòng trước ngày nhận phòng 24h',
+        breakfast_included: false,
+        price: basePrice,
+        tax_included_price: Math.round(basePrice * 1.15),
+        available_rooms: 4
+      },
+      {
+        id: `${hotel.id || 'h'}-breakfast`,
+        name: 'Phòng Tiêu Chuẩn Giường Đôi (Gồm bữa sáng)',
+        size: '22 m²',
+        bed: '1 Giường đôi Queen hoặc 2 giường đơn',
+        image: gallery[1] || fallbackImg,
+        max_guests: 2,
+        is_deal: true,
+        deal_tag: 'Bán chạy nhất',
+        free_cancellation: true,
+        cancellation_policy: 'Miễn phí hủy phòng trước ngày nhận phòng 24h',
+        breakfast_included: true,
+        price: Math.round(basePrice * 1.25),
+        tax_included_price: Math.round(basePrice * 1.25 * 1.15),
+        available_rooms: 3
+      },
+      {
+        id: `${hotel.id || 'h'}-exec`,
+        name: 'Phòng Thương Gia Cao Cấp Giường Đôi (Executive King)',
+        size: '28 m²',
+        bed: '1 Giường King-size cực lớn + View đẹp',
+        image: gallery[2] || fallbackImg,
+        max_guests: 2,
+        is_deal: false,
+        deal_tag: 'Đẳng cấp sang trọng',
+        free_cancellation: true,
+        cancellation_policy: 'Miễn phí hủy trước ngày nhận phòng 48h',
+        breakfast_included: true,
+        price: Math.round(basePrice * 1.5),
+        tax_included_price: Math.round(basePrice * 1.5 * 1.15),
+        available_rooms: 2
+      }
+    ]
+  }
+
+  const amenities = Array.isArray(hotel.amenities) && hotel.amenities.length > 0 
+    ? [...hotel.amenities]
+    : [
+        'Tiếng Anh & Tiếng Việt',
+        'Lễ tân phục vụ 24/7',
+        'Wi-Fi tốc độ cao miễn phí',
+        'Bãi đỗ xe ô tô an toàn',
+        'Bữa sáng buffet phong phú',
+        'Điều hòa & Nóng lạnh 2 chiều'
+      ]
+
+  activeHotelModal.value = {
+    ...hotel,
+    image: fallbackImg,
+    gallery,
+    rooms,
+    amenities,
+    stars: Math.max(1, Math.min(5, Math.round(Number(hotel.stars) || 4))),
+    rating: hotel.rating || 4.7,
+    reviews_count: hotel.reviews_count || 320,
+    address: hotel.address || `Trung tâm TP. ${formDuLieu.diemDen || 'Đà Nẵng'}`,
+    description: hotel.description || `Trải nghiệm dịch vụ hàng đầu và tiện nghi vượt trội tại ${hotel.name} để có một kỳ lưu trú đáng nhớ. Duy trì liên lạc với Wi-Fi miễn phí trong suốt kỳ nghỉ. Khách sạn tọa lạc tại vị trí đắc địa, thuận tiện tham quan và ẩm thực đặc sản.`
+  }
+  
+  activeHotelImageIdx.value = 0
+  isHotelModalFullscreen.value = false
+  showHotelDetailModal.value = true
+
+  try {
+    document.body.style.overflow = 'hidden'
+  } catch (e) {}
+}
+
+function dongModalXemPhong() {
+  showHotelDetailModal.value = false
+  try {
+    document.body.style.overflow = ''
+  } catch (e) {}
+}
+
+// Watcher bảo đảm cuộn trang luôn được mở khóa khi đóng modal (Tránh đứng web - Yêu cầu 4)
+watch(showHotelDetailModal, (isOpen) => {
+  try {
+    document.body.style.overflow = isOpen ? 'hidden' : ''
+  } catch (e) {}
+})
+
+function chonPhongTuModal(hotel, room) {
+  formDuLieu.khachSanDaChon = hotel
+  formDuLieu.phongDaChon = room
+  formDuLieu.tuTucKhachSan = false
+  showHotelDetailModal.value = false
+  try {
+    document.body.style.overflow = ''
+  } catch (e) {}
+  personalityToast.value = {
+    icon: '🏨',
+    title: 'Đã xác nhận chọn phòng!',
+    desc: `${hotel.name} — ${room.name} (${dinhDangTien(room.price)}đ/đêm)`
+  }
+  setTimeout(() => { personalityToast.value = null }, 4500)
+  // Đẩy nhẹ nhàng xuống phần lên lịch trình (Yêu cầu 4)
+  cuonXuongTaoLichTrinh()
+}
+
+function huyChonKhachSan() {
+  formDuLieu.khachSanDaChon = null
+  formDuLieu.phongDaChon = null
 }
 
 // Cập nhật nhà xe tối ưu chi phí khi đổi điểm đi hoặc điểm đến (KHÔNG TỰ ĐỘNG CHỌN VÉ XE - YÊU CẦU 1)
@@ -4529,12 +5380,29 @@ async function xacNhanLuuVaQuayLai() {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-function xacNhanHuyVaQuayLai() {
+async function xacNhanHuyVaQuayLai() {
   hienModalXacNhanQuayLai.value = false
+  if (lichTrinh.value?.tripId) {
+    const tid = lichTrinh.value.tripId
+    try {
+      await api.delete(`/social/trips/${tid}`)
+    } catch (e) {
+      console.warn('Lỗi xóa trip khi hủy:', e.message)
+    }
+    myTripsList.value = myTripsList.value.filter(t => t._id !== tid)
+    try {
+      const raw = localStorage.getItem('my_saved_trips')
+      if (raw) {
+        const arr = JSON.parse(raw).filter(t => t._id !== tid)
+        localStorage.setItem('my_saved_trips', JSON.stringify(arr))
+      }
+    } catch (e) {}
+  }
   lichTrinh.value = null
   daLuuLichTrinhHienTai.value = false
   currentPlannerStep.value = 1
   window.scrollTo({ top: 0, behavior: 'smooth' })
+  await taiChuyenDiCuaToi()
 }
 
 function addCustomPlace() {
@@ -4735,7 +5603,7 @@ const filteredCafes = computed(() => {
 })
 
 const totalFilteredPlacesCount = computed(() => {
-  return filteredAttractions.value.length + filteredRestaurants.value.length + filteredHotels.value.length + filteredCafes.value.length
+  return filteredAttractions.value.length + filteredRestaurants.value.length + filteredCafes.value.length
 })
 
 function getVisiblePlaces(list, category) {
@@ -5468,6 +6336,15 @@ const googleMapsDayRouteUrl = computed(() => {
 })
 
 function tinhChiPhiKhachSan(plan) {
+  if (formDuLieu.tuTucKhachSan || plan?.self_hotel) return 0
+  if (formDuLieu.khachSanDaChon && formDuLieu.phongDaChon) {
+    const nights = plan?.nights !== undefined ? Number(plan.nights) : (formDuLieu.soDem !== undefined ? Number(formDuLieu.soDem) : Math.max(0, (plan?.daysList?.length || 1) - 1))
+    if (nights <= 0) return 0
+    const people = Number(plan?.people) || Number(formDuLieu.soNguoi) || 2
+    const rooms = Math.max(1, Math.ceil(people / 2))
+    const price = Number(formDuLieu.phongDaChon.price) || Number(formDuLieu.khachSanDaChon.price_from) || 750000
+    return Math.round(price * rooms * nights)
+  }
   if (!plan?.hotel_recommendation) return 0
   const nights = plan.nights !== undefined ? Number(plan.nights) : (formDuLieu.soDem !== undefined ? Number(formDuLieu.soDem) : Math.max(0, (plan.daysList?.length || 1) - 1))
   if (nights <= 0) return 0
@@ -5899,12 +6776,32 @@ async function dongYLuuVaChuyenTab() {
   }
 }
 
-function khongLuuVaChuyenTab() {
+async function khongLuuVaChuyenTab() {
   hienModalNhacLuu.value = false
+  if (lichTrinh.value?.tripId) {
+    const tid = lichTrinh.value.tripId
+    try {
+      await api.delete(`/social/trips/${tid}`)
+    } catch (e) {
+      console.warn('Lỗi xóa trip khi không lưu:', e.message)
+    }
+    myTripsList.value = myTripsList.value.filter(t => t._id !== tid)
+    try {
+      const raw = localStorage.getItem('my_saved_trips')
+      if (raw) {
+        const arr = JSON.parse(raw).filter(t => t._id !== tid)
+        localStorage.setItem('my_saved_trips', JSON.stringify(arr))
+      }
+    } catch (e) {}
+  }
+  lichTrinh.value = null
+  daLuuLichTrinhHienTai.value = false
+  currentPlannerStep.value = 1
   if (pendingTabSwitch.value) {
     activeTab.value = pendingTabSwitch.value
     pendingTabSwitch.value = null
   }
+  await taiChuyenDiCuaToi()
 }
 
 function huyChuyenTab() {
@@ -6189,11 +7086,43 @@ async function taoLichTrinh() {
       transportation: formDuLieu.phuongTien,
       hotel_request: formDuLieu.yeuCauKhachSan,
       selected_bus: formDuLieu.nhaXeDaChon,
+      selected_hotel: formDuLieu.khachSanDaChon,
+      selected_room: formDuLieu.phongDaChon,
+      selected_departure_time: formDuLieu.gioXuatPhatChon,
       self_transit: Boolean(formDuLieu.tuTucPhuongTien),
-      tu_tuc_phuong_tien: Boolean(formDuLieu.tuTucPhuongTien)
+      tu_tuc_phuong_tien: Boolean(formDuLieu.tuTucPhuongTien),
+      self_hotel: Boolean(formDuLieu.tuTucKhachSan),
+      tu_tuc_khach_san: Boolean(formDuLieu.tuTucKhachSan)
     })
     lichTrinh.value = res.data
     lichTrinh.value.nights = formDuLieu.soDem
+    // Đồng bộ khách sạn đã chọn hoặc tự túc nơi ở
+    if (formDuLieu.tuTucKhachSan) {
+      lichTrinh.value.self_hotel = true
+      lichTrinh.value.hotel_recommendation = {
+        name: 'Tự túc nơi ở / Homestay riêng',
+        address: `Khu vực ${formDuLieu.diemDen || 'Miền Trung'}`,
+        rating: 5.0,
+        price_per_night: 0,
+        room_name: 'Tự túc chỗ nghỉ',
+        description: 'Chỗ ở tự túc (nhà người thân, homestay tự đặt hoặc cắm trại dã ngoại). Chi phí lưu trú: 0đ.',
+        image: null,
+        latitude: null,
+        longitude: null
+      }
+    } else if (formDuLieu.khachSanDaChon) {
+      lichTrinh.value.hotel_recommendation = {
+        name: formDuLieu.khachSanDaChon.name,
+        address: formDuLieu.khachSanDaChon.address,
+        rating: formDuLieu.khachSanDaChon.rating || 4.8,
+        price_per_night: Number(formDuLieu.phongDaChon?.price || formDuLieu.khachSanDaChon.price_from || 850000),
+        room_name: formDuLieu.phongDaChon?.name || 'Phòng Tiêu Chuẩn',
+        description: formDuLieu.phongDaChon ? `${formDuLieu.khachSanDaChon.name} - ${formDuLieu.phongDaChon.name}` : (formDuLieu.khachSanDaChon.description || 'Khách sạn nghỉ dưỡng'),
+        image: formDuLieu.khachSanDaChon.image || null,
+        latitude: formDuLieu.khachSanDaChon.latitude || null,
+        longitude: formDuLieu.khachSanDaChon.longitude || null
+      }
+    }
     // Đảm bảo gắn thông tin di chuyển tối ưu chi phí
     if (!lichTrinh.value.transit_summary) {
       lichTrinh.value.transit_summary = {
@@ -6201,6 +7130,7 @@ async function taoLichTrinh() {
         destination: formDuLieu.diemDen,
         estimated_distance_km: transitRouteInfo.value.estimatedDistanceKm,
         selected_bus: formDuLieu.nhaXeDaChon || null,
+        departure_time: formDuLieu.gioXuatPhatChon || null,
         comparison: transitRouteInfo.value.vehicleComparison,
         available_operators: transitRouteInfo.value.operators
       }
@@ -6517,6 +7447,8 @@ const userStats = computed(() => {
     favoritePlaces: favoritesList.value?.length || 0
   }
 })
+
+/* removed dup userLevelInfo */
 
 function editProfile() {
   profileForm.name = nguoiDung.value?.name || ''
@@ -7238,15 +8170,15 @@ button { cursor: pointer; }
   background-position: center;
   border: 2px solid transparent;
   outline: none;
-  padding: 16px 12px;
+  padding: 12px 10px;
   border-radius: 18px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  min-width: 180px;
-  max-width: 210px;
-  height: 200px;
+  min-width: 130px;
+  max-width: 150px;
+  height: 140px;
   color: #ffffff;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
@@ -7308,7 +8240,7 @@ button { cursor: pointer; }
   z-index: 2;
 }
 .city-name {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 800;
   color: #ffffff;
   text-shadow: 0 2px 6px rgba(0,0,0,0.9);
@@ -7316,7 +8248,7 @@ button { cursor: pointer; }
   margin-bottom: 4px;
 }
 .city-tag {
-  font-size: 11.5px;
+  font-size: 10px;
   color: rgba(255,255,255,0.92);
   text-shadow: 0 1px 4px rgba(0,0,0,0.85);
   font-weight: 500;
@@ -7363,7 +8295,7 @@ button { cursor: pointer; }
 .spotlight-hero-wrap {
   position: relative;
   width: 100%;
-  height: 340px;
+  height: 240px;
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
@@ -7454,7 +8386,7 @@ button { cursor: pointer; }
 }
 .spotlight-thumb-btn {
   position: relative;
-  height: 72px;
+  height: 54px;
   border: 2px solid transparent;
   border-radius: 10px;
   overflow: hidden;
@@ -7525,7 +8457,7 @@ button { cursor: pointer; }
   font-weight: 500;
 }
 .spotlight-title {
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 800;
   color: var(--text-color, #0f172a);
   line-height: 1.3;
@@ -7535,7 +8467,7 @@ button { cursor: pointer; }
   color: #f8fafc;
 }
 .spotlight-subtitle {
-  font-size: 13.5px;
+  font-size: 12.5px;
   font-weight: 600;
   color: #0ea5e9;
   margin: 0 0 10px 0;
@@ -7584,7 +8516,7 @@ button { cursor: pointer; }
   border: 1px solid rgba(2, 132, 199, 0.2);
 }
 .shb-text {
-  font-size: 13px;
+  font-size: 12px;
   color: #10b981;
   font-weight: 600;
   margin: 0;
@@ -8731,13 +9663,16 @@ button { cursor: pointer; }
   color: #fff;
   border-color: var(--primary);
 }
-/* PLACES PICKER IN PLANNER */
+/* PLACES PICKER IN PLANNER (FULL WIDTH SCREENSHOT 1 FIX) */
 .places-picker-box {
   margin-top: 16px;
-  padding: 14px;
+  padding: 18px 22px;
   background: var(--input-bg);
   border: 1px dashed var(--border-color);
   border-radius: var(--radius-md);
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 .picker-top {
   display: flex;
@@ -15830,5 +16765,1733 @@ button { cursor: pointer; }
 }
 .chat-header h3 { font-size: 14px; font-weight: 800; }
 .ai-status { font-size: 11px; color: #16a34a; font-weight: 600; }
+
+/* ==================== BƯỚC 3: DI CHUYỂN & LƯU TRÚ (TRANSIT & HOTEL STYLES) ==================== */
+.step3-subtabs-nav {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 22px;
+}
+.step3-subtab-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: var(--surface, #ffffff);
+  border: 2px solid var(--border-color, #e2e8f0);
+  border-radius: 14px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.25s ease;
+  position: relative;
+}
+.step3-subtab-btn:hover {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.04);
+}
+.step3-subtab-btn.active {
+  border-color: #0284c7;
+  background: rgba(2, 132, 199, 0.08);
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.15);
+}
+.ssb-icon-wrap {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #f1f5f9;
+  color: #0284c7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+.step3-subtab-btn.active .ssb-icon-wrap {
+  background: #0284c7;
+  color: #ffffff;
+}
+.ssb-text {
+  flex: 1;
+  min-width: 0;
+}
+.ssb-text strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-main, #0f172a);
+}
+.ssb-text small {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted, #64748b);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ssb-check-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #10b981;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* INTERACTIVE DEPARTURE TIME CHIPS IN BUS & TRAIN */
+.bst-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+.bst-chip {
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color, #cbd5e1);
+  background: var(--surface-secondary, #f8fafc);
+  color: var(--text-main, #1e293b);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.bst-chip:hover {
+  border-color: #0284c7;
+  background: rgba(2, 132, 199, 0.08);
+}
+.bst-chip.active {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #0284c7;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.35);
+  font-weight: 700;
+}
+
+/* PICKUP & DROPOFF POINTS DISPLAY */
+.bic-spec-points {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 6px;
+  padding: 8px 10px;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 8px;
+  border-left: 3px solid #0284c7;
+}
+.bsp-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+.bsp-label {
+  color: var(--text-muted, #64748b);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.bsp-val {
+  font-weight: 600;
+  color: var(--text-main, #1e293b);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* SMART TRANSIT FALLBACK CARD */
+.transit-smart-fallback-card {
+  margin-top: 20px;
+  padding: 16px 20px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.08) 0%, rgba(99, 102, 241, 0.06) 100%);
+  border: 1px solid rgba(2, 132, 199, 0.2);
+}
+.tsf-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.tsf-icon {
+  color: #0284c7;
+}
+.tsf-header strong {
+  display: block;
+  font-size: 14px;
+  color: var(--text-main, #0f172a);
+}
+.tsf-header small {
+  color: var(--text-muted, #64748b);
+  font-size: 12px;
+}
+.tsf-options-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+.tsf-option-card {
+  padding: 12px 14px;
+  background: var(--surface, #ffffff);
+  border-radius: 10px;
+  border: 1px solid var(--border-color, #e2e8f0);
+}
+.toc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #0284c7;
+  background: rgba(2, 132, 199, 0.1);
+  padding: 2px 8px;
+  border-radius: 6px;
+  margin-bottom: 6px;
+}
+.tsf-option-card h4 {
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: var(--text-main, #0f172a);
+}
+.tsf-option-card p {
+  font-size: 11.5px;
+  color: var(--text-muted, #64748b);
+  line-height: 1.45;
+  margin: 0;
+}
+
+/* HOTEL BUDGET FEASIBILITY ALERT */
+.hotel-feasibility-alert {
+  padding: 16px 20px;
+  border-radius: 14px;
+  margin-bottom: 20px;
+  border: 1px solid;
+}
+.hotel-feasibility-alert.critical {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #991b1b;
+}
+.hotel-feasibility-alert.warning {
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #92400e;
+}
+.hfa-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.hfa-text strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+}
+.hfa-text p {
+  margin: 4px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.hfa-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+.hfa-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+.hfa-btn-upgrade {
+  background: #2563eb;
+  color: #ffffff;
+}
+.hfa-btn-upgrade:hover {
+  background: #1d4ed8;
+}
+.hfa-btn-cheaper {
+  background: #ffffff;
+  color: #1e293b;
+  border: 1px solid #cbd5e1;
+}
+.hfa-btn-cheaper:hover {
+  background: #f1f5f9;
+}
+.hfa-btn-shorten {
+  background: rgba(0, 0, 0, 0.06);
+  color: inherit;
+}
+.hfa-btn-shorten:hover {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+/* SELECTED HOTEL BANNER */
+.selected-hotel-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.08) 0%, rgba(16, 185, 129, 0.06) 100%);
+  border: 2px solid #0284c7;
+  border-radius: 16px;
+  margin-bottom: 22px;
+  gap: 16px;
+}
+.shb-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+}
+.shb-thumb {
+  width: 90px;
+  height: 70px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+.shb-badge {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #0284c7;
+  background: rgba(2, 132, 199, 0.12);
+  padding: 2px 8px;
+  border-radius: 6px;
+  margin-bottom: 4px;
+}
+.shb-name {
+  margin: 0 0 2px;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-main, #0f172a);
+}
+.shb-room {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-main, #334155);
+}
+.shb-size-tag {
+  display: inline-block;
+  font-size: 11px;
+  color: var(--text-muted, #64748b);
+  margin-left: 4px;
+}
+.shb-meta {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--text-muted, #64748b);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.shb-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+.shb-price-box {
+  text-align: right;
+}
+.shb-rate {
+  font-size: 17px;
+  font-weight: 800;
+  color: #0284c7;
+}
+.shb-rate small {
+  font-size: 12px;
+  color: var(--text-muted, #64748b);
+}
+.shb-total {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted, #64748b);
+  margin-top: 2px;
+}
+.shb-btns {
+  display: flex;
+  gap: 8px;
+}
+.shb-btn-change {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  background: #0284c7;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.shb-btn-change:hover {
+  background: #0369a1;
+}
+.shb-btn-clear {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: transparent;
+  color: #ef4444;
+  border: 1px solid #fca5a5;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.shb-btn-clear:hover {
+  background: #fef2f2;
+}
+
+/* HOTEL CATALOG (MATCHING SCREENSHOT 3) */
+.hotel-catalog-box {
+  margin-top: 10px;
+}
+.hcb-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.hcb-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #0284c7;
+}
+.hcb-header h3 {
+  margin: 2px 0 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-main, #0f172a);
+}
+.hcb-count {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-muted, #64748b);
+}
+.hotel-catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+@media (max-width: 1024px) {
+  .hotel-catalog-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 640px) {
+  .hotel-catalog-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.hotel-catalog-card {
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+.hotel-catalog-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  border-color: #94a3b8;
+}
+.hotel-catalog-card.active {
+  border-color: #0284c7;
+  box-shadow: 0 0 0 2px #0284c7;
+}
+.hcc-image-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 11;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+.hcc-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s ease;
+}
+.hotel-catalog-card:hover .hcc-image {
+  transform: scale(1.05);
+}
+.hcc-dest-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  color: #ffffff;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.hcc-selected-tag {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #10b981;
+  color: #fff;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.hcc-content {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.hcc-title {
+  font-size: 15px;
+  font-weight: 800;
+  margin: 0 0 6px;
+  color: var(--text-main, #0f172a);
+  line-height: 1.35;
+  min-height: 40px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.hcc-stars {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-bottom: 12px;
+}
+.hcc-stars .star-icon {
+  color: #f59e0b;
+  font-size: 13px;
+}
+.hcc-rating-num {
+  font-size: 11px;
+  color: var(--text-muted, #64748b);
+  margin-left: 4px;
+}
+.hcc-bottom-row {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-color, #f1f5f9);
+}
+.hcc-price-info {
+  display: flex;
+  flex-direction: column;
+}
+.hcc-price-label {
+  font-size: 11px;
+  color: var(--text-muted, #94a3b8);
+}
+.hcc-price-val {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: #0284c7;
+}
+.hcc-price-val small {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted, #64748b);
+}
+/* NÚT "XEM PHÒNG" MÀU VÀNG CHUẨN SCREENSHOT 3 */
+.hcc-btn-view {
+  background: #facc15;
+  color: #1e293b;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(250, 204, 21, 0.4);
+}
+.hcc-btn-view:hover {
+  background: #eab308;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(250, 204, 21, 0.5);
+}
+
+.view-hotel-rooms-card-btn {
+  background: #facc15;
+  color: #1e293b;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s;
+  box-shadow: 0 2px 6px rgba(250, 204, 21, 0.3);
+}
+.view-hotel-rooms-card-btn:hover {
+  background: #eab308;
+  transform: translateY(-1px);
+}
+
+.dhsc-room-view-btn {
+  background: #facc15;
+  color: #1e293b;
+  border: none;
+  padding: 5px 12px;
+  border-radius: 14px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s;
+  box-shadow: 0 2px 5px rgba(250, 204, 21, 0.3);
+}
+.dhsc-room-view-btn:hover {
+  background: #eab308;
+}
+
+.transit-to-hotel-prompt {
+  margin-top: 18px;
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.08) 0%, rgba(250, 204, 21, 0.12) 100%);
+  border: 1.5px dashed rgba(2, 132, 199, 0.35);
+  border-radius: 14px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+.transit-to-hotel-prompt:hover {
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.14) 0%, rgba(250, 204, 21, 0.2) 100%);
+  border-color: #0284c7;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.15);
+}
+.tthp-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.tthp-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: #0284c7;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.tthp-text strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-main, #0f172a);
+}
+.tthp-text p {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  color: var(--text-muted, #64748b);
+}
+.tthp-btn {
+  background: #0284c7;
+  color: #fff;
+  border: none;
+  padding: 9px 18px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.3);
+}
+.tthp-btn:hover {
+  background: #0369a1;
+}
+
+/* ==================== HOTEL DETAIL MODAL (MATCHING SCREENSHOTS 4 & 5) ==================== */
+.hotel-detail-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.78);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: modalFadeIn 0.25s ease;
+  overflow-y: auto;
+}
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.hotel-detail-modal {
+  background: var(--surface, #ffffff);
+  border-radius: 20px;
+  max-width: 1160px;
+  width: 100%;
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border-color, #e2e8f0);
+}
+/* TOP BAR IN MODAL (SCREENSHOT 4) */
+.hdm-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: var(--surface, #ffffff);
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+  z-index: 10;
+  gap: 12px;
+}
+.hdm-tb-left {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.hdm-tb-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--surface-secondary, #f1f5f9);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main, #1e293b);
+}
+.hdm-tb-btn-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.hdm-tb-btn-edit:hover {
+  background: #bae6fd;
+}
+.hdm-tb-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.hdm-btn-choose-room-top {
+  background: #e11d48;
+  color: #fff;
+  border: none;
+  padding: 7px 18px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.hdm-btn-choose-room-top:hover {
+  background: #be123c;
+}
+.hdm-btn-close-modal {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: #f1f5f9;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.hdm-btn-close-modal:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+.hdm-scroll-body {
+  overflow-y: auto;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* HERO GALLERY SECTION (SCREENSHOT 4) */
+.hdm-gallery-section {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 12px;
+  height: 400px;
+  border-radius: 16px;
+  overflow: hidden;
+}
+@media (max-width: 768px) {
+  .hdm-gallery-section {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+}
+.hdm-thumbnails-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+}
+.hdm-thumb-item {
+  width: 100%;
+  height: 85px;
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+  background: #cbd5e1;
+}
+.hdm-thumb-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.hdm-thumb-item:hover {
+  opacity: 0.85;
+}
+.hdm-thumb-item.active {
+  border-color: #0284c7;
+  box-shadow: 0 0 0 2px #0284c7;
+}
+.hdm-main-photo-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #1e293b;
+}
+.hdm-main-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.hdm-photo-overlay-info {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 30px 24px 16px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, transparent 100%);
+  color: #fff;
+}
+.hdm-photo-overlay-info h3 {
+  margin: 0 0 4px;
+  font-size: 22px;
+  font-weight: 800;
+  color: #ffffff;
+}
+.hdm-photo-overlay-info .hdm-stars {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 14px;
+  color: #f59e0b;
+}
+.hdm-photo-overlay-info .hdm-stars span:last-child {
+  color: #f1f5f9;
+  font-size: 12px;
+  margin-left: 6px;
+}
+
+/* 3-COLUMN INFO SECTION (SCREENSHOT 4) */
+.hdm-info-3cols {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 20px;
+  padding: 20px;
+  background: var(--surface-secondary, #f8fafc);
+  border-radius: 16px;
+  border: 1px solid var(--border-color, #e2e8f0);
+}
+@media (max-width: 860px) {
+  .hdm-info-3cols {
+    grid-template-columns: 1fr;
+  }
+}
+.hdm-col .hdm-sec-title {
+  margin: 0 0 10px;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-main, #0f172a);
+}
+.hdm-desc-text {
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--text-muted, #475569);
+  margin: 0;
+}
+.hdm-location-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.hlc-pin-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.hlc-pin-icon {
+  color: #ef4444;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.hlc-addr-text {
+  font-size: 13px;
+  color: var(--text-main, #1e293b);
+  line-height: 1.45;
+}
+.hlc-map-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #e2e8f0;
+  color: #1e293b;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  width: fit-content;
+  transition: all 0.2s;
+}
+.hlc-map-btn:hover {
+  background: #cbd5e1;
+}
+.hdm-amenities-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.hdm-see-more {
+  font-size: 12px;
+  color: #0284c7;
+  font-weight: 600;
+  cursor: pointer;
+}
+.hdm-amenities-checklist {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.hdm-amenities-checklist li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-main, #334155);
+}
+.hdm-check-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #e0f2fe;
+  color: #0284c7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+/* ROOMS TABLE SECTION (MATCHING SCREENSHOT 5) */
+.hdm-rooms-table-section {
+  margin-top: 10px;
+}
+.hrt-section-header {
+  margin-bottom: 16px;
+}
+.hrt-section-header h3 {
+  margin: 0 0 2px;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-main, #0f172a);
+}
+.hrt-section-header small {
+  color: var(--text-muted, #64748b);
+  font-size: 13px;
+}
+.hrt-table-wrapper {
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--surface, #ffffff);
+}
+.hrt-table-head {
+  display: grid;
+  grid-template-columns: 240px 1.4fr 90px 180px 80px 140px;
+  padding: 12px 16px;
+  background: var(--surface-secondary, #f8fafc);
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-muted, #64748b);
+}
+@media (max-width: 960px) {
+  .hrt-table-head {
+    display: none;
+  }
+}
+.hrt-room-row {
+  display: grid;
+  grid-template-columns: 240px 1.4fr 90px 180px 80px 140px;
+  padding: 18px 16px;
+  border-bottom: 1px solid var(--border-color, #f1f5f9);
+  align-items: center;
+  gap: 12px;
+  transition: background 0.2s;
+}
+.hrt-room-row:last-child {
+  border-bottom: none;
+}
+.hrt-room-row:hover {
+  background: rgba(2, 132, 199, 0.02);
+}
+@media (max-width: 960px) {
+  .hrt-room-row {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 16px;
+  }
+}
+/* CELL 1: ROOM DETAILS */
+.td-room .room-title {
+  margin: 0 0 8px;
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--text-main, #0f172a);
+  line-height: 1.35;
+}
+.room-media-box {
+  position: relative;
+  width: 100%;
+  height: 120px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #cbd5e1;
+}
+.room-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.room-size-badge {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.room-bed-type {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+  font-size: 11.5px;
+  color: var(--text-muted, #64748b);
+}
+
+/* CELL 2: PROPOSALS / PERKS */
+.td-perks {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.deal-pill {
+  display: inline-block;
+  background: #ffedd5;
+  color: #ea580c;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  width: fit-content;
+}
+.perk-policy-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-main, #334155);
+}
+.perk-icon-info {
+  color: #f97316;
+  font-weight: bold;
+}
+.perk-icon-check {
+  color: #16a34a;
+  font-weight: bold;
+}
+.perk-breakfast {
+  color: #15803d;
+  font-weight: 600;
+}
+
+/* CELL 3: GUESTS */
+.guest-counter {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-main, #334155);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* CELL 4: PRICE */
+.td-price {
+  display: flex;
+  flex-direction: column;
+}
+.saving-ribbon {
+  font-size: 11px;
+  font-weight: 700;
+  color: #ea580c;
+  background: #ffedd5;
+  padding: 2px 6px;
+  border-radius: 4px;
+  width: fit-content;
+  margin-bottom: 4px;
+}
+.room-nightly-price {
+  font-size: 17px;
+  font-weight: 800;
+  color: #0284c7;
+}
+.room-nightly-price small {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted, #64748b);
+}
+.tax-note {
+  font-size: 11px;
+  color: var(--text-muted, #94a3b8);
+  margin-top: 2px;
+}
+
+/* CELL 5: COUNT */
+.room-qty-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--surface-secondary, #f1f5f9);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-main, #1e293b);
+}
+
+/* CELL 6: ACTION (NÚT ĐẶT NGAY MÀU ĐỎ CHUẨN SCREENSHOT 5) */
+.td-action {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+}
+.btn-book-room-red {
+  background: #dc2626;
+  color: #ffffff;
+  border: none;
+  padding: 9px 20px;
+  border-radius: 20px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  box-shadow: 0 3px 8px rgba(220, 38, 38, 0.35);
+}
+.btn-book-room-red:hover {
+  background: #b91c1c;
+  transform: translateY(-1px);
+  box-shadow: 0 5px 12px rgba(220, 38, 38, 0.45);
+}
+.room-urgency-note {
+  font-size: 11px;
+  color: #16a34a;
+  font-weight: 600;
+  margin-left: 4px;
+}
+
+/* DARK MODE CONTRAST STYLES */
+[data-theme="dark"] .step3-subtab-btn {
+  background: #1e293b;
+  border-color: #334155;
+}
+[data-theme="dark"] .step3-subtab-btn.active {
+  background: rgba(2, 132, 199, 0.15);
+  border-color: #38bdf8;
+}
+[data-theme="dark"] .step3-subtab-btn strong {
+  color: #f8fafc;
+}
+[data-theme="dark"] .step3-subtab-btn small {
+  color: #94a3b8;
+}
+[data-theme="dark"] .ssb-icon-wrap {
+  background: #334155;
+  color: #38bdf8;
+}
+[data-theme="dark"] .hotel-catalog-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+[data-theme="dark"] .hcc-title {
+  color: #f8fafc;
+}
+[data-theme="dark"] .hcc-price-val {
+  color: #38bdf8;
+}
+[data-theme="dark"] .hotel-detail-modal {
+  background: #0f172a;
+  border-color: #334155;
+}
+[data-theme="dark"] .hdm-top-bar {
+  background: #0f172a;
+  border-color: #334155;
+}
+[data-theme="dark"] .hdm-tb-chip {
+  background: #1e293b;
+  border-color: #334155;
+  color: #f1f5f9;
+}
+[data-theme="dark"] .hdm-info-3cols {
+  background: #1e293b;
+  border-color: #334155;
+}
+[data-theme="dark"] .hdm-col .hdm-sec-title {
+  color: #f8fafc;
+}
+[data-theme="dark"] .hdm-desc-text {
+  color: #cbd5e1;
+}
+[data-theme="dark"] .hlc-addr-text {
+  color: #e2e8f0;
+}
+[data-theme="dark"] .hdm-amenities-checklist li {
+  color: #e2e8f0;
+}
+[data-theme="dark"] .hrt-table-wrapper {
+  background: #1e293b;
+  border-color: #334155;
+}
+[data-theme="dark"] .hrt-table-head {
+  background: #0f172a;
+  border-color: #334155;
+  color: #94a3b8;
+}
+[data-theme="dark"] .hrt-room-row {
+  border-color: #334155;
+}
+[data-theme="dark"] .td-room .room-title {
+  color: #f8fafc;
+}
+[data-theme="dark"] .perk-policy-row {
+  color: #cbd5e1;
+}
+[data-theme="dark"] .guest-counter {
+  color: #e2e8f0;
+}
+[data-theme="dark"] .room-nightly-price {
+  color: #38bdf8;
+}
+[data-theme="dark"] .selected-hotel-banner {
+  background: rgba(2, 132, 199, 0.12);
+  border-color: #38bdf8;
+}
+[data-theme="dark"] .shb-name {
+  color: #f8fafc;
+}
+[data-theme="dark"] .shb-room {
+  color: #e2e8f0;
+}
+[data-theme="dark"] .shb-rate {
+  color: #38bdf8;
+}
+[data-theme="dark"] .hotel-feasibility-alert.critical {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: #ef4444;
+  color: #fca5a5;
+}
+[data-theme="dark"] .hotel-feasibility-alert.warning {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: #f59e0b;
+  color: #fcd34d;
+}
+[data-theme="dark"] .bst-chip {
+  background: #1e293b;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+[data-theme="dark"] .bst-chip.active {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #38bdf8;
+}
+[data-theme="dark"] .bsp-val {
+  color: #f8fafc;
+}
+[data-theme="dark"] .tsf-option-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+[data-theme="dark"] .tsf-option-card h4 {
+  color: #f8fafc;
+}
+/* ==================== BƯỚC 3: SEQUENTIAL WORKFLOW & ENHANCEMENTS ==================== */
+.step3-mandatory-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+.transit-notice {
+  background: rgba(2, 132, 199, 0.08);
+  border: 1px solid rgba(2, 132, 199, 0.25);
+  color: #0369a1;
+}
+.hotel-notice {
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  color: #b45309;
+}
+.step3-mandatory-notice .smn-icon {
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+.step3-mandatory-notice strong {
+  display: block;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+.step3-mandatory-notice p {
+  margin: 0;
+  opacity: 0.95;
+}
+
+/* THANH TIẾP TỤC BƯỚC 1 -> BƯỚC 2 */
+.transit-bottom-next-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px 20px;
+  background: var(--surface-card, #f8fafc);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 14px;
+  margin-top: 20px;
+}
+.tbn-status .tbn-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.tbn-badge.self {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+.tbn-badge.bus, .tbn-badge.train {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+.tbn-badge.pending {
+  background: #fef3c7;
+  color: #d97706;
+  border: 1px solid #fde68a;
+}
+.tbn-btn-next {
+  background: linear-gradient(135deg, #0284c7, #0369a1);
+  color: #ffffff;
+  border: none;
+  padding: 11px 22px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+}
+.tbn-btn-next:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(2, 132, 199, 0.35);
+}
+
+/* THANH SẮP XẾP VÀ HẠNG SAO KHÁCH SẠN */
+.hotel-sort-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--surface-card, #f8fafc);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+.hst-group {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.hst-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-muted, #64748b);
+  margin-right: 4px;
+}
+.hst-btn, .hst-star-btn {
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--border-color, #cbd5e1);
+  color: var(--text-main, #334155);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.hst-btn:hover, .hst-star-btn:hover {
+  border-color: #0284c7;
+  color: #0284c7;
+}
+.hst-btn.active, .hst-star-btn.active {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #0284c7;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25);
+}
+
+/* PHÂN TRANG VÀ THU GỌN / XEM THÊM KHÁCH SẠN */
+.hotel-pagination-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+  padding: 14px;
+}
+.hpa-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+.hpa-btn-more {
+  background: #0284c7;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+}
+.hpa-btn-more:hover {
+  background: #0369a1;
+  transform: translateY(-2px);
+}
+.hpa-btn-all {
+  background: var(--surface-card, #f1f5f9);
+  color: var(--text-main, #334155);
+  border: 1px solid var(--border-color, #cbd5e1);
+}
+.hpa-btn-all:hover {
+  background: #e2e8f0;
+}
+.hpa-btn-collapse {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+.hpa-btn-collapse:hover {
+  background: #fee2e2;
+}
+
+/* KHỐI READY TO GENERATE PUSH-DOWN */
+.step3-ready-box {
+  margin-top: 32px;
+  padding: 24px;
+  border-radius: 16px;
+  background: var(--surface-card, #f8fafc);
+  border: 2px solid var(--border-color, #e2e8f0);
+  transition: all 0.3s ease;
+}
+.step3-ready-box.is-ready {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(2, 132, 199, 0.08));
+  border-color: #10b981;
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.12);
+}
+.srb-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.srb-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #ecfdf5;
+  color: #059669;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.step3-ready-box:not(.is-ready) .srb-icon-wrap {
+  background: #eff6ff;
+  color: #2563eb;
+}
+.srb-title-text h4 {
+  margin: 0 0 4px;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--text-main, #0f172a);
+}
+.srb-title-text p {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--text-muted, #64748b);
+}
+.srb-checklist-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+@media (max-width: 640px) {
+  .srb-checklist-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.srb-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 12px;
+}
+.srb-item.done {
+  border-color: #a7f3d0;
+  background: #f0fdf4;
+}
+.srb-item-indicator {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.srb-item.done .srb-item-indicator {
+  background: #10b981;
+  color: #ffffff;
+}
+.srb-item-info {
+  flex: 1;
+}
+.srb-item-info small {
+  display: block;
+  font-size: 11.5px;
+  color: var(--text-muted, #64748b);
+  font-weight: 600;
+}
+.srb-item-info strong {
+  display: block;
+  font-size: 13px;
+  color: var(--text-main, #0f172a);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+}
+.srb-btn-goto {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #0284c7;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.srb-action-row {
+  display: flex;
+  justify-content: center;
+  padding-top: 8px;
+}
+.srb-btn-generate {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #ffffff;
+  border: none;
+  padding: 14px 36px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
+}
+.srb-btn-generate:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.45);
+}
+
+/* DARK MODE CHO CÁC PHẦN MỚI */
+[data-theme="dark"] .transit-notice {
+  background: rgba(2, 132, 199, 0.15);
+  border-color: #0284c7;
+  color: #7dd3fc;
+}
+[data-theme="dark"] .hotel-notice {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: #f59e0b;
+  color: #fde68a;
+}
+[data-theme="dark"] .transit-bottom-next-bar,
+[data-theme="dark"] .hotel-sort-toolbar,
+[data-theme="dark"] .step3-ready-box {
+  background: #1e293b;
+  border-color: #334155;
+}
+[data-theme="dark"] .hst-btn,
+[data-theme="dark"] .hst-star-btn {
+  background: #0f172a;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+[data-theme="dark"] .hst-btn.active,
+[data-theme="dark"] .hst-star-btn.active {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #38bdf8;
+}
+[data-theme="dark"] .srb-item {
+  background: #0f172a;
+  border-color: #334155;
+}
+[data-theme="dark"] .srb-item.done {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: #10b981;
+}
+[data-theme="dark"] .srb-item-info strong {
+  color: #f8fafc;
+}
+[data-theme="dark"] .srb-title-text h4 {
+  color: #f8fafc;
+}
+[data-theme="dark"] .hpa-btn-all {
+  background: #334155;
+  color: #f8fafc;
+  border-color: #475569;
+}
+[data-theme="dark"] .hpa-btn-collapse {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+  border-color: #ef4444;
+}
 
 </style>
