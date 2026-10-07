@@ -83,9 +83,7 @@ const chiDuongUrl = (name, address) => {
   padding-bottom: 1rem;
   border-bottom: 1px solid #e5e7eb;
 }
-.app-dark .favorites-header {
-  border-color: #374151;
-}
+
 
 .section-title {
   font-size: 1.4rem;
@@ -97,7 +95,7 @@ const chiDuongUrl = (name, address) => {
   margin: 0;
   letter-spacing: -0.01em;
 }
-.app-dark .section-title { color: #f9fafb; }
+
 
 .heart-icon {
   color: #ef4444;
@@ -124,14 +122,8 @@ const chiDuongUrl = (name, address) => {
   box-shadow: 0 12px 24px rgba(0,0,0,0.08);
   border-color: #e5e7eb;
 }
-.app-dark .fav-place-card {
-  background: #1f2937;
-  border-color: #374151;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-}
-.app-dark .fav-place-card:hover {
-  border-color: #4b5563;
-}
+
+
 
 .card-image-placeholder {
   height: 160px;
@@ -148,9 +140,7 @@ const chiDuongUrl = (name, address) => {
   background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.4));
 }
 
-.app-dark .card-image-placeholder {
-  border-color: #4b5563;
-}
+
 
 .place-type-badge {
   position: absolute;
@@ -166,10 +156,7 @@ const chiDuongUrl = (name, address) => {
   box-shadow: 0 2px 8px rgba(0,0,0,0.15);
   z-index: 2;
 }
-.app-dark .place-type-badge {
-  background: rgba(17,24,39,0.9);
-  color: #e5e7eb;
-}
+
 
 .heart-btn {
   position: absolute;
@@ -213,7 +200,7 @@ const chiDuongUrl = (name, address) => {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-.app-dark .place-name { color: #f9fafb; }
+
 
 .place-desc {
   font-size: 0.9rem;
@@ -226,7 +213,7 @@ const chiDuongUrl = (name, address) => {
   overflow: hidden;
   flex-grow: 1;
 }
-.app-dark .place-desc { color: #9ca3af; }
+
 
 .card-footer {
   display: flex;
@@ -244,7 +231,7 @@ const chiDuongUrl = (name, address) => {
   margin: 0;
   line-height: 1.4;
 }
-.app-dark .place-address { color: #d1d5db; }
+
 .place-address svg { flex-shrink: 0; margin-top: 2px; }
 
 .maps-btn {
@@ -265,11 +252,38 @@ const chiDuongUrl = (name, address) => {
 .maps-btn:hover {
   background: #e5e7eb;
 }
-.app-dark .maps-btn {
+
+
+</style>
+
+<style>
+[data-theme="dark"] .favorites-header {
+  border-color: #374151;
+}
+[data-theme="dark"] .section-title { color: #f9fafb; }
+[data-theme="dark"] .fav-place-card {
+  background: #1f2937;
+  border-color: #374151;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+[data-theme="dark"] .fav-place-card:hover {
+  border-color: #4b5563;
+}
+[data-theme="dark"] .card-image-placeholder {
+  border-color: #4b5563;
+}
+[data-theme="dark"] .place-type-badge {
+  background: rgba(17,24,39,0.9);
+  color: #e5e7eb;
+}
+[data-theme="dark"] .place-name { color: #f9fafb; }
+[data-theme="dark"] .place-desc { color: #9ca3af; }
+[data-theme="dark"] .place-address { color: #d1d5db; }
+[data-theme="dark"] .maps-btn {
   background: #374151;
   color: #f9fafb;
 }
-.app-dark .maps-btn:hover {
+[data-theme="dark"] .maps-btn:hover {
   background: #4b5563;
 }
 </style>

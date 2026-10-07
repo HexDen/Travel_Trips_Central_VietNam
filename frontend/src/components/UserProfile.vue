@@ -141,9 +141,7 @@ defineEmits(['editProfile', 'dangXuat', 'saveProfile', 'cancelEdit', 'handleAvat
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   color: #1a1a1a;
 }
-.app-dark .profile-container {
-  color: #f3f4f6;
-}
+
 
 /* Header Card */
 .profile-header-card {
@@ -154,20 +152,14 @@ defineEmits(['editProfile', 'dangXuat', 'saveProfile', 'cancelEdit', 'handleAvat
   margin-bottom: 2rem;
   border: 1px solid #f0f0f0;
 }
-.app-dark .profile-header-card {
-  background: #1f2937;
-  border-color: #374151;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-}
+
 
 .cover-photo {
   height: 180px;
   background: radial-gradient(circle at top left, #a1c4fd 0%, #c2e9fb 100%);
   position: relative;
 }
-.app-dark .cover-photo {
-  background: radial-gradient(circle at top left, #373b44 0%, #4286f4 100%);
-}
+
 
 .profile-main-info {
   display: flex;
@@ -192,10 +184,7 @@ defineEmits(['editProfile', 'dangXuat', 'saveProfile', 'cancelEdit', 'handleAvat
   background: #f3f4f6;
   box-shadow: 0 4px 10px rgba(0,0,0,0.08);
 }
-.app-dark .avatar-image, .app-dark .avatar-placeholder {
-  border-color: #1f2937;
-  background: #374151;
-}
+
 
 .avatar-placeholder {
   display: flex;
@@ -219,9 +208,7 @@ defineEmits(['editProfile', 'dangXuat', 'saveProfile', 'cancelEdit', 'handleAvat
   border: 2px solid #ffffff;
   white-space: nowrap;
 }
-.app-dark .level-badge {
-  border-color: #1f2937;
-}
+
 
 .user-name {
   font-size: 1.8rem;
@@ -246,9 +233,7 @@ defineEmits(['editProfile', 'dangXuat', 'saveProfile', 'cancelEdit', 'handleAvat
   color: #6b7280;
   margin: 0 0 1.5rem 0;
 }
-.app-dark .user-email {
-  color: #9ca3af;
-}
+
 
 .action-buttons {
   display: flex;
@@ -277,13 +262,8 @@ defineEmits(['editProfile', 'dangXuat', 'saveProfile', 'cancelEdit', 'handleAvat
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
-.app-dark .btn-primary {
-  background: #ffffff;
-  color: #111827;
-}
-.app-dark .btn-primary:hover {
-  background: #f3f4f6;
-}
+
+
 
 .btn-outline {
   background: transparent;
@@ -294,14 +274,8 @@ defineEmits(['editProfile', 'dangXuat', 'saveProfile', 'cancelEdit', 'handleAvat
   background: #f9fafb;
   color: #111827;
 }
-.app-dark .btn-outline {
-  color: #d1d5db;
-  border-color: #4b5563;
-}
-.app-dark .btn-outline:hover {
-  background: #374151;
-  color: #ffffff;
-}
+
+
 
 /* Grid Layout */
 .profile-grid {
@@ -322,10 +296,7 @@ defineEmits(['editProfile', 'dangXuat', 'saveProfile', 'cancelEdit', 'handleAvat
   transform: translateY(-3px);
   box-shadow: 0 8px 25px rgba(0,0,0,0.05);
 }
-.app-dark .grid-card {
-  background: #1f2937;
-  border-color: #374151;
-}
+
 
 .bio-card {
   grid-column: span 4;
@@ -351,7 +322,7 @@ defineEmits(['editProfile', 'dangXuat', 'saveProfile', 'cancelEdit', 'handleAvat
   font-style: italic;
   margin: 0;
 }
-.app-dark .bio-text { color: #e5e7eb; }
+
 
 /* Stat Cards */
 .stat-card {
@@ -378,10 +349,10 @@ defineEmits(['editProfile', 'dangXuat', 'saveProfile', 'cancelEdit', 'handleAvat
 .icon-red { background: #fef2f2; color: #ef4444; }
 .icon-yellow { background: #fefce8; color: #eab308; }
 
-.app-dark .icon-blue { background: rgba(59,130,246,0.15); }
-.app-dark .icon-green { background: rgba(34,197,94,0.15); }
-.app-dark .icon-red { background: rgba(239,68,68,0.15); }
-.app-dark .icon-yellow { background: rgba(234,179,8,0.15); }
+
+
+
+
 
 .stat-info {
   display: flex;
@@ -399,8 +370,8 @@ defineEmits(['editProfile', 'dangXuat', 'saveProfile', 'cancelEdit', 'handleAvat
   font-weight: 600;
   color: #6b7280;
 }
-.app-dark .stat-value { color: #f9fafb; }
-.app-dark .stat-label { color: #9ca3af; }
+
+
 
 /* Edit Profile */
 .edit-profile-card {
@@ -412,10 +383,7 @@ defineEmits(['editProfile', 'dangXuat', 'saveProfile', 'cancelEdit', 'handleAvat
   max-width: 650px;
   margin: 0 auto;
 }
-.app-dark .edit-profile-card {
-  background: #1f2937;
-  border-color: #374151;
-}
+
 
 .edit-header h2 {
   font-size: 1.5rem;
@@ -423,7 +391,7 @@ defineEmits(['editProfile', 'dangXuat', 'saveProfile', 'cancelEdit', 'handleAvat
   margin: 0 0 2rem 0;
   color: #111827;
 }
-.app-dark .edit-header h2 { color: #f9fafb; }
+
 
 .form-group { margin-bottom: 1.5rem; }
 .form-group label {
@@ -433,7 +401,7 @@ defineEmits(['editProfile', 'dangXuat', 'saveProfile', 'cancelEdit', 'handleAvat
   color: #374151;
   margin-bottom: 0.5rem;
 }
-.app-dark .form-group label { color: #d1d5db; }
+
 
 .form-input, .form-textarea {
   width: 100%;
@@ -451,15 +419,8 @@ defineEmits(['editProfile', 'dangXuat', 'saveProfile', 'cancelEdit', 'handleAvat
   border-color: #111827;
   background: #ffffff;
 }
-.app-dark .form-input, .app-dark .form-textarea {
-  background: #374151;
-  border-color: #4b5563;
-  color: #f9fafb;
-}
-.app-dark .form-input:focus, .app-dark .form-textarea:focus {
-  border-color: #f9fafb;
-  background: #1f2937;
-}
+
+
 
 .file-upload-wrapper {
   display: flex;
@@ -479,9 +440,7 @@ defineEmits(['editProfile', 'dangXuat', 'saveProfile', 'cancelEdit', 'handleAvat
   background: #f0fdf4;
   border: 1px dashed #22c55e;
 }
-.app-dark .avatar-preview {
-  background: rgba(34,197,94,0.1);
-}
+
 .preview-img {
   width: 56px;
   height: 56px;
@@ -494,7 +453,7 @@ defineEmits(['editProfile', 'dangXuat', 'saveProfile', 'cancelEdit', 'handleAvat
   font-weight: 600;
   color: #166534;
 }
-.app-dark .preview-text { color: #4ade80; }
+
 
 .edit-footer {
   display: flex;
@@ -504,7 +463,77 @@ defineEmits(['editProfile', 'dangXuat', 'saveProfile', 'cancelEdit', 'handleAvat
   padding-top: 1.5rem;
   border-top: 1px solid #e5e7eb;
 }
-.app-dark .edit-footer {
+
+</style>
+
+<style>
+[data-theme="dark"] .profile-container {
+  color: #f3f4f6;
+}
+[data-theme="dark"] .profile-header-card {
+  background: #1f2937;
+  border-color: #374151;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+[data-theme="dark"] .cover-photo {
+  background: radial-gradient(circle at top left, #373b44 0%, #4286f4 100%);
+}
+[data-theme="dark"] .avatar-image, :global([data-theme="dark"]) .avatar-placeholder {
+  border-color: #1f2937;
+  background: #374151;
+}
+[data-theme="dark"] .level-badge {
+  border-color: #1f2937;
+}
+[data-theme="dark"] .user-email {
+  color: #9ca3af;
+}
+[data-theme="dark"] .btn-primary {
+  background: #ffffff;
+  color: #111827;
+}
+[data-theme="dark"] .btn-primary:hover {
+  background: #f3f4f6;
+}
+[data-theme="dark"] .btn-outline {
+  color: #d1d5db;
+  border-color: #4b5563;
+}
+[data-theme="dark"] .btn-outline:hover {
+  background: #374151;
+  color: #ffffff;
+}
+[data-theme="dark"] .grid-card {
+  background: #1f2937;
+  border-color: #374151;
+}
+[data-theme="dark"] .bio-text { color: #e5e7eb; }
+[data-theme="dark"] .icon-blue { background: rgba(59,130,246,0.15); }
+[data-theme="dark"] .icon-green { background: rgba(34,197,94,0.15); }
+[data-theme="dark"] .icon-red { background: rgba(239,68,68,0.15); }
+[data-theme="dark"] .icon-yellow { background: rgba(234,179,8,0.15); }
+[data-theme="dark"] .stat-value { color: #f9fafb; }
+[data-theme="dark"] .stat-label { color: #9ca3af; }
+[data-theme="dark"] .edit-profile-card {
+  background: #1f2937;
+  border-color: #374151;
+}
+[data-theme="dark"] .edit-header h2 { color: #f9fafb; }
+[data-theme="dark"] .form-group label { color: #d1d5db; }
+[data-theme="dark"] .form-input, :global([data-theme="dark"]) .form-textarea {
+  background: #374151;
+  border-color: #4b5563;
+  color: #f9fafb;
+}
+[data-theme="dark"] .form-input:focus, :global([data-theme="dark"]) .form-textarea:focus {
+  border-color: #f9fafb;
+  background: #1f2937;
+}
+[data-theme="dark"] .avatar-preview {
+  background: rgba(34,197,94,0.1);
+}
+[data-theme="dark"] .preview-text { color: #4ade80; }
+[data-theme="dark"] .edit-footer {
   border-color: #374151;
 }
 </style>
