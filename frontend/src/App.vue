@@ -1839,6 +1839,9 @@
 
     </div>
 
+    <!-- Floating Chatbot Widget -->
+    <FloatingChatbot :is-dark="isDark" />
+
 
     <!-- ==================== POPUP MODAL XÁC NHẬN CHECK-IN ==================== -->
     <transition name="fade">
@@ -2166,6 +2169,7 @@ import AppHeader from './components/layout/AppHeader.vue'
 import SkeletonCard from './components/SkeletonCard.vue'
 import MapComponent from './components/MapComponent.vue'
 import AdminDashboard from './components/admin/AdminDashboard.vue'
+import FloatingChatbot from './components/chatbot/FloatingChatbot.vue'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import html2pdf from 'html2pdf.js'
