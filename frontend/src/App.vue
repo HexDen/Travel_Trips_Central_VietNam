@@ -2521,77 +2521,22 @@
         <!-- ==================== TAB 5: TÀI KHOẢN & YÊU THÍCH (PROFILE) ==================== -->
         <section v-if="activeTab === 'profile'" class="tab-pane">
           <!-- Nếu đã đăng nhập -->
-          <div v-if="nguoiDung" class="profile-card-premium">
-            <div class="profile-cover">
-              <button class="edit-profile-btn" @click="editProfile" v-if="!editProfileMode">
-                <AppIcon name="pencil" size="14" /> Chỉnh sửa hồ sơ
-              </button>
-            </div>
-            <div class="profile-avatar-premium">
-              <img v-if="nguoiDung.avatar" :src="nguoiDung.avatar" alt="Avatar" class="avatar-img" />
-              <div v-else class="avatar-placeholder">{{ nguoiDung.name ? nguoiDung.name[0].toUpperCase() : 'U' }}</div>
-              
-              <div class="level-badge" :style="{ backgroundColor: userLevelInfo?.color || '#10b981' }" :title="`Hoàn thành ${nguoiDung.completed_trips || 0} chuyến đi`">
-                <AppIcon :name="userLevelInfo?.icon || 'sprout'" size="14" /> {{ userLevelInfo?.title || 'Thành viên' }}
-              </div>
-            </div>
-            
-            <div class="profile-info-premium" v-if="!editProfileMode">
-              <h3 class="profile-name">{{ nguoiDung.name }} <span v-if="nguoiDung.role === 'admin'" class="admin-badge">Admin</span></h3>
-              <p class="profile-email">{{ nguoiDung.email }}</p>
-              <p class="profile-bio" v-if="nguoiDung.bio">"{{ nguoiDung.bio }}"</p>
-              
-              <div class="profile-stats-grid">
-                <div class="stat-box-premium">
-                  <div class="stat-icon"><AppIcon name="map" size="20" /></div>
-                  <strong>{{ myTripsList.length }}</strong>
-                  <small>Đã lên lịch</small>
-                </div>
-                <div class="stat-box-premium">
-                  <div class="stat-icon"><AppIcon name="checkcircle2" size="20" /></div>
-                  <strong>{{ nguoiDung.completed_trips || 0 }}</strong>
-                  <small>Hoàn thành</small>
-                </div>
-                <div class="stat-box-premium">
-                  <div class="stat-icon"><AppIcon name="heart" size="20" filled color="#ef4444" /></div>
-                  <strong>{{ favoritesList.length }}</strong>
-                  <small>Yêu thích</small>
-                </div>
-                <div class="stat-box-premium">
-                  <div class="stat-icon"><AppIcon name="trophy" size="20" /></div>
-                  <strong>{{ nguoiDung.points || 0 }}</strong>
-                  <small>Điểm số</small>
-                </div>
-              </div>
-              <button class="logout-btn-premium" @click="dangXuat">Đăng xuất</button>
-            </div>
-            
-            <div class="profile-edit-form" v-else>
-              <h3>Chỉnh sửa hồ sơ</h3>
-              <div class="edit-field">
-                <label>Tên hiển thị</label>
-                <input type="text" v-model="profileForm.name" class="app-input" />
-              </div>
-              <div class="edit-field">
-                <label>Ảnh đại diện (Tải lên từ thiết bị)</label>
-                <input type="file" accept="image/*" @change="handleAvatarUpload" class="app-input" style="padding: 8px;" />
-                <div v-if="profileForm.avatar && profileForm.avatar.startsWith('data:image')" style="margin-top: 10px; display: flex; align-items: center; gap: 10px;">
-                   <img :src="profileForm.avatar" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #10b981;" />
-                   <span style="font-size: 0.85rem; color: #10b981; font-weight: 600;">Đã đính kèm ảnh mới</span>
-                </div>
-              </div>
-              <div class="edit-field">
-                <label>Giới thiệu bản thân</label>
-                <textarea v-model="profileForm.bio" class="app-input" rows="3" placeholder="Sở thích du lịch của bạn là gì?"></textarea>
-              </div>
-              <div class="edit-actions">
-                <button class="cancel-edit-btn" @click="editProfileMode = false">Hủy</button>
-                <button class="save-edit-btn" @click="saveProfile"><AppIcon name="save" size="14" /> Lưu thay đổi</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Nếu chưa đăng nhập -->
+          
+          <UserProfile v-if="nguoiDung"
+            :nguoiDung="nguoiDung"
+            :userLevelInfo="userLevelInfo"
+            :myTripsCount="myTripsList.length"
+            :favoritesCount="favoritesList.length"
+            :isEditingProfile="isEditingProfile"
+            :profileForm="profileForm"
+            @editProfile="editProfile"
+            @dangXuat="dangXuat"
+            @saveProfile="saveProfile"
+            @cancelEdit="isEditingProfile = false"
+            @handleAvatarUpload="handleAvatarUpload"
+            @updateForm="(key, value) => { profileForm[key] = value }"
+          />
+          
           <div v-else class="auth-card" style="text-align: center; padding: 40px 20px;">
             <h2 style="margin-bottom: 12px;">Bạn chưa đăng nhập</h2>
             <p style="color: var(--text-sub); margin-bottom: 24px;">Hãy đăng nhập để lưu trữ chuyến đi và quản lý tài khoản nhé!</p>
@@ -2600,24 +2545,9 @@
             </button>
           </div>
 
-          <!-- Danh sách Địa điểm yêu thích -->
-          <div v-if="nguoiDung && favoritesList.length" class="favorites-section">
-            <h3>Địa điểm đã lưu yêu thích ({{ favoritesList.length }})</h3>
-            <div class="places-app-grid">
-              <article v-for="place in favoritesList" :key="place._id" class="app-place-card" v-reveal>
-                <div class="place-card-top">
-                  <span class="place-card-type">{{ getPlaceTypeLabel(place.type) }}</span>
-                  <button class="heart-action-btn active" @click="doiYeuThich(place._id)"><AppIcon name="heart" size="16" filled color="#ef4444" /></button>
-                </div>
-                <h4>{{ place.name }}</h4>
-                <p class="place-card-desc">{{ place.description }}</p>
-                <p class="place-card-address" v-if="place.address"><AppIcon name="pin" size="14" /> {{ place.address }}</p>
-                <div class="place-card-bottom">
-                  <a class="place-maps-btn" :href="chiDuongUrl(place.name, place.address)" target="_blank"><AppIcon name="map" size="14" /> Chỉ đường</a>
-                </div>
-              </article>
-            </div>
-          </div>
+          
+          <!-- Danh sách địa điểm yêu thích (Mới) -->
+          <FavoritePlaces :favoritesList="favoritesList" @doiYeuThich="doiYeuThich" :getPlaceImage="getPlaceImage" />
         </section>
 
       </main>
@@ -3115,6 +3045,8 @@
 </template>
 
 <script setup>
+import FavoritePlaces from './components/FavoritePlaces.vue';
+import UserProfile from './components/UserProfile.vue';
 import { reactive, ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import api from './services/api'
 import AppHeader from './components/layout/AppHeader.vue'
@@ -6320,6 +6252,8 @@ const userStats = computed(() => {
     favoritePlaces: favoritesList.value?.length || 0
   }
 })
+
+/* removed dup userLevelInfo */
 
 function editProfile() {
   profileForm.name = nguoiDung.value?.name || ''
