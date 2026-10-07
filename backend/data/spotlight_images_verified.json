@@ -1,0 +1,302 @@
+{
+  "Huế": {
+    "heroImage": "https://sacotravel.com/wp-content/uploads/2023/07/Dai-Noi-Hue.jpg",
+    "gallery": [
+      {
+        "name": "Đại Nội Hoàng Thành",
+        "image": "https://static.vinwonders.com/production/optimize_ngo-mon-hue_optimized.jpg"
+      },
+      {
+        "name": "Lăng Khải Định",
+        "image": "https://nemtv.vn/wp-content/uploads/2019/03/lang-khai-dinh-nemtv-3.jpg"
+      },
+      {
+        "name": "Chùa Thiên Mụ",
+        "image": "https://statics.vinpearl.com/thap-phuoc-duyen-4_1642651510.png"
+      },
+      {
+        "name": "Sông Hương & Cầu Tràng Tiền",
+        "image": "https://www.tuannguyentravel.com/data/images/Truong-Tien-Bridge-Da-Nang-to-Hur-by-private-car.jpg"
+      },
+      {
+        "name": "Đồi Vọng Cảnh",
+        "image": "https://huesmiletravel.com.vn/images/doi-vong-canh-hue.jpg"
+      }
+    ]
+  },
+  "Đà Nẵng": {
+    "heroImage": "https://www.pullman-danang.com/wp-content/uploads/sites/86/2019/05/DJI_0004.jpg",
+    "gallery": [
+      {
+        "name": "Cầu Vàng Bà Nà Hills",
+        "image": "https://www.pullman-danang.com/wp-content/uploads/sites/86/2019/05/DJI_0004.jpg"
+      },
+      {
+        "name": "Bãi biển Mỹ Khê",
+        "image": "https://mia.vn/media/uploads/blog-du-lich/bai-bien-my-khe-da-nang-lang-nguoi-ngam-nhin-1-trong-6-bai-bien-dep-nhat-hanh-tinh-01-1636298582.jpeg"
+      },
+      {
+        "name": "Bán đảo Sơn Trà",
+        "image": "https://r2.nucuoimekong.com/wp-content/uploads/ban-dao-son-tra-co-gi.jpg"
+      },
+      {
+        "name": "Cầu Rồng Sông Hàn",
+        "image": "https://benduthuyendanang.com/wp-content/uploads/Tour-xem-cau-rong-phun-lua.jpg"
+      },
+      {
+        "name": "Phố Cổ Hội An",
+        "image": "https://static.vinwonders.com/2022/03/pho-den-long-hoi-an-1.jpg"
+      }
+    ]
+  },
+  "Phú Yên": {
+    "heroImage": "https://static.vinwonders.com/production/ganh-da-dia-phu-yen-1.jpg",
+    "gallery": [
+      {
+        "name": "Ghềnh Đá Đĩa",
+        "image": "https://gonatour.vn/vnt_upload/news/03_2021/ghenh_da_dia_phu_yen.jpg"
+      },
+      {
+        "name": "Mũi Điện Hải Đăng",
+        "image": "https://cdn.xanhsm.com/2025/03/67778055-mui-dien-6.jpg"
+      },
+      {
+        "name": "Bãi Xép Hoa Vàng Cỏ Xanh",
+        "image": "https://cdn.xanhsm.com/2025/03/b622a2ba-hoa-vang-tren-co-xanh-thumb.jpg"
+      },
+      {
+        "name": "Tháp Nghinh Phong",
+        "image": "https://ik.imagekit.io/tvlk/blog/2023/01/thap-nghinh-phong-2-768x1024.jpg?tr=dpr-2,w-675"
+      },
+      {
+        "name": "Đầm Ô Loan",
+        "image": "https://52hz.vn/wp-content/uploads/2022/08/dam-o-loan-hoang-hon.jpg"
+      }
+    ]
+  },
+  "Khánh Hòa": {
+    "heroImage": "https://puolotrip.com/uploads/images/2023/09/Bien-nha-trang-2-jpg.webp",
+    "gallery": [
+      {
+        "name": "Bãi biển Nha Trang",
+        "image": "https://booking.muongthanh.com/upload_images/images/ve-dep-bai-bien-tran-phu-nha-trang.jpg"
+      },
+      {
+        "name": "Tháp Bà Ponagar",
+        "image": "https://danangprivatecar.com/wp-content/uploads/2023/07/This-is-a-famous-tourist-destination-in-Nha-Trang-and-Ponagar-Tower-is-the-largest-Cham-Pa-architectural-complex-in-Vietnam..jpeg"
+      },
+      {
+        "name": "Vịnh Vĩnh Hy",
+        "image": "https://thesinhtour.com/wp-content/uploads/2015/07/vinh-vinh-hy.jpg"
+      },
+      {
+        "name": "VinWonders Hòn Tre",
+        "image": "https://api.sovaba.travel/uploads/vinwonders_nha_trang_tren_cao_hon_tre_47c4184aee.jpg"
+      },
+      {
+        "name": "Rạn San Hô Hòn Mun",
+        "image": "https://bizweb.dktcdn.net/thumb/1024x1024/100/342/038/products/tour-dao-hon-mun-nha-trang-goodmorning-travel-02.jpg?v=1775720395537"
+      }
+    ]
+  },
+  "Quảng Ngãi": {
+    "heroImage": "https://statics.vinpearl.com/huyen-dao-ly-son_1742399346.jpg",
+    "gallery": [
+      {
+        "name": "Cổng Tò Vò Lý Sơn",
+        "image": "https://static.vinwonders.com/production/cong_to_vo_ly_son_1.jpg"
+      },
+      {
+        "name": "Hang Câu vách đá",
+        "image": "https://live.staticflickr.com/1695/25075454644_747b284099_b.jpg"
+      },
+      {
+        "name": "Đỉnh Thới Lới",
+        "image": "https://vivulyson.com/uploads/images/blog/xem-an-choi/82/mieng-nui-lua-ly-son-2.jpg"
+      },
+      {
+        "name": "Eo Gió Kỳ Co",
+        "image": "https://eholiday.vn/wp-content/uploads/2024/07/ky-co-1.jpg"
+      },
+      {
+        "name": "Đảo Bé Lý Sơn",
+        "image": "https://media-cdn-v2.laodong.vn/Storage/NewsPortal/2022/9/21/1095775/Dao-Be-Ly-Son-Ld.JPG"
+      }
+    ]
+  },
+  "Lâm Đồng": {
+    "heroImage": "https://smartland.vn/wp-content/uploads/2022/10/toan-canh-thanh-pho-da-lat-suong-mu.jpg",
+    "gallery": [
+      {
+        "name": "Hồ Xuân Hương",
+        "image": "https://2trip.vn/wp-content/uploads/2020/09/Ho-Xuan-Huong-Da-Lat-4.jpg"
+      },
+      {
+        "name": "Đồi chè Cầu Đất",
+        "image": "https://static.vinwonders.com/production/doi-che-cau-dat.jpg"
+      },
+      {
+        "name": "Thác Dambri",
+        "image": "https://52hz.vn/wp-content/uploads/2022/01/thac-dambri-9.jpeg"
+      },
+      {
+        "name": "Quảng trường Lâm Viên",
+        "image": "https://cdn2.fptshop.com.vn/unsafe/1920x0/filters:format(webp):quality(75)/quang_truong_lam_vien_thumb_e7e4262d19.png"
+      },
+      {
+        "name": "Đỉnh Langbiang",
+        "image": "https://dalatreview.vn/wp-content/uploads/2023/08/329666825_595037048714323_227516769466023961_n.jpg"
+      }
+    ]
+  },
+  "Gia Lai": {
+    "heroImage": "https://cdn.xanhsm.com/2025/03/8d98d60d-bien-ho-pleiku-13.jpg",
+    "gallery": [
+      {
+        "name": "Biển Hồ T’Nưng Pleiku",
+        "image": "https://touring.vn/wp-content/uploads/2023/12/Bien-Ho_TNung-4-800x612.jpg"
+      },
+      {
+        "name": "Núi lửa Chư Đăng Ya",
+        "image": "https://thanhnien.mediacdn.vn/Uploaded/maiha/2022_11_10/anh-3-3-3135.jpg"
+      },
+      {
+        "name": "Nhà rông Kon Klor",
+        "image": "https://image.vietgoing.com/editor/image_mwb1659681988.jpg"
+      },
+      {
+        "name": "Nhà thờ gỗ Kon Tum",
+        "image": "https://innotour.vn/image/catalog/blog-du-lich/kon-tum/pics/nha-tho-go-kon-tum-4.jpg"
+      },
+      {
+        "name": "Chùa Minh Thành",
+        "image": "https://media.gody.vn/images/gia-lai/chua-minh-thanh/11-2016/20161101090035-chua-minh-thanh-gody(11).jpg"
+      }
+    ]
+  },
+  "Đắk Lắk": {
+    "heroImage": "https://trungnguyenlegend.com/wp-content/uploads/2022/11/cttvbo1-6.jpg",
+    "gallery": [
+      {
+        "name": "Bảo tàng Thế Giới Cà Phê",
+        "image": "https://trungnguyenlegend.com/wp-content/uploads/2022/11/cttvbo1-6.jpg"
+      },
+      {
+        "name": "Thác Dray Nur",
+        "image": "https://tripmap.vn/wp-content/uploads/2021/07/thac-dray-nur-1627268728357.jpg"
+      },
+      {
+        "name": "Hồ Lắk",
+        "image": "https://statics.vinpearl.com/buon-ma-thuot-vietnam-08_1696090928.jpg"
+      },
+      {
+        "name": "Buôn Đôn",
+        "image": "https://cdn-i.vtcnews.vn/resize/th/upload/2023/07/09/voi-18114972.jpg"
+      },
+      {
+        "name": "Hồ Tà Đùng",
+        "image": "https://tinviettravel.com/uploads/tours/images/tay_nguyen/ho-ta-dung-dak-nong.jpg"
+      }
+    ]
+  },
+  "Quảng Trị": {
+    "heroImage": "https://phongnhatourist.com/wp-content/uploads/2019/04/dong-thie-duong-2.jpg",
+    "gallery": [
+      {
+        "name": "Động Thiên Đường",
+        "image": "https://www.quangbinhtravel.vn/wp-content/uploads/2012/04/dongthienduong-1.jpg"
+      },
+      {
+        "name": "Động Phong Nha",
+        "image": "https://phongnhaexplorer.com/wp-content/uploads/2025/07/dongphongnha2-1024x715.jpg"
+      },
+      {
+        "name": "Địa đạo Vịnh Mốc",
+        "image": "https://mia.vn/media/uploads/blog-du-lich/dia-dao-vinh-moc-1-1710467866.jpg"
+      },
+      {
+        "name": "Cầu Hiền Lương",
+        "image": "https://media.vietravel.com/images/Content/du-lich-quang-tri-3.jpg"
+      },
+      {
+        "name": "Thành Cổ Quảng Trị",
+        "image": "https://nads.1cdn.vn/2024/01/18/W_1.dai-tuong-niem-liet-si-thanh-co-quang-tri-1972....jpg"
+      }
+    ]
+  },
+  "Thanh Hóa": {
+    "heroImage": "https://viptrip.vn/public/upload/news/bai-bien-sam-son_23-05-2024_713782758.jpg",
+    "gallery": [
+      {
+        "name": "Bãi biển Sầm Sơn",
+        "image": "https://sunparadiseland.com/_next/image?url=https:%2F%2Fsun-ecommerce-cdn.azureedge.net%2Fecommerce%2Fservice-sites%2Fasset%2FSunParadiseLandQuangNinh%2Fgoogle-doc%2Fpost_id_31345%2FAD_4nXex57HvUCdJV6cNIazp-Sfdn2No2sqzDoRuycK8OQVkwBu56JQxwh9j9IYPAU7xmNXzF2-WaTQXM1dTdaxJUjiCoZn65k2JyLEY25oFyRv3MxipjcH7MxgbOrRQ68PJiyZJ8iu5T-Yi_vyZk3S3cF54mdTKbs0-BZKM4JJ2QQ4konnVsItU%253Ds2048.webp&w=1200&q=80"
+      },
+      {
+        "name": "Ruộng bậc thang Pù Luông",
+        "image": "https://m.yodycdn.com/products/anhruongbacthang1_m2b9i8yxd6fqow6fh1t.jpg"
+      },
+      {
+        "name": "Thành Nhà Hồ UNESCO",
+        "image": "https://static.vinwonders.com/production/toan-canh-di-tich-thanh-nha-ho.jpg"
+      },
+      {
+        "name": "Suối cá thần Cẩm Lương",
+        "image": "https://ticotravel.com.vn/wp-content/uploads/2021/05/suoi-ca-than-thanh-hoa-8.jpg"
+      },
+      {
+        "name": "Biển Hải Tiến",
+        "image": "https://static.vinwonders.com/production/dia-chi-bien-hai-tien.jpg"
+      }
+    ]
+  },
+  "Nghệ An": {
+    "heroImage": "https://farm8.staticflickr.com/7516/15964471348_7caca4ee9b_o.jpg",
+    "gallery": [
+      {
+        "name": "Bãi biển Cửa Lò",
+        "image": "https://farm8.staticflickr.com/7516/15964471348_7caca4ee9b_o.jpg"
+      },
+      {
+        "name": "Làng Sen quê Bác",
+        "image": "https://ilooca-tourdb.itourism.vn/files/thumb/840/456/uploads/content/17022/68384d86a12a6.png"
+      },
+      {
+        "name": "Đảo Chè Thanh Chương",
+        "image": "https://ticotravel.com.vn/wp-content/uploads/2022/10/Dao-che-Thanh-Chuong-6.jpeg"
+      },
+      {
+        "name": "Vườn quốc gia Pù Mát",
+        "image": "https://media.vietnamplus.vn/images/a01c0e0c6ca85cd3c5d38871d88e83e0e4b18c51a63b4c988d3a06bd34290b47d0734ca05f9eb49adb08a32cb2e3af59cdb57feb901aea868e56e8a402356a73/0910-khe-kem-pu-mat.jpg"
+      },
+      {
+        "name": "Biển Bãi Lữ",
+        "image": "https://dulichkhatvongviet.com/wp-content/uploads/2014/07/bai-lu-nghe-an.jpg"
+      }
+    ]
+  },
+  "Hà Tĩnh": {
+    "heroImage": "https://zoomtravel.vn/upload/images/thien-cam-ha-tinh-1-min.jpg",
+    "gallery": [
+      {
+        "name": "Biển Thiên Cầm",
+        "image": "https://zoomtravel.vn/upload/images/thien-cam-ha-tinh-1-min.jpg"
+      },
+      {
+        "name": "Ngã Ba Đồng Lộc",
+        "image": "https://static.vinwonders.com/production/thoi-diem-di-nga-ba-dong-loc.jpg"
+      },
+      {
+        "name": "Chùa Hương Tích",
+        "image": "https://cdn.baohatinh.vn/images/5c0e3df6f392cae5972c8105500d84182642ad8f46238526fddaf4a5ff633a59e3b9fc4f6b4de541067d96204805ebda/154d4222421t91554l0.jpg"
+      },
+      {
+        "name": "Hồ Kẻ Gỗ",
+        "image": "https://statics.vinpearl.com/ho-ke-go 1_1624870951.jpg"
+      },
+      {
+        "name": "Hải Đăng Cửa Sót",
+        "image": "https://cdn.daidoanket.vn/w1200/uploaded/images/2026/04/16/d32a8cb9-fba7-4dcf-b082-9801a25e06fc.jpg"
+      }
+    ]
+  }
+}

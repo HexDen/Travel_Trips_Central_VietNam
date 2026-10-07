@@ -3,12 +3,43 @@ const router = express.Router()
 const dichVuAI = require('../services/aiService')
 const Trip = require('../models/Trip')
 const Chat = require('../models/Chat')
+const { optimizeBudgetAllocation, classifyTier } = require('../services/budgetOptimizerService')
 const { optionalAuth } = require('../middleware/auth')
+
+// API Dự toán và phân bổ ngân sách thông minh (theo 5 tầng T0 - T4)
+router.post('/budget-estimate', (req, res) => {
+  try {
+    const { budget, days, people, actual_transit } = req.body
+    const estimate = optimizeBudgetAllocation(budget, days, people, actual_transit)
+    res.json(estimate)
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Lỗi tính toán ngân sách' })
+  }
+})
 
 // Create plan and save trip
 router.post('/plan', optionalAuth, async (req, res) => {
-  try{
+  try {
     const duLieu = req.body
+
+    // Kiểm tra tính khả thi của chuyến đi theo ngân sách (vd: 500k đi 10 ngày 2 người)
+    const { checkTripFeasibility } = require('../services/budgetOptimizerService')
+    const feasibility = checkTripFeasibility(
+      duLieu.budget,
+      duLieu.days,
+      duLieu.people,
+      duLieu.destination,
+      duLieu.free_places_only
+    )
+
+    if (!feasibility.feasible && !duLieu.free_places_only) {
+      return res.status(400).json({
+        error: feasibility.message,
+        is_unfeasible: true,
+        feasibility
+      })
+    }
+
     const lichTrinh = await dichVuAI.taoLichTrinh(duLieu)
     // save to DB
     const doc = new Trip({
@@ -83,21 +114,6 @@ router.post('/chat', async (req, res) => {
   }catch(err){
     console.error(err)
     res.status(500).json({ error: err.message || 'lỗi nội bộ' })
-  }
-})
-
-// Parse natural language prompt into structured trip requirements
-router.post('/parse-prompt', async (req, res) => {
-  try {
-    const { prompt } = req.body
-    if (!prompt) {
-      return res.status(400).json({ error: 'Thiếu nội dung yêu cầu (prompt)' })
-    }
-    const parsedData = await dichVuAI.phanTichYeuCau(prompt)
-    res.json(parsedData)
-  } catch (error) {
-    console.error('Lỗi khi phân tích prompt:', error)
-    res.status(500).json({ error: error.message || 'Lỗi hệ thống khi phân tích yêu cầu' })
   }
 })
 

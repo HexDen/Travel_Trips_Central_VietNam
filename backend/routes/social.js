@@ -28,6 +28,43 @@ router.get('/my-trips', requireAuth, async (req, res) => {
   }
 })
 
+// Lưu hoặc cập nhật chuyến đi vào tài khoản
+router.post('/my-trips', requireAuth, async (req, res) => {
+  try {
+    const data = req.body
+    let trip = null
+    if (data._id || data.tripId) {
+      trip = await Trip.findById(data._id || data.tripId)
+    }
+    if (trip) {
+      trip.owner = req.userId
+      if (data.destination) trip.destination = data.destination
+      if (data.total_budget) trip.total_budget = data.total_budget
+      if (data.people) trip.people = data.people
+      if (data.daysList || data.days) trip.days = data.daysList || data.days
+      if (data.budget_breakdown) trip.budget_breakdown = data.budget_breakdown
+      if (data.hotel_recommendation) trip.hotel_recommendation = data.hotel_recommendation
+      await trip.save()
+    } else {
+      trip = new Trip({
+        owner: req.userId,
+        destination: data.destination || 'Miền Trung',
+        total_budget: data.total_budget || 0,
+        people: data.people || 1,
+        days: data.daysList || data.days || [],
+        budget_breakdown: data.budget_breakdown || {},
+        hotel_recommendation: data.hotel_recommendation || null,
+        transportation: data.transportation || 'linh hoạt',
+        interests: data.interests || []
+      })
+      await trip.save()
+    }
+    res.json({ success: true, trip })
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Không thể lưu chuyến đi' })
+  }
+})
+
 router.get('/favorites', requireAuth, async (req, res) => {
   const user = await User.findById(req.userId).populate('favorite_places')
   res.json(user?.favorite_places || [])

@@ -1,6 +1,13 @@
 // aiService: Gemini AI + MongoDB Atlas Local Data Integration (Supported Selected Places & Exact Addresses)
 const axios = require('axios')
 const Place = require('../models/Place')
+const {
+  TIER_DEFINITIONS,
+  classifyTier,
+  optimizeBudgetAllocation,
+  scorePlaceForBudget,
+  auditTripBudget
+} = require('./budgetOptimizerService')
 
 function getGeminiKey() {
   const key = process.env.GEMINI_API_KEY
@@ -81,16 +88,6 @@ function clusterPlaces(places, numClusters) {
 }
 
 async function taoLichTrinh(duLieu) {
-  const nganSach = Number(duLieu.budget) || 0;
-  const nguoi = Number(duLieu.people) || 1;
-  const ngay = Number(duLieu.days) || 1;
-  const budgetPerPersonPerDay = nganSach / (nguoi * ngay);
-  
-  if (budgetPerPersonPerDay < 500000) {
-    const requiredBudget = 500000 * nguoi * ngay;
-    throw new Error(`Ngân sách quá thấp! Để duy trì các chi phí cơ bản (khách sạn, ăn uống, di chuyển) trong ${ngay} ngày cho ${nguoi} người, bạn cần tối thiểu ${requiredBudget.toLocaleString('vi-VN')}đ (tương đương 500.000đ/người/ngày). Vui lòng tăng ngân sách lên nhé!`);
-  }
-
   const geminiKey = getGeminiKey()
   let diemDen = duLieu.destination || 'Đà Nẵng'
   if (DESTINATION_ALIASES[diemDen]) {
@@ -137,9 +134,54 @@ async function taoLichTrinh(duLieu) {
       people: duLieu.people || 1
     })
 
-    if (result.budget_breakdown && transitData.cheapestBusTotal) {
-      result.budget_breakdown.transportation = (result.budget_breakdown.transportation || 0) + transitData.cheapestBusTotal;
-      result.total_budget = (result.total_budget || 0) + transitData.cheapestBusTotal;
+    const nights = Math.max(1, (result.days?.length || duLieu.days || 1))
+    const people = Number(result.people) || Number(duLieu.people) || 1
+    const hotelPrice = Number(result.hotel_recommendation?.price_per_night) || 850000
+    // Homestay/dorm (<= 300k): tính theo người/đêm (90k * 2 người * 5 đêm = 900k)
+    // Khách sạn/resort (> 300k): tính theo phòng (1 phòng / 2 người)
+    const realHotelCost = hotelPrice <= 300000
+      ? Math.round(hotelPrice * people * nights)
+      : Math.round(hotelPrice * Math.max(1, Math.ceil(people / 2)) * nights)
+
+    let realFood = 0;
+    let realTickets = 0;
+    const daysArr = result.days || [];
+    daysArr.forEach(d => {
+      (d.activities || []).forEach(a => {
+        const costPerPerson = Number(a.estimated_cost) || 0
+        if (['breakfast', 'lunch', 'dinner', 'restaurant'].includes(a.type)) {
+          realFood += costPerPerson * people
+        } else if (['attraction', 'checkin'].includes(a.type)) {
+          realTickets += costPerPerson * people
+        }
+      })
+    })
+
+    if (!result.budget_breakdown) result.budget_breakdown = {}
+    result.budget_breakdown.hotel = realHotelCost
+    if (realFood > 0) result.budget_breakdown.food = realFood
+    if (duLieu.free_places_only) {
+      result.budget_breakdown.tickets = 0
+    } else if (realTickets > 0) {
+      result.budget_breakdown.tickets = realTickets
+    }
+
+    if (transitData && transitData.cheapestBusTotal) {
+      result.budget_breakdown.transportation = transitData.cheapestBusTotal;
+    }
+
+    const calculatedSubtotal = (result.budget_breakdown.hotel || 0) +
+      (result.budget_breakdown.food || 0) +
+      (result.budget_breakdown.transportation || 0) +
+      (result.budget_breakdown.tickets || 0)
+    const userTargetBudget = Number(duLieu.budget) || 3000000
+    result.target_budget = userTargetBudget
+    result.user_budget = userTargetBudget
+    result.calculated_total = calculatedSubtotal + result.budget_breakdown.reserve
+    result.total_budget = result.calculated_total
+
+    if (result.budget_tier) {
+      result.budget_audit = auditTripBudget(result, userTargetBudget, result.budget_tier.key);
     }
 
     return {
@@ -204,39 +246,50 @@ function buildPrompt(duLieu, diaDiemDatabase) {
   const selectedPlaces = Array.isArray(duLieu.selected_places) ? duLieu.selected_places : []
   const contextRegion = LOCAL_CONTEXT_MAP[diaDiem] || `Toàn bộ danh lam thắng cảnh và đặc sản nổi bật tại ${diaDiem}`
 
-  const budgetPerPersonPerDay = nganSach / (nguoi * ngay)
-  let phanKhuc = 'BÌNH DÂN, GIÁ RẺ, TIẾT KIỆM CHI PHÍ'
-  let ksMota = 'khách sạn giá rẻ'
-  let ksGia = 350000
-  let ksLoai = 'khách sạn / homestay bình dân'
-  
-  if (budgetPerPersonPerDay >= 2000000) {
-    phanKhuc = 'SANG TRỌNG, CAO CẤP, DỊCH VỤ 4-5 SAO, SANG CHẢNH'
-    ksMota = 'khách sạn/resort cao cấp, sang trọng'
-    ksGia = 2500000
-    ksLoai = 'khách sạn 4-5 sao / resort cao cấp'
-  } else if (budgetPerPersonPerDay >= 1000000) {
-    phanKhuc = 'TIÊU CHUẨN 3-4 SAO, THOẢI MÁI, CHẤT LƯỢNG TỐT'
-    ksMota = 'khách sạn chất lượng tốt, tiện nghi'
-    ksGia = 800000
-    ksLoai = 'khách sạn 3-4 sao'
-  }
+  const isFreeOnly = Boolean(duLieu.free_places_only)
+
+  // Tính toán tối ưu phân bổ theo tầng ngân sách
+  const allocation = optimizeBudgetAllocation(nganSach, ngay, nguoi, null, isFreeOnly)
+  const tier = allocation.tierInfo
+  const phanKhuc = isFreeOnly ? '100% MIỄN PHÍ VÉ (FREE PLACES)' : `${tier.name.toUpperCase()} (${tier.badge})`
+  const ksMota = tier.hotelDesc
+  const ksGia = allocation.perNightHotel
+  const ksLoai = tier.hotelDesc
 
   let goiYDbText = ''
   if (diaDiemDatabase && diaDiemDatabase.length > 0) {
-    const listHotels = diaDiemDatabase.filter(p => p.type === 'hotel').slice(0, 4).map(p => `${p.name} (${p.address || diaDiem}, giá: ${p.estimated_cost || 850000}đ)`).join('; ')
+    // Sắp xếp khách sạn phù hợp với tầng ngân sách (rẻ cho 1-2tr, cao cấp cho 30tr)
+    const listHotels = diaDiemDatabase
+      .filter(p => p.type === 'hotel')
+      .map(p => ({ ...p, score: scorePlaceForBudget(p, tier.key) }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 4)
+      .map(p => `${p.name} (${p.address || diaDiem}, giá: ${(p.estimated_cost || ksGia).toLocaleString('vi-VN')}đ)`)
+      .join('; ')
     
     // Sử dụng thuật toán phân cụm để nhóm địa điểm gần nhau
     const clusters = clusterPlaces(diaDiemDatabase, Math.min(ngay, 5));
     let clusteredText = '';
     clusters.forEach((cluster, idx) => {
-      const cAttractions = cluster.filter(p => p.type === 'attraction').slice(0, 5).map(p => p.name).join(', ');
-      const cFoods = cluster.filter(p => p.type === 'restaurant').slice(0, 5).map(p => p.name).join(', ');
+      const cAttractions = cluster
+        .filter(p => p.type === 'attraction')
+        .map(p => ({ ...p, score: scorePlaceForBudget(p, tier.key, null, [], isFreeOnly) }))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 5)
+        .map(p => p.name)
+        .join(', ');
+      const cFoods = cluster
+        .filter(p => p.type === 'restaurant')
+        .map(p => ({ ...p, score: scorePlaceForBudget(p, tier.key) }))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 5)
+        .map(p => p.name)
+        .join(', ');
       const cCafe = cluster.filter(p => p.type === 'cafe').slice(0, 3).map(p => p.name).join(', ');
       clusteredText += `\n- Cụm Khu Vực ${idx + 1} (Các điểm RẤT GẦN NHAU, Dùng cho Ngày ${idx + 1}): Thắng cảnh: [${cAttractions}]; Quán ăn: [${cFoods}]; Cafe: [${cCafe}].`;
     });
 
-    goiYDbText = `\nĐỊA ĐIỂM THỰC TẾ TẠI ${diaDiem.toUpperCase()}:\n- Khách sạn (chọn 1 cho cả chuyến đi): ${listHotels}\n${clusteredText}\n`
+    goiYDbText = `\nĐỊA ĐIỂM THỰC TẾ TẠI ${diaDiem.toUpperCase()} (ĐÃ LỌC PHÙ HỢP PHÂN KHÚC ${phanKhuc}):\n- Khách sạn (chọn 1 cho cả chuyến đi): ${listHotels}\n${clusteredText}\n`
   }
 
   let mustVisitText = ''
@@ -246,6 +299,33 @@ Du khách đã chủ động lựa chọn các địa điểm/món ăn sau: [${s
 BẠN BẮT BUỘC PHẢI XẾP TẤT CẢ CÁC ĐỊA ĐIỂM TRÊN VÀO LỊCH TRÌNH các ngày sao cho hợp lý và tối ưu tuyến đường di chuyển!\n`
   }
 
+  // Tùy biến chỉ dẫn cho AI theo phân khúc (Free Places vs 1-2 triệu vs 30 triệu)
+  let chiDanNganSach = ''
+  if (isFreeOnly) {
+    chiDanNganSach = `9. QUY TẮC BẮT BUỘC - CHẾ ĐỘ THAM QUAN 100% MIỄN PHÍ VÉ (FREE PLACES ONLY) (${nganSach.toLocaleString('vi-VN')} VND / ${nguoi} người / ${ngay} ngày):
+- Du khách yêu cầu CHỈ GỢI Ý CÁC ĐỊA ĐIỂM THAM QUAN 100% MIỄN PHÍ VÉ (0 VNĐ).
+- BẮT BUỘC tất cả các hoạt động tham quan (type: 'attraction' hoặc 'checkin') phải có estimated_cost = 0 và ticket_price = 0.
+- Ưu tiên các danh thắng tự nhiên, công cộng hoặc văn hóa miễn phí: Bãi biển, Cầu Rồng, Cầu Tình Yêu, Chùa Linh Ứng Sơn Trà, Bán đảo Sơn Trà, Đèo Hải Vân, Chợ Cồn, Phố đi bộ...
+- TUYỆT ĐỐI KHÔNG xếp các điểm bán vé đắt đỏ (Bà Nà Hills, VinWonders, Suối khoáng Núi Thần Tài, v.v.).
+- Chỗ nghỉ và ăn uống ở mức tự túc / siêu tiết kiệm bình dân.`
+  } else if (tier.key === 'T0' || tier.key === 'T1') {
+    chiDanNganSach = `9. QUY TẮC BẮT BUỘC CHO PHÂN KHÚC TIẾT KIỆM (${nganSach.toLocaleString('vi-VN')} VND / ${nguoi} người / ${ngay} ngày):
+- Tổng ngân sách RẤT TIẾT KIỆM (khoảng 1 - 2 triệu đồng).
+- BẮT BUỘC chọn phòng nghỉ bình dân / homestay / hostel với giá khoảng ~${ksGia.toLocaleString('vi-VN')}đ/đêm.
+- BẮT BUỘC chọn quán ăn đặc sản vỉa hè / bình dân giá rẻ: Ăn sáng (20k - 35k), Ăn trưa (35k - 50k), Ăn tối (40k - 60k).
+- BẮT BUỘC ưu tiên các điểm tham quan MIỄN PHÍ VÉ (bãi biển, cầu biểu tượng, phố đi bộ, bán đảo, chợ đêm) hoặc vé rất rẻ.
+- TỔNG CHI PHÍ HOẠT ĐỘNG + KHÁCH SẠN PHẢI NẰM GỌN TRONG TỔNG NGÂN SÁCH ĐÃ CHO, TUYỆT ĐỐI KHÔNG GỢI Ý CÁC ĐIỂM XA HOA ĐẮT ĐỎ!`
+  } else if (tier.key === 'T4') {
+    chiDanNganSach = `9. QUY TẮC BẮT BUỘC CHO PHÂN KHÚC XA HOA VIP (${nganSach.toLocaleString('vi-VN')} VND / ${nguoi} người / ${ngay} ngày):
+- Tổng ngân sách DỒI DÀO (tầm 20 - 30 triệu đồng trở lên). Du khách muốn trải nghiệm ĐẲNG CẤP, XA HOA NHẤT.
+- BẮT BUỘC chọn Resort 5 sao hoặc Khách sạn 5 sao cao cấp (khoảng ~${ksGia.toLocaleString('vi-VN')}đ/đêm, ví dụ Resort ven biển cao cấp, InterContinental, Hyatt, Vinpearl, Furama...).
+- BẮT BUỘC chọn nhà hàng hải sản cao cấp, Fine Dining, buffet 5 sao, ăn tối du thuyền riêng (khoảng 350.000đ - 1.200.000đ/bữa).
+- BẮT BUỘC sắp xếp các trải nghiệm đỉnh cao: Vé VIP Bà Nà Hills WOW Pass, cáp treo không xếp hàng, du thuyền sông Hàn, cano riêng ra đảo, liệu trình Spa trị liệu 5 sao.
+- TỐI ƯU TOÀN BỘ NGÂN SÁCH ĐỂ MANG ĐẾN CHUYẾN ĐI XỨNG TẦM 30 TRIỆU, TUYỆT ĐỐI KHÔNG GỢI Ý QUÁN BỤI BÌNH DÂN HOẶC PHÒNG TRỌ RẺ TIỀN!`
+  } else {
+    chiDanNganSach = `9. QUY TẮC NGÂN SÁCH (${nganSach.toLocaleString('vi-VN')} VND): Cân đối hài hòa giữa chất lượng và chi phí theo phân khúc ${phanKhuc}. Phòng khách sạn ~${ksGia.toLocaleString('vi-VN')}đ/đêm.`
+  }
+
   return `Bạn là Chuyên gia Lên lịch trình Du lịch hàng đầu tại Việt Nam.
 Hãy thiết kế lịch trình du lịch chi tiết, sống động, đầy đủ Khách sạn, Bữa ăn (Sáng/Trưa/Tối), Điểm Check-in và ĐỊA CHỈ RÕ RÀNG cho điểm đến: "${diaDiem}" (Khu vực mở rộng sau sáp nhập gồm: ${contextRegion}).
 
@@ -253,23 +333,22 @@ THÔNG TIN CHUYẾN ĐI:
 - Điểm đến: ${diaDiem}
 - Số ngày: ${ngay} ngày
 - Số người: ${nguoi} người
-- Tổng ngân sách: ${nganSach} VND
+- Tổng ngân sách: ${nganSach} VND (${tier.name} - ${tier.badge})
 - Ngày khởi hành: ${ngayBatDau || 'Chưa định ngày'} đến ${ngayKetThuc || 'Chưa định ngày'}
 - Phương tiện: ${duLieu.transportation || 'linh hoạt'}
-- Yêu cầu khách sạn: ${duLieu.hotel_request || 'tiêu chuẩn, vị trí thuận tiện'}
-- Phong cách nhận phòng: ${duLieu.hotel_checkin_preference === 'play_first' ? 'ĐI CHƠI LUÔN, BẮT BUỘC xếp lịch Nhận phòng khách sạn vào BUỔI TỐI MUỘN của Ngày 1 (ví dụ 19:00 - 20:00)' : 'CẤT ĐỒ TRƯỚC, BẮT BUỘC xếp lịch Nhận phòng/Gửi đồ tại khách sạn là HOẠT ĐỘNG ĐẦU TIÊN CỦA NGÀY 1 (ví dụ 08:00 - 10:00 sáng), SAU ĐÓ mới đi chơi'}
+- Yêu cầu khách sạn: ${duLieu.hotel_request || tier.hotelDesc}
 - Sở thích: ${soThich.join(', ') || 'khám phá ẩm thực đặc sản, check-in cảnh đẹp'}
 ${goiYDbText}${mustVisitText}
 QUY TẮC BẮT BUỘC:
 1. TUYỆT ĐỐI KHÔNG ĐƯỢC LẶP LẠI ĐỊA ĐIỂM: Mọi thắng cảnh, quán ăn sáng, quán ăn trưa, quán ăn tối trong suốt toàn bộ ${ngay} ngày BẮT BUỘC PHẢI KHÁC NHAU 100%. Không được xếp lại cùng 1 địa điểm ở các ngày khác nhau.
 2. ĐỊA CHỈ RÕ RÀNG (ADDRESS): BẮT BUỘC mọi hoạt động và khách sạn đều phải có trường "address" cụ thể (Số nhà, Tên đường, Quận/Huyện, Tỉnh/TP).
-3. KHÁCH SẠN (HOTEL): ƯU TIÊN CHỌN KHÁCH SẠN PHÂN KHÚC: ${phanKhuc}. Có trường "hotel_recommendation" gồm: name, address, rating, price_per_night, description. ${duLieu.hotel_checkin_preference === 'play_first' ? 'Ngày 1 CÓ MỤC "Nhận phòng" Ở CUỐI NGÀY' : 'Ngày 1 CÓ MỤC "Nhận phòng" Ở ĐẦU TIÊN'}, ngày cuối lúc 12:00 có mốc "Trả phòng".
+3. KHÁCH SẠN (HOTEL): ƯU TIÊN CHỌN KHÁCH SẠN PHÂN KHÚC: ${phanKhuc}. Có trường "hotel_recommendation" gồm: name, address, rating, price_per_night, description. Ngày 1 lúc 14:00 có mốc "Nhận phòng", ngày cuối lúc 12:00 có mốc "Trả phòng".
 4. NHÃN PHÂN LOẠI (CATEGORY): Mỗi hoạt động có type ('breakfast' | 'lunch' | 'dinner' | 'checkin' | 'attraction' | 'cafe' | 'checkout') và label ('Ăn sáng' | 'Ăn trưa' | 'Ăn tối' | 'Nhận phòng' | 'Tham quan / Check-in' | 'Cafe & Chill' | 'Trả phòng').
 5. ĐẶC SẢN & DANH THẮNG NỔI TIẾNG NHẤT: BẮT BUỘC chọn các điểm tham quan biểu tượng, quán ăn nổi tiếng nhất của ${diaDiem} PHÙ HỢP VỚI PHÂN KHÚC ${phanKhuc}. TUYỆT ĐỐI KHÔNG gợi ý các điểm không có thật. Nêu rõ tên món đặc sản + tên quán ăn cụ thể.
 6. MỖI NGÀY MỘT CỤM VÀ RẤT GẦN NHAU: Để tiết kiệm chi phí và sức khỏe, các địa điểm trong cùng 1 ngày BẮT BUỘC phải nằm rất gần nhau (cách nhau dưới 10-15km). Ngày 1 đi Cụm 1, Ngày 2 đi Cụm 2... KHÔNG di chuyển zic-zac xa xôi!
 7. TỐI ƯU KHOẢNG CÁCH & PHÍ DI CHUYỂN: BẮT BUỘC phải ghi chú tên điểm xuất phát, khoảng cách, THỜI GIAN DI CHUYỂN, và phí di chuyển vào cuối nội dung "activity" (Buổi sáng bắt buộc tính từ KHÁCH SẠN).
 8. MÔ TẢ GIÁ TRỊ THỰC TẾ (ACTIVITY): Viết 1 câu súc tích làm nổi bật nét hấp dẫn và giá trị thực tế của địa điểm. TUYỆT ĐỐI KHÔNG dùng câu mẫu rập khuôn.
-${nganSach <= 500000 ? `9. ĐẶC BIỆT - NGÂN SÁCH TỐI GIẢN / SINH TỒN (${nganSach.toLocaleString('vi-VN')} VND): Ngân sách du khách rất eo hẹp! BẮT BUỘC chỉ chọn các điểm tham quan MIỄN PHÍ VÉ (bãi biển, phố cổ, di tích mở), quán ăn vỉa hè bình dân giá rẻ nhất có thể!` : ''}
+${chiDanNganSach}
 
 ĐỊNH DẠNG ĐẦU RA (CHỈ TRẢ VỀ JSON DUY NHẤT):
 {
@@ -478,6 +557,10 @@ async function taoLichTrinhThongMinh(duLieu, diaDiemDatabase) {
   const availableRestaurants = [...diaDiemDatabase.filter(p => p.type === 'restaurant')]
   const availableCafes = [...diaDiemDatabase.filter(p => p.type === 'cafe')]
 
+  const isFreeOnly = Boolean(duLieu.free_places_only)
+  const allocation = optimizeBudgetAllocation(nganSach, soNgay, soNguoi, null, isFreeOnly)
+  const tier = allocation.tierInfo
+
   // 1. Phân cụm toàn bộ địa điểm (tối đa `soNgay` cụm hoặc 5 cụm)
   const clusters = clusterPlaces(diaDiemDatabase, Math.min(soNgay, 5));
   let bestCluster = clusters[0] || diaDiemDatabase;
@@ -494,29 +577,23 @@ async function taoLichTrinhThongMinh(duLieu, diaDiemDatabase) {
     centroid = { latitude: sumLat / clusterWithCoords.length, longitude: sumLng / clusterWithCoords.length };
   }
 
-  // 3. Chọn Khách sạn bình dân GẦN CENTROID NHẤT
+  // 3. Chọn Khách sạn phù hợp với tầng ngân sách (T0-T1 homestay/hostel giá mềm, T4 resort 5 sao)
   const hotels = diaDiemDatabase.filter(p => p.type === 'hotel')
-  if (centroid && hotels.length > 0) {
+  if (hotels.length > 0) {
     hotels.sort((a, b) => {
-      const distA = calculateDistance(centroid.latitude, centroid.longitude, a.latitude, a.longitude);
-      const distB = calculateDistance(centroid.latitude, centroid.longitude, b.latitude, b.longitude);
-      const priceA = a.estimated_cost || 9999999;
-      const priceB = b.estimated_cost || 9999999;
-      // Trọng số: Khách sạn quá xa (>10km) bị phạt nặng, ưu tiên giá + khoảng cách
-      const scoreA = priceA + (distA > 10 ? 5000000 : distA * 20000); // 1km xa thêm coi như đắt thêm 20k
-      const scoreB = priceB + (distB > 10 ? 5000000 : distB * 20000);
-      return scoreA - scoreB;
+      const scoreA = scorePlaceForBudget(a, tier.key, centroid, soThich)
+      const scoreB = scorePlaceForBudget(b, tier.key, centroid, soThich)
+      return scoreB - scoreA
     });
-  } else {
-    hotels.sort((a, b) => (a.estimated_cost || 9999999) - (b.estimated_cost || 9999999));
   }
 
+  const defaultHotelPrice = allocation.perNightHotel
   const hotelChon = hotels[0] || {
-    name: `Khách sạn nghỉ dưỡng trung tâm ${diemDen}`,
+    name: tier.key === 'T4' ? `Resort Nghỉ Dưỡng 5 Sao ${diemDen}` : `Khách sạn Tiêu Chuẩn ${diemDen}`,
     address: `Đường trung tâm thành phố ${diemDen}`,
-    rating: 4.8,
-    estimated_cost: 850000,
-    description: `Khách sạn vị trí đắc địa gần trung tâm ${diemDen}, tiện nghi hiện đại và phòng ốc thoáng đãng.`,
+    rating: tier.key === 'T4' ? 4.9 : 4.7,
+    estimated_cost: defaultHotelPrice,
+    description: `${tier.hotelDesc} vị trí đắc địa tại ${diemDen}, tiện nghi và phong cảnh đẹp.`,
     latitude: centroid ? centroid.latitude : null,
     longitude: centroid ? centroid.longitude : null
   }
@@ -535,26 +612,39 @@ async function taoLichTrinhThongMinh(duLieu, diaDiemDatabase) {
     }
 
     let available = list.filter(p => !usedPlaceNames.has(p.name))
-    if (available.length > 0) {
-      if (anchor && anchor.latitude && anchor.longitude) {
-        available.sort((a, b) => {
-          const distA = calculateDistance(anchor.latitude, anchor.longitude, a.latitude, a.longitude);
-          const distB = calculateDistance(anchor.latitude, anchor.longitude, b.latitude, b.longitude);
-          return distA - distB;
-        });
+    if (isFreeOnly && fallbackType === 'attraction') {
+      const freeList = available.filter(p => (Number(p.estimated_cost) || 0) === 0)
+      if (freeList.length > 0) {
+        available = freeList
+      } else {
+        available = [] // Tuyệt đối không chọn điểm bán vé đắt khi người dùng yêu cầu chỉ đi điểm miễn phí
       }
+    }
+
+    if (available.length > 0) {
+      available.sort((a, b) => {
+        const scoreA = scorePlaceForBudget(a, tier.key, anchor, soThich, isFreeOnly);
+        const scoreB = scorePlaceForBudget(b, tier.key, anchor, soThich, isFreeOnly);
+        return scoreB - scoreA;
+      });
       const picked = available[0]
       usedPlaceNames.add(picked.name)
       return picked
     }
 
     const index = usedPlaceNames.size + 1
+    const finalFallbackCost = (isFreeOnly && fallbackType === 'attraction') ? 0 : fallbackCost
+    const finalFallbackName = (isFreeOnly && fallbackType === 'attraction')
+      ? (fallbackTen.includes('chiều') ? `Điểm check-in dạo mát & ngắm cảnh miễn phí ${diemDen}` : `Danh thắng công cộng miễn phí vé ${diemDen}`)
+      : fallbackTen
+
     const fallback = {
-      name: `${fallbackTen} (Điểm ${index})`,
+      name: `${finalFallbackName} (Điểm ${index})`,
       address: `Thành phố ${diemDen}`,
       type: fallbackType,
-      description: `Khám phá và trải nghiệm không gian độc đáo tại ${diemDen}`,
-      estimated_cost: fallbackCost,
+      description: isFreeOnly ? `Điểm ngắm cảnh và trải nghiệm không gian công cộng hoàn toàn miễn phí vé tại ${diemDen}` : `Khám phá và trải nghiệm không gian độc đáo tại ${diemDen}`,
+      estimated_cost: finalFallbackCost,
+      ticket_price: (isFreeOnly && fallbackType === 'attraction') ? 0 : undefined,
       latitude: anchor ? anchor.latitude : null,
       longitude: anchor ? anchor.longitude : null
     }
@@ -565,6 +655,13 @@ async function taoLichTrinhThongMinh(duLieu, diaDiemDatabase) {
   const mangNgay = []
   let previousAnchor = hotelChon; // Bắt đầu từ khách sạn
   
+  // Chi phí mục tiêu theo từng bữa dựa vào tầng ngân sách
+  const breakfastTargetCost = Math.round(tier.targetMealCost * 0.65)
+  const lunchTargetCost = tier.targetMealCost
+  const dinnerTargetCost = Math.round(tier.targetMealCost * 1.35)
+  const cafeTargetCost = Math.round(tier.targetMealCost * 0.5)
+  const ticketTargetCost = isFreeOnly ? 0 : (tier.targetTicketCost || 40000)
+
   for (let d = 1; d <= soNgay; d++) {
     const actDay = []
     
@@ -576,7 +673,6 @@ async function taoLichTrinhThongMinh(duLieu, diaDiemDatabase) {
     
     let dayAnchor = previousAnchor;
 
-    // Ngày mới: Tìm một danh thắng ở cụm hiện tại để làm mỏ neo
     if (d > 1) {
       const unusedAttractions = cAttractions.filter(p => !usedPlaceNames.has(p.name));
       if (unusedAttractions.length > 0) {
@@ -584,9 +680,9 @@ async function taoLichTrinhThongMinh(duLieu, diaDiemDatabase) {
       }
     }
 
-    let lastPlaceInDay = hotelChon; // Luôn bắt đầu ngày mới từ khách sạn
+    let lastPlaceInDay = hotelChon;
 
-    function addActivity(time, type, label, placeObj, fallbackActivityText) {
+    function addActivity(time, type, label, placeObj, fallbackActivityText, overrideCost = null) {
       let travel_from = null;
       let travel_distance_km = null;
       let travel_duration_mins = null;
@@ -605,6 +701,7 @@ async function taoLichTrinhThongMinh(duLieu, diaDiemDatabase) {
       
       const realDesc = sinhMoTaThucTe(placeObj, type, diemDen) || fallbackActivityText;
       const activityText = realDesc;
+      const finalCost = overrideCost !== null ? overrideCost : (placeObj.estimated_cost || 50000);
       
       actDay.push({
         time,
@@ -613,7 +710,7 @@ async function taoLichTrinhThongMinh(duLieu, diaDiemDatabase) {
         place: placeObj.name,
         address: placeObj.address || `Khu vực ${diemDen}`,
         activity: activityText,
-        estimated_cost: placeObj.estimated_cost || 50000,
+        estimated_cost: finalCost,
         rating: placeObj.rating || 4.7,
         review_count: taoSoLuongDanhGia(placeObj.name),
         tags: Array.isArray(placeObj.tags) && placeObj.tags.length > 0 ? placeObj.tags.slice(0, 3) : [],
@@ -624,7 +721,6 @@ async function taoLichTrinhThongMinh(duLieu, diaDiemDatabase) {
         travel_distance_km,
         travel_duration_mins,
         travel_cost,
-        // Bổ sung 5 nhóm dữ liệu mới & trường theo chiến lược Gom nguồn cào
         open_hours: placeObj.open_hours || layGioMoCuaUocTinh(type),
         dwell_time: placeObj.dwell_time || (type === 'attraction' ? '1.5 - 2 tiếng' : type === 'cafe' ? '45 phút' : '1 tiếng'),
         best_time: placeObj.best_time || (type === 'cafe' ? '15:00 - 17:00' : 'Tuỳ chọn'),
@@ -632,7 +728,7 @@ async function taoLichTrinhThongMinh(duLieu, diaDiemDatabase) {
         signature_dishes: placeObj.signature_dishes || [],
         signature_highlight: placeObj.signature_highlight || '',
         price_range: placeObj.price_range || '',
-        ticket_price: placeObj.ticket_price || (type === 'attraction' ? placeObj.estimated_cost : undefined),
+        ticket_price: placeObj.ticket_price || (type === 'attraction' ? finalCost : undefined),
         dress_code: placeObj.dress_code || (type === 'attraction' ? 'Trang phục lịch sự, mang giày bệt/thể thao' : 'Tự do thoải mái'),
         closing_days: placeObj.closing_days || (type === 'attraction' ? 'Mở cửa tất cả các ngày trong tuần' : ''),
         source_target: placeObj.source_target || 'Targeted Multi-Source'
@@ -640,14 +736,38 @@ async function taoLichTrinhThongMinh(duLieu, diaDiemDatabase) {
       lastPlaceInDay = placeObj;
     }
 
-    const restSang = layDiaDiemKhongTrung(cRestaurants.length > 0 ? cRestaurants : availableRestaurants, `Điểm tâm đặc sản ${diemDen}`, 'restaurant', 45000, dayAnchor)
-    addActivity('07:30', 'breakfast', 'Ăn sáng', restSang, `Thưởng thức món ngon đặc trưng xứ ${diemDen}`)
+    if (d === 1) {
+      const originName = duLieu.origin || duLieu.diemKhoiHanh || 'Hà Nội'
+      const nhaXe = duLieu.selected_bus || null
+      const departTime = nhaXe?.depart_times ? nhaXe.depart_times.split(',')[0].trim() : '06:00'
+      const durationStr = nhaXe?.duration || '12 - 14 giờ'
+      const pickupPoint = nhaXe?.pickup || `Điểm tập kết / Bến xe ${originName}`
 
-    const attSang = layDiaDiemKhongTrung(cAttractions.length > 0 ? cAttractions : availableAttractions, `Danh thắng nổi tiếng ${diemDen}`, 'attraction', 100000, dayAnchor)
-    addActivity('09:00', 'attraction', 'Tham quan / Check-in', attSang, `Khám phá địa danh biểu tượng của ${diemDen}`)
+      actDay.push({
+        time: departTime,
+        type: 'transit',
+        label: 'Khởi hành',
+        place: `Khởi hành: ${originName} ➔ ${diemDen}`,
+        address: pickupPoint,
+        travel_from: originName,
+        travel_duration_mins: 120,
+        travel_distance_km: 650,
+        travel_cost: nhaXe?.price ? `${nhaXe.price.toLocaleString('vi-VN')}đ/người` : 'Đã tính trong vé',
+        activity: `Khởi hành từ ${originName} đi ${diemDen}. Phương tiện: ${nhaXe?.name || 'Xe khách chất lượng cao'} (${nhaXe?.type || 'Giường nằm VIP'}). Thời gian di chuyển dự kiến: ${durationStr}. Đón tại: ${pickupPoint}.`,
+        estimated_cost: 0,
+        is_indoor: true
+      })
+    }
 
-    const restTrua = layDiaDiemKhongTrung(cRestaurants.length > 0 ? cRestaurants : availableRestaurants, `Nhà hàng đặc sản ${diemDen}`, 'restaurant', 150000, lastPlaceInDay)
-    addActivity('12:00', 'lunch', 'Ăn trưa', restTrua, `Dùng bữa trưa với các món đặc sản địa phương`)
+    const restSang = layDiaDiemKhongTrung(cRestaurants.length > 0 ? cRestaurants : availableRestaurants, `Điểm tâm đặc sản ${diemDen}`, 'restaurant', breakfastTargetCost, dayAnchor)
+    addActivity('07:30', 'breakfast', 'Ăn sáng', restSang, `Thưởng thức món ngon đặc trưng xứ ${diemDen}`, restSang.estimated_cost || breakfastTargetCost)
+
+    const attSang = layDiaDiemKhongTrung(cAttractions.length > 0 ? cAttractions : availableAttractions, `Danh thắng nổi tiếng ${diemDen}`, 'attraction', ticketTargetCost, dayAnchor)
+    const attSangCost = isFreeOnly ? 0 : (attSang.estimated_cost || ticketTargetCost)
+    addActivity('09:00', 'attraction', 'Tham quan / Check-in', attSang, `Khám phá địa danh biểu tượng của ${diemDen}`, attSangCost)
+
+    const restTrua = layDiaDiemKhongTrung(cRestaurants.length > 0 ? cRestaurants : availableRestaurants, `Nhà hàng đặc sản ${diemDen}`, 'restaurant', lunchTargetCost, lastPlaceInDay)
+    addActivity('12:00', 'lunch', 'Ăn trưa', restTrua, `Dùng bữa trưa với các món đặc sản địa phương`, restTrua.estimated_cost || lunchTargetCost)
 
     if (d === 1) {
       let taxiNote = '';
@@ -679,15 +799,33 @@ async function taoLichTrinhThongMinh(duLieu, diaDiemDatabase) {
       })
       lastPlaceInDay = hotelChon;
     } else {
-      const cafeChieu = layDiaDiemKhongTrung(cCafes.length > 0 ? cCafes : availableCafes, `Quán Cafe view đẹp ${diemDen}`, 'cafe', 50000, lastPlaceInDay)
-      addActivity('14:30', 'cafe', 'Cafe & Chill', cafeChieu, `Thưởng thức cafe và nghỉ ngơi nhẹ`)
+      const cafeChieu = layDiaDiemKhongTrung(cCafes.length > 0 ? cCafes : availableCafes, `Quán Cafe view đẹp ${diemDen}`, 'cafe', cafeTargetCost, lastPlaceInDay)
+      addActivity('14:30', 'cafe', 'Cafe & Chill', cafeChieu, `Thưởng thức cafe và nghỉ ngơi nhẹ`, cafeChieu.estimated_cost || cafeTargetCost)
     }
 
-    const attChieu = layDiaDiemKhongTrung(cAttractions.length > 0 ? cAttractions : availableAttractions, `Điểm check-in chiều ${diemDen}`, 'attraction', 50000, lastPlaceInDay)
-    addActivity('16:00', 'attraction', 'Tham quan / Check-in', attChieu, `Tiếp tục hành trình tham quan buổi chiều`)
+    const attChieu = layDiaDiemKhongTrung(cAttractions.length > 0 ? cAttractions : availableAttractions, `Điểm check-in chiều ${diemDen}`, 'attraction', ticketTargetCost, lastPlaceInDay)
+    const attChieuCost = isFreeOnly ? 0 : (attChieu.estimated_cost || ticketTargetCost)
+    addActivity('16:00', 'attraction', 'Tham quan / Check-in', attChieu, `Tiếp tục hành trình tham quan buổi chiều`, attChieuCost)
 
-    const restToi = layDiaDiemKhongTrung(cRestaurants.length > 0 ? cRestaurants : availableRestaurants, `Nhà hàng ăn tối ${diemDen}`, 'restaurant', 200000, lastPlaceInDay)
-    addActivity('19:00', 'dinner', 'Ăn tối', restToi, `Dùng bữa tối, khám phá ẩm thực về đêm`)
+    const restToi = layDiaDiemKhongTrung(cRestaurants.length > 0 ? cRestaurants : availableRestaurants, `Nhà hàng ăn tối ${diemDen}`, 'restaurant', dinnerTargetCost, lastPlaceInDay)
+    addActivity('19:00', 'dinner', 'Ăn tối', restToi, `Dùng bữa tối, khám phá ẩm thực về đêm`, restToi.estimated_cost || dinnerTargetCost)
+
+    if (d === soNgay) {
+      const originName = duLieu.origin || duLieu.diemKhoiHanh || 'Hà Nội'
+      actDay.push({
+        time: '20:30',
+        type: 'transit',
+        label: 'Chuyến về',
+        place: `Khởi hành về lại ${originName}`,
+        address: `Bến xe / Văn phòng nhà xe tại ${diemDen}`,
+        travel_from: diemDen,
+        travel_duration_mins: 120,
+        travel_distance_km: 650,
+        activity: `Tập trung tại điểm hẹn, lên phương tiện trở về lại ${originName}. Kết thúc chuyến đi khám phá miền Trung an toàn và trọn vẹn kỷ niệm!`,
+        estimated_cost: 0,
+        is_indoor: true
+      })
+    }
 
     mangNgay.push({ day: d, activities: actDay })
     previousAnchor = dayAnchor;
@@ -704,23 +842,19 @@ async function taoLichTrinhThongMinh(duLieu, diaDiemDatabase) {
     hotel_recommendation: {
       name: hotelChon.name,
       address: hotelChon.address || `Trung tâm ${diemDen}`,
-      rating: hotelChon.rating || 4.7,
-      price_per_night: hotelChon.estimated_cost || 850000,
-      description: hotelChon.description || `Khách sạn nghỉ dưỡng tiện nghi tại ${diemDen}`
+      rating: hotelChon.rating || (tier.key === 'T4' ? 4.9 : 4.7),
+      price_per_night: hotelChon.estimated_cost || defaultHotelPrice,
+      description: hotelChon.description || `${tier.hotelDesc} tại ${diemDen}`
     },
-    budget_breakdown: taoPhanBoNganSach(nganSach),
+    budget_breakdown: allocation.breakdown,
+    budget_tier: tier,
     days: mangNgay
   }
 }
 
-function taoPhanBoNganSach(nganSach) {
-  return {
-    hotel: Math.round(nganSach * 0.35),
-    food: Math.round(nganSach * 0.25),
-    transportation: Math.round(nganSach * 0.15),
-    tickets: Math.round(nganSach * 0.15),
-    reserve: Math.round(nganSach * 0.1)
-  }
+function taoPhanBoNganSach(nganSach, days = 3, people = 1) {
+  const allocation = optimizeBudgetAllocation(nganSach, days, people)
+  return allocation.breakdown
 }
 
 function boSungDuLieuLichTrinh(lichTrinh, duLieu, diaDiemDatabase) {
@@ -737,27 +871,9 @@ function boSungDuLieuLichTrinh(lichTrinh, duLieu, diaDiemDatabase) {
   // Bổ sung địa chỉ và tọa độ từ DB nếu AI chưa điền cho activity
   const diaDiemList = diaDiemDatabase || []
   const placeDataMap = new Map(diaDiemList.map(p => [p.name.toLowerCase().trim(), p]))
-  
-  let validatedHotelRec = lichTrinh.hotel_recommendation || defaultHotel;
-  if (validatedHotelRec && validatedHotelRec.name) {
-    const hName = validatedHotelRec.name.toLowerCase().trim();
-    if (placeDataMap.has(hName) && placeDataMap.get(hName).estimated_cost) {
-      validatedHotelRec.price_per_night = placeDataMap.get(hName).estimated_cost;
-    } else {
-      const nguoi = Math.max(1, Number(duLieu.people) || 1);
-      const ngay = Math.max(1, Number(duLieu.days) || 1);
-      const budgetPerDay = nganSach / (nguoi * ngay);
-      const minRealisticPrice = budgetPerDay > 1000000 ? 500000 : 200000;
-      validatedHotelRec.price_per_night = Number(String(validatedHotelRec.price_per_night).replace(/[^\d]/g, '')) || 0;
-      if (!validatedHotelRec.price_per_night || validatedHotelRec.price_per_night < minRealisticPrice) {
-        validatedHotelRec.price_per_night = Math.round(nganSach * 0.35 / ngay);
-        if (validatedHotelRec.price_per_night < 150000) validatedHotelRec.price_per_night = 150000;
-      }
-    }
-  }
 
   const updatedDays = (lichTrinh.days || []).map(day => {
-    let prevNode = validatedHotelRec;
+    let prevNode = lichTrinh.hotel_recommendation || defaultHotel;
     const activities = (day.activities || []).map(act => {
       let addr = act.address
       let lat = act.latitude || null
@@ -781,18 +897,6 @@ function boSungDuLieuLichTrinh(lichTrinh, duLieu, diaDiemDatabase) {
         addr = foundPlace.address || addr
         lat = foundPlace.latitude || lat
         lng = foundPlace.longitude || lng
-      }
-
-      // FALLBACK TOẠ ĐỘ NẾU KHÔNG CÓ TRONG DB (Giúp map không bị lỗi)
-      if (!lat || !lng) {
-        const dLower = (duLieu.destination || '').toLowerCase();
-        const base = dLower.includes('đà nẵng') ? [16.0544, 108.2022] 
-                   : dLower.includes('huế') ? [16.4637, 107.5909]
-                   : dLower.includes('hội an') ? [15.8801, 108.3380]
-                   : dLower.includes('đà lạt') ? [11.9404, 108.4583]
-                   : [16.0544, 108.2022];
-        lat = base[0] + (Math.random() - 0.5) * 0.04;
-        lng = base[1] + (Math.random() - 0.5) * 0.04;
       }
 
       if (!addr || addr === duLieu.destination) {
@@ -898,20 +1002,83 @@ function boSungDuLieuLichTrinh(lichTrinh, duLieu, diaDiemDatabase) {
     };
   });
 
+  const isFreeOnly = Boolean(duLieu.free_places_only)
+  const numDaysCalculated = updatedDays.length || Number(duLieu.days) || 3
+  const numPeopleCalculated = Number(lichTrinh.people) || Number(duLieu.people) || 1
+  const totalBudgetCalculated = Number(lichTrinh.total_budget) || nganSach
+  const allocation = optimizeBudgetAllocation(totalBudgetCalculated, numDaysCalculated, numPeopleCalculated, null, isFreeOnly)
+
+  // Nếu ở chế độ free_places_only, đảm bảo tất cả điểm tham quan có chi phí vé = 0
+  if (isFreeOnly) {
+    updatedDays.forEach(d => {
+      (d.activities || []).forEach(act => {
+        if (act.type === 'attraction' || act.type === 'checkin') {
+          act.estimated_cost = 0;
+          act.ticket_price = 0;
+        }
+      });
+    });
+  }
+
   const finalResult = {
     ...lichTrinh,
     destination: lichTrinh.destination || duLieu.destination,
-    total_budget: Number(lichTrinh.total_budget) || nganSach,
-    people: Number(lichTrinh.people) || Number(duLieu.people) || 1,
+    total_budget: totalBudgetCalculated,
+    people: numPeopleCalculated,
+    free_places_only: isFreeOnly,
     interests: lichTrinh.interests || duLieu.interests || [],
     selected_places: duLieu.selected_places || lichTrinh.selected_places || [],
     transportation: lichTrinh.transportation || duLieu.transportation || 'linh hoạt',
     hotel_request: lichTrinh.hotel_request || duLieu.hotel_request || '',
-    hotel_recommendation: validatedHotelRec,
-    budget_breakdown: lichTrinh.budget_breakdown || taoPhanBoNganSach(nganSach),
+    hotel_recommendation: lichTrinh.hotel_recommendation || defaultHotel,
+    budget_breakdown: isFreeOnly ? allocation.breakdown : (lichTrinh.budget_breakdown || allocation.breakdown),
+    budget_tier: allocation.tierInfo,
     daysList: updatedDays,
     days: updatedDays
   }
+
+  // Đồng bộ chi phí khách sạn & ngân sách theo đúng thực tế địa điểm gợi ý
+  const hotelObj = finalResult.hotel_recommendation || defaultHotel
+  const hotelPrice = Number(hotelObj?.price_per_night) || 850000
+  const nightsCount = Math.max(1, updatedDays.length)
+  // Nếu là homestay/dorm (<= 300k): tính theo người/đêm (90k * 2 người * 5 đêm = 900k)
+  const realHotelCost = hotelPrice <= 300000
+    ? Math.round(hotelPrice * numPeopleCalculated * nightsCount)
+    : Math.round(hotelPrice * Math.max(1, Math.ceil(numPeopleCalculated / 2)) * nightsCount)
+
+  if (!finalResult.budget_breakdown) finalResult.budget_breakdown = {}
+  finalResult.budget_breakdown.hotel = realHotelCost
+
+  // Đồng bộ chi phí ăn uống & vé tham quan theo số người thực tế
+  let realFood = 0
+  let realTickets = 0
+  updatedDays.forEach(day => {
+    (day.activities || []).forEach(act => {
+      const c = Number(act.estimated_cost) || 0
+      if (['breakfast', 'lunch', 'dinner', 'restaurant'].includes(act.type)) {
+        realFood += c * numPeopleCalculated
+      } else if (['attraction', 'checkin'].includes(act.type)) {
+        realTickets += c * numPeopleCalculated
+      }
+    })
+  })
+
+  if (realFood > 0) finalResult.budget_breakdown.food = realFood
+  if (isFreeOnly) finalResult.budget_breakdown.tickets = 0
+  else if (realTickets > 0) finalResult.budget_breakdown.tickets = realTickets
+
+  const calculatedSubtotal = (finalResult.budget_breakdown.hotel || 0) +
+    (finalResult.budget_breakdown.food || 0) +
+    (finalResult.budget_breakdown.transportation || 0) +
+    (finalResult.budget_breakdown.tickets || 0)
+  const userTargetBudget = Number(duLieu.budget) || 3000000
+  finalResult.target_budget = userTargetBudget
+  finalResult.user_budget = userTargetBudget
+  finalResult.calculated_total = calculatedSubtotal + finalResult.budget_breakdown.reserve
+  finalResult.total_budget = finalResult.calculated_total
+
+  // Cân bằng chi phí thực tế (Audit: vé xe + khách sạn + ăn uống + vé vào cổng)
+  finalResult.budget_audit = auditTripBudget(finalResult, userTargetBudget, allocation.tierInfo.key)
   require('fs').writeFileSync('debug_plan.json', JSON.stringify(finalResult, null, 2))
   return finalResult
 }
@@ -983,54 +1150,15 @@ Chỉ trả về JSON có cấu trúc: {"days":[{"day":number,"activities":[{"ti
   return trip.days
 }
 
-async function phanTichYeuCau(promptText) {
-  const apiKey = getGeminiKey()
-  if (!apiKey) {
-    throw new Error('Hệ thống chưa được cấu hình AI. Vui lòng liên hệ Admin.')
-  }
-
-  const model = 'gemini-1.5-flash'
-  const prompt = `Bạn là chuyên gia phân tích ngôn ngữ tự nhiên. Yêu cầu của người dùng về chuyến đi: "${promptText}"
-
-Hãy trích xuất các thông tin sau và trả về định dạng JSON:
-- diemDen: (string) Tên địa điểm, ưu tiên ở Miền Trung Việt Nam (ví dụ: Đà Nẵng, Phú Quốc, Huế). Nếu không tìm thấy, mặc định là "Đà Nẵng".
-- soNgay: (number) Số ngày đi (ví dụ: 4N3Đ -> 4). Mặc định là 3.
-- soNguoi: (number) Số người. Mặc định là 1.
-- nganSach: (number) Tổng ngân sách (VNĐ) (ví dụ: 15 triệu -> 15000000). Mặc định là 5000000.
-- kieuDuLich: (string) Kiểu du lịch phù hợp (Nghỉ dưỡng, Khám phá, Trải nghiệm...).
-- soThich: (string) Các ghi chú, sở thích thêm.
-
-Chỉ trả về JSON có dạng: {"diemDen": "...", "soNgay": 3, "soNguoi": 2, "nganSach": 15000000, "kieuDuLich": "...", "soThich": "..."}
-Tuyệt đối không kèm text nào khác ngoài JSON.`
-
-  try {
-    const res = await axios.post(
-      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-      { contents: [{ parts: [{ text: prompt }] }] },
-      { headers: { 'Content-Type': 'application/json' }, timeout: 15000 }
-    )
-    const raw = res.data.candidates?.[0]?.content?.parts?.[0]?.text
-    const parsed = parseJsonResponse(raw || '')
-    return {
-      diemDen: parsed.diemDen || 'Đà Nẵng',
-      soNgay: parsed.soNgay || 3,
-      soNguoi: parsed.soNguoi || 1,
-      nganSach: parsed.nganSach || 5000000,
-      kieuDuLich: parsed.kieuDuLich || 'Khám phá',
-      soThich: parsed.soThich || ''
-    }
-  } catch (err) {
-    console.error('Lỗi phân tích AI:', err.message)
-    // Fallback if AI fails
-    return {
-      diemDen: 'Đà Nẵng', soNgay: 3, soNguoi: 2, nganSach: 6000000, kieuDuLich: 'Khám phá', soThich: promptText
-    }
-  }
+function taoPhanHoiChatMock(message, trip) {
+  const diaDiem = trip?.destination || 'Miền Trung'
+  return `Tại ${diaDiem}, bạn nhất định nên trải nghiệm các thắng cảnh nổi tiếng và thưởng thức ẩm thực đặc sản trứ danh địa phương. Bạn cần tôi gợi ý thêm về quán ăn, điểm check-in hay khách sạn nào không?`
 }
 
 module.exports = {
   taoLichTrinh,
   taoPhanHoiChat,
   taoLichTrinhLai,
-  phanTichYeuCau
+  taoLichTrinhThongMinh,
+  boSungDuLieuLichTrinh
 }

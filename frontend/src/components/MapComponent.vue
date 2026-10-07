@@ -157,10 +157,10 @@
         <!-- TRƯỜNG HỢP 2: GHIM ĐƠN LẺ (KHI ZOOM GẦN HOẶC TẮT GOM CỤM HOẶC LỌC DANH MỤC) -->
         <template v-else>
           <l-marker
-            v-for="place in filteredPlaces"
+            v-for="(place, index) in filteredPlaces"
             :key="place._id || place.name"
             :lat-lng="[place.latitude, place.longitude]"
-            :icon="getCustomPin(place.type)"
+            :icon="getCustomPin(place.type, place.name, index)"
           >
             <l-popup>
               <div class="gmap-popup">
@@ -479,8 +479,8 @@ onMounted(() => {
   }, 400)
 })
 
-// Tạo Marker Pin dạng giọt nước SVG với màu sắc riêng cho từng loại địa điểm
-function getCustomPin(type) {
+// Tạo Marker Pin dạng ghim với avatar của thành viên
+function getCustomPin(type, placeName = '', index = 0) {
   const configs = {
     attraction: { color: '#0d9488', emoji: '🏛️' }, // Đồng bộ Teal chủ đạo
     restaurant: { color: '#e65100', emoji: '🍲' },
@@ -488,12 +488,17 @@ function getCustomPin(type) {
     hotel:      { color: '#0284c7', emoji: '🏨' }
   }
   const cfg = configs[type] || { color: '#0d9488', emoji: '📍' }
+  
+  // Chọn avatar (hash dựa trên tên địa điểm)
+  const friendIdx = (placeName.length + index) % 5;
+  const avatars = ['/shrek.jpg', '/avatars/friend1.png', '/avatars/friend2.jpg', '/avatars/friend3.jpg', '/avatars/friend4.jpg'];
+  const avatarSrc = avatars[friendIdx];
 
   const html = `
     <div style="
       position: relative;
-      width: 32px;
-      height: 32px;
+      width: 44px;
+      height: 44px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -504,8 +509,9 @@ function getCustomPin(type) {
       box-shadow: 0 4px 12px rgba(0,0,0,0.35);
       cursor: pointer;
       transition: transform 0.2s ease;
+      overflow: hidden;
     ">
-      <span style="transform: rotate(45deg); font-size: 14px; user-select: none;">${cfg.emoji}</span>
+      <img src="${avatarSrc}" style="width: 130%; height: 130%; object-fit: cover; transform: rotate(45deg); border-radius: 50%;" />
     </div>
   `
 

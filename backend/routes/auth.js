@@ -11,7 +11,7 @@ function createToken(user){
 }
 
 function publicUser(user){
-  return { id: user._id, name: user.name, email: user.email, interests: user.interests || [], role: user.role || 'user', avatar: user.avatar || '', bio: user.bio || '', points: user.points || 0, completed_trips: user.completed_trips || 0 }
+  return { id: user._id, name: user.name, email: user.email, interests: user.interests || [], role: user.role || 'user' }
 }
 
 router.post('/register', async (req, res) => {
@@ -63,25 +63,6 @@ router.get('/me', requireAuth, async (req, res) => {
   const user = await User.findById(req.userId).select('-password_hash')
   if(!user) return res.status(404).json({ error: 'Người dùng không tồn tại' })
   res.json(publicUser(user))
-})
-
-router.put('/update-profile', requireAuth, async (req, res) => {
-  if (req.userId === 'admin_id_001') {
-    return res.status(403).json({ error: 'Không thể sửa hồ sơ Admin' })
-  }
-  try {
-    const { name, avatar, bio } = req.body
-    const updates = {}
-    if (name) updates.name = name
-    if (avatar !== undefined) updates.avatar = avatar
-    if (bio !== undefined) updates.bio = bio
-    
-    const user = await User.findByIdAndUpdate(req.userId, updates, { new: true })
-    if (!user) return res.status(404).json({ error: 'Người dùng không tồn tại' })
-    res.json(publicUser(user))
-  } catch (err) {
-    res.status(500).json({ error: 'Lỗi cập nhật hồ sơ' })
-  }
 })
 
 module.exports = router

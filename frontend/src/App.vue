@@ -39,28 +39,11 @@
             <div class="hero-content">
               <span class="hero-badge">AI TRAVEL ASSISTANT</span>
               <h2>Lên lịch đi chơi, đừng lên lịch cãi nhau.</h2>
-              <p style="margin-bottom: 24px;">AI sắp xếp lịch trình, bạn chỉ cần quyết định... ai trả tiền.</p>
-              
-              <form class="hero-ai-chat-form" @submit.prevent="submitAiPrompt" style="display: flex; align-items: center; background: white; border-radius: 50px; padding: 6px 6px 6px 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); max-width: 600px; margin: 0 auto; transition: box-shadow 0.3s;" :style="isDark ? 'background: #1e293b; box-shadow: 0 10px 30px rgba(0,0,0,0.5);' : ''">
-                <span style="font-size: 1.5rem; margin-right: 12px; animation: robotBounce 2s infinite;">🤖</span>
-                  <input 
-                    type="text" 
-                    v-model="aiPromptText" 
-                    placeholder="Ví dụ: Phú Quốc 4N3Đ, 2 người..." 
-                    :disabled="isParsingPrompt"
-                    style="flex: 1; min-width: 0; border: none; outline: none; background: transparent; font-size: 1rem; color: var(--text-main); font-weight: 500;"
-                    :style="isDark ? 'color: white;' : ''"
-                  />
-                <button 
-                  type="submit" 
-                  :disabled="!aiPromptText || isParsingPrompt"
-                  style="width: 48px; height: 48px; border-radius: 50%; border: none; background: var(--primary); color: white; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: all 0.2s; margin-left: 12px; flex-shrink: 0;"
-                  :style="(!aiPromptText || isParsingPrompt) ? 'opacity: 0.5; cursor: not-allowed;' : 'box-shadow: 0 4px 12px rgba(13, 124, 118, 0.3);'"
-                >
-                  <span v-if="isParsingPrompt" style="width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 1s linear infinite;"></span>
-                  <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                </button>
-              </form>
+              <p>AI sắp xếp lịch trình, bạn chỉ cần quyết định... ai trả tiền.</p>
+              <button class="hero-cta-btn" @click="startPlannerTransition">
+                <span>Lên lịch trình ngay</span>
+                <strong>→</strong>
+              </button>
             </div>
           </div>
 
@@ -119,6 +102,129 @@
                 </span>
                 <span class="city-name">{{ city.displayName || city.name }}</span>
                 <small class="city-tag">{{ city.tag }}</small>
+              </div>
+            </div>
+
+            <!-- HERO SHOWCASE & THUMBNAILS GALLERY TỈNH THÀNH (THEO VIETRAVEL / TRAVELOKA) -->
+            <div class="province-spotlight-card" v-if="currentSpotlight" v-reveal>
+              <div class="spotlight-visual-column">
+                <!-- Ảnh lớn hero -->
+                <div class="spotlight-hero-wrap">
+                  <img
+                    :src="activeHeroImage"
+                    :alt="currentSpotlight.title"
+                    class="spotlight-hero-img"
+                    loading="lazy"
+                  />
+                  <div class="spotlight-overlay"></div>
+                  <!-- Badge ESG & LEI chuẩn quốc tế bên dưới góc trái ảnh -->
+                  <div class="spotlight-badge-esg">
+                    <span class="esg-icon">🌿</span>
+                    <strong>{{ currentSpotlight.esgText }}</strong>
+                  </div>
+                  <!-- Badge chứng nhận góc trên bên phải -->
+                  <div class="spotlight-badge-cert" v-if="currentSpotlight.badge">
+                    <span>🏅 {{ currentSpotlight.badge }}</span>
+                  </div>
+                  <!-- Nút bấm phóng to ảnh toàn màn hình góc dưới bên phải -->
+                  <button
+                    type="button"
+                    class="spotlight-fullscreen-btn"
+                    @click="isSpotlightModalOpen = true"
+                    title="Phóng to ảnh toàn màn hình"
+                  >
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2">
+                      <polyline points="15 3 21 3 21 9"></polyline>
+                      <polyline points="9 21 3 21 3 15"></polyline>
+                      <line x1="21" y1="3" x2="14" y2="10"></line>
+                      <line x1="3" y1="21" x2="10" y2="14"></line>
+                    </svg>
+                  </button>
+                </div>
+
+                <!-- Dãy 5 hình ảnh miêu tả bên dưới để bấm chuyển ảnh -->
+                <div class="spotlight-thumbnails-row">
+                  <button
+                    v-for="(thumb, idx) in currentSpotlight.gallery"
+                    :key="idx"
+                    type="button"
+                    :class="['spotlight-thumb-btn', { active: activeHeroImage === thumb.image }]"
+                    @click="selectedSpotlightImage = thumb.image"
+                    :title="thumb.name"
+                  >
+                    <img :src="thumb.image" :alt="thumb.name" loading="lazy" />
+                    <span class="thumb-caption">{{ thumb.name }}</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Cột thông tin chi tiết về Tỉnh / Thành phố -->
+              <div class="spotlight-info-column">
+                <div class="spotlight-header-meta">
+                  <span class="spotlight-tag-kicker">✨ ĐIỂM ĐẾN NỔI BẬT MIỀN TRUNG</span>
+                  <span class="spotlight-cert-sub">{{ currentSpotlight.certText }}</span>
+                </div>
+                <h3 class="spotlight-title">{{ currentSpotlight.title }}</h3>
+                <p class="spotlight-subtitle">{{ currentSpotlight.subtitle }}</p>
+                <p class="spotlight-description">{{ currentSpotlight.description }}</p>
+
+                <!-- Đặc sản nổi tiếng -->
+                <div class="spotlight-highlight-box">
+                  <div class="shb-label">🍲 <b>Đặc sản trứ danh:</b></div>
+                  <div class="shb-chips">
+                    <span v-for="spec in currentSpotlight.specialties" :key="spec" class="spotlight-spec-chip">
+                      {{ spec }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Mùa du lịch lý tưởng -->
+                <div class="spotlight-highlight-box">
+                  <div class="shb-label">🌤️ <b>Thời điểm lý tưởng:</b></div>
+                  <p class="shb-text">{{ currentSpotlight.bestSeason }}</p>
+                </div>
+
+                <!-- Nút CTA chuyển sang lên lịch trình ngay -->
+                <div class="spotlight-actions">
+                  <button
+                    type="button"
+                    class="spotlight-cta-btn"
+                    @click="chuyenSangLenLichTrinh(formDuLieu.diemDen)"
+                  >
+                    <span>✨ Lên lịch trình đến {{ formDuLieu.diemDen === ALL_DESTINATIONS ? 'Miền Trung' : formDuLieu.diemDen }} ngay</span>
+                    <strong>→</strong>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- MODAL PHÓNG TO ẢNH FULLSCREEN KHI CLICK ICON ZOOM -->
+            <div
+              v-if="isSpotlightModalOpen"
+              class="spotlight-modal-backdrop"
+              @click.self="isSpotlightModalOpen = false"
+            >
+              <div class="spotlight-modal-box">
+                <button
+                  type="button"
+                  class="spotlight-modal-close"
+                  @click="isSpotlightModalOpen = false"
+                >✕</button>
+                <img :src="activeHeroImage" :alt="currentSpotlight.title" class="spotlight-modal-img" />
+                <div class="spotlight-modal-footer">
+                  <h4>{{ currentSpotlight.title }}</h4>
+                  <div class="spotlight-modal-thumbs">
+                    <button
+                      v-for="(thumb, idx) in currentSpotlight.gallery"
+                      :key="'modal-' + idx"
+                      type="button"
+                      :class="['sm-thumb-btn', { active: activeHeroImage === thumb.image }]"
+                      @click="selectedSpotlightImage = thumb.image"
+                    >
+                      <img :src="thumb.image" :alt="thumb.name" />
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -401,22 +507,82 @@
                 </div>
               </div>
 
-              <!-- Số ngày & Số người -->
-              <div class="app-field">
-                <label>Số ngày đi</label>
-                <div class="stepper-input">
-                  <button type="button" @click="formDuLieu.soNgay = Math.max(1, formDuLieu.soNgay - 1)">-</button>
-                  <span>{{ formDuLieu.soNgay }} ngày</span>
-                  <button type="button" @click="formDuLieu.soNgay++">+</button>
+              <!-- LỊCH TRÌNH KHỞI HÀNH & QUY MÔ CHUYẾN ĐI (KHỐI THỐNG NHẤT GỌN ĐẸP) -->
+              <div class="departure-schedule-box full-width">
+                <div class="dsb-header">
+                  <div class="dsb-title-wrap">
+                    <span class="dsb-icon">📅</span>
+                    <div>
+                      <h4 class="dsb-title">Lịch trình khởi hành & Quy mô chuyến đi</h4>
+                      <small class="dsb-subtitle">Chọn tháng dự kiến, ngày bắt đầu, số ngày đi và số lượng thành viên</small>
+                    </div>
+                  </div>
+                  <span class="dsb-duration-tag">Trọn vẹn {{ formDuLieu.soNgay }} ngày {{ Math.max(0, formDuLieu.soNgay - 1) }} đêm • {{ formDuLieu.soNguoi }} người</span>
                 </div>
-              </div>
 
-              <div class="app-field">
-                <label>Số người</label>
-                <div class="stepper-input">
-                  <button type="button" @click="formDuLieu.soNguoi = Math.max(1, formDuLieu.soNguoi - 1)">-</button>
-                  <span>{{ formDuLieu.soNguoi }} người</span>
-                  <button type="button" @click="formDuLieu.soNguoi++">+</button>
+                <!-- Dãy nút chọn tháng kiểu viên thuốc -->
+                <div class="month-pills-row">
+                  <button
+                    v-for="m in DEPARTURE_MONTHS"
+                    :key="m.key"
+                    type="button"
+                    :class="['month-pill-btn', { active: selectedMonthKey === m.key }]"
+                    @click="chonThangKhoiHanh(m)"
+                  >
+                    <span>Tháng {{ m.key.split('-')[1] }}</span>
+                    <strong>{{ m.key.split('-')[0] }}</strong>
+                  </button>
+                </div>
+
+                <!-- Khối thống nhất 4 thông số: Ngày đi, Số ngày, Số người, Ngày về -->
+                <div class="dsb-unified-controls-grid">
+                  <div class="dsb-ctrl-field">
+                    <label>🛫 Ngày bắt đầu:</label>
+                    <input
+                      type="date"
+                      v-model="formDuLieu.ngayBatDau"
+                      class="app-input departure-date-input"
+                      :min="todayIso"
+                    />
+                  </div>
+
+                  <div class="dsb-ctrl-field">
+                    <label>⏱️ Số ngày đi:</label>
+                    <div class="stepper-input dsb-stepper">
+                      <button type="button" @click="formDuLieu.soNgay = Math.max(1, formDuLieu.soNgay - 1)">-</button>
+                      <span class="dsb-stepper-val">{{ formDuLieu.soNgay }} ngày</span>
+                      <button type="button" @click="formDuLieu.soNgay++">+</button>
+                    </div>
+                  </div>
+
+                  <div class="dsb-ctrl-field">
+                    <label>👥 Số người tham gia:</label>
+                    <div class="stepper-input dsb-stepper">
+                      <button type="button" @click="formDuLieu.soNguoi = Math.max(1, formDuLieu.soNguoi - 1)">-</button>
+                      <span class="dsb-stepper-val">{{ formDuLieu.soNguoi }} người</span>
+                      <button type="button" @click="formDuLieu.soNguoi++">+</button>
+                    </div>
+                  </div>
+
+                  <div class="dsb-ctrl-field">
+                    <label>🛬 Ngày về (Tự động):</label>
+                    <input
+                      type="date"
+                      :value="formDuLieu.ngayKetThuc || ngayKetThucDisplay"
+                      class="app-input departure-date-input disabled-input"
+                      readonly
+                    />
+                  </div>
+                </div>
+
+                <!-- Tóm tắt lịch trình chi tiết -->
+                <div class="trip-date-summary-banner" v-if="formDuLieu.ngayBatDau">
+                  <span class="tdsb-icon">✨</span>
+                  <div class="tdsb-text">
+                    Lịch trình: <b>{{ dinhDangNgayTuan(formDuLieu.ngayBatDau) }}</b>
+                    ➔ <b>{{ dinhDangNgayTuan(formDuLieu.ngayKetThuc || ngayKetThucDisplay) }}</b>
+                    <span>({{ formDuLieu.soNgay }} ngày {{ Math.max(0, formDuLieu.soNgay - 1) }} đêm • {{ formDuLieu.soNguoi }} khách tại {{ formDuLieu.diemDen }})</span>
+                  </div>
                 </div>
               </div>
 
@@ -433,37 +599,29 @@
                 <input
                   type="range"
                   v-model.number="formDuLieu.nganSach"
-                  min="100000"
+                  min="1000000"
                   max="30000000"
-                  step="100000"
+                  step="500000"
                   class="budget-slider"
                 />
 
-                <!-- Phím tắt chọn nhanh ngân sách -->
+                <!-- Phím tắt chọn nhanh ngân sách (Đã loại bỏ các mức không khả thi 100k - 500k) -->
                 <div class="quick-budget-chips">
                   <button
                     type="button"
                     class="q-budget-chip"
-                    :class="{ active: formDuLieu.nganSach === 100000 }"
-                    @click="formDuLieu.nganSach = 100000"
+                    :class="{ active: formDuLieu.nganSach === 1000000 }"
+                    @click="formDuLieu.nganSach = 1000000"
                   >
-                    100K 🚨
+                    1 Tr 🎒
                   </button>
                   <button
                     type="button"
                     class="q-budget-chip"
-                    :class="{ active: formDuLieu.nganSach === 500000 }"
-                    @click="formDuLieu.nganSach = 500000"
+                    :class="{ active: formDuLieu.nganSach === 2000000 }"
+                    @click="formDuLieu.nganSach = 2000000"
                   >
-                    500K 💸
-                  </button>
-                  <button
-                    type="button"
-                    class="q-budget-chip"
-                    :class="{ active: formDuLieu.nganSach === 1500000 }"
-                    @click="formDuLieu.nganSach = 1500000"
-                  >
-                    1.5 Tr 🎒
+                    2 Tr 🌿
                   </button>
                   <button
                     type="button"
@@ -489,6 +647,88 @@
                   >
                     15 Tr 💎
                   </button>
+                  <button
+                    type="button"
+                    class="q-budget-chip"
+                    :class="{ active: formDuLieu.nganSach === 30000000 }"
+                    @click="formDuLieu.nganSach = 30000000"
+                  >
+                    30 Tr 👑
+                  </button>
+                </div>
+
+                <!-- CẢNH BÁO CHUYẾN ĐI BẤT KHẢ THI HOẶC CHỌN ĐIỂM FREE -->
+                <div v-if="!tripFeasibility.feasible" class="unfeasible-warning-box">
+                  <div class="uwb-header">
+                    <span class="uwb-icon">🚨</span>
+                    <div class="uwb-header-text">
+                      <strong class="uwb-title">Yêu cầu chưa khả thi về mặt tài chính</strong>
+                      <p class="uwb-desc">{{ tripFeasibility.message }}</p>
+                    </div>
+                  </div>
+                  
+                  <div class="uwb-actions">
+                    <button
+                      type="button"
+                      class="uwb-btn btn-budget-fix"
+                      @click="formDuLieu.nganSach = tripFeasibility.minFeasibleBudget"
+                    >
+                      ⚡ Tự động nâng ngân sách lên {{ dinhDangTien(tripFeasibility.minFeasibleBudget) }}đ
+                    </button>
+                    <button
+                      v-if="tripFeasibility.maxFeasibleDays < formDuLieu.soNgay"
+                      type="button"
+                      class="uwb-btn btn-days-fix"
+                      @click="formDuLieu.soNgay = tripFeasibility.maxFeasibleDays"
+                    >
+                      ⏱️ Rút ngắn lịch trình xuống {{ tripFeasibility.maxFeasibleDays }} ngày
+                    </button>
+                  </div>
+
+                  <!-- Tuỳ chọn: Điểm 100% miễn phí vé -->
+                  <div class="uwb-free-choice">
+                    <label class="uwb-checkbox-label">
+                      <input
+                        type="checkbox"
+                        v-model="formDuLieu.freePlacesOnly"
+                        class="uwb-checkbox"
+                      />
+                      <span>🏖️ <strong>Chấp nhận phượt tự túc:</strong> Chỉ gợi ý các địa điểm 100% MIỄN PHÍ VÉ (Tự lo ăn ở tiết kiệm)</span>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- BANNER BÁO ĐANG Ở CHẾ ĐỘ 100% FREE VÉ -->
+                <div v-else-if="formDuLieu.freePlacesOnly" class="free-mode-banner">
+                  <div class="fmb-left">
+                    <span class="fmb-icon">🟢</span>
+                    <div>
+                      <strong>Đang bật chế độ: 100% Địa điểm Miễn Phí Vé</strong>
+                      <p>AI sẽ chỉ chọn các danh lam thắng cảnh 0đ (bãi biển, phố đi bộ, cầu biểu tượng, chợ đêm, chùa...). Vé tham quan = 0đ.</p>
+                    </div>
+                  </div>
+                  <button type="button" class="fmb-turnoff" @click="formDuLieu.freePlacesOnly = false">✕ Tắt</button>
+                </div>
+
+                <!-- THẺ NHẬN DIỆN PHÂN TẦNG NGÂN SÁCH THÔNG MINH (TIER INDICATOR) -->
+                <div class="tier-indicator-banner" :style="{ borderColor: currentBudgetTier.color }">
+                  <div class="tib-left">
+                    <span class="tib-icon">{{ currentBudgetTier.icon }}</span>
+                    <div>
+                      <div class="tib-badge-row">
+                        <span class="tib-badge" :style="{ backgroundColor: currentBudgetTier.color }">{{ currentBudgetTier.badge }}</span>
+                        <strong class="tib-title">{{ currentBudgetTier.name }}</strong>
+                      </div>
+                      <p class="tib-rate">
+                        Định mức: <b>~{{ dinhDangTien(currentBudgetTier.perPersonPerDay) }}đ</b> / người / ngày
+                      </p>
+                    </div>
+                  </div>
+                  <div class="tib-tags">
+                    <span class="tib-tag" title="Tiêu chuẩn chỗ nghỉ">🏨 {{ currentBudgetTier.hotelDesc }}</span>
+                    <span class="tib-tag" title="Tiêu chuẩn ẩm thực">🍜 {{ currentBudgetTier.foodDesc }}</span>
+                    <span class="tib-tag" title="Tiêu chuẩn di chuyển">🚌 {{ currentBudgetTier.transportDesc }}</span>
+                  </div>
                 </div>
 
                 <!-- DỰ TOÁN CHI PHÍ THÔNG MINH (DYNAMIC BUDGET BREAKDOWN) -->
@@ -602,31 +842,6 @@
                 </div>
               </div>
 
-              <!-- PHONG CÁCH NHẬN PHÒNG -->
-              <div class="input-group full-width-group">
-                <div class="input-label-row">
-                  <label style="font-size: 1.05rem; font-weight: 700; color: #1e293b;">Phong cách nhận phòng khách sạn</label>
-                </div>
-                <div class="checkin-preference-options" style="display: flex; gap: 12px; margin-top: 12px; flex-wrap: wrap;">
-                  <label :class="['pref-card', { active: formDuLieu.hotel_checkin_preference === 'checkin_first' }]" style="flex: 1; min-width: 200px; cursor: pointer; padding: 16px; border-radius: 12px; border: 2px solid; transition: all 0.2s; display: flex; align-items: flex-start; gap: 12px;" :style="{ borderColor: formDuLieu.hotel_checkin_preference === 'checkin_first' ? '#10b981' : '#e2e8f0', backgroundColor: formDuLieu.hotel_checkin_preference === 'checkin_first' ? '#ecfdf5' : '#f8fafc' }">
-                    <input type="radio" v-model="formDuLieu.hotel_checkin_preference" value="checkin_first" style="display: none;" />
-                    <span style="font-size: 1.5rem; line-height: 1;">🏨</span>
-                    <div>
-                      <strong style="display: block; color: #0f172a; font-size: 0.95rem; margin-bottom: 4px;">Cất đồ / Nhận phòng trước</strong>
-                      <span style="color: #475569; font-size: 0.85rem; line-height: 1.4; display: block;">Nhận phòng sớm nhất có thể rồi mới bắt đầu đi chơi.</span>
-                    </div>
-                  </label>
-                  <label :class="['pref-card', { active: formDuLieu.hotel_checkin_preference === 'play_first' }]" style="flex: 1; min-width: 200px; cursor: pointer; padding: 16px; border-radius: 12px; border: 2px solid; transition: all 0.2s; display: flex; align-items: flex-start; gap: 12px;" :style="{ borderColor: formDuLieu.hotel_checkin_preference === 'play_first' ? '#10b981' : '#e2e8f0', backgroundColor: formDuLieu.hotel_checkin_preference === 'play_first' ? '#ecfdf5' : '#f8fafc' }">
-                    <input type="radio" v-model="formDuLieu.hotel_checkin_preference" value="play_first" style="display: none;" />
-                    <span style="font-size: 1.5rem; line-height: 1;">🎢</span>
-                    <div>
-                      <strong style="display: block; color: #0f172a; font-size: 0.95rem; margin-bottom: 4px;">Đi chơi luôn</strong>
-                      <span style="color: #475569; font-size: 0.85rem; line-height: 1.4; display: block;">Chơi đến tối muộn mới về khách sạn nhận phòng.</span>
-                    </div>
-                  </label>
-                </div>
-              </div>
-
               <!-- TỐI ƯU CHI PHÍ GIÁ XE & GỢI Ý NHÀ XE GIÁ RẺ -->
               <div class="bus-optimization-section full-width">
                 <div class="bos-header">
@@ -725,13 +940,21 @@
                           <span>⏱️ Thời gian:</span>
                           <b>{{ bus.duration }}</b>
                         </div>
-                        <div class="bic-spec">
-                          <span>🕒 Giờ chạy:</span>
-                          <b>{{ bus.depart_times }}</b>
+                        <div class="bic-spec-times">
+                          <span class="bst-label">🕒 Giờ xuất bến:</span>
+                          <div class="bst-chips">
+                            <span
+                              v-for="timeStr in (bus.depart_times ? bus.depart_times.split(',') : [])"
+                              :key="timeStr"
+                              class="bst-chip"
+                            >
+                              {{ timeStr.trim() }}
+                            </span>
+                          </div>
                         </div>
                         <div class="bic-spec">
-                          <span>📍 Điểm đón/trả:</span>
-                          <small>{{ bus.pickup }} ➔ {{ bus.dropoff }}</small>
+                          <span>📍 Điểm đón ➔ trả:</span>
+                          <small :title="bus.pickup + ' ➔ ' + bus.dropoff">{{ bus.pickup }} ➔ {{ bus.dropoff }}</small>
                         </div>
                       </div>
 
@@ -799,13 +1022,21 @@
                           <span>⏱️ Thời gian:</span>
                           <b>{{ train.duration }}</b>
                         </div>
-                        <div class="bic-spec">
-                          <span>🕒 Giờ khởi hành:</span>
-                          <b>{{ train.depart_times }}</b>
+                        <div class="bic-spec-times">
+                          <span class="bst-label">🕒 Giờ xuất phát:</span>
+                          <div class="bst-chips">
+                            <span
+                              v-for="timeStr in (train.depart_times ? train.depart_times.split(',') : [])"
+                              :key="timeStr"
+                              class="bst-chip train-time-chip"
+                            >
+                              {{ timeStr.trim() }}
+                            </span>
+                          </div>
                         </div>
                         <div class="bic-spec">
                           <span>🚉 Ga đi ➔ Ga đến:</span>
-                          <small>{{ train.depart_station }} ➔ {{ train.arrive_station }}</small>
+                          <small :title="train.depart_station + ' ➔ ' + train.arrive_station">{{ train.depart_station }} ➔ {{ train.arrive_station }}</small>
                         </div>
                       </div>
 
@@ -883,19 +1114,109 @@
                 </span>
               </div>
 
+              <!-- THANH TÌM KIẾM ĐỊA ĐIỂM & MÓN ĂN NHANH (TỐI GIẢN GIAO DIỆN) -->
+              <div class="place-picker-search-bar">
+                <span class="pps-icon">🔍</span>
+                <input
+                  v-model="searchPlacePickerQuery"
+                  type="text"
+                  :placeholder="'Tìm kiếm địa điểm, di tích, món ăn, cafe tại ' + (formDuLieu.diemDen === ALL_DESTINATIONS ? 'Miền Trung' : formDuLieu.diemDen) + '...'"
+                  class="pps-input"
+                />
+                <button
+                  v-if="searchPlacePickerQuery"
+                  type="button"
+                  class="pps-clear-btn"
+                  @click="searchPlacePickerQuery = ''"
+                  title="Xóa tìm kiếm"
+                >✕</button>
+              </div>
+
+              <!-- CÁC TAB PHÂN LOẠI DANH MỤC GỌN GÀNG -->
+              <div class="place-picker-tabs">
+                <button
+                  type="button"
+                  :class="['ppt-btn', { active: placePickerActiveTab === 'all' }]"
+                  @click="placePickerActiveTab = 'all'"
+                >
+                  Tất cả ({{ totalFilteredPlacesCount }})
+                </button>
+                <button
+                  type="button"
+                  :class="['ppt-btn', { active: placePickerActiveTab === 'attraction' }]"
+                  @click="placePickerActiveTab = 'attraction'"
+                >
+                  🏛️ Thắng cảnh ({{ filteredAttractions.length }})
+                </button>
+                <button
+                  type="button"
+                  :class="['ppt-btn', { active: placePickerActiveTab === 'restaurant' }]"
+                  @click="placePickerActiveTab = 'restaurant'"
+                >
+                  🍜 Đặc sản ({{ filteredRestaurants.length }})
+                </button>
+                <button
+                  type="button"
+                  :class="['ppt-btn', { active: placePickerActiveTab === 'hotel' }]"
+                  @click="placePickerActiveTab = 'hotel'"
+                >
+                  🏨 Khách sạn ({{ filteredHotels.length }})
+                </button>
+                <button
+                  type="button"
+                  :class="['ppt-btn', { active: placePickerActiveTab === 'cafe' }]"
+                  @click="placePickerActiveTab = 'cafe'"
+                >
+                  ☕ Cafe ({{ filteredCafes.length }})
+                </button>
+                <button
+                  v-if="selectedPlaces.length"
+                  type="button"
+                  :class="['ppt-btn ppt-selected-tab', { active: placePickerActiveTab === 'selected' }]"
+                  @click="placePickerActiveTab = 'selected'"
+                >
+                  ⭐ Đã chọn ({{ selectedPlaces.length }})
+                </button>
+              </div>
+
+              <!-- KHAY ĐỊA ĐIỂM ĐÃ CHỌN (TIỆN LỢI & DỄ QUẢN LÝ) -->
+              <div v-if="selectedPlaces.length" class="selected-places-tray">
+                <div class="spt-header">
+                  <span class="spt-title">📍 Danh sách bạn đã chọn ({{ selectedPlaces.length }} địa điểm):</span>
+                  <button type="button" class="spt-clear-all" @click="clearAllSelectedPlaces">Xóa tất cả</button>
+                </div>
+                <div class="spt-chips">
+                  <span v-for="name in selectedPlaces" :key="name" class="spt-chip">
+                    {{ name }}
+                    <button type="button" @click="removeSelectedPlace(name)" title="Bỏ chọn">✕</button>
+                  </span>
+                </div>
+              </div>
+
               <!-- Thông báo AI Crawler -->
               <div v-if="thongBaoCrawl" class="crawl-alert-banner">
                 <span>{{ thongBaoCrawl }}</span>
               </div>
-              
-              <div class="places-scroll-container">
 
               <!-- Nhóm Thắng cảnh -->
-              <div v-if="attractionsList.length" class="picker-row">
-                <span class="row-label">📸 Thắng cảnh:</span>
+              <div
+                v-if="filteredAttractions.length && (placePickerActiveTab === 'all' || placePickerActiveTab === 'attraction')"
+                class="picker-row"
+              >
+                <div class="picker-row-header">
+                  <span class="row-label">📸 Thắng cảnh & Di tích ({{ filteredAttractions.length }}):</span>
+                  <button
+                    v-if="!searchPlacePickerQuery && filteredAttractions.length > 8 && placePickerActiveTab === 'all'"
+                    type="button"
+                    class="picker-expand-toggle-btn"
+                    @click="togglePickerExpand('attraction')"
+                  >
+                    {{ isPickerExpanded.attraction ? '▲ Thu gọn' : `▼ Xem thêm (+${filteredAttractions.length - 8} địa điểm)` }}
+                  </button>
+                </div>
                 <div class="chips-wrap">
                   <button
-                    v-for="p in attractionsList"
+                    v-for="p in getVisiblePlaces(filteredAttractions, 'attraction')"
                     :key="p.name"
                     type="button"
                     :class="['app-chip', { active: isPlaceSelected(p.name) }]"
@@ -908,11 +1229,24 @@
               </div>
 
               <!-- Nhóm Món ngon -->
-              <div v-if="restaurantsList.length" class="picker-row">
-                <span class="row-label">🍜 Quán đặc sản:</span>
+              <div
+                v-if="filteredRestaurants.length && (placePickerActiveTab === 'all' || placePickerActiveTab === 'restaurant')"
+                class="picker-row"
+              >
+                <div class="picker-row-header">
+                  <span class="row-label">🍜 Quán đặc sản & Ẩm thực ({{ filteredRestaurants.length }}):</span>
+                  <button
+                    v-if="!searchPlacePickerQuery && filteredRestaurants.length > 8 && placePickerActiveTab === 'all'"
+                    type="button"
+                    class="picker-expand-toggle-btn"
+                    @click="togglePickerExpand('restaurant')"
+                  >
+                    {{ isPickerExpanded.restaurant ? '▲ Thu gọn' : `▼ Xem thêm (+${filteredRestaurants.length - 8} quán)` }}
+                  </button>
+                </div>
                 <div class="chips-wrap">
                   <button
-                    v-for="p in restaurantsList"
+                    v-for="p in getVisiblePlaces(filteredRestaurants, 'restaurant')"
                     :key="p.name"
                     type="button"
                     :class="['app-chip', { active: isPlaceSelected(p.name) }]"
@@ -925,11 +1259,24 @@
               </div>
 
               <!-- Nhóm Khách sạn -->
-              <div v-if="hotelsList.length" class="picker-row">
-                <span class="row-label">🏨 Khách sạn:</span>
+              <div
+                v-if="filteredHotels.length && (placePickerActiveTab === 'all' || placePickerActiveTab === 'hotel')"
+                class="picker-row"
+              >
+                <div class="picker-row-header">
+                  <span class="row-label">🏨 Khách sạn & Homestay ({{ filteredHotels.length }}):</span>
+                  <button
+                    v-if="!searchPlacePickerQuery && filteredHotels.length > 8 && placePickerActiveTab === 'all'"
+                    type="button"
+                    class="picker-expand-toggle-btn"
+                    @click="togglePickerExpand('hotel')"
+                  >
+                    {{ isPickerExpanded.hotel ? '▲ Thu gọn' : `▼ Xem thêm (+${filteredHotels.length - 8} nơi lưu trú)` }}
+                  </button>
+                </div>
                 <div class="chips-wrap">
                   <button
-                    v-for="p in hotelsList"
+                    v-for="p in getVisiblePlaces(filteredHotels, 'hotel')"
                     :key="p.name"
                     type="button"
                     :class="['app-chip', { active: isPlaceSelected(p.name) }]"
@@ -942,11 +1289,24 @@
               </div>
 
               <!-- Nhóm Cafe -->
-              <div v-if="cafesList.length" class="picker-row">
-                <span class="row-label">☕ Quán Cafe:</span>
+              <div
+                v-if="filteredCafes.length && (placePickerActiveTab === 'all' || placePickerActiveTab === 'cafe')"
+                class="picker-row"
+              >
+                <div class="picker-row-header">
+                  <span class="row-label">☕ Quán Cafe & Check-in ({{ filteredCafes.length }}):</span>
+                  <button
+                    v-if="!searchPlacePickerQuery && filteredCafes.length > 8 && placePickerActiveTab === 'all'"
+                    type="button"
+                    class="picker-expand-toggle-btn"
+                    @click="togglePickerExpand('cafe')"
+                  >
+                    {{ isPickerExpanded.cafe ? '▲ Thu gọn' : `▼ Xem thêm (+${filteredCafes.length - 8} quán cafe)` }}
+                  </button>
+                </div>
                 <div class="chips-wrap">
                   <button
-                    v-for="p in cafesList"
+                    v-for="p in getVisiblePlaces(filteredCafes, 'cafe')"
                     :key="p.name"
                     type="button"
                     :class="['app-chip', { active: isPlaceSelected(p.name) }]"
@@ -957,6 +1317,12 @@
                   </button>
                 </div>
               </div>
+
+              <!-- Khi không tìm thấy kết quả tìm kiếm -->
+              <div v-if="searchPlacePickerQuery && totalFilteredPlacesCount === 0" class="empty-search-places">
+                <span>🔍</span>
+                <p>Không tìm thấy địa điểm nào khớp với từ khóa "<b>{{ searchPlacePickerQuery }}</b>".</p>
+                <button type="button" class="app-secondary-btn" @click="searchPlacePickerQuery = ''">Xóa tìm kiếm</button>
               </div>
               
               <!-- Tự nhập điểm đến -->
@@ -997,14 +1363,22 @@
                 Tiếp theo →
               </button>
 
+              <div v-if="currentPlannerStep === 3 && !tripFeasibility.feasible && !formDuLieu.freePlacesOnly" class="unfeasible-step3-notice">
+                <span>⛔</span>
+                <div>
+                  <strong>Yêu cầu không khả thi:</strong>
+                  Ngân sách {{ dinhDangTien(formDuLieu.nganSach) }}đ không đủ cho {{ formDuLieu.soNgay }} ngày {{ formDuLieu.soNguoi }} người. Vui lòng quay lại Bước 2 để tăng ngân sách hoặc chọn "Chỉ gợi ý các địa điểm 100% MIỄN PHÍ VÉ".
+                </div>
+              </div>
+
               <button
                 v-if="currentPlannerStep === 3"
                 class="app-primary-btn submit-plan-btn"
                 @click="taoLichTrinh"
-                :disabled="dangTao"
+                :disabled="dangTao || (!tripFeasibility.feasible && !formDuLieu.freePlacesOnly)"
               >
                 <span v-if="dangTao" class="btn-spinner"></span>
-                <span>{{ dangTao ? 'AI đang lên kế hoạch...' : '✨ Tạo Lịch Trình' }}</span>
+                <span>{{ dangTao ? 'AI đang lên kế hoạch...' : (!tripFeasibility.feasible && !formDuLieu.freePlacesOnly ? '⛔ Yêu Cầu Không Khả Thi' : '✨ Tạo Lịch Trình') }}</span>
               </button>
             </div>
           </div>
@@ -1012,12 +1386,26 @@
           <!-- Personality AI Loading State (Khi AI đang tạo lịch trình) -->
           <div v-if="dangTao" class="ai-generating-card">
             <div class="ai-gen-radar">
-              <div class="radar-pulse"></div>
-              <div class="radar-center"><img src="/shrek.jpg" style="width: 58px; height: 58px; object-fit: cover; border-radius: 50%; display: block;" alt="AI Robot" /></div>
-              <div class="radar-orb orb-1">🍜</div>
-              <div class="radar-orb orb-2">🗺️</div>
-              <div class="radar-orb orb-3">🚗</div>
-              <div class="radar-orb orb-4">☀️</div>
+              <div class="radar-pulse pulse-1"></div>
+              <div class="radar-pulse pulse-2"></div>
+              <div class="radar-track"></div>
+              <div class="radar-center">
+                <img src="/shrek.jpg" class="radar-center-img" alt="Leader" />
+              </div>
+              <div class="radar-orb-ring">
+                <div class="radar-orb orb-1" title="Thành viên 1">
+                  <img src="/avatars/friend1.png" class="orb-img" alt="Member 1" />
+                </div>
+                <div class="radar-orb orb-2" title="Thành viên 2">
+                  <img src="/avatars/friend2.jpg" class="orb-img orb-img-cyclo" alt="Member 2" />
+                </div>
+                <div class="radar-orb orb-3" title="Thành viên 3">
+                  <img src="/avatars/friend3.jpg" class="orb-img" alt="Member 3" />
+                </div>
+                <div class="radar-orb orb-4" title="Thành viên 4">
+                  <img src="/avatars/friend4.jpg" class="orb-img orb-img-smirk" alt="Member 4" />
+                </div>
+              </div>
             </div>
             <div class="ai-gen-body">
               <div class="ai-gen-badge">
@@ -1040,51 +1428,164 @@
 
           <!-- KẾT QUẢ LỊCH TRÌNH CHI TIẾT -->
           <div v-if="lichTrinh" class="plan-results-container">
-            
-            <!-- LIVE MODE BANNER -->
-            <div v-if="liveModeActive" class="live-budget-banner" style="position: sticky; top: 20px; z-index: 100; background: #0f172a; color: white; padding: 16px 20px; border-radius: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3); border: 1px solid #334155; align-items: center;">
-              <div>
-                <div style="font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Đang trong chuyến đi</div>
-                <strong style="font-size: 1.2rem; color: #10b981;">🚀 Live Mode</strong>
-              </div>
-              <div style="text-align: right; font-size: 0.95rem;">
-                Dự kiến ban đầu: <span style="color: #cbd5e1;">{{ dinhDangTien(lichTrinh.total_budget) }}đ</span><br>
-                Đã chi tiêu thực tế: <span style="color: #fca5a5; font-weight: bold;">{{ dinhDangTien(actualTotalSpent) }}đ</span><br>
-                Ngân sách còn lại: <span style="color: #6ee7b7; font-weight: bold; font-size: 1.1rem;">{{ dinhDangTien(lichTrinh.total_budget - actualTotalSpent) }}đ</span>
-              </div>
-            </div>
             <!-- Personality Completion Banner (Khi AI tạo lịch trình xong) -->
             <transition name="fade-slide">
-              <div v-if="hienCompletionBanner" class="ai-completion-banner">
+              <div v-if="hienCompletionBanner" class="ai-completion-banner confetti-celebration">
                 <div class="acb-left">
-                  <div class="acb-icon">{{ activeCompletionQuote.icon }}</div>
+                  <div class="acb-icon">🎉</div>
                 </div>
                 <div class="acb-content">
-                  <div class="acb-badge">HÀNH TRÌNH ĐÃ SẴN SÀNG</div>
+                  <div class="acb-badge">ĐỘI HÌNH ĐÃ SẴN SÀNG PHÁ ĐẢO THẾ GIỚI ẢO!</div>
                   <h4>{{ activeCompletionQuote.title }}</h4>
                   <p>{{ activeCompletionQuote.desc }}</p>
+                  <!-- Đội hình nhảy múa -->
+                  <div class="celebrating-squad">
+                    <div class="celeb-avatar-wrap celeb-1" title="Trưởng đoàn / Trùm cuối"><img src="/shrek.jpg" class="celeb-avatar" alt="Trùm cuối"></div>
+                    <div class="celeb-avatar-wrap celeb-2" title="Thủ quỹ kiêm Đòi nợ"><img src="/avatars/friend1.png" class="celeb-avatar" alt="Thủ quỹ"></div>
+                    <div class="celeb-avatar-wrap celeb-3" title="Chúa tể lười biếng / Trùm kêu ca"><img src="/avatars/friend2.jpg" class="celeb-avatar" style="object-position: center 25%;" alt="Chúa tể lười"></div>
+                    <div class="celeb-avatar-wrap celeb-4" title="Thánh sống ảo / Chuyên gia check-in"><img src="/avatars/friend3.jpg" class="celeb-avatar" alt="Thánh sống ảo"></div>
+                    <div class="celeb-avatar-wrap celeb-5" title="Hoa tiêu / Google Maps chạy bằng cơm"><img src="/avatars/friend4.jpg" class="celeb-avatar" style="object-position: center 20%;" alt="Hoa tiêu"></div>
+                  </div>
                 </div>
                 <button class="acb-close" @click="hienCompletionBanner = false" title="Đóng banner">✕</button>
               </div>
             </transition>
 
             <!-- Thẻ tổng quan kết quả -->
-            <div class="plan-summary-card">
+            <div class="plan-summary-card" :class="{ 'is-over-budget-card': lichTrinh.is_over_budget }">
               <div class="summary-meta">
                 <div class="summary-top-tag">
                   <span class="plan-dest-badge">{{ lichTrinh.destination }}</span>
-                  <span class="savings-badge">💡 Đã tối ưu tuyến đường & chi phí tiết kiệm</span>
+                  <span v-if="lichTrinh.is_over_budget" class="over-budget-pill-badge">
+                    🚨 VƯỢT QUÁ KHẢ NĂNG TÀI CHÍNH (+{{ lichTrinh.over_percent }}%)
+                  </span>
+                  <span v-else-if="lichTrinh.budget_tier" class="tier-pill-badge" :style="{ backgroundColor: lichTrinh.budget_tier.color || '#10b981' }">
+                    {{ lichTrinh.budget_tier.icon }} {{ lichTrinh.budget_tier.badge }}
+                  </span>
+                  <span class="savings-badge">💡 Đã tối ưu tuyến đường & chi phí</span>
                 </div>
                 <h2>Hành trình {{ lichTrinh.daysList.length }} Ngày Tuyệt Vời</h2>
-                <p class="summary-budget">Tổng dự toán: <strong>{{ dinhDangTien(lichTrinh.total_budget) }}đ</strong> ({{ lichTrinh.people }} người · TB {{ dinhDangTien(Math.round(lichTrinh.total_budget / lichTrinh.people)) }}đ/người)</p>
+                
+                <!-- ĐỘI HÌNH PHÁ ĐẢO (SQUAD AVATARS) -->
+                <div class="squad-avatars-group" title="Đội hình phá đảo">
+                  <span class="squad-label">Đội hình:</span>
+                  <div class="squad-overlap">
+                    <div class="squad-avatar-wrap" title="Trưởng đoàn / Trùm cuối">
+                      <img src="/shrek.jpg" class="sq-img" alt="Trùm cuối">
+                    </div>
+                    <div class="squad-avatar-wrap" title="Thủ quỹ kiêm Đòi nợ" v-if="lichTrinh.people >= 2">
+                      <img src="/avatars/friend1.png" class="sq-img" alt="Thủ quỹ">
+                    </div>
+                    <div class="squad-avatar-wrap" title="Chúa tể lười biếng / Trùm kêu ca" v-if="lichTrinh.people >= 3">
+                      <img src="/avatars/friend2.jpg" class="sq-img sq-cyclo" alt="Chúa tể lười">
+                    </div>
+                    <div class="squad-avatar-wrap" title="Thánh sống ảo / Chuyên gia check-in" v-if="lichTrinh.people >= 4">
+                      <img src="/avatars/friend3.jpg" class="sq-img" alt="Thánh sống ảo">
+                    </div>
+                    <div class="squad-avatar-wrap" title="Hoa tiêu / Google Maps chạy bằng cơm" v-if="lichTrinh.people >= 5">
+                      <img src="/avatars/friend4.jpg" class="sq-img sq-smirk" alt="Hoa tiêu">
+                    </div>
+                    <div class="squad-avatar-wrap sq-more" v-if="lichTrinh.people > 5">
+                      +{{ lichTrinh.people - 5 }}
+                    </div>
+                  </div>
+                </div>
+
+                <p class="summary-budget" :class="{ 'has-over-budget': lichTrinh.is_over_budget }">
+                  <template v-if="lichTrinh.is_over_budget">
+                    <span class="sb-target">🎯 Ngân sách bạn chọn: <b>{{ dinhDangTien(lichTrinh.target_budget || formDuLieu.nganSach) }}đ</b></span>
+                    <span class="sb-divider">·</span>
+                    <span class="sb-actual">Chi phí thực tế tính toán: <strong class="red-calc-num">{{ dinhDangTien(lichTrinh.total_budget) }}đ</strong></span>
+                    <span class="sb-diff-tag">🚨 Vượt +{{ dinhDangTien(lichTrinh.over_amount) }}đ</span>
+                  </template>
+                  <template v-else>
+                    Tổng dự toán: <strong>{{ dinhDangTien(lichTrinh.total_budget) }}đ</strong> ({{ lichTrinh.people }} người · TB {{ dinhDangTien(Math.round(lichTrinh.total_budget / lichTrinh.people)) }}đ/người)
+                  </template>
+                </p>
+
+                <!-- KHỐI BÁO ĐỎ: CẢNH BÁO KẾ HOẠCH VƯỢT QUÁ KHẢ NĂNG TÀI CHÍNH (YÊU CẦU 1) -->
+                <div v-if="lichTrinh.is_over_budget" class="over-budget-alert-box">
+                  <div class="oba-header">
+                    <div class="oba-icon-ring">🚨</div>
+                    <div class="oba-texts">
+                      <h4>CẢNH BÁO BÁO ĐỎ: CHI PHÍ VƯỢT QUÁ NGÂN SÁCH {{ dinhDangTien(lichTrinh.target_budget || formDuLieu.nganSach) }}đ!</h4>
+                      <p>
+                        Chuyến đi {{ lichTrinh.daysList.length }} ngày cho {{ lichTrinh.people }} người với các chi phí cố định (Vé xe khứ hồi: <b>{{ dinhDangTien(lichTrinh.budget_breakdown?.transportation) }}đ</b> + Khách sạn {{ lichTrinh.daysList.length }} đêm: <b>{{ dinhDangTien(lichTrinh.budget_breakdown?.hotel) }}đ</b> + Ăn uống: <b>{{ dinhDangTien(lichTrinh.budget_breakdown?.food) }}đ</b>) cần tối thiểu <b>{{ dinhDangTien(lichTrinh.total_budget) }}đ</b> để đảm bảo chuyến đi an toàn.
+                      </p>
+                    </div>
+                  </div>
+                  <div class="oba-actions-bar">
+                    <span class="oba-act-title">⚡ Giải pháp xử lý ngay:</span>
+                    <button v-if="!formDuLieu.freePlacesOnly" type="button" class="oba-action-btn btn-free" @click="kichHoatCheDoFreePlaces">
+                      🌿 1. Bật chế độ 100% Điểm Miễn Phí (Cắt vé về 0đ)
+                    </button>
+                    <span v-else class="oba-done-tag">✅ Đã bật Free Places — vé tham quan = 0đ</span>
+                    <button v-if="Number(formDuLieu.soNgay) > 1" type="button" class="oba-action-btn btn-shorten" @click="rutNganNgayPhuHop">
+                      ✂️ 2. Rút ngắn ngày đi vừa vặn {{ dinhDangTien(formDuLieu.nganSach) }}đ
+                    </button>
+                    <span v-else class="oba-done-tag">✅ Đã rút ngắn tối đa (1 ngày)</span>
+                    <button type="button" class="oba-action-btn btn-increase-budget" @click="formDuLieu.nganSach = lichTrinh.total_budget; taoLichTrinh()">
+                      💰 3. Nâng ngân sách lên {{ dinhDangTien(lichTrinh.total_budget) }}đ (vừa đủ)
+                    </button>
+                    <button type="button" class="oba-action-btn btn-replan" @click="hienModalDoiLichTrinh = true">
+                      🔄 4. Điều chỉnh thông số khác
+                    </button>
+                  </div>
+                </div>
+
                 <!-- Personality Low Budget Callout in Plan Result -->
-                <div v-if="lichTrinh.total_budget <= 500000" class="budget-humor-callout">
+                <div v-else-if="lichTrinh.total_budget <= 500000" class="budget-humor-callout">
                   <span class="bhc-icon">{{ lichTrinh.total_budget <= 150000 ? '🚨' : '💸' }}</span>
                   <span class="bhc-text">
                     {{ lichTrinh.total_budget <= 150000 ? 'Cảnh báo ví nguy hiểm: Nhớ ngắm cảnh miễn phí và hạn chế nhìn menu nhé!' : 'Du lịch tối giản: Chúng ta không nghèo, chúng ta đang du lịch phong cách tối giản (tạm né hải sản 😭)!' }}
                   </span>
                 </div>
+                <!-- Personality Luxury Budget Callout -->
+                <div v-else-if="lichTrinh.total_budget >= 20000000" class="budget-luxury-callout">
+                  <span class="bhc-icon">👑</span>
+                  <span class="bhc-text">
+                    Đẳng cấp thượng lưu: Toàn bộ dịch vụ đã được nâng cấp lên chuẩn 5 sao, resort cao cấp và fine dining sang trọng!
+                  </span>
+                </div>
               </div>
+
+              <!-- NÚT HÀNH ĐỘNG CHÍNH: LƯU LỊCH TRÌNH HOẶC THAY ĐỔI LỊCH TRÌNH (YÊU CẦU 1) -->
+              <div class="itinerary-decision-actions-bar">
+                <button
+                  type="button"
+                  class="it-dec-btn it-save-btn"
+                  :class="{ 'is-saved': daLuuLichTrinhHienTai }"
+                  @click="luuLichTrinhHienTai"
+                  title="Lưu lại lịch trình này để xem lại bất cứ lúc nào"
+                >
+                  <span class="it-dec-icon">{{ daLuuLichTrinhHienTai ? '✅' : '💾' }}</span>
+                  <div class="it-dec-text">
+                    <strong>{{ daLuuLichTrinhHienTai ? 'Đã lưu lịch trình' : 'Lưu lại lịch trình này' }}</strong>
+                    <small>{{ daLuuLichTrinhHienTai ? 'Bấm để xem danh sách chuyến đi đã lưu' : 'Lưu vào tài khoản / bộ nhớ máy' }}</small>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  class="it-dec-btn it-replan-btn"
+                  @click="hienModalDoiLichTrinh = true"
+                  title="Thay đổi thông số hoặc yêu cầu AI tạo lịch trình khác"
+                >
+                  <span class="it-dec-icon">🔄</span>
+                  <div class="it-dec-text">
+                    <strong>Thay đổi lịch trình khác</strong>
+                    <small>Sửa thông số hoặc AI lên phương án mới</small>
+                  </div>
+                </button>
+              </div>
+
+              <!-- Thông báo khi lưu thành công -->
+              <transition name="fade">
+                <div v-if="thongBaoLuuThanhCong" class="save-success-banner">
+                  <span>🎉 <strong>Đã lưu lịch trình thành công!</strong> Bạn có thể mở lại tại tab "Chuyến đi đã lưu".</span>
+                  <button type="button" class="ssb-view-btn" @click="activeTab = 'mytrips'">Xem ngay ↗</button>
+                </div>
+              </transition>
 
               <!-- Thanh phân bổ ngân sách khoa học -->
               <div v-if="lichTrinh.budget_breakdown" class="budget-breakdown-row">
@@ -1095,10 +1596,43 @@
                 <div class="bb-pill"><span>🛡️ Dự phòng:</span> <b>{{ dinhDangTien(lichTrinh.budget_breakdown.reserve) }}đ</b></div>
               </div>
 
+              <!-- Thẻ nghiệm thu chi phí thực tế (Budget Audit & Balance) -->
+              <div v-if="lichTrinh.budget_audit" class="budget-audit-card" :class="lichTrinh.budget_audit.fit_status">
+                <div class="bac-header">
+                  <div class="bac-title-group">
+                    <span class="bac-icon">{{ lichTrinh.budget_audit.fit_status === 'optimal' ? '✅' : (lichTrinh.budget_audit.fit_status === 'under' ? '💡' : '⚠️') }}</span>
+                    <div>
+                      <strong class="bac-msg">{{ lichTrinh.budget_audit.fit_message }}</strong>
+                      <p class="bac-advice">{{ lichTrinh.budget_audit.advice }}</p>
+                    </div>
+                  </div>
+                  <div class="bac-stats">
+                    <span class="bac-stat-label">Tổng chi phí tính toán:</span>
+                    <strong class="bac-stat-num">{{ dinhDangTien(lichTrinh.budget_audit.calculated_total) }}đ</strong>
+                  </div>
+                </div>
+
+                <div class="bac-details-row">
+                  <div class="bad-item">
+                    <span class="bad-label">🚌 Vé xe / Đi lại:</span>
+                    <b>{{ dinhDangTien(lichTrinh.budget_audit.audit_breakdown?.transit || lichTrinh.budget_breakdown?.transportation || 0) }}đ</b>
+                  </div>
+                  <div class="bad-item">
+                    <span class="bad-label">🏨 Phòng nghỉ / Resort:</span>
+                    <b>{{ dinhDangTien(lichTrinh.budget_audit.audit_breakdown?.hotel || lichTrinh.budget_breakdown?.hotel || 0) }}đ</b>
+                  </div>
+                  <div class="bad-item">
+                    <span class="bad-label">🍜 Toàn bộ ăn uống:</span>
+                    <b>{{ dinhDangTien(lichTrinh.budget_audit.audit_breakdown?.food || lichTrinh.budget_breakdown?.food || 0) }}đ</b>
+                  </div>
+                  <div class="bad-item">
+                    <span class="bad-label">🎟️ Vé vui chơi check-in:</span>
+                    <b>{{ dinhDangTien(lichTrinh.budget_audit.audit_breakdown?.tickets || lichTrinh.budget_breakdown?.tickets || 0) }}đ</b>
+                  </div>
+                </div>
+              </div>
+
               <div class="plan-tool-actions">
-                <button class="tool-btn" @click="liveModeActive = !liveModeActive" title="Bật chế độ theo dõi thực tế chuyến đi" style="background: #10b981; color: white; border: none; font-weight: bold; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
-                  🚀 {{ liveModeActive ? 'Tắt Live Mode' : 'Bắt đầu chuyến đi' }}
-                </button>
                 <button class="tool-btn ai-opt-highlight-btn" @click="toiUuCungDuongToanBo" title="Sắp xếp toàn bộ điểm đến theo vòng cung tối ưu di chuyển">
                   ⚡ AI Tối ưu thứ tự điểm đến
                 </button>
@@ -1179,7 +1713,13 @@
                 </div>
                 <div class="hotel-side">
                   <span class="hotel-stars">★ {{ lichTrinh.hotel_recommendation.rating || '4.8' }}</span>
-                  <span class="hotel-price">{{ dinhDangTien(lichTrinh.hotel_recommendation.price_per_night || 850000) }}đ<small>/đêm</small></span>
+                  <span class="hotel-price">
+                    {{ dinhDangTien(lichTrinh.hotel_recommendation.price_per_night || 850000) }}đ
+                    <small>{{ (lichTrinh.hotel_recommendation.price_per_night || 850000) <= 300000 ? '/đêm/người' : '/đêm/phòng' }}</small>
+                  </span>
+                  <div class="hotel-nights-calc-badge" v-if="lichTrinh.daysList && lichTrinh.daysList.length">
+                    Tổng {{ lichTrinh.daysList.length }} đêm ({{ lichTrinh.people }} người): <b>{{ dinhDangTien(tinhChiPhiKhachSan(lichTrinh)) }}đ</b>
+                  </div>
                   <a
                     class="hotel-maps-link"
                     :href="chiDuongUrl(lichTrinh.hotel_recommendation.name, lichTrinh.hotel_recommendation.address)"
@@ -1240,12 +1780,103 @@
             </div>
 
             <!-- BỐ CỤC LỊCH TRÌNH: SPLIT VIEW / TIMELINE / MAP EXPANDED -->
-            <div :class="['itinerary-split-container', liveModeActive ? 'mode-split' : `mode-${itineraryViewMode}`]">
+            <div :class="['itinerary-split-container', `mode-${itineraryViewMode}`]">
               <!-- Cột Trái: Dòng thời gian từng ngày (Timeline) (Hiển thị khi Timeline hoặc Split View) -->
               <transition name="view-fade">
-                <div v-show="itineraryViewMode !== 'map' && !liveModeActive" class="app-timeline-wrap">
+                <div v-show="itineraryViewMode !== 'map'" class="app-timeline-wrap" style="position: relative;">
+                  <!-- XÍCH LÔ DẪN ĐƯỜNG SCROLL (Ý TƯỞNG 4) -->
+                  <div class="cyclo-scroll-indicator" title="Chiếc xích lô dẫn đường">
+                    <img src="/avatars/friend2.jpg" class="sq-cyclo" alt="Cyclo">
+                  </div>
+                  <!-- THANH ĐIỀU KHIỂN TINH GỌN LỊCH TRÌNH (TỐI ƯU YÊU CẦU 2: KHÔNG DÀI DÒNG) -->
+                  <div class="timeline-compact-filter-toolbar">
+                    <!-- Hàng 1: Tabs chọn ngày linh hoạt -->
+                    <div class="tc-day-tabs-scroll">
+                      <button
+                        v-for="d in lichTrinh.daysList"
+                        :key="'tab-d-' + d.day"
+                        type="button"
+                        :class="['tc-day-tab', { active: selectedDay === d.day && !showAllDays }]"
+                        @click="selectedDay = d.day; showAllDays = false"
+                        :title="`Xem chi tiết Ngày ${d.day}`"
+                      >
+                        📅 Ngày {{ d.day }}
+                      </button>
+                      <button
+                        type="button"
+                        :class="['tc-day-tab tc-all-tab', { active: showAllDays }]"
+                        @click="showAllDays = true"
+                        :title="`Xem toàn bộ ${lichTrinh.daysList.length} ngày liên tục`"
+                      >
+                        📋 Xem tất cả ({{ lichTrinh.daysList.length }} ngày)
+                      </button>
+                    </div>
+
+                    <!-- Hàng 2: Chuyển đổi Thu gọn / Chi tiết & Lọc theo Buổi -->
+                    <div class="tc-controls-row">
+                      <div class="tc-density-toggle">
+                        <button
+                          type="button"
+                          :class="['tc-density-btn', { active: timelineDensity === 'compact' }]"
+                          @click="timelineDensity = 'compact'"
+                          title="Chế độ Thu gọn: hiển thị dạng hàng ngang thanh lịch, không phải cuộn chuột dài"
+                        >
+                          <span class="tcd-icon">📱</span>
+                          <span>Thu gọn</span>
+                        </button>
+                        <button
+                          type="button"
+                          :class="['tc-density-btn', { active: timelineDensity === 'expanded' }]"
+                          @click="timelineDensity = 'expanded'"
+                          title="Chế độ Chi tiết: hiển thị dạng thẻ lớn đầy đủ ảnh"
+                        >
+                          <span class="tcd-icon">📖</span>
+                          <span>Chi tiết</span>
+                        </button>
+                      </div>
+
+                      <div class="tc-session-filters">
+                        <button
+                          type="button"
+                          :class="['tc-session-pill', { active: selectedSessionFilter === 'all' }]"
+                          @click="selectedSessionFilter = 'all'"
+                        >
+                          Tất cả
+                        </button>
+                        <button
+                          type="button"
+                          :class="['tc-session-pill', { active: selectedSessionFilter === 'morning' }]"
+                          @click="selectedSessionFilter = 'morning'"
+                        >
+                          🌅 Sáng
+                        </button>
+                        <button
+                          type="button"
+                          :class="['tc-session-pill', { active: selectedSessionFilter === 'noon' }]"
+                          @click="selectedSessionFilter = 'noon'"
+                        >
+                          ☀️ Trưa
+                        </button>
+                        <button
+                          type="button"
+                          :class="['tc-session-pill', { active: selectedSessionFilter === 'afternoon' }]"
+                          @click="selectedSessionFilter = 'afternoon'"
+                        >
+                          🌆 Chiều
+                        </button>
+                        <button
+                          type="button"
+                          :class="['tc-session-pill', { active: selectedSessionFilter === 'evening' }]"
+                          @click="selectedSessionFilter = 'evening'"
+                        >
+                          🌙 Tối
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
                   <article
-                    v-for="(day, dayIdx) in lichTrinh.daysList"
+                    v-for="(day, dayIdx) in (showAllDays ? lichTrinh.daysList : lichTrinh.daysList.filter(d => d.day === selectedDay))"
                     :key="day.day"
                     class="timeline-day-card"
                     :class="{ 'day-selected-highlight': selectedDay === day.day }"
@@ -1307,12 +1938,109 @@
                     </div>
 
                     <div class="activities-stream">
+                      <!-- CHẶNG KHỞI HÀNH LIÊN TỈNH: THỜI GIAN VÀ CỰ LY TỪ NƠI XUẤT PHÁT ĐẾN ĐIỂM ĐẾN (YÊU CẦU 3) -->
+                      <div v-if="day.day === 1 && !day.activities.some(a => a.type === 'transit')" class="origin-departure-journey-card">
+                        <div class="odjc-time-col">
+                          <span class="odjc-time">{{ formDuLieu.nhaXeDaChon?.depart_times ? formDuLieu.nhaXeDaChon.depart_times.split(',')[0].trim() : '06:30' }}</span>
+                          <div class="odjc-bullet">🚌</div>
+                        </div>
+                        <div class="odjc-card-content">
+                          <div class="odjc-header">
+                            <span class="odjc-badge">CHẶNG KHỞI HÀNH TỪ NƠI XUẤT PHÁT</span>
+                            <span class="odjc-duration-pill">⏱️ Di chuyển: <b>{{ formDuLieu.nhaXeDaChon?.duration || '13 – 14 giờ' }}</b></span>
+                          </div>
+                          <h4 class="odjc-title">{{ formDuLieu.diemKhoiHanh }} ➔ {{ lichTrinh.destination }}</h4>
+                          <div class="odjc-meta-grid">
+                            <div class="odjc-meta-item">
+                              <span class="omi-label">Phương tiện:</span>
+                              <strong>{{ formDuLieu.nhaXeDaChon ? (formDuLieu.nhaXeDaChon.name + ' - ' + formDuLieu.nhaXeDaChon.type) : (lichTrinh.transit_summary?.selected_bus?.name || 'Xe khách giường nằm VIP') }}</strong>
+                            </div>
+                            <div class="odjc-meta-item">
+                              <span class="omi-label">Cự ly di chuyển:</span>
+                              <strong>~{{ (lichTrinh.transit_summary?.estimated_distance_km || transitRouteInfo.estimatedDistanceKm || 669) }} km</strong>
+                            </div>
+                            <div class="odjc-meta-item">
+                              <span class="omi-label">Điểm đón khách:</span>
+                              <strong>{{ formDuLieu.nhaXeDaChon?.pickup || ('VP bến xe tại ' + formDuLieu.diemKhoiHanh) }}</strong>
+                            </div>
+                            <div class="odjc-meta-item">
+                              <span class="omi-label">Điểm đến / Check-in:</span>
+                              <strong>{{ lichTrinh.hotel_recommendation?.name || 'Khách sạn / Homestay lưu trú' }}</strong>
+                            </div>
+                          </div>
+                          <p class="odjc-note">
+                            🚀 Chuyến đi khởi hành đúng giờ. Đoàn đến {{ lichTrinh.destination }}, cập bến và di chuyển về nhận phòng / gửi hành lý trước khi bắt đầu lịch trình tham quan.
+                          </p>
+                        </div>
+                      </div>
+
                       <template
-                        v-for="(act, actIndex) in day.activities"
+                        v-for="(act, actIndex) in filterActivitiesBySession(day.activities)"
                         :key="act.time + act.place + actIndex"
                       >
-                        <!-- Thẻ Hoạt Động (Activity Row) -->
+                        <!-- DẠNG THU GỌN (COMPACT ACT ROW - TỐI ƯU YÊU CẦU 2 KHÔNG DÀI DÒNG) -->
                         <div
+                          v-if="timelineDensity === 'compact'"
+                          :id="'activity-card-' + dayIdx + '-' + actIndex"
+                          class="compact-act-row"
+                          :class="{
+                            'is-expanded': expandedCardKey === `act-${day.day}-${actIndex}`,
+                            'is-hovered': hoveredActIndex === actIndex && selectedDay === day.day
+                          }"
+                          @mouseenter="hoverActivity(act, actIndex, day.day)"
+                          @mouseleave="unhoverActivity(act, actIndex)"
+                          @click="toggleExpandCard(`act-${day.day}-${actIndex}`)"
+                        >
+                          <div class="car-time-col">
+                            <span class="car-time">{{ act.time }}</span>
+                            <span class="car-dot" :class="getBadgeInfo(act).class"></span>
+                          </div>
+
+                          <div class="car-thumb" @click.stop="panToActivity(act)">
+                            <img :src="getPlaceImage(act)" :alt="act.place" loading="lazy" @error="onImageError" />
+                            <span class="car-idx">#{{ actIndex + 1 }}</span>
+                          </div>
+
+                          <div class="car-body">
+                            <div class="car-top">
+                              <span :class="['badge-type-mini', getBadgeInfo(act).class]">
+                                {{ getBadgeInfo(act).icon }} {{ getBadgeInfo(act).label }}
+                              </span>
+                              <h4 class="car-title" @click.stop="panToActivity(act)">{{ act.place }}</h4>
+                              <span class="car-cost" v-if="act.estimated_cost">💵 {{ dinhDangTien(act.estimated_cost) }}đ</span>
+                            </div>
+                            <div class="car-sub">
+                              <span class="car-addr" v-if="act.address">📍 {{ act.address }}</span>
+                              <span class="car-eta" v-if="getTravelEstimate(act, day, actIndex)">
+                                ⏱️ {{ getTravelEstimate(act, day, actIndex).duration }} ({{ getTravelEstimate(act, day, actIndex).distance }} km)
+                              </span>
+                            </div>
+
+                            <!-- Bung chi tiết nhỏ khi click -->
+                            <div v-if="expandedCardKey === `act-${day.day}-${actIndex}`" class="car-detail-drawer" @click.stop>
+                              <p class="cdd-desc">{{ lamSachMoTa(act.activity, act) }}</p>
+                              <div v-if="act.signature_dishes && act.signature_dishes.length" class="cdd-dishes">
+                                🍲 <b>Món đặc sản:</b> {{ act.signature_dishes.join(', ') }}
+                              </div>
+                              <div class="cdd-meta-tags">
+                                <span class="cdd-tag">⭐ {{ act.rating || '4.7' }}</span>
+                                <span class="cdd-tag">🕒 {{ act.open_hours || getGioMoCua(act.type) }}</span>
+                                <span class="cdd-tag" v-if="act.is_indoor === true">☔ Có mái che</span>
+                                <span class="cdd-tag" v-else-if="act.is_indoor === false">☀️ Ngoài trời</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div class="car-actions">
+                            <button type="button" class="car-btn" @click.stop="moModalDoiDiaDiem(day.day - 1, actIndex, act.type)" title="Đổi điểm">🔄</button>
+                            <a class="car-btn" :href="chiDuongUrl(act.place, act.address)" target="_blank" rel="noreferrer" title="Google Maps" @click.stop>🗺️</a>
+                            <span class="car-chevron">{{ expandedCardKey === `act-${day.day}-${actIndex}` ? '▲' : '▼' }}</span>
+                          </div>
+                        </div>
+
+                        <!-- DẠNG CHI TIẾT ĐẦY ĐỦ (EXPANDED ACTIVITY ROW) -->
+                        <div
+                          v-else
                           :id="'activity-card-' + dayIdx + '-' + actIndex"
                           class="activity-row"
                           :class="{
@@ -1365,10 +2093,6 @@
                                   <h4 class="place-name" :title="act.place" @click="panToActivity(act)">{{ act.place }}</h4>
                                 </div>
                                 <div class="act-actions-group">
-                                  <!-- Nút Đổi Vị Trí (Kéo/Thả ảo) -->
-                                  <button @click.stop="moveActivity(day, actIndex, -1)" v-if="actIndex > 0" class="act-change-btn" title="Chuyển lên" style="background:#f1f5f9; color:#475569; padding: 6px;">▲</button>
-                                  <button @click.stop="moveActivity(day, actIndex, 1)" v-if="actIndex < day.activities.length - 1" class="act-change-btn" title="Chuyển xuống" style="background:#f1f5f9; color:#475569; padding: 6px;">▼</button>
-                                  
                                   <button
                                     type="button"
                                     class="act-change-btn"
@@ -1387,24 +2111,7 @@
                                   >
                                     🗺️ Chỉ đường ↗
                                   </a>
-                                  
-                                  <!-- LIVE MODE: Nút Check-in -->
-                                  <button
-                                    v-if="liveModeActive"
-                                    type="button"
-                                    @click.stop="xacNhanCheckIn(day.day - 1, actIndex, act)"
-                                    style="background: #10b981; color: white; border: none; padding: 4px 10px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.85rem;"
-                                    title="Check-in và nhập chi phí"
-                                  >
-                                    {{ completedActivities[`${day.day - 1}-${actIndex}`] ? '↩ Hủy' : '✅ Đã tới' }}
-                                  </button>
                                 </div>
-                              </div>
-                              
-                              <!-- LIVE MODE: Hiển thị trạng thái đã check-in -->
-                              <div v-if="liveModeActive && completedActivities[`${day.day - 1}-${actIndex}`]" style="margin-top: 8px; padding: 10px; background: #ecfdf5; border: 1px dashed #34d399; border-radius: 8px; font-size: 0.9rem; color: #065f46; display: flex; align-items: center; justify-content: space-between;">
-                                <span><strong style="color: #059669;">Hoàn thành lúc:</strong> {{ new Date().toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'}) }}</span>
-                                <span><strong>Thực chi:</strong> <span style="color: #dc2626;">{{ dinhDangTien(actualExpenses[`${day.day - 1}-${actIndex}`]) }}đ</span></span>
                               </div>
 
                               <!-- Cảnh báo xung đột thời gian mở cửa -->
@@ -1461,9 +2168,38 @@
                               </div>
 
                               <p v-if="act.address" class="act-address">📍 {{ act.address }}</p>
+
+                              <!-- Dòng thời gian di chuyển từ nơi xuất phát đến điểm đến (Yêu cầu 3 - Screenshot 3) -->
+                              <div v-if="getTravelEstimate(act, day, actIndex)" class="act-quick-travel-bar">
+                                <span class="aqtb-time">⏱️ {{ getTravelEstimate(act, day, actIndex).duration }}</span>
+                                <span class="aqtb-sep">·</span>
+                                <span class="aqtb-desc">Từ <strong>{{ getTravelEstimate(act, day, actIndex).from }}</strong> (~{{ getTravelEstimate(act, day, actIndex).distance }} km · {{ getTravelEstimate(act, day, actIndex).mode }})</span>
+                              </div>
                               
                               <!-- Mô tả giá trị thực tế không rập khuôn -->
                               <p class="act-desc">{{ lamSachMoTa(act.activity, act) }}</p>
+
+                              <!-- BONG BÓNG BÌNH LUẬN VUI NHỘN (SQUAD SPEECH BUBBLE) -->
+                              <div v-if="day.day === 1 && actIndex === 0" class="squad-speech-bubble">
+                                <img src="/shrek.jpg" class="sq-chat-avatar" alt="Trùm cuối">
+                                <div class="sq-chat-text">"Tất cả tập trung! {{ act.time }} bắt đầu xuất phát nhé mấy đứa! Lề mề bỏ ở nhà nha! 📣"</div>
+                              </div>
+                              <div v-else-if="act.estimated_cost === 0 && act.type !== 'transport'" class="squad-speech-bubble">
+                                <img src="/avatars/friend1.png" class="sq-chat-avatar" alt="Thủ quỹ">
+                                <div class="sq-chat-text">"Chỗ này FREE nha anh em, đỡ tốn tiền quỹ của tui! Quá đã! 🤑"</div>
+                              </div>
+                              <div v-else-if="actIndex % 5 === 2" class="squad-speech-bubble">
+                                <img src="/avatars/friend2.jpg" class="sq-chat-avatar sq-cyclo" alt="Chúa tể lười">
+                                <div class="sq-chat-text">"Trời ơi đi nãy giờ mỏi chân quá, tới chỗ này có chỗ nằm nghỉ không dạ... 🚲"</div>
+                              </div>
+                              <div v-else-if="actIndex % 5 === 3 && (act.type === 'checkin' || act.type === 'explore')" class="squad-speech-bubble">
+                                <img src="/avatars/friend3.jpg" class="sq-chat-avatar" alt="Thánh sống ảo">
+                                <div class="sq-chat-text">"Góc này lên hình chắc cháy máy! Đưa máy đây nháy cho mấy tấm thần sầu nè 🌹📸"</div>
+                              </div>
+                              <div v-else-if="actIndex % 5 === 4 && act.type === 'food'" class="squad-speech-bubble">
+                                <img src="/avatars/friend4.jpg" class="sq-chat-avatar sq-smirk" alt="Hoa tiêu">
+                                <div class="sq-chat-text">"Review 4.8 sao đấy, ăn không ngon tui đền! Tin tui đi 😏"</div>
+                              </div>
 
                               <div v-if="act.signature_dishes && act.signature_dishes.length > 0" class="act-signature-box">
                                 <span class="asb-title">🍲 Món phải thử (Signature):</span>
@@ -1480,7 +2216,7 @@
 
                         <!-- Transit Micro-UX Badge & UX Validation Warning (Nằm giữa 2 Activity Node) -->
                         <div
-                          v-if="actIndex < day.activities.length - 1"
+                          v-if="timelineDensity === 'expanded' && actIndex < filterActivitiesBySession(day.activities).length - 1"
                           class="transit-micro-row"
                         >
                           <div class="transit-time-col"></div>
@@ -1536,49 +2272,6 @@
                 </div>
               </transition>
 
-              <!-- MÀN HÌNH LIVE MODE BÊN TRÁI -->
-              <transition name="view-fade">
-                <div v-if="liveModeActive" class="live-tracker-sidebar" style="width: 100%; display: flex; flex-direction: column; gap: 16px; padding: 24px; background: white; border-radius: 12px; box-shadow: 0 4px 20px -2px rgba(0,0,0,0.1); overflow-y: auto; z-index: 10;">
-                  <div v-if="currentLiveActivity" style="display: flex; flex-direction: column; gap: 20px;">
-                    <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 20px; border-radius: 16px; position: relative; overflow: hidden;">
-                      <div style="position: absolute; top: -20px; right: -20px; opacity: 0.1; font-size: 100px;">🎯</div>
-                      <h3 style="font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; opacity: 0.9; display: flex; align-items: center; justify-content: space-between;">
-                        <span>Điểm đến tiếp theo</span>
-                        <span style="background: rgba(255,255,255,0.25); padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; font-weight: 700;">{{ currentLiveActivity.globalIndex }} / {{ currentLiveActivity.totalActivities }}</span>
-                      </h3>
-                      <h2 style="font-size: 1.8rem; font-weight: 800; margin-bottom: 8px; line-height: 1.2;">{{ currentLiveActivity.act.place }}</h2>
-                      <p style="font-size: 1.05rem; opacity: 0.95; margin-bottom: 16px;">{{ currentLiveActivity.act.activity }}</p>
-                      
-                      <div style="display: flex; gap: 12px; align-items: center; background: rgba(255,255,255,0.2); padding: 10px 16px; border-radius: 8px; font-weight: 600;">
-                        <span>🕒 Dự kiến: {{ currentLiveActivity.act.time }}</span>
-                      </div>
-                    </div>
-
-                    <div style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0;">
-                      <h4 style="color: #64748b; font-size: 0.85rem; text-transform: uppercase; margin-bottom: 8px;">Thông tin hữu ích</h4>
-                      <ul style="list-style: none; padding: 0; margin: 0; color: #334155; font-size: 0.95rem; line-height: 1.6;">
-                        <li v-if="currentLiveActivity.act.price_range">💵 Giá tham khảo: <b>{{ currentLiveActivity.act.price_range }}</b></li>
-                        <li v-else-if="currentLiveActivity.act.estimated_cost">💵 Dự kiến chi: <b>{{ dinhDangTien(currentLiveActivity.act.estimated_cost) }}đ</b></li>
-                        <li v-if="currentLiveActivity.act.address">📍 Địa chỉ: {{ currentLiveActivity.act.address }}</li>
-                      </ul>
-                    </div>
-
-                    <button @click="xacNhanCheckIn(currentLiveActivity.dayIndex, currentLiveActivity.actIndex, currentLiveActivity.act)" style="background: #10b981; color: white; border: none; padding: 18px; border-radius: 12px; font-size: 1.2rem; font-weight: 800; box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.4); cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 10px;">
-                      ✅ ĐÃ TỚI NƠI / CHECK-IN
-                    </button>
-                    
-                    <a :href="chiDuongUrl(currentLiveActivity.act.place, currentLiveActivity.act.address)" target="_blank" rel="noreferrer" style="background: white; color: #0284c7; border: 2px solid #0284c7; padding: 14px; border-radius: 12px; font-size: 1rem; font-weight: 700; text-align: center; text-decoration: none; display: block;">
-                      🗺️ Chỉ đường Google Maps
-                    </a>
-                  </div>
-                  <div v-else style="text-align: center; padding: 40px 20px; color: #10b981;">
-                    <div style="font-size: 4rem; margin-bottom: 16px;">🎉</div>
-                    <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 8px;">CHÚC MỪNG!</h2>
-                    <p>Bạn đã hoàn thành toàn bộ lịch trình chuyến đi. Thật tuyệt vời!</p>
-                  </div>
-                </div>
-              </transition>
-
               <!-- Cột Phải: Bản đồ cố định Sticky (Hiển thị khi Split hoặc Map View) -->
               <transition name="view-fade">
                 <div
@@ -1604,6 +2297,109 @@
                       </div>
                     </div>
                     <div id="routing-map" class="app-map-iframe" style="z-index: 1;"></div>
+
+                    <!-- Nút xem lộ trình ngày trên Google Maps (Overlay góc trên bản đồ - Screenshot 4) -->
+                    <div class="map-floating-overlay-bar">
+                      <a
+                        :href="googleMapsDayRouteUrl"
+                        target="_blank"
+                        rel="noreferrer"
+                        class="map-route-gmap-pill"
+                        title="Mở toàn bộ lộ trình ngày hôm nay trên Google Maps"
+                      >
+                        <span class="gmap-g-logo">G</span> Xem lộ trình ngày {{ selectedDay }} ↗
+                      </a>
+                    </div>
+
+                    <!-- THẺ CHI TIẾT ĐỊA ĐIỂM TRÊN GOOGLE MAPS KHI CLICK (YÊU CẦU 4 - THEO ĐÚNG SCREENSHOT 4) -->
+                    <transition name="drawer-fade">
+                      <div v-if="selectedMapPlace" class="map-place-detail-drawer">
+                        <button class="mpd-close-btn" @click="selectedMapPlace = null" title="Đóng chi tiết">✕</button>
+                        
+                        <div class="mpd-image-wrap">
+                          <img
+                            :src="getPlaceImage(selectedMapPlace)"
+                            :alt="selectedMapPlace.place"
+                            class="mpd-img"
+                            @error="onImageError"
+                          />
+                          <span :class="['mpd-badge', getBadgeInfo(selectedMapPlace).class]">
+                            {{ getBadgeInfo(selectedMapPlace).label }}
+                          </span>
+                        </div>
+
+                        <div class="mpd-body">
+                          <div class="mpd-header-row">
+                            <h3 class="mpd-title">{{ selectedMapPlace.place }}</h3>
+                          </div>
+                          
+                          <div class="mpd-rating-row">
+                            <span class="mpd-score">{{ selectedMapPlace.rating || '4.6' }}</span>
+                            <span class="mpd-stars">★★★★★</span>
+                            <span class="mpd-reviews">{{ selectedMapPlace.review_count || '7550' }} nhận xét</span>
+                          </div>
+
+                          <p class="mpd-addr">📍 {{ selectedMapPlace.address || selectedMapPlace.place }}</p>
+
+                          <div class="mpd-section">
+                            <h5>Tổng quan</h5>
+                            <p class="mpd-desc">{{ lamSachMoTa(selectedMapPlace.activity, selectedMapPlace) }}</p>
+                          </div>
+
+                          <div class="mpd-gmap-btn-box">
+                            <a
+                              :href="googleMapsSearchUrl(selectedMapPlace)"
+                              target="_blank"
+                              rel="noreferrer"
+                              class="mpd-gmap-primary-btn"
+                            >
+                              🗺️ Xem trên Google Maps ↗
+                            </a>
+                          </div>
+
+                          <!-- Khối nhận xét mô phỏng Google Maps -->
+                          <div class="mpd-section mpd-rev-section">
+                            <h5>Nhận xét</h5>
+                            <div class="mpd-review-card">
+                              <div class="mpd-rev-top">
+                                <div class="mpd-rev-avatar">{{ (selectedMapPlace.reviewer_name || 'Thuy Pham')[0] }}</div>
+                                <div>
+                                  <strong class="mpd-rev-name">{{ selectedMapPlace.reviewer_name || 'Thuy Pham' }}</strong>
+                                  <div class="mpd-rev-rating">★★★★★ <small>một tháng trước</small></div>
+                                </div>
+                              </div>
+                              <p class="mpd-rev-body">
+                                {{ getSampleReviewText(selectedMapPlace) }}
+                              </p>
+                            </div>
+                          </div>
+
+                          <!-- Nút hành động -->
+                          <div class="mpd-actions-row">
+                            <button
+                              type="button"
+                              class="mpd-fav-btn"
+                              @click="doiYeuThich(selectedMapPlace._id || selectedMapPlace.place)"
+                              :title="laYeuThich(selectedMapPlace._id || selectedMapPlace.place) ? 'Bỏ yêu thích' : 'Lưu yêu thích'"
+                            >
+                              {{ laYeuThich(selectedMapPlace._id || selectedMapPlace.place) ? '❤️ Đã thích' : '🤍 Yêu thích' }}
+                            </button>
+                            <button
+                              type="button"
+                              class="mpd-change-btn"
+                              @click="moModalDoiDiaDiemTuMap(selectedMapPlace)"
+                            >
+                              🔄 Đổi địa điểm khác
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </transition>
+
+                    <!-- Thanh hướng dẫn click bản đồ phía dưới (Screenshot 4) -->
+                    <div class="map-bottom-prompt-bar">
+                      <span>Click chọn địa điểm để xem chi tiết trên bản đồ & Google Maps</span>
+                    </div>
                   </div>
                 </div>
               </transition>
@@ -1614,111 +2410,55 @@
 
         <!-- ==================== TAB 3: CHUYẾN ĐI CỦA TÔI (MY TRIPS) ==================== -->
         <section v-if="activeTab === 'mytrips'" class="tab-pane">
-          <div class="pane-header" style="flex-wrap: wrap; gap: 16px;">
+          <div class="pane-header">
             <div>
               <span class="sub-heading">LỊCH SỬ CHUYẾN ĐI</span>
               <h2>Chuyến đi đã lưu</h2>
             </div>
-            <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-              <template v-if="nguoiDung && myTripsList.length">
-                <button 
-                  @click="toggleSelectAllTrips" 
-                  style="background: transparent; border: 1px solid var(--border-color); color: var(--text-main); padding: 8px 16px; border-radius: 50px; font-weight: 600; cursor: pointer;">
-                  {{ selectedTrips.length === myTripsList.length ? 'Bỏ chọn tất cả' : 'Chọn tất cả' }}
-                </button>
-                <button 
-                  v-if="selectedTrips.length > 0"
-                  @click="promptDeleteSelected" 
-                  style="background: #fee2e2; color: #ef4444; border: none; padding: 8px 16px; border-radius: 50px; font-weight: 600; cursor: pointer; transition: all 0.2s;"
-                  onmouseover="this.style.background='#fecaca'" onmouseout="this.style.background='#fee2e2'">
-                  Xóa {{ selectedTrips.length }} mục
-                </button>
-                <button 
-                  @click="promptDeleteAll" 
-                  style="background: #f1f5f9; color: #64748b; border: none; padding: 8px 16px; border-radius: 50px; font-weight: 600; cursor: pointer; transition: background 0.2s;"
-                  onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
-                  Xóa tất cả
-                </button>
-              </template>
-              <button class="app-primary-btn small-btn" style="border-radius: 50px;" @click="startPlannerTransition">+ Tạo mới</button>
+            <button class="app-primary-btn small-btn" @click="startPlannerTransition">+ Tạo chuyến mới</button>
+          </div>
+
+          <!-- Nếu có chuyến đi đã lưu (cả tài khoản và lưu trên máy) -->
+          <div v-if="myTripsList.length" class="my-trips-container">
+            <div v-if="!nguoiDung" class="guest-saved-trips-banner">
+              <span>💡 Bạn đang xem <b>{{ myTripsList.length }} chuyến đi</b> được lưu trên thiết bị này.</span>
+              <button class="gstb-login-btn" @click="hienAuthModal = true">Đăng nhập để đồng bộ đám mây ☁️</button>
+            </div>
+
+            <div class="my-trips-grid">
+              <article v-for="trip in myTripsList" :key="trip._id" class="my-trip-card">
+                <div class="trip-top">
+                  <span class="trip-dest">{{ trip.destination }}</span>
+                  <span class="trip-date">{{ dinhDangNgayNgan(trip.created_at) }}</span>
+                </div>
+                <h3>Chuyến đi {{ trip.days?.length || (trip.daysList?.length) || 0 }} ngày tại {{ trip.destination }}</h3>
+                <p>Dự toán: <b>{{ dinhDangTien(trip.total_budget) }}đ</b> · {{ trip.people || 1 }} người</p>
+                <div class="trip-actions">
+                  <button class="open-trip-btn" @click="xemChiTietChuyenDi(trip)">📋 Xem chi tiết</button>
+                  <button class="share-trip-btn" @click="chiaSeChuyenDi(trip)">🔗 Chia sẻ</button>
+                  <button
+                    class="delete-trip-btn"
+                    @click="xoaChuyenDi(trip)"
+                    title="Xóa chuyến đi này"
+                  >
+                    🗑️
+                  </button>
+                </div>
+              </article>
             </div>
           </div>
 
-          <div v-if="!nguoiDung" class="empty-state-box" style="margin-top: 40px; max-width: 500px; margin-inline: auto;">
-            <div style="font-size: 4rem; margin-bottom: 20px;">🔒</div>
-            <h3 style="font-size: 1.5rem; margin-bottom: 12px;">Đăng nhập để xem các chuyến đi đã lưu</h3>
-            <p style="color: var(--text-sub); margin-bottom: 24px; font-size: 1.05rem; line-height: 1.6;">Lịch trình du lịch của bạn được đồng bộ và lưu trữ an toàn trên đám mây, giúp bạn xem lại và tiếp tục hành trình bất cứ lúc nào, trên mọi thiết bị.</p>
-            <button class="app-primary-btn" style="padding: 14px 28px; font-size: 1.1rem; border-radius: 50px; box-shadow: 0 4px 15px rgba(13, 124, 118, 0.3);" @click="hienAuthModal = true">🚀 Đăng nhập / Đăng ký ngay</button>
-          </div>
-
-          <div v-else-if="myTripsList.length" class="my-trips-grid" style="margin-top: 24px; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; padding-bottom: 40px;">
-            <article v-for="trip in myTripsList" :key="trip._id" class="my-trip-card" style="border-radius: 20px; overflow: hidden; border: 1px solid var(--border-color); box-shadow: 0 10px 30px rgba(0,0,0,0.06); transition: transform 0.3s ease, box-shadow 0.3s ease; position: relative; display: flex; flex-direction: column; background: var(--card-bg);" @mouseenter="$event.currentTarget.style.transform='translateY(-6px)'; $event.currentTarget.style.boxShadow='0 20px 40px rgba(0,0,0,0.12)'" @mouseleave="$event.currentTarget.style.transform='none'; $event.currentTarget.style.boxShadow='0 10px 30px rgba(0,0,0,0.06)'">
-              
-              <!-- Cover Banner -->
-              <div style="height: 130px; background: linear-gradient(135deg, var(--primary) 0%, #06b6d4 100%); position: relative; padding: 24px; color: white; display: flex; flex-direction: column; justify-content: flex-end; cursor: pointer;" @click="toggleTripSelection(trip._id)">
-                 <!-- Checkbox góc trái -->
-                 <div style="position: absolute; top: 16px; left: 16px; width: 24px; height: 24px; border-radius: 6px; background: rgba(255,255,255,0.3); border: 2px solid white; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" :style="selectedTrips.includes(trip._id) ? 'background: white;' : ''">
-                   <svg v-if="selectedTrips.includes(trip._id)" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                 </div>
-                 <span style="position: absolute; top: 16px; right: 16px; background: rgba(255,255,255,0.25); padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; backdrop-filter: blur(8px); box-shadow: 0 2px 8px rgba(0,0,0,0.1);">{{ trip.days?.length || 0 }} Ngày</span>
-                 <h3 style="font-size: 1.8rem; font-weight: 800; margin: 0; color: white; text-shadow: 0 2px 8px rgba(0,0,0,0.25); line-height: 1.2;">{{ trip.destination }}</h3>
-              </div>
-
-              <!-- Card Body -->
-              <div style="padding: 24px; flex: 1; display: flex; flex-direction: column;">
-                 <p style="color: var(--text-sub); margin-bottom: 20px; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; font-weight: 500;">
-                   📅 <span>Tạo ngày: {{ dinhDangNgayNgan(trip.created_at) }}</span>
-                 </p>
-                 
-                 <!-- Stats Box -->
-                 <div style="background: var(--bg-color); padding: 16px 20px; border-radius: 14px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-color);">
-                    <div>
-                       <p style="font-size: 0.75rem; color: var(--text-sub); margin: 0 0 6px 0; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;">NGÂN SÁCH</p>
-                       <b style="font-size: 1.3rem; color: var(--primary);">{{ dinhDangTien(trip.total_budget) }}đ</b>
-                    </div>
-                    <div style="text-align: right;">
-                       <p style="font-size: 0.75rem; color: var(--text-sub); margin: 0 0 6px 0; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;">THÀNH VIÊN</p>
-                       <b style="font-size: 1.15rem; color: var(--text-main);">{{ trip.people || 1 }} Người</b>
-                    </div>
-                 </div>
-                 
-                 <div style="margin-top: auto; display: flex; gap: 12px;">
-                   <button @click="moLaiLichTrinh(trip)" style="flex: 1; padding: 14px; border-radius: 12px; background: var(--primary); color: white; border: none; font-size: 1rem; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(13, 124, 118, 0.25); transition: background 0.2s;" onmouseover="this.style.background='var(--primary-dark)'" onmouseout="this.style.background='var(--primary)'">
-                     Mở lịch trình ↗
-                   </button>
-                   <button @click="chiaSeChuyenDi(trip)" style="padding: 14px; width: 52px; display: flex; justify-content: center; align-items: center; border-radius: 12px; background: #f1f5f9; color: #475569; border: none; font-size: 1.1rem; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'" title="Chia sẻ">
-                     🔗
-                   </button>
-                   <button @click="promptDeleteTrip(trip)" style="padding: 14px; width: 52px; display: flex; justify-content: center; align-items: center; border-radius: 12px; background: #fee2e2; color: #ef4444; border: none; font-size: 1.1rem; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#fecaca'" onmouseout="this.style.background='#fee2e2'" title="Xóa chuyến đi">
-                     🗑️
-                   </button>
-                 </div>
-              </div>
-            </article>
-          </div>
-
-          <!-- Modal Xóa -->
-          <transition name="fade">
-            <div v-if="modalDeleteVisible" class="modal-overlay" style="z-index: 1000;" @click.self="modalDeleteVisible = false">
-              <div class="modal-card" style="max-width: 420px; padding: 28px; border-radius: 16px; text-align: center;">
-                <div style="width: 64px; height: 64px; background: #fee2e2; color: #ef4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 2rem;">
-                  🗑️
-                </div>
-                <h3 style="font-size: 1.4rem; font-weight: 800; color: #0f172a; margin-bottom: 12px;">Xác nhận xóa</h3>
-                
-                <p v-if="deleteTarget === 'all'" style="color: #475569; font-size: 1.05rem; margin-bottom: 24px;">Bạn có chắc chắn muốn xóa <b>toàn bộ {{ myTripsList.length }} chuyến đi</b> không? Hành động này không thể hoàn tác.</p>
-                <p v-else-if="deleteTarget === 'selected'" style="color: #475569; font-size: 1.05rem; margin-bottom: 24px;">Bạn có chắc chắn muốn xóa <b>{{ selectedTrips.length }} chuyến đi đã chọn</b> không? Hành động này không thể hoàn tác.</p>
-                <p v-else style="color: #475569; font-size: 1.05rem; margin-bottom: 24px;">Bạn có chắc chắn muốn xóa chuyến đi <b>"{{ deleteTarget?.destination }}"</b> không? Hành động này không thể hoàn tác.</p>
-                
-                <div style="display: flex; gap: 12px;">
-                  <button @click="modalDeleteVisible = false" style="flex: 1; padding: 14px; border-radius: 12px; font-weight: 600; border: none; background: #f1f5f9; color: #475569; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">Hủy bỏ</button>
-                  <button @click="executeDeleteTrips" style="flex: 1; padding: 14px; border-radius: 12px; font-weight: 700; border: none; background: #ef4444; color: white; cursor: pointer; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); transition: background 0.2s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">Xóa ngay</button>
-                </div>
-              </div>
+          <div v-else-if="!nguoiDung" class="auth-prompt-card">
+            <span class="prompt-icon">🔒</span>
+            <h3>Đăng nhập hoặc lưu lịch trình đầu tiên</h3>
+            <p>Sau khi lên lịch trình, bạn có thể bấm "Lưu lại lịch trình này" để xem lại bất cứ lúc nào.</p>
+            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 12px;">
+              <button class="app-primary-btn" @click="hienAuthModal = true">Đăng nhập / Đăng ký</button>
+              <button class="app-secondary-btn" @click="activeTab = 'planner'">+ Lên lịch trình mới</button>
             </div>
-          </transition>
+          </div>
 
-          <div v-if="nguoiDung && myTripsList.length === 0" class="empty-state-box">
+          <div v-else class="empty-state-box">
             <span class="empty-icon">🧳</span>
             <h3>Bạn chưa lưu chuyến đi nào</h3>
             <p>Hãy tạo lịch trình đầu tiên để bắt đầu hành trình khám phá Miền Trung.</p>
@@ -1730,74 +2470,23 @@
         <!-- ==================== TAB 5: TÀI KHOẢN & YÊU THÍCH (PROFILE) ==================== -->
         <section v-if="activeTab === 'profile'" class="tab-pane">
           <!-- Nếu đã đăng nhập -->
-          <div v-if="nguoiDung" class="profile-card-premium">
-            <div class="profile-cover">
-              <button class="edit-profile-btn" @click="editProfile" v-if="!editProfileMode">
-                ✏️ Chỉnh sửa hồ sơ
-              </button>
+          <div v-if="nguoiDung" class="profile-card">
+            <div class="profile-avatar-large">
+              {{ nguoiDung.name ? nguoiDung.name[0].toUpperCase() : 'U' }}
             </div>
-            <div class="profile-avatar-premium">
-              <img v-if="nguoiDung.avatar" :src="nguoiDung.avatar" alt="Avatar" class="avatar-img" />
-              <div v-else class="avatar-placeholder">{{ nguoiDung.name ? nguoiDung.name[0].toUpperCase() : 'U' }}</div>
-              
-              <div class="level-badge" :style="{ backgroundColor: userLevelInfo.color }" :title="`Hoàn thành ${nguoiDung.completed_trips || 0} chuyến đi`">
-                {{ userLevelInfo.icon }} {{ userLevelInfo.title }}
+            <h3>{{ nguoiDung.name }}</h3>
+            <p class="profile-email">{{ nguoiDung.email }}</p>
+            <div class="profile-stats-row">
+              <div class="stat-box">
+                <strong>{{ myTripsList.length }}</strong>
+                <small>Chuyến đi</small>
               </div>
-            </div>
-            
-            <div class="profile-info-premium" v-if="!editProfileMode">
-              <h3 class="profile-name">{{ nguoiDung.name }} <span v-if="nguoiDung.role === 'admin'" class="admin-badge">Admin</span></h3>
-              <p class="profile-email">{{ nguoiDung.email }}</p>
-              <p class="profile-bio" v-if="nguoiDung.bio">"{{ nguoiDung.bio }}"</p>
-              
-              <div class="profile-stats-grid">
-                <div class="stat-box-premium">
-                  <div class="stat-icon">🗺️</div>
-                  <strong>{{ myTripsList.length }}</strong>
-                  <small>Đã lên lịch</small>
-                </div>
-                <div class="stat-box-premium">
-                  <div class="stat-icon">✅</div>
-                  <strong>{{ nguoiDung.completed_trips || 0 }}</strong>
-                  <small>Hoàn thành</small>
-                </div>
-                <div class="stat-box-premium">
-                  <div class="stat-icon">❤️</div>
-                  <strong>{{ favoritesList.length }}</strong>
-                  <small>Yêu thích</small>
-                </div>
-                <div class="stat-box-premium">
-                  <div class="stat-icon">🏆</div>
-                  <strong>{{ nguoiDung.points || 0 }}</strong>
-                  <small>Điểm số</small>
-                </div>
-              </div>
-              <button class="logout-btn-premium" @click="dangXuat">Đăng xuất</button>
-            </div>
-            
-            <div class="profile-edit-form" v-else>
-              <h3>Chỉnh sửa hồ sơ</h3>
-              <div class="edit-field">
-                <label>Tên hiển thị</label>
-                <input type="text" v-model="profileForm.name" class="app-input" />
-              </div>
-              <div class="edit-field">
-                <label>Ảnh đại diện (Tải lên từ thiết bị)</label>
-                <input type="file" accept="image/*" @change="handleAvatarUpload" class="app-input" style="padding: 8px;" />
-                <div v-if="profileForm.avatar && profileForm.avatar.startsWith('data:image')" style="margin-top: 10px; display: flex; align-items: center; gap: 10px;">
-                   <img :src="profileForm.avatar" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #10b981;" />
-                   <span style="font-size: 0.85rem; color: #10b981; font-weight: 600;">Đã đính kèm ảnh mới</span>
-                </div>
-              </div>
-              <div class="edit-field">
-                <label>Giới thiệu bản thân</label>
-                <textarea v-model="profileForm.bio" class="app-input" rows="3" placeholder="Sở thích du lịch của bạn là gì?"></textarea>
-              </div>
-              <div class="edit-actions">
-                <button class="cancel-edit-btn" @click="editProfileMode = false">Hủy</button>
-                <button class="save-edit-btn" @click="saveProfile">💾 Lưu thay đổi</button>
+              <div class="stat-box">
+                <strong>{{ favoritesList.length }}</strong>
+                <small>Yêu thích</small>
               </div>
             </div>
+            <button class="logout-btn" @click="dangXuat">Đăng xuất</button>
           </div>
 
           <!-- Nếu chưa đăng nhập -->
@@ -1809,25 +2498,20 @@
             </button>
           </div>
 
-          <div v-if="nguoiDung && favoritesList.length" class="favorites-section" style="margin-top: 32px; text-align: left;">
-            <h3 style="margin-bottom: 20px; color: #0f172a;">Địa điểm đã lưu yêu thích ({{ favoritesList.length }})</h3>
+          <!-- Danh sách Địa điểm yêu thích -->
+          <div v-if="nguoiDung && favoritesList.length" class="favorites-section">
+            <h3>Địa điểm đã lưu yêu thích ({{ favoritesList.length }})</h3>
             <div class="places-app-grid">
               <article v-for="place in favoritesList" :key="place._id" class="app-place-card" v-reveal>
-                <div class="place-img-cover" :style="{ backgroundImage: `url(${getPlaceImage(place)})` }">
-                  <span :class="['place-card-type', 'type-' + place.type]">
-                    {{ getPlaceTypeLabel(place.type) }}
-                  </span>
-                  <button class="heart-action-btn active" @click.stop="doiYeuThich(place._id)" title="Bỏ yêu thích">
-                    ♥
-                  </button>
+                <div class="place-card-top">
+                  <span class="place-card-type">{{ getPlaceTypeLabel(place.type) }}</span>
+                  <button class="heart-action-btn active" @click="doiYeuThich(place._id)">♥</button>
                 </div>
-                <div class="place-card-content">
-                  <h4>{{ place.name }}</h4>
-                  <p class="place-card-desc">{{ place.description }}</p>
-                  <p class="place-card-address" v-if="place.address">📍 {{ place.address }}</p>
-                  <div class="place-card-bottom">
-                    <a class="place-maps-btn" :href="chiDuongUrl(place.name, place.address)" target="_blank">🗺️ Chỉ đường</a>
-                  </div>
+                <h4>{{ place.name }}</h4>
+                <p class="place-card-desc">{{ place.description }}</p>
+                <p class="place-card-address" v-if="place.address">📍 {{ place.address }}</p>
+                <div class="place-card-bottom">
+                  <a class="place-maps-btn" :href="chiDuongUrl(place.name, place.address)" target="_blank">🗺️ Chỉ đường</a>
                 </div>
               </article>
             </div>
@@ -1839,27 +2523,6 @@
 
     </div>
 
-
-    <!-- ==================== POPUP MODAL XÁC NHẬN CHECK-IN ==================== -->
-    <transition name="fade">
-      <div v-if="hienModalCheckIn" class="modal-overlay" @click.self="hienModalCheckIn = false" style="z-index: 1000;">
-        <div class="modal-card" style="max-width: 400px; padding: 24px; text-align: center; border-radius: 16px;">
-          <div style="font-size: 3rem; margin-bottom: 16px;">🎉</div>
-          <h3 style="font-size: 1.4rem; font-weight: 800; color: #0f172a; margin-bottom: 8px;">Chúc mừng bạn đã đến nơi!</h3>
-          <p style="color: #64748b; font-size: 1.1rem; font-weight: 600; margin-bottom: 24px;">{{ checkInTempData?.place }}</p>
-          
-          <div style="text-align: left; margin-bottom: 24px;">
-            <label style="display: block; font-size: 0.95rem; color: #475569; font-weight: 600; margin-bottom: 8px;">Chi phí bạn đã tiêu ở đây là bao nhiêu? (VND)</label>
-            <input type="number" v-model="checkInTempCost" class="app-input" placeholder="0" style="width: 100%; font-size: 1.1rem; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1;" @keyup.enter="luuCheckIn">
-          </div>
-          
-          <div style="display: flex; gap: 12px;">
-            <button @click="hienModalCheckIn = false" style="flex: 1; padding: 12px; border-radius: 8px; font-weight: 600; border: 1px solid #cbd5e1; background: white; color: #64748b; cursor: pointer;">Để sau</button>
-            <button @click="luuCheckIn" style="flex: 2; padding: 12px; border-radius: 8px; font-weight: 700; border: none; background: #10b981; color: white; cursor: pointer; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">Hoàn thành</button>
-          </div>
-        </div>
-      </div>
-    </transition>
 
     <!-- ==================== POPUP MODAL ĐĂNG NHẬP NHANH ==================== -->
     <transition name="auth-fade">
@@ -1894,6 +2557,54 @@
       </div>
     </div>
     </transition>
+
+
+    <!-- ==================== POPUP MODAL THAY ĐỔI LỊCH TRÌNH KHÁC (YÊU CẦU 1) ==================== -->
+    <div v-if="hienModalDoiLichTrinh" class="modal-overlay" @click.self="hienModalDoiLichTrinh = false">
+      <div class="modal-card replan-modal-card">
+        <div class="modal-header">
+          <div class="rmc-title-group">
+            <span class="rmc-icon">🔄</span>
+            <div>
+              <h3 style="margin: 0; font-size: 1.15rem;">Thay Đổi Lịch Trình Khác</h3>
+              <p class="rmc-sub" style="margin: 2px 0 0; font-size: 0.82rem; color: #64748b;">Chọn phương thức bạn muốn điều chỉnh hành trình</p>
+            </div>
+          </div>
+          <button class="close-modal-btn" @click="hienModalDoiLichTrinh = false">✕</button>
+        </div>
+        <div class="replan-options-body">
+          <!-- Lựa chọn 1: Chỉnh sửa thông số -->
+          <div class="replan-option-card" @click="chonDoiThongSo">
+            <div class="roc-icon">✏️</div>
+            <div class="roc-text">
+              <h4>Chỉnh sửa thông số chuyến đi</h4>
+              <p>Thay đổi số ngày, số người, mức kinh phí, phương tiện xe hoặc ngày khởi hành.</p>
+            </div>
+            <span class="roc-arrow">➔</span>
+          </div>
+
+          <!-- Lựa chọn 2: AI Tạo phương án ngẫu nhiên mới -->
+          <div class="replan-option-card" @click="chonAILenPhuongAnMoi">
+            <div class="roc-icon">🎲</div>
+            <div class="roc-text">
+              <h4>AI Đề xuất phương án mới ngay</h4>
+              <p>Giữ nguyên số ngày và ngân sách, AI sẽ làm mới và gợi ý các điểm check-in & quán ăn khác.</p>
+            </div>
+            <span class="roc-arrow">➔</span>
+          </div>
+
+          <!-- Lựa chọn 3: Đổi sang tỉnh thành khác -->
+          <div class="replan-option-card" @click="chonDoiTinhThanh">
+            <div class="roc-icon">📍</div>
+            <div class="roc-text">
+              <h4>Khám phá tỉnh thành khác</h4>
+              <p>Chọn các điểm đến hấp dẫn khác như Huế, Đà Nẵng, Hội An, Quy Nhơn, Nha Trang...</p>
+            </div>
+            <span class="roc-arrow">➔</span>
+          </div>
+        </div>
+      </div>
+    </div>
 
 
     <!-- ==================== POPUP MODAL CHIA TIỀN NHÓM (BILL SPLITTER) ==================== -->
@@ -2152,6 +2863,145 @@
       <button class="skip-intro-btn" @click.stop="boQuaIntro">Bỏ qua ⏭️</button>
     </div>
 
+    <!-- ==================== MODAL XÁC NHẬN LƯU LỊCH TRÌNH TRƯỚC KHI CHUYỂN TAB (PHẦN 2) ==================== -->
+    <div v-if="hienModalNhacLuu" class="modal-overlay save-confirm-overlay" @click.self="huyChuyenTab">
+      <div class="modal-card save-confirm-card">
+        <div class="scm-icon-ring">💾</div>
+        <h3>Lưu lịch trình trước khi rời đi?</h3>
+        <p>Bạn có một lịch trình <b>chưa được lưu</b>. Nếu rời trang này mà không lưu, lịch trình sẽ bị mất.</p>
+        <div class="scm-actions">
+          <button class="scm-btn scm-btn-save" @click="dongYLuuVaChuyenTab">
+            💾 Lưu lịch trình
+          </button>
+          <button class="scm-btn scm-btn-discard" @click="khongLuuVaChuyenTab">
+            🚫 Bỏ qua, không lưu
+          </button>
+          <button class="scm-btn scm-btn-cancel" @click="huyChuyenTab">
+            ✕ Ở lại trang này
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== MODAL XEM CHI TIẾT CHUYẾN ĐI ĐÃ LƯU (PHẦN 3) ==================== -->
+    <div v-if="hienModalChiTietTrip && xemTripChiTiet" class="modal-overlay trip-detail-overlay" @click.self="hienModalChiTietTrip = false">
+      <div class="modal-card trip-detail-modal-card">
+        <!-- Header -->
+        <div class="tdm-header">
+          <div class="tdm-header-info">
+            <span class="tdm-dest-tag">{{ xemTripChiTiet.destination }}</span>
+            <h2 class="tdm-title">Chuyến đi {{ (xemTripChiTiet.daysList || xemTripChiTiet.days || []).length }} Ngày tại {{ xemTripChiTiet.destination }}</h2>
+            <div class="tdm-meta-row">
+              <span class="tdm-meta-item">👥 {{ xemTripChiTiet.people || 1 }} người</span>
+              <span class="tdm-meta-item">💰 {{ dinhDangTien(xemTripChiTiet.total_budget) }}đ</span>
+              <span class="tdm-meta-item">📅 {{ dinhDangNgayNgan(xemTripChiTiet.created_at) }}</span>
+            </div>
+          </div>
+          <button class="close-modal-btn tdm-close" @click="hienModalChiTietTrip = false">✕</button>
+        </div>
+
+        <!-- Body: Nếu đang xem ngày cụ thể -->
+        <div v-if="xemNgayChiTiet" class="tdm-day-detail-view">
+          <button class="tdm-back-btn" @click="xemNgayChiTiet = null">← Quay lại danh sách ngày</button>
+          <!-- Day card header giống hình 3/4 -->
+          <div class="tdm-day-header-card">
+            <div class="tdm-day-info">
+              <span class="tdm-day-label">Ngày {{ xemNgayChiTiet.day }}</span>
+              <h3 class="tdm-day-route">{{ xemNgayChiTiet.title || xemNgayChiTiet.route || ('Ngày ' + xemNgayChiTiet.day) }}</h3>
+              <p class="tdm-day-meals">
+                🍽️ {{ ['breakfast','lunch','dinner'].filter(m => (xemNgayChiTiet.activities||[]).some(a => a.type === m)).map(m => m === 'breakfast' ? 'Sáng' : m === 'lunch' ? 'Trưa' : 'Tối').join(', ') || 'Ăn sáng, trưa, tối' }}
+              </p>
+            </div>
+            <div class="tdm-day-img-wrap" v-if="xemNgayChiTiet.activities && xemNgayChiTiet.activities[0]?.image_url">
+              <img :src="xemNgayChiTiet.activities[0].image_url" :alt="xemNgayChiTiet.title" class="tdm-day-img" />
+            </div>
+            <div class="tdm-day-img-wrap tdm-day-img-placeholder" v-else>
+              <span>🗺️</span>
+            </div>
+          </div>
+
+          <!-- Activities list -->
+          <div class="tdm-activities-section">
+            <h4 class="tdm-activities-title">
+              {{ xemNgayChiTiet.theme ? ('Hoạt động chính: ' + xemNgayChiTiet.theme) : 'Lịch trình trong ngày' }}
+            </h4>
+            <ul class="tdm-activities-list">
+              <li v-for="(act, idx) in (xemNgayChiTiet.activities || [])" :key="idx" class="tdm-act-item">
+                <span class="tdm-act-time" v-if="act.time">{{ act.time }}</span>
+                <span class="tdm-act-icon">{{ act.type === 'breakfast' ? '🌅' : act.type === 'lunch' ? '☀️' : act.type === 'dinner' ? '🌙' : act.type === 'attraction' || act.type === 'checkin' ? '📍' : act.type === 'transport' ? '🚌' : '✨' }}</span>
+                <div class="tdm-act-info">
+                  <span class="tdm-act-name">{{ act.name }}</span>
+                  <span class="tdm-act-desc" v-if="act.description">{{ act.description }}</span>
+                  <span class="tdm-act-cost" v-if="act.estimated_cost > 0">~{{ dinhDangTien(act.estimated_cost) }}đ/người</span>
+                  <span class="tdm-act-cost free-tag" v-else-if="act.estimated_cost === 0">Miễn phí</span>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Body: Danh sách ngày (giống hình 2 — list clickable) -->
+        <div v-else class="tdm-days-list-view">
+          <h3 class="tdm-section-title">📅 Lịch trình</h3>
+          <div class="tdm-days-list">
+            <div
+              v-for="day in (xemTripChiTiet.daysList || xemTripChiTiet.days || [])"
+              :key="day.day"
+              class="tdm-day-row"
+              @click="xemNgayChiTiet = day"
+            >
+              <div class="tdm-day-row-info">
+                <span class="tdm-day-row-title">Ngày {{ day.day }}: {{ day.title || day.route || ('Ngày ' + day.day) }}</span>
+                <span class="tdm-day-row-meals">
+                  🍽️ {{ ['breakfast','lunch','dinner'].filter(m => (day.activities||[]).some(a => a.type === m)).map(m => m === 'breakfast' ? 'Ăn sáng' : m === 'lunch' ? 'trưa' : 'tối').join(', ') || 'Ăn sáng, trưa, tối' }}
+                </span>
+              </div>
+              <span class="tdm-day-row-arrow">›</span>
+            </div>
+          </div>
+
+          <!-- Budget summary -->
+          <div class="tdm-budget-summary" v-if="xemTripChiTiet.budget_breakdown">
+            <h3 class="tdm-section-title">💰 Chi phí ước tính</h3>
+            <div class="tdm-budget-grid">
+              <div class="tdm-budget-item" v-if="xemTripChiTiet.budget_breakdown.hotel">
+                <span class="tbi-icon">🏨</span>
+                <span class="tbi-label">Khách sạn</span>
+                <span class="tbi-value">{{ dinhDangTien(xemTripChiTiet.budget_breakdown.hotel) }}đ</span>
+              </div>
+              <div class="tdm-budget-item" v-if="xemTripChiTiet.budget_breakdown.transportation">
+                <span class="tbi-icon">🚌</span>
+                <span class="tbi-label">Di chuyển</span>
+                <span class="tbi-value">{{ dinhDangTien(xemTripChiTiet.budget_breakdown.transportation) }}đ</span>
+              </div>
+              <div class="tdm-budget-item" v-if="xemTripChiTiet.budget_breakdown.food">
+                <span class="tbi-icon">🍜</span>
+                <span class="tbi-label">Ăn uống</span>
+                <span class="tbi-value">{{ dinhDangTien(xemTripChiTiet.budget_breakdown.food) }}đ</span>
+              </div>
+              <div class="tdm-budget-item" v-if="xemTripChiTiet.budget_breakdown.tickets">
+                <span class="tbi-icon">🎫</span>
+                <span class="tbi-label">Vé tham quan</span>
+                <span class="tbi-value">{{ dinhDangTien(xemTripChiTiet.budget_breakdown.tickets) }}đ</span>
+              </div>
+              <div class="tdm-budget-item tdm-budget-total">
+                <span class="tbi-icon">💵</span>
+                <span class="tbi-label">Tổng cộng</span>
+                <span class="tbi-value tbi-total">{{ dinhDangTien(xemTripChiTiet.total_budget) }}đ</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action buttons -->
+          <div class="tdm-footer-actions">
+            <button class="tdm-action-btn tdm-open-btn" @click="moLaiLichTrinh(xemTripChiTiet); hienModalChiTietTrip = false">
+              🗺️ Mở và xem đầy đủ lịch trình
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ==================== PLANNER FLASH TRANSITION ==================== -->
     <transition name="planner-flash">
       <div v-if="isPlannerTransitioning" class="planner-transition-overlay"></div>
@@ -2181,61 +3031,49 @@ L.Icon.Default.mergeOptions({
 
 // Navigation Tab State
 const activeTab = ref('explore')
-const selectedTrips = ref([])
-const modalDeleteVisible = ref(false)
-const deleteTarget = ref(null) // Can be 'all', 'selected', or a specific trip object
 const isPlannerTransitioning = ref(false)
 
+function cuonLenDauTrang() {
+  window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+  document.documentElement.scrollTop = 0
+  document.body.scrollTop = 0
+  const appRoot = document.querySelector('.app-root') || document.querySelector('.app')
+  if (appRoot) appRoot.scrollTop = 0
+}
+
 function handleTabChange(newTab) {
-  if (newTab === 'planner' && activeTab.value !== 'planner') {
+  if (newTab === 'planner') {
     startPlannerTransition()
   } else {
-    activeTab.value = newTab
+    // Dùng chuyenTab() để kiểm tra lưu lịch trình trước khi rời planner (Phần 2)
+    chuyenTab(newTab)
   }
 }
 
 function startPlannerTransition() {
-  if (activeTab.value === 'planner') return
   activeTab.value = 'planner'
+  cuonLenDauTrang()
+  nextTick(() => {
+    cuonLenDauTrang()
+  })
 }
 
-const aiPromptText = ref('')
-const isParsingPrompt = ref(false)
+const ALL_DESTINATIONS = 'Tất cả miền Trung'
 
-async function submitAiPrompt() {
-  if (!aiPromptText.value.trim() || isParsingPrompt.value) return
-  isParsingPrompt.value = true
-  
-  try {
-    const res = await api.post('/ai/parse-prompt', { prompt: aiPromptText.value })
-    const data = res.data
-    
-    // Fill the planner form
-    formDuLieu.diemDen = data.diemDen || 'Đà Nẵng'
-    formDuLieu.ngay = data.soNgay || 3
-    formDuLieu.soNguoi = data.soNguoi || 1
-    formDuLieu.nganSach = data.nganSach || 5000000
-    formDuLieu.chuDe = data.kieuDuLich || 'Khám phá'
-    if (data.soThich) {
-      formDuLieu.ghiChu = data.soThich
-    }
-    
-    // Clear prompt & Transition to planner
-    aiPromptText.value = ''
-    startPlannerTransition()
-    
-    // Auto-generate itinerary immediately so the user doesn't have to interact with the long form
-    setTimeout(() => {
-      taoLichTrinh()
-    }, 100)
-    
-  } catch (e) {
-    alert('Không thể phân tích yêu cầu: ' + (e?.response?.data?.error || e.message))
-  } finally {
-    isParsingPrompt.value = false
-  }
-}
-
+const formDuLieu = reactive({
+  diemKhoiHanh: 'Hà Nội',
+  diemDen: 'Đà Nẵng',
+  soNgay: 3,
+  nganSach: 3500000,
+  soNguoi: 2,
+  soThich: [],
+  ngayBatDau: '2026-10-06',
+  ngayKetThuc: '2026-10-08',
+  phuongTien: 'xe khách',
+  yeuCauKhachSan: '',
+  nhaXeDaChon: null,
+  freePlacesOnly: false
+})
 
 // Dark Mode State
 const isDark = ref(false)
@@ -2266,7 +3104,259 @@ const centralCities = [
   { name: 'Lâm Đồng', icon: '🌲', tag: 'Đà Lạt Ngàn Hoa & Thác Dambri', image: 'https://cdn.tgdd.vn/Files/2023/10/25/1553008/top-22-dia-diem-du-lich-lam-dong-dep-nhat-dinh-khong-nen-bo-qua-202310251415581585.jpg', audio: '/music/lamdong.mp3' }
 ]
 
-const ALL_DESTINATIONS = 'Tất cả miền Trung'
+// DỮ LIỆU ĐIỂM ĐẾN NỔI BẬT: ẢNH HD THỰC TẾ 100%, 5 THUMBNAILS GALLERY ĐÚNG DANH THẮNG & THÔNG TIN DU LỊCH CHI TIẾT
+const PROVINCE_SPOTLIGHTS = {
+  'Đà Nẵng': {
+    title: 'Đà Nẵng - Thành phố đáng sống bên sông Hàn & Biển Mỹ Khê',
+    subtitle: 'Kỳ quan Cầu Vàng Bà Nà Hills, Bán đảo Sơn Trà & Di sản Phố Cổ Hội An kề cận',
+    badge: 'ESG & LEI Certified 2026',
+    esgText: 'ESG: 75 | LEI: 72',
+    certText: 'Chứng nhận Di sản & Du lịch Xanh',
+    description: 'Đà Nẵng sở hữu đường bờ biển Mỹ Khê lọt top quyến rũ nhất hành tinh, bán đảo Sơn Trà - lá phổi xanh nguyên sinh với Chùa Linh Ứng uy nghiêm, cây Cầu Rồng phun lửa ngoạn mục và vị trí tâm điểm kết nối các di sản thế giới miền Trung.',
+    specialties: ['Mì Quảng ếch', 'Bánh tráng cuốn thịt heo hai đầu da', 'Bánh xèo nem lụi', 'Chả bò Đà Nẵng', 'Gỏi cá Nam Ô'],
+    bestSeason: 'Tháng 3 - Tháng 8 (Mùa khô ráo, nắng vàng chan hòa, biển trong xanh màu ngọc bích)',
+    heroImage: 'https://www.pullman-danang.com/wp-content/uploads/sites/86/2019/05/DJI_0004.jpg',
+    gallery: [
+      { name: 'Cầu Vàng Bà Nà Hills', image: 'https://www.pullman-danang.com/wp-content/uploads/sites/86/2019/05/DJI_0004.jpg' },
+      { name: 'Bãi biển Mỹ Khê', image: 'https://mia.vn/media/uploads/blog-du-lich/bai-bien-my-khe-da-nang-lang-nguoi-ngam-nhin-1-trong-6-bai-bien-dep-nhat-hanh-tinh-01-1636298582.jpeg' },
+      { name: 'Bán đảo Sơn Trà', image: 'https://r2.nucuoimekong.com/wp-content/uploads/ban-dao-son-tra-co-gi.jpg' },
+      { name: 'Cầu Rồng Sông Hàn', image: 'https://benduthuyendanang.com/wp-content/uploads/Tour-xem-cau-rong-phun-lua.jpg' },
+      { name: 'Phố Cổ Hội An', image: 'https://static.vinwonders.com/2022/03/pho-den-long-hoi-an-1.jpg' }
+    ]
+  },
+  'Huế': {
+    title: 'Cố Đô Huế - Miền Di Sản Trầm Mặc & Nhã Nhạc Cung Đình',
+    subtitle: 'Quần thể Di tích Cố đô triều Nguyễn, Sông Hương êm đềm & Ẩm thực cung đình tinh hoa',
+    badge: 'UNESCO World Heritage',
+    esgText: 'ESG: 78 | LEI: 74',
+    certText: 'Di sản Văn hóa Thế giới UNESCO',
+    description: 'Thủ phủ văn hóa lịch sử triều Nguyễn với Đại Nội Hoàng Thành nguy nga, lăng tẩm các vị vua cổ kính, chùa Thiên Mụ soi bóng dòng sông Hương thơ mộng và ẩm thực cung đình cầu kỳ tinh tế bậc nhất Việt Nam.',
+    specialties: ['Bún bò giò heo Cố đô', 'Cơm hến Đập Đá', 'Bánh bèo, nậm, lọc', 'Chè bột lọc heo quay', 'Nem lụi Hoàng Cung'],
+    bestSeason: 'Tháng 1 - Tháng 5 (Khí hậu dịu mát, không mưa, hoa ngô đồng nở rộ Hoàng Thành)',
+    heroImage: 'https://sacotravel.com/wp-content/uploads/2023/07/Dai-Noi-Hue.jpg',
+    gallery: [
+      { name: 'Đại Nội Hoàng Thành', image: 'https://static.vinwonders.com/production/optimize_ngo-mon-hue_optimized.jpg' },
+      { name: 'Lăng Khải Định kỳ vĩ', image: 'https://nemtv.vn/wp-content/uploads/2019/03/lang-khai-dinh-nemtv-3.jpg' },
+      { name: 'Chùa Thiên Mụ', image: 'https://statics.vinpearl.com/thap-phuoc-duyen-4_1642651510.png' },
+      { name: 'Sông Hương & Cầu Tràng Tiền', image: 'https://www.tuannguyentravel.com/data/images/Truong-Tien-Bridge-Da-Nang-to-Hur-by-private-car.jpg' },
+      { name: 'Đồi Vọng Cảnh bình yên', image: 'https://huesmiletravel.com.vn/images/doi-vong-canh-hue.jpg' }
+    ]
+  },
+  'Khánh Hòa': {
+    title: 'Khánh Hòa - Nha Trang: Thiên Đường Vịnh Biển Quốc Tế & Tháp Bà Ponagar',
+    subtitle: 'Vịnh biển Nha Trang tuyệt mỹ, Vịnh Vĩnh Hy, lặn ngắm san hô & Hải sản tươi sống',
+    badge: 'Most Beautiful Bays Club',
+    esgText: 'ESG: 74 | LEI: 70',
+    certText: 'Top 29 Vịnh biển đẹp nhất thế giới',
+    description: 'Nha Trang nổi danh toàn cầu nhờ làn nước biển trong vắt quanh năm, bãi cát trắng mịn trải dài đường Trần Phú, quần thể Tháp Bà Ponagar nghìn năm tuổi của người Chăm và thiên đường nghỉ dưỡng đẳng cấp quốc tế.',
+    specialties: ['Bún chả cá Nha Trang', 'Nem nướng Ninh Hòa', 'Bánh căn mực trứng', 'Yến sào Hòn Nội', 'Hải sản tươi sống làng chài'],
+    bestSeason: 'Tháng 1 - Tháng 8 (Biển lặng sóng êm ả, trời trong xanh rực rỡ, lý tưởng lặn biển)',
+    heroImage: 'https://booking.muongthanh.com/upload_images/images/ve-dep-bai-bien-tran-phu-nha-trang.jpg',
+    gallery: [
+      { name: 'Bãi biển Nha Trang', image: 'https://booking.muongthanh.com/upload_images/images/ve-dep-bai-bien-tran-phu-nha-trang.jpg' },
+      { name: 'Tháp Bà Ponagar', image: 'https://danangprivatecar.com/wp-content/uploads/2023/07/This-is-a-famous-tourist-destination-in-Nha-Trang-and-Ponagar-Tower-is-the-largest-Cham-Pa-architectural-complex-in-Vietnam..jpeg' },
+      { name: 'Vịnh Vĩnh Hy xanh biếc', image: 'https://thesinhtour.com/wp-content/uploads/2015/07/vinh-vinh-hy.jpg' },
+      { name: 'VinWonders Hòn Tre', image: 'https://api.sovaba.travel/uploads/vinwonders_nha_trang_tren_cao_hon_tre_47c4184aee.jpg' },
+      { name: 'Rạn San Hô Hòn Mun', image: 'https://bizweb.dktcdn.net/thumb/1024x1024/100/342/038/products/tour-dao-hon-mun-nha-trang-goodmorning-travel-02.jpg?v=1775720395537' }
+    ]
+  },
+  'Quảng Ngãi': {
+    title: 'Quảng Ngãi & Đảo Lý Sơn - Vương Quốc Tỏi & Tuyệt Tác Núi Lửa',
+    subtitle: 'Cổng Tò Vò triệu năm, Hang Câu kỳ vĩ, Kỳ Co Eo Gió & Ẩm thực biển đảo hoang sơ',
+    badge: 'Geopark Candidate',
+    esgText: 'ESG: 69 | LEI: 65',
+    certText: 'Công viên Địa chất Đảo Núi Lửa',
+    description: 'Huyện đảo Lý Sơn được tạo tác từ những đợt phun trào núi lửa triệu năm trước, sở hữu Cổng Tò Vò trầm tích bazan độc nhất vô nhị, vách đá Hang Câu sừng sững bên bờ biển ngọc và đặc sản tỏi cô đơn trứ danh.',
+    specialties: ['Gỏi rong biển Lý Sơn', 'Cua Huỳnh Đế biển sâu', 'Cá bống sông Trà kho tiêu', 'Don nước ngọt sông Vệ', 'Kẹo gương đậu phụng'],
+    bestSeason: 'Tháng 4 - Tháng 9 (Mùa biển êm, tàu cao tốc chạy thuận lợi, nước trong vắt tận đáy)',
+    heroImage: 'https://statics.vinpearl.com/huyen-dao-ly-son_1742399346.jpg',
+    gallery: [
+      { name: 'Cổng Tò Vò Lý Sơn', image: 'https://static.vinwonders.com/production/cong_to_vo_ly_son_1.jpg' },
+      { name: 'Hang Câu vách đá', image: 'https://live.staticflickr.com/1695/25075454644_747b284099_b.jpg' },
+      { name: 'Đỉnh Thới Lới', image: 'https://vivulyson.com/uploads/images/blog/xem-an-choi/82/mieng-nui-lua-ly-son-2.jpg' },
+      { name: 'Eo Gió Kỳ Co', image: 'https://eholiday.vn/wp-content/uploads/2024/07/ky-co-1.jpg' },
+      { name: 'Đảo Bé Lý Sơn', image: 'https://media-cdn-v2.laodong.vn/Storage/NewsPortal/2022/9/21/1095775/Dao-Be-Ly-Son-Ld.JPG' }
+    ]
+  },
+  'Phú Yên': {
+    title: 'Phú Yên - Xứ Sở Hoa Vàng Trên Cỏ Xanh & Ghềnh Đá Đĩa Huyền Bí',
+    subtitle: 'Ghềnh Đá Đĩa kỳ quan đá ong núi lửa, Mũi Điện đón bình minh đầu tiên & Tháp Nghinh Phong',
+    badge: 'ESG: 68 | LEI: 65',
+    esgText: 'ESG: 68 | LEI: 65',
+    certText: 'Chứng nhận Di tích Quốc gia Đặc biệt Ghềnh Đá Đĩa',
+    description: 'Phú Yên quyến rũ du khách bằng vẻ đẹp nguyên sơ của kiệt tác Ghềnh Đá Đĩa với hàng nghìn cột đá bazan hình lục giác xếp lớp đều tăm tắp, ngọn hải đăng Đại Lãnh đón ánh bình minh sớm nhất đất liền và bãi cát vàng óng ả ôm trọn sóng biển.',
+    specialties: ['Mắt cá ngừ đại dương hầm thuốc bắc', 'Sò huyết Đầm Ô Loan béo ngậy', 'Bánh hỏi lòng heo An Mỹ', 'Gỏi sứa Đầm Cù Mông', 'Bò một nắng muối kiến vàng'],
+    bestSeason: 'Tháng 1 - Tháng 8 (Thời tiết nhiều nắng, biển trong vắt, sóng êm thích hợp tắm biển và chụp ảnh check-in)',
+    heroImage: 'https://static.vinwonders.com/production/ganh-da-dia-phu-yen-1.jpg',
+    gallery: [
+      { name: 'Ghềnh Đá Đĩa', image: 'https://gonatour.vn/vnt_upload/news/03_2021/ghenh_da_dia_phu_yen.jpg' },
+      { name: 'Mũi Điện Hải Đăng', image: 'https://cdn.xanhsm.com/2025/03/67778055-mui-dien-6.jpg' },
+      { name: 'Bãi Xép Hoa Vàng Cỏ Xanh', image: 'https://cdn.xanhsm.com/2025/03/b622a2ba-hoa-vang-tren-co-xanh-thumb.jpg' },
+      { name: 'Tháp Nghinh Phong', image: 'https://ik.imagekit.io/tvlk/blog/2023/01/thap-nghinh-phong-2-768x1024.jpg?tr=dpr-2,w-675' },
+      { name: 'Đầm Ô Loan chiều hoàng hôn', image: 'https://52hz.vn/wp-content/uploads/2022/08/dam-o-loan-hoang-hon.jpg' }
+    ]
+  },
+  'Lâm Đồng': {
+    title: 'Lâm Đồng & Đà Lạt - Thành Phố Ngàn Hoa & Rừng Thông Cao Nguyên',
+    subtitle: 'Khí hậu se lạnh mát lành bốn mùa, Hồ Tuyền Lâm, Đồi Chè Cầu Đất & Thác Dambri hùng vĩ',
+    badge: 'Eco Wellness Resort',
+    esgText: 'ESG: 82 | LEI: 78',
+    certText: 'Đô thị Nghỉ Dưỡng Sinh Thái Cao Nguyên',
+    description: 'Nằm trên cao nguyên Lang Biang độ cao 1.500m, Đà Lạt mê hoặc lòng người bởi khí hậu ôn đới mát mẻ quanh năm, những đồi thông reo trong sương sớm, thung lũng ngập tràn hoa tươi và văn hóa cà phê chill độc đáo.',
+    specialties: ['Lẩu gà lá é Tao Ngộ', 'Lẩu bò Ba Toa', 'Bánh ướt lòng gà', 'Bánh tráng nướng Đà Lạt', 'Dâu tây thủy canh & Kem bơ béo ngậy'],
+    bestSeason: 'Tháng 10 - Tháng 4 (Mùa khô, săn mây đồi chè, mùa hoa dã quỳ và mai anh đào nở rộ)',
+    heroImage: 'https://smartland.vn/wp-content/uploads/2022/10/toan-canh-thanh-pho-da-lat-suong-mu.jpg',
+    gallery: [
+      { name: 'Hồ Xuân Hương Đà Lạt', image: 'https://2trip.vn/wp-content/uploads/2020/09/Ho-Xuan-Huong-Da-Lat-4.jpg' },
+      { name: 'Đồi chè Cầu Đất', image: 'https://static.vinwonders.com/production/doi-che-cau-dat.jpg' },
+      { name: 'Thác Dambri hùng vĩ', image: 'https://52hz.vn/wp-content/uploads/2022/01/thac-dambri-9.jpeg' },
+      { name: 'Quảng trường Lâm Viên', image: 'https://cdn2.fptshop.com.vn/unsafe/1920x0/filters:format(webp):quality(75)/quang_truong_lam_vien_thumb_e7e4262d19.png' },
+      { name: 'Đỉnh Langbiang huyền thoại', image: 'https://dalatreview.vn/wp-content/uploads/2023/08/329666825_595037048714323_227516769466023961_n.jpg' }
+    ]
+  },
+  'Gia Lai': {
+    title: 'Gia Lai & Kon Tum - Đôi Mắt Pleiku Huyền Tích & Nhà Rông Tây Nguyên',
+    subtitle: 'Biển Hồ T’Nưng núi lửa cổ đại, Chư Đăng Ya hoa dã quỳ rực rỡ & Cồng chiêng đại ngàn',
+    badge: 'National Heritage',
+    esgText: 'ESG: 68 | LEI: 65',
+    certText: 'Không Gian Văn Hóa Cồng Chiêng Tây Nguyên',
+    description: 'Pleiku níu chân du khách với Biển Hồ T’Nưng xanh biếc tựa viên ngọc bích lọt thỏm giữa miệng núi lửa ngưng hoạt động hàng triệu năm, những đồi thông cổ thụ rợp bóng và tiếng chiêng trầm hùng bên bếp lửa nhà rông.',
+    specialties: ['Phở hai tô (Phở khô Pleiku)', 'Gà nướng cơm lam sa lửa', 'Gỏi lá rừng Kon Tum 40 vị', 'Bò một nắng muối kiến Krông Pa', 'Cà phê nguyên chất Robusta'],
+    bestSeason: 'Tháng 11 - Tháng 4 (Mùa hoa dã quỳ vàng ngập tràn triền đồi Chư Đăng Ya, mùa lễ hội cồng chiêng)',
+    heroImage: 'https://cdn.xanhsm.com/2025/03/8d98d60d-bien-ho-pleiku-13.jpg',
+    gallery: [
+      { name: 'Biển Hồ T’Nưng Pleiku', image: 'https://touring.vn/wp-content/uploads/2023/12/Bien-Ho_TNung-4-800x612.jpg' },
+      { name: 'Núi lửa Chư Đăng Ya', image: 'https://thanhnien.mediacdn.vn/Uploaded/maiha/2022_11_10/anh-3-3-3135.jpg' },
+      { name: 'Nhà rông Kon Klor', image: 'https://image.vietgoing.com/editor/image_mwb1659681988.jpg' },
+      { name: 'Nhà thờ gỗ Kon Tum', image: 'https://innotour.vn/image/catalog/blog-du-lich/kon-tum/pics/nha-tho-go-kon-tum-4.jpg' },
+      { name: 'Chùa Minh Thành', image: 'https://media.gody.vn/images/gia-lai/chua-minh-thanh/11-2016/20161101090035-chua-minh-thanh-gody(11).jpg' }
+    ]
+  },
+  'Đắk Lắk': {
+    title: 'Đắk Lắk - Thủ Phủ Cà Phê Thế Giới & Sử Thi Hùng Tráng',
+    subtitle: 'Bảo tàng Cà phê kiến trúc độc bản, Thác nước Dray Nur gầm vang & Buôn Đôn voi huyền thoại',
+    badge: 'Cultural Heritage',
+    esgText: 'ESG: 71 | LEI: 67',
+    certText: 'Thủ Phủ Cà Phê Thế Giới Buôn Ma Thuột',
+    description: 'Đắk Lắk là trái tim đại ngàn Tây Nguyên, quê hương của những rẫy cà phê bạt ngàn ngát hương hoa trắng, bảo tàng thế giới cà phê mang dáng dấp nhà dài Ê Đê, dòng sông Sêrêpôk chảy ngược cùng những thác nước kỳ vĩ tráng lệ.',
+    specialties: ['Bún đỏ Buôn Ma Thuột', 'Gà đồng nướng chấm muối ớt rừng', 'Rượu cần men lá truyền thống', 'Cá lăng nấu măng chua sông Sêrêpôk', 'Cà phê Chồn thượng hạng'],
+    bestSeason: 'Tháng 12 - Tháng 4 (Mùa hoa cà phê nở trắng muốt như tuyết, thời tiết mát dịu)',
+    heroImage: 'https://trungnguyenlegend.com/wp-content/uploads/2022/11/cttvbo1-6.jpg',
+    gallery: [
+      { name: 'Bảo tàng Thế Giới Cà Phê', image: 'https://trungnguyenlegend.com/wp-content/uploads/2022/11/cttvbo1-6.jpg' },
+      { name: 'Thác Dray Nur', image: 'https://tripmap.vn/wp-content/uploads/2021/07/thac-dray-nur-1627268728357.jpg' },
+      { name: 'Hồ Lắk', image: 'https://statics.vinpearl.com/buon-ma-thuot-vietnam-08_1696090928.jpg' },
+      { name: 'Buôn Đôn', image: 'https://cdn-i.vtcnews.vn/resize/th/upload/2023/07/09/voi-18114972.jpg' },
+      { name: 'Hồ Tà Đùng', image: 'https://tinviettravel.com/uploads/tours/images/tay_nguyen/ho-ta-dung-dak-nong.jpg' }
+    ]
+  },
+  'Quảng Trị': {
+    title: 'Quảng Trị & Quảng Bình - Kỳ Quan Hang Động Đệ Nhất Thế Giới & Đất Lửa Hào Hùng',
+    subtitle: 'Động Phong Nha, Động Thiên Đường thạch nhũ triệu năm, Cầu Hiền Lương & Địa đạo Vịnh Mốc',
+    badge: 'UNESCO Natural Heritage',
+    esgText: 'ESG: 76 | LEI: 72',
+    certText: 'Kỳ Quan Thiên Nhiên Thế Giới UNESCO',
+    description: 'Miền đất quy tụ những kỳ quan hang động vĩ đại nhất hành tinh tại Phong Nha - Kẻ Bàng, kết hợp cùng những di tích lịch sử thiêng liêng hào hùng gắn liền với khát vọng hòa bình của dân tộc.',
+    specialties: ['Bánh khoái Quảng Trị giòn rụm', 'Bún hến Mai Xá', 'Cháo bột cá lóc Diên Sanh', 'Thịt trâu xào lá trơng', 'Chắt chắt xào bánh đa'],
+    bestSeason: 'Tháng 3 - Tháng 8 (Mùa khô ráo, các hang động đón nắng vàng rực rỡ lấp lánh)',
+    heroImage: 'https://phongnhatourist.com/wp-content/uploads/2019/04/dong-thie-duong-2.jpg',
+    gallery: [
+      { name: 'Động Thiên Đường', image: 'https://www.quangbinhtravel.vn/wp-content/uploads/2012/04/dongthienduong-1.jpg' },
+      { name: 'Động Phong Nha', image: 'https://phongnhaexplorer.com/wp-content/uploads/2025/07/dongphongnha2-1024x715.jpg' },
+      { name: 'Địa đạo Vịnh Mốc', image: 'https://mia.vn/media/uploads/blog-du-lich/dia-dao-vinh-moc-1-1710467866.jpg' },
+      { name: 'Cầu Hiền Lương', image: 'https://media.vietravel.com/images/Content/du-lich-quang-tri-3.jpg' },
+      { name: 'Thành Cổ Quảng Trị', image: 'https://nads.1cdn.vn/2024/01/18/W_1.dai-tuong-niem-liet-si-thanh-co-quang-tri-1972....jpg' }
+    ]
+  },
+  'Thanh Hóa': {
+    title: 'Thanh Hóa - Biển Sầm Sơn Sôi Động & Sinh Thái Pù Luông Xanh Ngắt',
+    subtitle: 'Bãi biển Sầm Sơn danh tiếng, ruộng bậc thang Pù Luông thơ mộng & Thành Nhà Hồ ngàn năm',
+    badge: 'UNESCO Heritage Site',
+    esgText: 'ESG: 73 | LEI: 69',
+    certText: 'Di sản Văn hóa Thế giới Thành Nhà Hồ',
+    description: 'Thanh Hóa là cửa ngõ miền Trung với bờ biển Sầm Sơn sôi động, khu bảo tồn thiên nhiên Pù Luông hoang sơ tựa chốn bồng lai tiên cảnh cùng Thành Nhà Hồ - công trình kiến trúc đá độc nhất vô nhị ở Đông Nam Á.',
+    specialties: ['Nem chua Thanh Hóa gia truyền', 'Chả tôm nướng than hoa', 'Bánh khoái tép Nồi đất', 'Gỏi cá nhệch Nga Sơn', 'Vịt Cổ Lũng Pù Luông'],
+    bestSeason: 'Tháng 4 - Tháng 9 (Mùa tắm biển Sầm Sơn tuyệt hảo và ngắm lúa chín vàng Pù Luông)',
+    heroImage: 'https://viptrip.vn/public/upload/news/bai-bien-sam-son_23-05-2024_713782758.jpg',
+    gallery: [
+      { name: 'Bãi biển Sầm Sơn', image: 'https://sunparadiseland.com/_next/image?url=https:%2F%2Fsun-ecommerce-cdn.azureedge.net%2Fecommerce%2Fservice-sites%2Fasset%2FSunParadiseLandQuangNinh%2Fgoogle-doc%2Fpost_id_31345%2FAD_4nXex57HvUCdJV6cNIazp-Sfdn2No2sqzDoRuycK8OQVkwBu56JQxwh9j9IYPAU7xmNXzF2-WaTQXM1dTdaxJUjiCoZn65k2JyLEY25oFyRv3MxipjcH7MxgbOrRQ68PJiyZJ8iu5T-Yi_vyZk3S3cF54mdTKbs0-BZKM4JJ2QQ4konnVsItU%253Ds2048.webp&w=1200&q=80' },
+      { name: 'Ruộng bậc thang Pù Luông', image: 'https://m.yodycdn.com/products/anhruongbacthang1_m2b9i8yxd6fqow6fh1t.jpg' },
+      { name: 'Thành Nhà Hồ UNESCO', image: 'https://static.vinwonders.com/production/toan-canh-di-tich-thanh-nha-ho.jpg' },
+      { name: 'Suối cá thần Cẩm Lương', image: 'https://ticotravel.com.vn/wp-content/uploads/2021/05/suoi-ca-than-thanh-hoa-8.jpg' },
+      { name: 'Biển Hải Tiến', image: 'https://static.vinwonders.com/production/dia-chi-bien-hai-tien.jpg' }
+    ]
+  },
+  'Nghệ An': {
+    title: 'Nghệ An - Bãi Biển Cửa Lò Trong Xanh & Quê Hương Bác Hồ Kính Yêu',
+    subtitle: 'Bãi biển Cửa Lò trải dài cát mịn, Làng Sen Kim Liên thanh bình & Đảo Chè Thanh Chương',
+    badge: 'National Cultural Heritage',
+    esgText: 'ESG: 72 | LEI: 68',
+    certText: 'Khu Di tích Quốc gia Đặc biệt Kim Liên',
+    description: 'Nghệ An địa linh nhân kiệt với bãi biển Cửa Lò sóng êm cát mịn, Khu di tích Kim Liên lưu giữ tuổi thơ Bác Hồ với những mái tranh mộc mạc và ốc đảo chè Thanh Chương uốn lượn non xanh nước biếc.',
+    specialties: ['Cháo lươn & Súp lươn xứ Nghệ', 'Mực nhảy nướng Cửa Lò', 'Tương Nam Đàn nức tiếng', 'Cam Xã Đoài mọng nước', 'Bánh mướt giò nóng'],
+    bestSeason: 'Tháng 4 - Tháng 8 (Mùa hè biển Cửa Lò tuyệt đẹp, thích hợp nghỉ mát gia đình)',
+    heroImage: 'https://farm8.staticflickr.com/7516/15964471348_7caca4ee9b_o.jpg',
+    gallery: [
+      { name: 'Bãi biển Cửa Lò', image: 'https://farm8.staticflickr.com/7516/15964471348_7caca4ee9b_o.jpg' },
+      { name: 'Làng Sen quê Bác', image: 'https://ilooca-tourdb.itourism.vn/files/thumb/840/456/uploads/content/17022/68384d86a12a6.png' },
+      { name: 'Đảo Chè Thanh Chương', image: 'https://ticotravel.com.vn/wp-content/uploads/2022/10/Dao-che-Thanh-Chuong-6.jpeg' },
+      { name: 'Vườn quốc gia Pù Mát', image: 'https://media.vietnamplus.vn/images/a01c0e0c6ca85cd3c5d38871d88e83e0e4b18c51a63b4c988d3a06bd34290b47d0734ca05f9eb49adb08a32cb2e3af59cdb57feb901aea868e56e8a402356a73/0910-khe-kem-pu-mat.jpg' },
+      { name: 'Biển Bãi Lữ', image: 'https://dulichkhatvongviet.com/wp-content/uploads/2014/07/bai-lu-nghe-an.jpg' }
+    ]
+  },
+  'Hà Tĩnh': {
+    title: 'Hà Tĩnh - Biển Thiên Cầm Đàn Trời & Ngã Ba Đồng Lộc Bất Tử',
+    subtitle: 'Bãi biển Thiên Cầm hình cánh cung êm đềm, Ngã ba Đồng Lộc linh thiêng & Chùa Hương Tích',
+    badge: 'National Heritage',
+    esgText: 'ESG: 70 | LEI: 66',
+    certText: 'Quần Thể Di Tích Quốc Gia Đặc Biệt',
+    description: 'Hà Tĩnh nổi tiếng với cung biển Thiên Cầm tuyệt đẹp được ví như cung đàn trời ngân nga bên sóng vỗ, Chùa Hương Tích cổ tự ẩn mình trên đỉnh núi Hồng Lĩnh và Ngã Ba Đồng Lộc - biểu tượng bất tử của lòng dũng cảm.',
+    specialties: ['Kẹo Cu đơ Hà Tĩnh giòn thơm', 'Mực nhảy Vũng Áng ngọt lịm', 'Bánh bèo Hà Tĩnh', 'Bưởi Phúc Trạch tiến vua', 'Gỏi cá đục Lộc Hà'],
+    bestSeason: 'Tháng 4 - Tháng 8 (Khí hậu nhiều nắng, biển Thiên Cầm trong xanh êm đềm)',
+    heroImage: 'https://zoomtravel.vn/upload/images/thien-cam-ha-tinh-1-min.jpg',
+    gallery: [
+      { name: 'Biển Thiên Cầm', image: 'https://zoomtravel.vn/upload/images/thien-cam-ha-tinh-1-min.jpg' },
+      { name: 'Ngã Ba Đồng Lộc', image: 'https://static.vinwonders.com/production/thoi-diem-di-nga-ba-dong-loc.jpg' },
+      { name: 'Chùa Hương Tích', image: 'https://cdn.baohatinh.vn/images/5c0e3df6f392cae5972c8105500d84182642ad8f46238526fddaf4a5ff633a59e3b9fc4f6b4de541067d96204805ebda/154d4222421t91554l0.jpg' },
+      { name: 'Hồ Kẻ Gỗ', image: 'https://statics.vinpearl.com/ho-ke-go 1_1624870951.jpg' },
+      { name: 'Hải Đăng Cửa Sót', image: 'https://cdn.daidoanket.vn/w1200/uploaded/images/2026/04/16/d32a8cb9-fba7-4dcf-b082-9801a25e06fc.jpg' }
+    ]
+  }
+}
+
+// State quản lý phóng to ảnh & chuyển đổi hình ảnh miêu tả của tỉnh thành
+const selectedSpotlightImage = ref(null)
+const isSpotlightModalOpen = ref(false)
+
+watch(() => formDuLieu.diemDen, () => {
+  selectedSpotlightImage.value = null
+})
+
+const currentSpotlight = computed(() => {
+  const dest = formDuLieu.diemDen || 'Đà Nẵng'
+  if (dest === ALL_DESTINATIONS) {
+    return PROVINCE_SPOTLIGHTS['Đà Nẵng']
+  }
+  return PROVINCE_SPOTLIGHTS[dest] || PROVINCE_SPOTLIGHTS['Đà Nẵng']
+})
+
+const activeHeroImage = computed(() => {
+  return selectedSpotlightImage.value || currentSpotlight.value?.heroImage
+})
+
+function chuyenSangLenLichTrinh(city) {
+  if (city && city !== ALL_DESTINATIONS) {
+    formDuLieu.diemDen = city
+  }
+  selectedSpotlightImage.value = null
+  activeTab.value = 'planner'
+  currentPlannerStep.value = 1
+  cuonLenDauTrang()
+  nextTick(() => {
+    cuonLenDauTrang()
+  })
+}
+
 const allDestinationsCard = {
   name: ALL_DESTINATIONS,
   displayName: 'Tất cả',
@@ -2477,20 +3567,70 @@ const aiProvinceSubtitle = computed(() => {
   return subtitles[dest] || `Khám phá ${dest} — nơi có cảnh đẹp, đặc sản ngon và rất nhiều lý do để quay lại. ✨`
 })
 
-const formDuLieu = reactive({
-  diemKhoiHanh: 'Hà Nội',
-  diemDen: 'Đà Nẵng',
-  soNgay: 3,
-  nganSach: 3500000,
-  soNguoi: 2,
-  soThich: [],
-  ngayBatDau: '',
-  ngayKetThuc: '',
-  phuongTien: 'xe khách',
-  yeuCauKhachSan: '',
-  hotel_checkin_preference: 'checkin_first',
-  nhaXeDaChon: null
+// LỊCH TRÌNH KHỞI HÀNH & CHỌN NGÀY ĐI (THEO SCREENSHOT 3)
+const todayIso = new Date().toISOString().split('T')[0]
+
+const DEPARTURE_MONTHS = [
+  { label: 'Tháng 10 2026', key: '2026-10', defaultDate: '2026-10-06' },
+  { label: 'Tháng 11 2026', key: '2026-11', defaultDate: '2026-11-01' },
+  { label: 'Tháng 12 2026', key: '2026-12', defaultDate: '2026-12-01' },
+  { label: 'Tháng 1 2027', key: '2027-01', defaultDate: '2027-01-01' },
+  { label: 'Tháng 2 2027', key: '2027-02', defaultDate: '2027-02-01' },
+  { label: 'Tháng 3 2027', key: '2027-03', defaultDate: '2027-03-01' }
+]
+
+const selectedMonthKey = ref('2026-10')
+
+function chonThangKhoiHanh(m) {
+  selectedMonthKey.value = m.key
+  formDuLieu.ngayBatDau = m.defaultDate
+}
+
+const ngayKetThucDisplay = computed(() => {
+  if (!formDuLieu.ngayBatDau) return ''
+  try {
+    const parts = formDuLieu.ngayBatDau.split('-')
+    if (parts.length !== 3) return ''
+    const year = parseInt(parts[0], 10)
+    const month = parseInt(parts[1], 10) - 1
+    const day = parseInt(parts[2], 10)
+    const d = new Date(year, month, day)
+    const days = Math.max(1, parseInt(formDuLieu.soNgay, 10) || 1)
+    d.setDate(d.getDate() + (days - 1))
+    const yyyy = d.getFullYear()
+    const mm = String(d.getMonth() + 1).padStart(2, '0')
+    const dd = String(d.getDate()).padStart(2, '0')
+    return `${yyyy}-${mm}-${dd}`
+  } catch (e) {
+    return ''
+  }
 })
+
+function dinhDangNgayTuan(dateStr) {
+  if (!dateStr) return ''
+  try {
+    const [y, m, d] = dateStr.split('-').map(Number)
+    const dt = new Date(y, m - 1, d)
+    const dayNames = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy']
+    const dayName = dayNames[dt.getDay()]
+    const dd = String(d).padStart(2, '0')
+    const mm = String(m).padStart(2, '0')
+    return `${dayName}, ${dd}/${mm}/${y}`
+  } catch (e) {
+    return dateStr
+  }
+}
+
+// Đồng bộ tự động ngày kết thúc khi ngày bắt đầu hoặc số ngày thay đổi
+watch([() => formDuLieu.ngayBatDau, () => formDuLieu.soNgay], () => {
+  formDuLieu.ngayKetThuc = ngayKetThucDisplay.value
+  if (formDuLieu.ngayBatDau && formDuLieu.ngayBatDau.length >= 7) {
+    const key = formDuLieu.ngayBatDau.substring(0, 7)
+    if (DEPARTURE_MONTHS.some(m => m.key === key)) {
+      selectedMonthKey.value = key
+    }
+  }
+}, { immediate: true })
 
 // Ở phần "sở thích và trải nghiệm" hãy bỏ trống mặc định theo yêu cầu
 const chuoiSoThich = ref('')
@@ -2665,32 +3805,202 @@ function isInterestTagActive(tag) {
   return (chuoiSoThich.value || '').includes(tag)
 }
 
+// ==================== KIỂM TRA TÍNH KHẢ THI CỦA CHUYẾN ĐI (FEASIBILITY CHECK) ====================
+const tripFeasibility = computed(() => {
+  const budget = Number(formDuLieu.nganSach) || 0
+  const days = Math.max(1, Number(formDuLieu.soNgay) || 1)
+  const people = Math.max(1, Number(formDuLieu.soNguoi) || 1)
+  const dest = formDuLieu.diemDen || 'Đà Nẵng'
+  const freeOnly = Boolean(formDuLieu.freePlacesOnly)
+  const perPersonPerDay = Math.round(budget / (days * people))
+
+  // Định mức tối thiểu để có thể đi du lịch:
+  // 1 ngày: tối thiểu 150.000đ/người (ăn 2 bữa nhẹ + xăng xe máy, không ở qua đêm)
+  // Nhiều ngày: tối thiểu 250.000đ/người/ngày (homestay/dorm chia phòng tối thiểu ~120k + ăn 3 bữa ~100k + xăng xe ~30k)
+  const minDailyPerPerson = days === 1 ? 150000 : 250000
+  const minFeasibleBudget = days === 1 ? (people * 150000) : (days * people * 250000)
+
+  if (freeOnly) {
+    return {
+      feasible: true,
+      mode: 'free_places_only',
+      perPersonPerDay,
+      minFeasibleBudget,
+      message: 'Chế độ phượt tự túc: AI chỉ xếp các điểm tham quan 100% miễn phí vé (0đ).'
+    }
+  }
+
+  if (budget < minFeasibleBudget) {
+    const maxFeasibleDays = Math.max(1, Math.floor(budget / (people * 250000)))
+    return {
+      feasible: false,
+      reason: 'INSUFFICIENT_BUDGET',
+      budget,
+      days,
+      people,
+      perPersonPerDay,
+      minDailyPerPerson,
+      minFeasibleBudget,
+      maxFeasibleDays,
+      message: `Ngân sách ${dinhDangTien(budget)}đ không khả thi cho chuyến đi ${days} ngày ${people} người tại ${dest} (trung bình chỉ ~${dinhDangTien(perPersonPerDay)}đ/người/ngày). Số tiền này không đủ chi trả chỗ ở tối thiểu (~150.000đ/đêm) và ăn uống 3 bữa mỗi ngày.`,
+      recommendation: {
+        minBudget: minFeasibleBudget,
+        suggestedDays: maxFeasibleDays,
+        advice: `Bạn nên tăng ngân sách lên tối thiểu ${dinhDangTien(minFeasibleBudget)}đ, hoặc rút ngắn chuyến đi xuống ${maxFeasibleDays} ngày, hoặc chọn chế độ chỉ tham quan điểm miễn phí vé.`
+      }
+    }
+  }
+
+  return {
+    feasible: true,
+    perPersonPerDay,
+    minFeasibleBudget
+  }
+})
+
+// ==================== 5 PHÂN TẦNG NGÂN SÁCH THÔNG MINH ====================
+const currentBudgetTier = computed(() => {
+  const total = Number(formDuLieu.nganSach) || 3500000
+  const days = Math.max(1, Number(formDuLieu.soNgay) || 3)
+  const people = Math.max(1, Number(formDuLieu.soNguoi) || 1)
+  const perDay = total / (days * people)
+
+  if (total >= 20000000 && perDay >= 2500000) {
+    return {
+      key: 'T4',
+      name: 'Xa Hoa / VIP Nghỉ Dưỡng',
+      icon: '🟡',
+      badge: '5 SAO XA HOA (30 TRIỆU+)',
+      color: '#f59e0b',
+      perPersonPerDay: Math.round(perDay),
+      hotelDesc: 'Resort 5 sao quốc tế / Biệt thự biển riêng (InterContinental, Hyatt, Vinpearl)',
+      foodDesc: 'Fine Dining, buffet tôm hùm 5 sao, ăn tối du thuyền riêng',
+      transportDesc: 'Vé máy bay hạng thương gia / Xe limousine riêng đưa đón',
+      ratios: { hotel: 0.45, food: 0.23, transport: 0.15, tickets: 0.12, reserve: 0.05 }
+    }
+  }
+
+  if (perDay < 250000) {
+    return {
+      key: 'T0',
+      name: 'Sinh Tồn / Phượt Bụi',
+      icon: '🪨',
+      badge: 'SIÊU TIẾT KIỆM (DƯỚI 250K/NGÀY)',
+      color: '#64748b',
+      perPersonPerDay: Math.round(perDay),
+      hotelDesc: 'Hostel dorm / Homestay cộng đồng / Couchsurfing',
+      foodDesc: 'Quán ăn vỉa hè, bánh mì que, bánh bèo hẻm, bún bình dân',
+      transportDesc: 'Xe khách ghế ngồi / Đi bộ / Xe buýt nội đô',
+      ratios: { hotel: 0.20, food: 0.45, transport: 0.20, tickets: 0.05, reserve: 0.10 }
+    }
+  }
+
+  if (perDay < 600000) {
+    return {
+      key: 'T1',
+      name: 'Tiết Kiệm / Sinh Viên',
+      icon: '💚',
+      badge: 'TIẾT KIỆM TỐI ƯU (1 - 2 TRIỆU)',
+      color: '#10b981',
+      perPersonPerDay: Math.round(perDay),
+      hotelDesc: 'Nhà nghỉ tiêu chuẩn / Phòng riêng homestay giá mềm',
+      foodDesc: 'Mì Quảng, cơm gà bình dân, hải sản tươi ven chợ',
+      transportDesc: 'Xe khách giường nằm giá rẻ / Thuê xe máy vi vu',
+      ratios: { hotel: 0.28, food: 0.35, transport: 0.22, tickets: 0.08, reserve: 0.07 }
+    }
+  }
+
+  if (perDay < 1500000) {
+    return {
+      key: 'T2',
+      name: 'Tiêu Chuẩn / Phổ Thông',
+      icon: '💙',
+      badge: 'TIÊU CHUẨN THOẢI MÁI',
+      color: '#0284c7',
+      perPersonPerDay: Math.round(perDay),
+      hotelDesc: 'Khách sạn 3 sao có ăn sáng / Gần biển',
+      foodDesc: 'Nhà hàng đặc sản, hải sản tươi sống, cafe view đẹp',
+      transportDesc: 'Xe Limousine / Tàu hỏa ngắm cảnh / Thuê xe máy tốt',
+      ratios: { hotel: 0.35, food: 0.28, transport: 0.20, tickets: 0.12, reserve: 0.05 }
+    }
+  }
+
+  if (perDay < 3500000) {
+    return {
+      key: 'T3',
+      name: 'Chất Lượng Cao / 4 Sao',
+      icon: '💜',
+      badge: '4 SAO CAO CẤP',
+      color: '#8b5cf6',
+      perPersonPerDay: Math.round(perDay),
+      hotelDesc: 'Khách sạn 4 sao / Resort boutique / View biển hồ bơi vô cực',
+      foodDesc: 'Nhà hàng hải sản lớn, lẩu hải sản, bar cocktail hoàng hôn',
+      transportDesc: 'Vé máy bay khứ hồi / Thuê ô tô tự lái / Taxi trọn gói',
+      ratios: { hotel: 0.40, food: 0.23, transport: 0.20, tickets: 0.12, reserve: 0.05 }
+    }
+  }
+
+  return {
+    key: 'T4',
+    name: 'Xa Hoa / VIP Nghỉ Dưỡng',
+    icon: '🟡',
+    badge: '5 SAO XA HOA (30 TRIỆU+)',
+    color: '#f59e0b',
+    perPersonPerDay: Math.round(perDay),
+    hotelDesc: 'Resort 5 sao quốc tế / Biệt thự biển riêng (InterContinental, Hyatt, Vinpearl)',
+    foodDesc: 'Fine Dining, buffet tôm hùm 5 sao, ăn tối du thuyền riêng',
+    transportDesc: 'Vé máy bay hạng thương gia / Xe limousine riêng đưa đón',
+    ratios: { hotel: 0.45, food: 0.23, transport: 0.15, tickets: 0.12, reserve: 0.05 }
+  }
+})
+
 // ==================== DỰ TOÁN CHI PHÍ THÔNG MINH (DYNAMIC BUDGET BREAKDOWN) ====================
 const dynamicBudget = computed(() => {
   const total = Number(formDuLieu.nganSach) || 3500000
-  const days = Number(formDuLieu.soNgay) || 3
+  const days = Math.max(1, Number(formDuLieu.soNgay) || 3)
   const nights = Math.max(1, days - 1)
-  const people = Number(formDuLieu.soNguoi) || 2
+  const people = Math.max(1, Number(formDuLieu.soNguoi) || 2)
+  const isFreeOnly = Boolean(formDuLieu.freePlacesOnly)
+  const tier = currentBudgetTier.value
+  
+  let ratios = { ...tier.ratios }
+  if (isFreeOnly) {
+    const nonTicketSum = ratios.hotel + ratios.food + ratios.transport + ratios.reserve
+    ratios = {
+      hotel: ratios.hotel / nonTicketSum,
+      food: ratios.food / nonTicketSum,
+      transport: ratios.transport / nonTicketSum,
+      tickets: 0,
+      reserve: ratios.reserve / nonTicketSum
+    }
+  }
 
-  const hotel = Math.round(total * 0.35)
-  const food = Math.round(total * 0.35)
-  const transportAndTickets = Math.round(total * 0.20)
-  const reserve = Math.round(total * 0.10)
+  const hotel = Math.round(total * ratios.hotel)
+  const food = Math.round(total * ratios.food)
+  const transport = Math.round(total * ratios.transport)
+  const tickets = isFreeOnly ? 0 : Math.round(total * ratios.tickets)
+  const transportAndTickets = transport + tickets
+  const reserve = Math.max(0, total - (hotel + food + transportAndTickets))
+
+  const hotelPercent = Math.round(ratios.hotel * 100)
+  const foodPercent = Math.round(ratios.food * 100)
+  const transportPercent = Math.round((ratios.transport + ratios.tickets) * 100)
+  const reservePercent = Math.max(1, 100 - (hotelPercent + foodPercent + transportPercent))
 
   return {
     total,
     hotel,
     hotelDesc: `${nights} đêm (~${Math.round(hotel / nights / 1000)}k/đêm)`,
     food,
-    foodDesc: `Đặc sản, hải sản (~${Math.round(food / days / people / 1000)}k/người/ngày)`,
+    foodDesc: `Ăn uống (~${Math.round(food / days / people / 1000)}k/người/ngày)`,
     transportAndTickets,
-    transitDesc: `Vé xe/tàu + vé cổng tham quan`,
+    transitDesc: isFreeOnly ? `Di chuyển (${Math.round(transport / 1000)}k) + Vé 0đ (100% Free)` : `Di chuyển (${Math.round(transport / 1000)}k) + Vé chơi (${Math.round(tickets / 1000)}k)`,
     reserve,
-    reserveDesc: `Chi tiêu phát sinh & mua sắm quà`,
-    hotelPercent: 35,
-    foodPercent: 35,
-    transportPercent: 20,
-    reservePercent: 10
+    reserveDesc: `Dự phòng & mua quà (~${Math.round(reserve / 1000)}k)`,
+    hotelPercent,
+    foodPercent,
+    transportPercent,
+    reservePercent
   }
 })
 
@@ -2918,7 +4228,7 @@ watch(
     if (transitRouteInfo.value?.operators?.length > 0) {
       const currentId = formDuLieu.nhaXeDaChon?.id
       const found = transitRouteInfo.value.operators.find(b => b.id === currentId)
-      formDuLieu.nhaXeDaChon = found || null
+      formDuLieu.nhaXeDaChon = found || transitRouteInfo.value.operators[0]
     } else {
       formDuLieu.nhaXeDaChon = null
     }
@@ -2926,64 +4236,6 @@ watch(
   { immediate: true }
 )
 const dangTao = ref(false)
-const liveModeActive = ref(false)
-const completedActivities = ref({}) 
-const actualExpenses = ref({}) 
-const hienModalCheckIn = ref(false)
-const checkInTempData = ref(null)
-const checkInTempCost = ref(0)
-const currentLiveActivity = computed(() => {
-  if (!lichTrinh.value || !lichTrinh.value.daysList) return null;
-  
-  let totalActivities = 0;
-  for (let d = 0; d < lichTrinh.value.daysList.length; d++) {
-    totalActivities += lichTrinh.value.daysList[d].activities.length;
-  }
-  
-  let globalIndex = 0;
-  for (let d = 0; d < lichTrinh.value.daysList.length; d++) {
-    const day = lichTrinh.value.daysList[d];
-    for (let a = 0; a < day.activities.length; a++) {
-      globalIndex++;
-      if (!completedActivities.value[`${day.day - 1}-${a}`]) {
-        return { 
-          dayIndex: day.day - 1, 
-          actIndex: a, 
-          dayData: day, 
-          act: day.activities[a],
-          globalIndex,
-          totalActivities
-        };
-      }
-    }
-  }
-  return null;
-})
-
-const actualTotalSpent = computed(() => {
-  return Object.values(actualExpenses.value).reduce((a, b) => a + Number(b || 0), 0)
-})
-function xacNhanCheckIn(dayIndex, actIndex, act) {
-  const key = `${dayIndex}-${actIndex}`
-  if (completedActivities.value[key]) {
-    delete completedActivities.value[key]
-    delete actualExpenses.value[key]
-    return
-  }
-  
-  checkInTempData.value = { key, place: act.place }
-  checkInTempCost.value = ''
-  hienModalCheckIn.value = true
-}
-
-function luuCheckIn() {
-  if (checkInTempData.value) {
-    completedActivities.value[checkInTempData.value.key] = true
-    actualExpenses.value[checkInTempData.value.key] = Number(checkInTempCost.value) || 0
-  }
-  hienModalCheckIn.value = false
-  checkInTempData.value = null
-}
 const taoPlanError = ref('')
 const lichTrinh = ref(null)
 const selectedPlaces = ref([])
@@ -3041,53 +4293,74 @@ const thongDiepNganSach = computed(() => {
   const budget = Number(formDuLieu.nganSach) || 0
   const people = Number(formDuLieu.soNguoi) || 1
   const perPerson = Math.round(budget / people)
+  const tier = currentBudgetTier.value
 
-  if (budget <= 100000) {
+  if (!tripFeasibility.value.feasible && !formDuLieu.freePlacesOnly) {
     return {
       type: 'budget-danger',
       icon: '🚨',
-      tag: 'BÁO ĐỘNG VÍ TIỀN',
-      title: 'Ví của bạn đang có dấu hiệu nguy hiểm.',
-      desc: 'Khuyến nghị: ngắm cảnh miễn phí và hạn chế nhìn menu.'
+      tag: 'BẤT KHẢ THI',
+      title: `Chưa khả thi: ${dinhDangTien(budget)}đ cho ${people} người ${formDuLieu.soNgay} ngày`,
+      desc: tripFeasibility.value.message
     }
   }
 
-  if (budget <= 500000) {
-    return {
-      type: 'budget-minimal',
-      icon: '💸',
-      tag: 'PHONG CÁCH TỐI GIẢN',
-      title: `Ngân sách: ${dinhDangTien(budget)}đ`,
-      desc: 'Không sao. Chúng ta không nghèo, chúng ta đang du lịch theo phong cách tối giản. (500K? Được, nhưng tôi không đảm bảo bạn được ăn hải sản mỗi bữa đâu nhé! 😭)'
-    }
-  }
-
-  if (budget <= 1500000) {
+  if (formDuLieu.freePlacesOnly) {
     return {
       type: 'budget-saving',
-      icon: '🎒',
-      tag: 'TIẾT KIỆM & THỰC TẾ',
-      title: `Ngân sách: ${dinhDangTien(budget)}đ (~${dinhDangTien(perPerson)}đ/người)`,
-      desc: 'Mức ngân sách cực chuẩn cho sinh viên & phượt thủ! Bánh mì que, bánh bèo, chè hẻm đang vẫy gọi.'
+      icon: '🏖️',
+      tag: '100% MIỄN PHÍ VÉ',
+      title: `Chế độ tự túc & điểm tham quan 0đ: ${dinhDangTien(budget)}đ`,
+      desc: 'AI chỉ ưu tiên các danh lam thắng cảnh biểu tượng tự nhiên, bãi biển, phố đi bộ, chợ đêm hoàn toàn miễn phí vé vào cổng.'
     }
   }
 
-  if (budget <= 5000000) {
+  if (tier.key === 'T0') {
+    return {
+      type: 'budget-danger',
+      icon: tier.icon,
+      tag: tier.badge,
+      title: `Chuyến đi sinh tồn: ${dinhDangTien(budget)}đ (~${dinhDangTien(perPerson)}đ/người)`,
+      desc: 'Ngân sách thử thách bản lĩnh phượt thủ! Ngắm cảnh đẹp miễn phí, ăn bánh mì que & chè hẻm ngon bổ rẻ.'
+    }
+  }
+
+  if (tier.key === 'T1') {
+    return {
+      type: 'budget-saving',
+      icon: tier.icon,
+      tag: tier.badge,
+      title: `Gói tiết kiệm thông minh: ${dinhDangTien(budget)}đ (~${dinhDangTien(perPerson)}đ/người)`,
+      desc: 'Mức ngân sách cực chuẩn cho sinh viên & gia đình trẻ! Xe khách giường nằm, homestay ấm cúng và ăn sập đặc sản bản địa.'
+    }
+  }
+
+  if (tier.key === 'T2') {
     return {
       type: 'budget-cozy',
-      icon: '✨',
-      tag: 'DU LỊCH RỦNG RỈNH',
-      title: `Ngân sách: ${dinhDangTien(budget)}đ (~${dinhDangTien(perPerson)}đ/người)`,
-      desc: 'Rất thoải mái! Ăn hải sản tươi rói, cafe view biển triệu đô và khách sạn tiện nghi!'
+      icon: tier.icon,
+      tag: tier.badge,
+      title: `Tiêu chuẩn thoải mái: ${dinhDangTien(budget)}đ (~${dinhDangTien(perPerson)}đ/người)`,
+      desc: 'Chuyến đi vừa vặn, nghỉ ngơi khách sạn 3 sao gần biển, thưởng thức hải sản tươi ngon và cafe view cực chill!'
+    }
+  }
+
+  if (tier.key === 'T3') {
+    return {
+      type: 'budget-comfort',
+      icon: tier.icon,
+      tag: tier.badge,
+      title: `Trải nghiệm chất lượng cao: ${dinhDangTien(budget)}đ (~${dinhDangTien(perPerson)}đ/người)`,
+      desc: 'Thoải mái tận hưởng khách sạn 4 sao, nhà hàng hải sản phong phú và các điểm check-in hấp dẫn nhất!'
     }
   }
 
   return {
     type: 'budget-luxury',
-    icon: '💎',
-    tag: 'ĐẠI GIA MIỀN TRUNG',
-    title: `Ngân sách: ${dinhDangTien(budget)}đ (~${dinhDangTien(perPerson)}đ/người)`,
-    desc: 'Resort sang xịn, buffet tôm hùm, AI chỉ lo bạn mệt vì tiêu tiền không kịp thôi!'
+    icon: tier.icon,
+    tag: tier.badge,
+    title: `Nghỉ dưỡng thượng lưu 5 sao: ${dinhDangTien(budget)}đ (~${dinhDangTien(perPerson)}đ/người)`,
+    desc: 'Đẳng cấp đại gia Miền Trung! Resort 5 sao quốc tế, buffet tôm hùm, ăn tối du thuyền lãng mạn và vé VIP không cần xếp hàng.'
   }
 })
 
@@ -3118,6 +4391,66 @@ const attractionsList = computed(() => (places.value || []).filter(p => p.type =
 const restaurantsList = computed(() => (places.value || []).filter(p => p.type === 'restaurant'))
 const hotelsList = computed(() => (places.value || []).filter(p => p.type === 'hotel'))
 const cafesList = computed(() => (places.value || []).filter(p => p.type === 'cafe'))
+
+// TÌM KIẾM, PHÂN LOẠI & THU GỌN GỢI Ý ĐỊA ĐIỂM (BƯỚC 3 PLANNER)
+const searchPlacePickerQuery = ref('')
+const placePickerActiveTab = ref('all')
+const isPickerExpanded = reactive({
+  attraction: false,
+  restaurant: false,
+  hotel: false,
+  cafe: false
+})
+
+function togglePickerExpand(category) {
+  isPickerExpanded[category] = !isPickerExpanded[category]
+}
+
+const filteredAttractions = computed(() => {
+  const q = searchPlacePickerQuery.value.trim().toLowerCase()
+  if (!q) return attractionsList.value
+  return attractionsList.value.filter(p => p.name.toLowerCase().includes(q) || (p.description && p.description.toLowerCase().includes(q)))
+})
+
+const filteredRestaurants = computed(() => {
+  const q = searchPlacePickerQuery.value.trim().toLowerCase()
+  if (!q) return restaurantsList.value
+  return restaurantsList.value.filter(p => p.name.toLowerCase().includes(q) || (p.description && p.description.toLowerCase().includes(q)))
+})
+
+const filteredHotels = computed(() => {
+  const q = searchPlacePickerQuery.value.trim().toLowerCase()
+  if (!q) return hotelsList.value
+  return hotelsList.value.filter(p => p.name.toLowerCase().includes(q) || (p.description && p.description.toLowerCase().includes(q)))
+})
+
+const filteredCafes = computed(() => {
+  const q = searchPlacePickerQuery.value.trim().toLowerCase()
+  if (!q) return cafesList.value
+  return cafesList.value.filter(p => p.name.toLowerCase().includes(q) || (p.description && p.description.toLowerCase().includes(q)))
+})
+
+const totalFilteredPlacesCount = computed(() => {
+  return filteredAttractions.value.length + filteredRestaurants.value.length + filteredHotels.value.length + filteredCafes.value.length
+})
+
+function getVisiblePlaces(list, category) {
+  if (searchPlacePickerQuery.value.trim() || isPickerExpanded[category] || placePickerActiveTab.value === category) {
+    return list
+  }
+  return list.slice(0, 8)
+}
+
+function removeSelectedPlace(name) {
+  const idx = selectedPlaces.value.indexOf(name)
+  if (idx > -1) {
+    selectedPlaces.value.splice(idx, 1)
+  }
+}
+
+function clearAllSelectedPlaces() {
+  selectedPlaces.value = []
+}
 
 // Đổi địa điểm State
 const showChangePlaceModal = ref(false)
@@ -3301,10 +4634,14 @@ function renderLeafletMap() {
           popupAnchor: [0, -16]
         });
         const marker = L.marker([stop.latitude, stop.longitude], { icon: numIcon })
-          .bindPopup(`<div class="map-popup-card"><b>${index + 1}. ${stop.place}</b><br/><small>📍 ${stop.address || ''}</small></div>`)
+          .bindPopup(`<div class="map-popup-card"><b>${index + 1}. ${stop.place}</b><br/><small>📍 ${stop.address || ''}</small><br/><a href="${googleMapsSearchUrl(stop)}" target="_blank" class="popup-gmap-link" style="color: #0284c7; font-weight: 600; text-decoration: underline; margin-top: 4px; display: inline-block;">Xem trên Google Maps ↗</a></div>`)
           .addTo(routingLayerGroup);
           
         marker.on('click', () => {
+          selectedMapPlace.value = stop;
+          if (routingMap) {
+            routingMap.flyTo([stop.latitude, stop.longitude], 16, { duration: 0.6 });
+          }
           const actCard = document.getElementById(`activity-card-${selectedDay.value - 1}-${index}`);
           if (actCard) {
             actCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -3373,8 +4710,9 @@ function unhoverActivity(act, index) {
 }
 
 function panToActivity(act) {
+  selectedMapPlace.value = act;
   if (act.latitude && act.longitude && routingMap) {
-    routingMap.flyTo([act.latitude, act.longitude], 15, { duration: 0.8 });
+    routingMap.flyTo([act.latitude, act.longitude], 16, { duration: 0.8 });
   }
 }
 
@@ -3628,16 +4966,45 @@ function lamSachMoTa(text, act) {
   return cleaned;
 }
 
-function moveActivity(day, actIndex, direction) {
-  const newIndex = actIndex + direction;
-  if (newIndex < 0 || newIndex >= day.activities.length) return;
-  const temp = day.activities[actIndex];
-  day.activities[actIndex] = day.activities[newIndex];
-  day.activities[newIndex] = temp;
-}
-
 function getTravelEstimate(act, day, actIndex) {
-  // 1. Dữ liệu có cấu trúc từ backend
+  // 1. Nếu là hoạt động đầu tiên của Ngày 1: Chặng khởi hành từ nơi xuất phát đến điểm đến (Yêu cầu 3)
+  if (day && day.day === 1 && actIndex === 0) {
+    const origin = formDuLieu.diemKhoiHanh || 'Hà Nội';
+    const bus = formDuLieu.nhaXeDaChon || lichTrinh.value?.transit_summary?.selected_bus;
+    const dist = Number(lichTrinh.value?.transit_summary?.estimated_distance_km || transitRouteInfo.value?.estimatedDistanceKm || 669);
+    const dur = bus?.duration || (dist > 500 ? '13 – 14 giờ' : '4 – 6 giờ');
+    return {
+      from: origin,
+      distance: dist,
+      duration: dur,
+      cost: bus?.price ? `${dinhDangTien(bus.price)}đ/vé` : 'Đã tính vé',
+      mode: bus ? `${bus.name} (${bus.type})` : 'Xe khách giường nằm VIP'
+    };
+  }
+
+  // 2. Nếu là hoạt động đầu tiên của các ngày tiếp theo: Di chuyển từ khách sạn lưu trú
+  if (day && actIndex === 0) {
+    const hotel = lichTrinh.value?.hotel_recommendation;
+    const fromName = hotel?.name || 'Khách sạn lưu trú';
+    let dist = 3.2;
+    let dur = '10 - 15 phút';
+    if (hotel?.latitude && hotel?.longitude && act.latitude && act.longitude) {
+      const calc = tinhKhoangCachVaThoiGian(hotel, act);
+      if (calc && calc.distKm > 0.1) {
+        dist = calc.distKm;
+        dur = `${calc.phut} phút`;
+      }
+    }
+    return {
+      from: fromName,
+      distance: dist,
+      duration: dur,
+      cost: `~${Math.round(dist * 14000 / 1000) * 1000}đ`,
+      mode: dist < 1.5 ? 'Đi bộ thư thả' : dist < 5 ? 'Xe máy tiện lợi' : 'Ô tô / Taxi'
+    };
+  }
+
+  // 3. Dữ liệu có cấu trúc từ backend
   if (act.travel_from && act.travel_duration_mins) {
     const dist = Number(act.travel_distance_km || 1);
     return {
@@ -3649,7 +5016,7 @@ function getTravelEstimate(act, day, actIndex) {
     };
   }
 
-  // 2. Dữ liệu trích xuất từ chuỗi mô tả nếu có
+  // 4. Dữ liệu trích xuất từ chuỗi mô tả nếu có
   const rawText = act.activity || '';
   const match = rawText.match(/\(Từ (.*?) di chuyển ~([0-9.]+)km, khoảng ([0-9]+) phút(?:, phí taxi ước tính (.*?))?\)/);
   if (match) {
@@ -3663,31 +5030,29 @@ function getTravelEstimate(act, day, actIndex) {
     };
   }
 
-  // 3. Tính toán trực tiếp theo tọa độ điểm trước đó trong ngày hoặc từ khách sạn
-  if (day && day.activities && act.latitude && act.longitude) {
-    let prev = null;
-    if (actIndex > 0) {
-      prev = day.activities[actIndex - 1];
-    } else if (lichTrinh.value?.hotel_recommendation) {
-      prev = {
-        name: lichTrinh.value.hotel_recommendation.name || 'Khách sạn lưu trú',
-        latitude: lichTrinh.value.hotel_recommendation.latitude,
-        longitude: lichTrinh.value.hotel_recommendation.longitude
-      };
-    }
-
-    if (prev && prev.latitude && prev.longitude) {
+  // 5. Tính toán trực tiếp theo tọa độ điểm trước đó trong ngày
+  if (day && day.activities && actIndex > 0) {
+    const prev = day.activities[actIndex - 1];
+    if (prev && prev.latitude && prev.longitude && act.latitude && act.longitude) {
       const calc = tinhKhoangCachVaThoiGian(prev, act);
       if (calc && calc.distKm > 0.1 && calc.distKm < 150) {
         const cost = Math.round(calc.distKm * 14000 / 1000) * 1000;
         return {
-          from: prev.name || prev.place || 'Điểm xuất phát',
+          from: prev.name || prev.place || 'Điểm trước',
           distance: calc.distKm,
           duration: `${calc.phut} phút`,
           cost: `~${cost.toLocaleString('vi-VN')}đ`,
           mode: `${calc.phuongTien} ${calc.labelPhuongTien}`
         };
       }
+    } else if (prev) {
+      return {
+        from: prev.place || prev.name || 'Điểm trước',
+        distance: 2.8,
+        duration: '10 - 15 phút',
+        cost: '~35.000đ',
+        mode: 'Xe máy / Taxi'
+      };
     }
   }
 
@@ -3696,6 +5061,322 @@ function getTravelEstimate(act, day, actIndex) {
 
 // ==================== MAP VIEW TOGGLE & TRANSIT MICRO-UX LOGIC ====================
 const itineraryViewMode = ref('split') // 'timeline' | 'split' | 'map'
+const daLuuLichTrinhHienTai = ref(false)
+const thongBaoLuuThanhCong = ref(false)
+const hienModalDoiLichTrinh = ref(false)
+const selectedMapPlace = ref(null)
+
+// ==================== PHẦN 2: NHẮC LƯU LỊCH TRÌNH TRƯỚC KHI CHUYỂN TAB ====================
+const hienModalNhacLuu = ref(false)
+const pendingTabSwitch = ref(null) // tab name cần chuyển đến
+
+// ==================== PHẦN 3: XEM CHI TIẾT CHUYẾN ĐI ĐÃ LƯU ====================
+const hienModalChiTietTrip = ref(false)
+const xemTripChiTiet = ref(null) // trip object đang xem chi tiết
+const xemNgayChiTiet = ref(null) // day object đang xem chi tiết (null = xem list ngày)
+
+// Tối ưu danh sách không bị dài dòng (Yêu cầu 2)
+const timelineDensity = ref('compact') // 'compact' | 'expanded'
+const showAllDays = ref(false) // false: chỉ xem ngày selectedDay; true: xem tất cả các ngày
+const selectedSessionFilter = ref('all') // 'all' | 'morning' | 'noon' | 'afternoon' | 'evening'
+const expandedCardKey = ref(null)
+
+function toggleExpandCard(key) {
+  expandedCardKey.value = expandedCardKey.value === key ? null : key
+}
+
+function filterActivitiesBySession(activities) {
+  if (!activities) return []
+  if (selectedSessionFilter.value === 'all') return activities
+  return activities.filter(act => {
+    const time = act.time || '08:00'
+    const hour = parseInt(time.split(':')[0]) || 8
+    const type = act.type || ''
+    if (selectedSessionFilter.value === 'morning') {
+      return hour < 11 || type === 'breakfast'
+    } else if (selectedSessionFilter.value === 'noon') {
+      return (hour >= 11 && hour < 14) || type === 'lunch'
+    } else if (selectedSessionFilter.value === 'afternoon') {
+      return (hour >= 14 && hour < 18) || type === 'checkin'
+    } else if (selectedSessionFilter.value === 'evening') {
+      return hour >= 18 || type === 'dinner'
+    }
+    return true
+  })
+}
+
+function kichHoatCheDoFreePlaces() {
+  formDuLieu.freePlacesOnly = true
+  // Sau khi bật free-places, kiểm tra xem hotel+transport có vừa ngân sách không
+  // Nếu không, tự động rút ngắn số ngày cho phù hợp
+  const budget = Number(formDuLieu.nganSach) || 3000000
+  const people = Number(formDuLieu.soNguoi) || 2
+  const busPrice = Number(formDuLieu.nhaXeDaChon?.price || 320000) * people * 2
+  const hotelPerNight = Number(formDuLieu.yeuCauKhachSan?.priceHint || 150000)
+  const hotelCostPerNight = hotelPerNight <= 300000 ? hotelPerNight * people : hotelPerNight * Math.max(1, Math.ceil(people / 2))
+  // Chi phí ăn mỗi ngày (chỉ bữa ăn, không có vé)
+  const foodPerDay = 140000 * people
+  const costPerDay = hotelCostPerNight + foodPerDay
+  // Số ngày tối đa có thể sau khi trừ xe
+  const remaining = Math.max(0, budget - busPrice)
+  const maxDays = remaining > 0 && costPerDay > 0 ? Math.max(1, Math.floor(remaining / costPerDay)) : 1
+  // Nếu số ngày hiện tại quá lớn, auto rút về vừa vặn
+  if (Number(formDuLieu.soNgay) > maxDays) {
+    formDuLieu.soNgay = maxDays
+    personalityToast.value = { icon: '✂️', title: 'Tự động điều chỉnh!', desc: `Đã rút về ${maxDays} ngày + bật 100% Điểm Miễn Phí để vừa ngân sách ${dinhDangTien(budget)}đ!` }
+  } else {
+    personalityToast.value = { icon: '🌿', title: 'Đã bật Free Places!', desc: 'Tất cả vé tham quan sẽ là 0đ — tiết kiệm tối đa!' }
+  }
+  setTimeout(() => { personalityToast.value = null }, 5000)
+  taoLichTrinh()
+}
+
+function rutNganNgayPhuHop() {
+  const people = Number(formDuLieu.soNguoi) || 2
+  const budget = Number(formDuLieu.nganSach) || 3000000
+  // Chi phí vé xe khứ hồi (cố định)
+  const busPrice = Number(formDuLieu.nhaXeDaChon?.price || 320000) * people * 2
+  // Chi phí khách sạn mỗi đêm (theo loại: dorm/person hay phòng)
+  const hotelPerNight = Number(formDuLieu.yeuCauKhachSan?.priceHint || 150000)
+  const hotelCostPerNight = hotelPerNight <= 300000
+    ? hotelPerNight * people
+    : hotelPerNight * Math.max(1, Math.ceil(people / 2))
+  // Chi phí ăn mỗi ngày + di chuyển nội tỉnh
+  const foodPerDay = 140000 * people
+  const localTransportPerDay = 75000 * Math.max(1, Math.ceil(people / 2))
+  // Chi phí vé tham quan (ước tính 30k/người/ngày nếu không free-only)
+  const ticketPerDay = formDuLieu.freePlacesOnly ? 0 : 30000 * people
+  const costPerDay = hotelCostPerNight + foodPerDay + localTransportPerDay + ticketPerDay
+  // Tính số ngày tối đa
+  const remaining = Math.max(0, budget - busPrice)
+  const calculatedDays = costPerDay > 0 ? Math.max(1, Math.min(7, Math.floor(remaining / costPerDay))) : 1
+  const oldDays = Number(formDuLieu.soNgay)
+  formDuLieu.soNgay = calculatedDays
+  personalityToast.value = { icon: '✂️', title: `Đã rút ${oldDays} → ${calculatedDays} ngày!`, desc: `Vừa vặn ngân sách ${dinhDangTien(budget)}đ — lịch trình mới đang được tạo...` }
+  setTimeout(() => { personalityToast.value = null }, 5000)
+  taoLichTrinh()
+}
+
+const googleMapsDayRouteUrl = computed(() => {
+  if (!lichTrinh.value?.daysList) return 'https://www.google.com/maps'
+  const currentDay = lichTrinh.value.daysList.find(d => d.day === selectedDay.value) || lichTrinh.value.daysList[0]
+  return taoLinkGoogleMapsChoNgay(currentDay)
+})
+
+function tinhChiPhiKhachSan(plan) {
+  if (!plan?.hotel_recommendation) return 0
+  const nights = Math.max(1, plan.daysList?.length || plan.days?.length || formDuLieu.soNgay || 5)
+  const people = Number(plan.people) || Number(formDuLieu.soNguoi) || 2
+  const budget = Number(plan.target_budget || formDuLieu.nganSach || 3000000)
+  const aiPrice = Number(plan.hotel_recommendation.price_per_night) || 850000
+
+  // Tính ngưỡng giá khách sạn tối đa hợp lý theo ngân sách (tối đa 30% ngân sách cho khách sạn)
+  const maxHotelBudget = budget * 0.30
+  const maxPricePerNight = nights > 0 ? Math.round(maxHotelBudget / nights) : 300000
+
+  // Nếu AI gợi ý khách sạn quá đắt so với ngân sách, dùng giá phù hợp
+  const effectivePrice = Math.min(aiPrice, maxPricePerNight)
+
+  // Homestay, dorm, hostel (<= 300.000đ): giá theo người/đêm (90k * 2 người * 5 đêm = 900.000đ)
+  // Khách sạn (> 300.000đ): giá theo phòng (1 phòng cho 2 người)
+  if (effectivePrice <= 300000) {
+    return Math.round(effectivePrice * people * nights)
+  }
+  const rooms = Math.max(1, Math.ceil(people / 2))
+  return Math.round(effectivePrice * rooms * nights)
+}
+
+function dongBoChiPhiLichTrinh() {
+  if (!lichTrinh.value) return
+  const plan = lichTrinh.value
+  const people = Number(plan.people) || Number(formDuLieu.soNguoi) || 2
+  const days = Math.max(1, plan.daysList?.length || plan.days?.length || formDuLieu.soNgay || 5)
+
+  // 1. Chi phí khách sạn chính xác (khắc phục lỗi 90k * 2 người * 5 đêm = 900k)
+  const realHotel = tinhChiPhiKhachSan(plan)
+
+  // 2. Chi phí vé xe di chuyển liên tỉnh khứ hồi + di chuyển nội tỉnh
+  const busPrice = Number(formDuLieu.nhaXeDaChon?.price || plan.transit_summary?.selected_bus?.price || 320000)
+  const roundTripBus = busPrice * people * 2
+  const localTransport = days * 75000 * Math.max(1, Math.ceil(people / 2))
+  const realTransit = roundTripBus + localTransport
+
+  // 3. Chi phí các hoạt động (ăn uống + vé tham quan)
+  let realFood = 0
+  let realTickets = 0
+  const allDays = plan.daysList || plan.days || []
+  allDays.forEach(d => {
+    (d.activities || []).forEach(a => {
+      const c = Number(a.estimated_cost) || 0
+      if (['breakfast', 'lunch', 'dinner', 'restaurant'].includes(a.type)) {
+        realFood += c * people
+      } else if (['attraction', 'checkin'].includes(a.type)) {
+        realTickets += c * people
+      }
+    })
+  })
+
+  if (realFood === 0) {
+    realFood = days * people * 140000
+  }
+  if (formDuLieu.freePlacesOnly || plan.free_places_only) {
+    realTickets = 0
+  }
+
+  const subtotal = realHotel + realTransit + realFood + realTickets
+  const realReserve = Math.round(subtotal * 0.08)
+  const realTotal = subtotal + realReserve
+
+  if (!plan.budget_breakdown) plan.budget_breakdown = {}
+  plan.budget_breakdown.hotel = realHotel
+  plan.budget_breakdown.transportation = realTransit
+  plan.budget_breakdown.food = realFood
+  plan.budget_breakdown.tickets = realTickets
+  plan.budget_breakdown.reserve = realReserve
+
+  // Bảo toàn ngân sách mong muốn của người dùng và phát hiện BÁO ĐỎ vượt ngân sách (Yêu cầu 1)
+  const userTargetBudget = Number(plan.target_budget || formDuLieu.nganSach || 3000000)
+  plan.target_budget = userTargetBudget
+  plan.user_budget = userTargetBudget
+  plan.calculated_total = realTotal
+  plan.total_budget = realTotal
+
+  const isOver = realTotal > userTargetBudget * 1.05
+  plan.is_over_budget = isOver
+  plan.over_amount = Math.max(0, realTotal - userTargetBudget)
+  plan.over_percent = userTargetBudget > 0 ? Math.round((plan.over_amount / userTargetBudget) * 100) : 0
+
+  if (!plan.budget_audit) plan.budget_audit = {}
+  plan.budget_audit.target_budget = userTargetBudget
+  plan.budget_audit.calculated_total = realTotal
+  plan.budget_audit.is_over_budget = isOver
+  plan.budget_audit.over_amount = plan.over_amount
+  plan.budget_audit.fit_status = isOver ? 'over' : (realTotal < userTargetBudget * 0.75 ? 'under' : 'optimal')
+  if (isOver) {
+    plan.budget_audit.fit_message = `CẢNH BÁO BÁO ĐỎ: Kế hoạch thực tế (${dinhDangTien(realTotal)}đ) vượt quá khả năng tài chính bạn đã chọn (${dinhDangTien(userTargetBudget)}đ) khoảng +${dinhDangTien(plan.over_amount)}đ (+${plan.over_percent}%)!`
+    plan.budget_audit.advice = 'Khuyến nghị: Vé xe và khách sạn đã chiếm phần lớn ngân sách. Bạn nên bật "100% Điểm Miễn Phí" hoặc giảm bớt số ngày để vừa vặn tài chính.'
+  }
+  if (!plan.budget_audit.audit_breakdown) plan.budget_audit.audit_breakdown = {}
+  plan.budget_audit.audit_breakdown.hotel = realHotel
+  plan.budget_audit.audit_breakdown.transit = realTransit
+  plan.budget_audit.audit_breakdown.food = realFood
+  plan.budget_audit.audit_breakdown.tickets = realTickets
+}
+
+async function luuLichTrinhHienTai() {
+  if (!lichTrinh.value) return
+
+  const localTripsKey = 'my_saved_trips'
+  let savedLocal = []
+  try {
+    const raw = localStorage.getItem(localTripsKey)
+    if (raw) savedLocal = JSON.parse(raw)
+  } catch (e) {
+    savedLocal = []
+  }
+
+  const tripToSave = {
+    ...lichTrinh.value,
+    _id: lichTrinh.value._id || lichTrinh.value.tripId || ('local-' + Date.now()),
+    created_at: lichTrinh.value.created_at || new Date().toISOString()
+  }
+
+  const existingIdx = savedLocal.findIndex(t => t._id === tripToSave._id)
+  if (existingIdx >= 0) {
+    savedLocal[existingIdx] = tripToSave
+  } else {
+    savedLocal.unshift(tripToSave)
+  }
+  localStorage.setItem(localTripsKey, JSON.stringify(savedLocal))
+
+  if (nguoiDung.value) {
+    try {
+      await api.post('/social/my-trips', tripToSave)
+      await taiChuyenDiCuaToi()
+    } catch (e) {
+      console.warn('Lỗi lưu cloud:', e.message)
+    }
+  } else {
+    myTripsList.value = savedLocal
+  }
+
+  daLuuLichTrinhHienTai.value = true
+  thongBaoLuuThanhCong.value = true
+  personalityToast.value = {
+    icon: '💾',
+    title: 'Đã lưu lịch trình thành công!',
+    desc: nguoiDung.value 
+      ? 'Chuyến đi đã được lưu an toàn vào tài khoản của bạn.' 
+      : 'Chuyến đi đã được lưu trên thiết bị của bạn. Bạn có thể mở xem lại tại tab "Chuyến đi đã lưu"!'
+  }
+  setTimeout(() => {
+    thongBaoLuuThanhCong.value = false
+    personalityToast.value = null
+  }, 6000)
+}
+
+function chonDoiThongSo() {
+  hienModalDoiLichTrinh.value = false
+  currentPlannerStep.value = 1
+  activeTab.value = 'planner'
+  nextTick(() => {
+    const el = document.getElementById('step-indicator-bar') || document.querySelector('.planner-layout')
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  })
+}
+
+async function chonAILenPhuongAnMoi() {
+  hienModalDoiLichTrinh.value = false
+  daLuuLichTrinhHienTai.value = false
+  await taoLichTrinh()
+}
+
+function chonDoiTinhThanh() {
+  hienModalDoiLichTrinh.value = false
+  activeTab.value = 'explore'
+  nextTick(() => {
+    window.scrollTo({ top: 400, behavior: 'smooth' })
+  })
+}
+
+function googleMapsSearchUrl(place) {
+  if (!place) return 'https://www.google.com/maps'
+  const name = place.place || place.name || ''
+  const addr = place.address || formDuLieu.diemDen || 'Việt Nam'
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name + ' ' + addr)}`
+}
+
+function getSampleReviewText(place) {
+  const name = (place.place || place.name || '').toLowerCase()
+  if (name.includes('bãi') || name.includes('biển')) {
+    return 'Bãi biển rất sạch và đẹp, nước trong xanh cát trắng mịn. Buổi sáng tắm biển ngắm bình minh tuyệt vời, có nhiều dịch vụ thể thao biển.'
+  }
+  if (name.includes('esco') || name.includes('restaurant') || name.includes('quán') || name.includes('cơm') || name.includes('bánh') || name.includes('bún')) {
+    return 'Quán rộng đẹp, view biển thoáng mát, đồ ăn nêm nếm đậm đà chuẩn vị miền Trung. Nhân viên phục vụ nhanh nhẹn nhiệt tình.'
+  }
+  if (name.includes('cafe') || name.includes('cà phê') || name.includes('chill')) {
+    return 'Không gian quán cực chill và nhiều góc check-in triệu view. Đồ uống pha chế ngon, nhạc nhẹ nhàng thư giãn.'
+  }
+  return 'Địa điểm rất đáng để ghé thăm trong chuyến đi, không gian rộng rãi, cảnh quan ấn tượng và chụp ảnh rất đẹp.'
+}
+
+function moModalDoiDiaDiemTuMap(place) {
+  if (!place || !lichTrinh.value?.daysList) return
+  const currentDayIdx = selectedDay.value - 1
+  const day = lichTrinh.value.daysList[currentDayIdx]
+  if (!day) return
+  const actIdx = day.activities.findIndex(a => a.place === place.place || a.place === place.name)
+  if (actIdx >= 0) {
+    moModalDoiDiaDiem(currentDayIdx, actIdx, day.activities[actIdx].type)
+  } else {
+    moModalDoiDiaDiem(currentDayIdx, 0, place.type || 'attraction')
+  }
+}
+
+function laYeuThich(placeId) {
+  if (!placeId) return false
+  return favoritesList.value.some(p => p._id === placeId || p === placeId)
+}
 
 function doiViewMode(mode) {
   itineraryViewMode.value = mode
@@ -3798,8 +5479,54 @@ watch(lichTrinh, () => {
   renderLeafletMap();
 }, { deep: true });
 
+// ==================== PHẦN 2: XÁC NHẬN LƯU TRƯỚC KHI CHUYỂN TAB ====================
+// Wrapper để chuyển tab có kiểm tra lưu lịch trình chưa lưu
+function chuyenTab(tabName) {
+  // Nếu đang ở planner, có lịch trình, và chưa lưu → hỏi trước
+  if (activeTab.value === 'planner' && lichTrinh.value && !daLuuLichTrinhHienTai.value) {
+    pendingTabSwitch.value = tabName
+    hienModalNhacLuu.value = true
+    return
+  }
+  activeTab.value = tabName
+}
+
+async function dongYLuuVaChuyenTab() {
+  await luuLichTrinhHienTai()
+  hienModalNhacLuu.value = false
+  if (pendingTabSwitch.value) {
+    activeTab.value = pendingTabSwitch.value
+    pendingTabSwitch.value = null
+  }
+}
+
+function khongLuuVaChuyenTab() {
+  hienModalNhacLuu.value = false
+  if (pendingTabSwitch.value) {
+    activeTab.value = pendingTabSwitch.value
+    pendingTabSwitch.value = null
+  }
+}
+
+function huyChuyenTab() {
+  hienModalNhacLuu.value = false
+  pendingTabSwitch.value = null
+}
+
+// ==================== PHẦN 3: MỞ CHI TIẾT CHUYẾN ĐI ĐÃ LƯU ====================
+function xemChiTietChuyenDi(trip) {
+  xemTripChiTiet.value = trip
+  xemNgayChiTiet.value = null
+  hienModalChiTietTrip.value = true
+}
+
 watch(activeTab, (newTab) => {
   if (newTab === 'planner') {
+    // Luôn cuộn lên đầu trang ngay lập tức để người dùng thấy ảnh Miền Trung (Yêu cầu 5)
+    cuonLenDauTrang()
+    nextTick(() => {
+      cuonLenDauTrang()
+    })
     // Luôn re-render khi chuyển sang tab planner để tránh grey tiles
     renderLeafletMap()
     // Random câu AI mới mỗi khi vào tab planner
@@ -3819,9 +5546,23 @@ onMounted(() => {
       if (lichTrinh.value?.daysList?.[0]) {
         selectedDay.value = lichTrinh.value.daysList[0].day
       }
+      dongBoChiPhiLichTrinh()
     } catch (e) {
       console.error(e)
     }
+  }
+
+  // Tải danh sách chuyến đi đã lưu từ bộ nhớ máy (cho cả khách chưa đăng nhập)
+  try {
+    const localSaved = localStorage.getItem('my_saved_trips')
+    if (localSaved) {
+      const parsedLocal = JSON.parse(localSaved)
+      if (Array.isArray(parsedLocal) && parsedLocal.length > 0) {
+        myTripsList.value = parsedLocal
+      }
+    }
+  } catch (e) {
+    console.warn('Lỗi đọc my_saved_trips:', e.message)
   }
   
   if (activeTab.value === 'planner') {
@@ -4008,6 +5749,12 @@ async function taiDuLieuThanhPho() {
 }
 
 async function taoLichTrinh() {
+  if (!tripFeasibility.value.feasible && !formDuLieu.freePlacesOnly) {
+    taoPlanError.value = tripFeasibility.value.message || 'Yêu cầu không khả thi về ngân sách. Vui lòng tăng ngân sách hoặc chọn chế độ chỉ đi điểm miễn phí vé.';
+    currentPlannerStep.value = 2;
+    return;
+  }
+
   formDuLieu.soThich = chuoiSoThich.value ? chuoiSoThich.value.split(',').map(s => s.trim()).filter(Boolean) : []
   dangTao.value = true
   lichTrinh.value = null
@@ -4028,13 +5775,13 @@ async function taoLichTrinh() {
       days: formDuLieu.soNgay,
       budget: formDuLieu.nganSach,
       people: formDuLieu.soNguoi,
+      free_places_only: Boolean(formDuLieu.freePlacesOnly),
       interests: formDuLieu.soThich,
       selected_places: selectedPlaces.value,
       start_date: formDuLieu.ngayBatDau,
       end_date: formDuLieu.ngayKetThuc,
       transportation: formDuLieu.phuongTien,
       hotel_request: formDuLieu.yeuCauKhachSan,
-      hotel_checkin_preference: formDuLieu.hotel_checkin_preference,
       selected_bus: formDuLieu.nhaXeDaChon
     })
     lichTrinh.value = res.data
@@ -4044,13 +5791,16 @@ async function taoLichTrinh() {
         origin: formDuLieu.diemKhoiHanh,
         destination: formDuLieu.diemDen,
         estimated_distance_km: transitRouteInfo.value.estimatedDistanceKm,
-        selected_bus: formDuLieu.nhaXeDaChon,
+        selected_bus: formDuLieu.nhaXeDaChon || transitRouteInfo.value.cheapestOperator,
         comparison: transitRouteInfo.value.vehicleComparison,
         available_operators: transitRouteInfo.value.operators
       }
     }
     if (lichTrinh.value?.days) lichTrinh.value.daysList = lichTrinh.value.days
     selectedDay.value = 1
+    // Đồng bộ tính toán chi phí khách sạn và ngân sách thực tế đúng với lịch trình (Yêu cầu 2)
+    dongBoChiPhiLichTrinh()
+    daLuuLichTrinhHienTai.value = false
     splitterTongTien.value = lichTrinh.value.total_budget || formDuLieu.nganSach
     splitterSoNguoi.value = lichTrinh.value.people || formDuLieu.soNguoi
     taiChuyenDiCuaToi()
@@ -4065,7 +5815,12 @@ async function taoLichTrinh() {
     }, 7500)
   } catch (e) {
     const msg = e?.response?.data?.error || e.message;
-    taoPlanError.value = msg.includes('Ngân sách quá thấp') ? msg : 'Quá trình tạo lịch trình gặp sự cố: ' + msg;
+    if (e?.response?.data?.is_unfeasible) {
+      taoPlanError.value = `⛔ Chuyến đi không thể thực hiện: ${msg}`;
+      currentPlannerStep.value = 2;
+    } else {
+      taoPlanError.value = 'Quá trình tạo lịch trình gặp sự cố: ' + msg;
+    }
   } finally {
     dangTao.value = false
     if (loadingMessageTimer) {
@@ -4135,73 +5890,6 @@ async function dangNhapHoacDangKy() {
   }
 }
 
-const editProfileMode = ref(false)
-const profileForm = reactive({ name: '', avatar: '', bio: '' })
-
-function editProfile() {
-  profileForm.name = nguoiDung.value.name || ''
-  profileForm.avatar = nguoiDung.value.avatar || ''
-  profileForm.bio = nguoiDung.value.bio || ''
-  editProfileMode.value = true
-}
-
-function handleAvatarUpload(event) {
-  const file = event.target.files[0]
-  if (!file) return
-  
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    const img = new Image()
-    img.onload = () => {
-      const canvas = document.createElement('canvas')
-      const MAX_WIDTH = 300
-      const MAX_HEIGHT = 300
-      let width = img.width
-      let height = img.height
-
-      if (width > height) {
-        if (width > MAX_WIDTH) {
-          height *= MAX_WIDTH / width
-          width = MAX_WIDTH
-        }
-      } else {
-        if (height > MAX_HEIGHT) {
-          width *= MAX_HEIGHT / height
-          height = MAX_HEIGHT
-        }
-      }
-      canvas.width = width
-      canvas.height = height
-      const ctx = canvas.getContext('2d')
-      ctx.drawImage(img, 0, 0, width, height)
-      
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.8)
-      profileForm.avatar = dataUrl
-    }
-    img.src = e.target.result
-  }
-  reader.readAsDataURL(file)
-}
-
-async function saveProfile() {
-  try {
-    const res = await api.put('/auth/update-profile', profileForm)
-    nguoiDung.value = res.data
-    editProfileMode.value = false
-  } catch(e) {
-    alert('Lỗi cập nhật hồ sơ: ' + (e.response?.data?.error || e.message))
-  }
-}
-
-const userLevelInfo = computed(() => {
-  if (!nguoiDung.value) return { title: 'Người mới', icon: '🌱', color: '#94a3b8' }
-  const trips = nguoiDung.value.completed_trips || 0
-  if (trips >= 10) return { title: 'Chuyên gia du lịch', icon: '👑', color: '#f59e0b' }
-  if (trips >= 5) return { title: 'Dân phượt chính hiệu', icon: '🚀', color: '#3b82f6' }
-  if (trips >= 2) return { title: 'Tín đồ mê xê dịch', icon: '🎒', color: '#10b981' }
-  return { title: 'Tân binh', icon: '🌱', color: '#8b5cf6' }
-})
-
 function dangXuat() {
   localStorage.removeItem('travel_token')
   nguoiDung.value = null
@@ -4250,7 +5938,13 @@ function moLaiLichTrinh(trip) {
   lichTrinh.value = trip
   if (lichTrinh.value?.days) lichTrinh.value.daysList = lichTrinh.value.days
   selectedDay.value = 1
+  dongBoChiPhiLichTrinh()
+  daLuuLichTrinhHienTai.value = true
   activeTab.value = 'planner'
+  nextTick(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+    renderLeafletMap()
+  })
 }
 
 async function chiaSeChuyenDi(trip) {
@@ -4268,66 +5962,26 @@ async function chiaSeChuyenDi(trip) {
   }
 }
 
-function promptDeleteTrip(trip) {
-  deleteTarget.value = trip
-  modalDeleteVisible.value = true
-}
-
-function promptDeleteSelected() {
-  if (selectedTrips.value.length === 0) return
-  deleteTarget.value = 'selected'
-  modalDeleteVisible.value = true
-}
-
-function promptDeleteAll() {
-  deleteTarget.value = 'all'
-  modalDeleteVisible.value = true
-}
-
-function toggleTripSelection(tripId) {
-  const index = selectedTrips.value.indexOf(tripId)
-  if (index === -1) {
-    selectedTrips.value.push(tripId)
-  } else {
-    selectedTrips.value.splice(index, 1)
-  }
-}
-
-function toggleSelectAllTrips() {
-  if (selectedTrips.value.length === myTripsList.value.length) {
-    selectedTrips.value = []
-  } else {
-    selectedTrips.value = myTripsList.value.map(t => t._id)
-  }
-}
-
-async function executeDeleteTrips() {
-  const target = deleteTarget.value
-  modalDeleteVisible.value = false
-  if (!target) return
-  
+async function xoaChuyenDi(trip) {
+  const tenChuyen = `${trip.days?.length || (trip.daysList?.length) || 0} ngày tại ${trip.destination}`
+  const xacNhan = confirm(`Bạn có chắc muốn xóa chuyến đi "${tenChuyen}" không?\n\n⚠️ Hành động này không thể hoàn tác.`)
+  if (!xacNhan) return
   try {
-    let idsToDelete = []
-    if (target === 'all') {
-      idsToDelete = myTripsList.value.map(t => t._id)
-    } else if (target === 'selected') {
-      idsToDelete = [...selectedTrips.value]
-    } else {
-      idsToDelete = [target._id]
+    if (trip._id && !trip._id.startsWith('local-')) {
+      await api.delete(`/social/trips/${trip._id}`)
     }
-    
-    // Process sequentially or Promise.all. Promise.all is faster.
-    await Promise.all(idsToDelete.map(id => api.delete(`/social/trips/${id}`)))
-    
-    // Update local list
-    myTripsList.value = myTripsList.value.filter(t => !idsToDelete.includes(t._id))
-    selectedTrips.value = selectedTrips.value.filter(id => !idsToDelete.includes(id))
-    
-    // Show toast or alert? Just silently succeed is fine or show a toast if we had one.
   } catch (e) {
-    alert('Đã xảy ra lỗi khi xóa: ' + (e?.response?.data?.error || e.message))
+    console.warn('Lỗi xóa trên server:', e.message)
   }
-  deleteTarget.value = null
+  // Xóa khỏi danh sách local và state
+  myTripsList.value = myTripsList.value.filter(t => t._id !== trip._id)
+  try {
+    const raw = localStorage.getItem('my_saved_trips')
+    if (raw) {
+      const arr = JSON.parse(raw).filter(t => t._id !== trip._id)
+      localStorage.setItem('my_saved_trips', JSON.stringify(arr))
+    }
+  } catch (e) {}
 }
 
 function xuatPdf() {
@@ -4400,7 +6054,6 @@ let introTimeout2 = null;
 function playIntroSplash() {
   showIntroSplash.value = true
   introSplitting.value = false
-  document.body.style.overflow = 'hidden'
   
   clearTimeout(introTimeout1)
   clearTimeout(introTimeout2)
@@ -4410,7 +6063,6 @@ function playIntroSplash() {
     introSplitting.value = true
     introTimeout2 = setTimeout(() => {
       showIntroSplash.value = false
-      document.body.style.overflow = ''
     }, 2500)
   }, 7500)
 }
@@ -4423,7 +6075,6 @@ function boQuaIntro() {
   introSplitting.value = true
   setTimeout(() => {
     showIntroSplash.value = false
-    document.body.style.overflow = ''
   }, 800)
 }
 </script>
@@ -4869,12 +6520,6 @@ button { cursor: pointer; }
   .hero-content {
     opacity: 1;
   }
-  .app-hero-card {
-    background: linear-gradient(rgba(0, 0, 0, 0.1), rgba(15, 30, 20, 0.95)), url('/images/mientrung-hero.jpg') no-repeat top center;
-    background-size: 100% auto;
-    background-color: #0f1e14;
-    min-height: 320px;
-  }
 }
 
 @keyframes floatHeroCard {
@@ -5061,20 +6706,20 @@ button { cursor: pointer; }
   background-color: var(--card-bg);
   background-size: cover;
   background-position: center;
-  border: none;
+  border: 2px solid transparent;
   outline: none;
-  padding: 10px 8px;
-  border-radius: var(--radius-md);
+  padding: 16px 12px;
+  border-radius: 18px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  min-width: 105px;
-  max-width: 115px;
-  height: 125px;
+  min-width: 180px;
+  max-width: 210px;
+  height: 200px;
   color: #ffffff;
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
-  box-shadow: var(--shadow-sm);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
   position: relative;
   text-align: center;
   overflow: hidden;
@@ -5087,35 +6732,38 @@ button { cursor: pointer; }
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 60%, rgba(0,0,0,0.05) 100%);
+  background: linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.45) 55%, rgba(0,0,0,0.05) 100%);
   z-index: 1;
   border-radius: inherit;
+  transition: opacity 0.2s ease;
 }
 .city-card-btn:hover {
-  transform: translateY(-6px) scale(1.03);
-  box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.4), 0 0 15px rgba(13, 148, 136, 0.3);
+  transform: translateY(-8px) scale(1.03);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.45), 0 0 20px rgba(14, 165, 233, 0.4);
+  border-color: rgba(14, 165, 233, 0.6);
 }
 .city-card-btn.active {
-  box-shadow: 0 0 0 2px var(--primary), 0 0 0 5px var(--primary-light), var(--shadow-sm);
-  transform: translateY(-2px);
+  box-shadow: 0 0 0 3px #0ea5e9, 0 12px 28px rgba(14, 165, 233, 0.45);
+  border-color: #0ea5e9;
+  transform: translateY(-4px);
 }
 .city-card-btn.active::after {
   content: '✓';
   position: absolute;
-  top: 6px;
-  right: 6px;
-  font-size: 10px;
+  top: 10px;
+  right: 10px;
+  font-size: 13px;
   font-weight: 800;
-  background: var(--primary);
+  background: #10b981;
   color: #fff;
-  width: 18px;
-  height: 18px;
+  width: 26px;
+  height: 26px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
   z-index: 2;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.25);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.35);
 }
 .city-icon, .city-name, .city-tag {
   position: relative;
@@ -5123,14 +6771,886 @@ button { cursor: pointer; }
 }
 .city-pin-icon {
   display: block;
-  margin-bottom: 4px;
-  opacity: 0.9;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+  margin-bottom: 6px;
+  opacity: 0.95;
+  filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5));
   position: relative;
   z-index: 2;
 }
-.city-name { font-size: 13px; font-weight: 800; color: #ffffff; text-shadow: 0 2px 4px rgba(0,0,0,0.9); line-height: 1.2; margin-bottom: 2px; }
-.city-tag { font-size: 9.5px; color: rgba(255,255,255,0.88); text-shadow: 0 1px 3px rgba(0,0,0,0.8); font-weight: 500; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.25; }
+.city-name {
+  font-size: 16px;
+  font-weight: 800;
+  color: #ffffff;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.9);
+  line-height: 1.25;
+  margin-bottom: 4px;
+}
+.city-tag {
+  font-size: 11.5px;
+  color: rgba(255,255,255,0.92);
+  text-shadow: 0 1px 4px rgba(0,0,0,0.85);
+  font-weight: 500;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.35;
+}
+
+/* ========================================================
+   PROVINCE SPOTLIGHT SHOWCASE & THUMBNAILS GALLERY (YÊU CẦU 2)
+   ======================================================== */
+.province-spotlight-card {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 24px;
+  background: var(--card-bg, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 20px;
+  padding: 22px;
+  margin-top: 18px;
+  margin-bottom: 24px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+:root[data-theme="dark"] .province-spotlight-card {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+}
+@media (max-width: 900px) {
+  .province-spotlight-card {
+    grid-template-columns: 1fr;
+    gap: 18px;
+    padding: 16px;
+  }
+}
+.spotlight-visual-column {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.spotlight-hero-wrap {
+  position: relative;
+  width: 100%;
+  height: 340px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+@media (max-width: 600px) {
+  .spotlight-hero-wrap {
+    height: 240px;
+  }
+}
+.spotlight-hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+.spotlight-hero-wrap:hover .spotlight-hero-img {
+  transform: scale(1.02);
+}
+.spotlight-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.05) 50%, rgba(0,0,0,0.3) 100%);
+  pointer-events: none;
+}
+.spotlight-badge-esg {
+  position: absolute;
+  bottom: 14px;
+  left: 14px;
+  background: rgba(236, 253, 245, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1px solid #10b981;
+  color: #065f46;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  z-index: 2;
+}
+.spotlight-badge-cert {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: rgba(254, 243, 199, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1px solid #f59e0b;
+  color: #92400e;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 999px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  z-index: 2;
+}
+.spotlight-fullscreen-btn {
+  position: absolute;
+  bottom: 14px;
+  right: 14px;
+  width: 38px;
+  height: 38px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1e293b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 2;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+.spotlight-fullscreen-btn:hover {
+  background: #ffffff;
+  transform: scale(1.08);
+  color: #0284c7;
+}
+
+/* 5 Thumbnails Gallery dưới ảnh chính */
+.spotlight-thumbnails-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+.spotlight-thumb-btn {
+  position: relative;
+  height: 72px;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  overflow: hidden;
+  padding: 0;
+  background: #000;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+}
+.spotlight-thumb-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease, opacity 0.2s ease;
+  opacity: 0.82;
+}
+.spotlight-thumb-btn:hover img {
+  opacity: 1;
+  transform: scale(1.05);
+}
+.spotlight-thumb-btn.active {
+  border-color: #0284c7;
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.3);
+}
+.spotlight-thumb-btn.active img {
+  opacity: 1;
+}
+.thumb-caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.72);
+  color: #fff;
+  font-size: 9.5px;
+  font-weight: 600;
+  padding: 2px 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+/* Cột thông tin chi tiết */
+.spotlight-info-column {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.spotlight-header-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.spotlight-tag-kicker {
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  color: #0284c7;
+  text-transform: uppercase;
+}
+.spotlight-cert-sub {
+  font-size: 11.5px;
+  color: var(--text-muted, #64748b);
+  font-weight: 500;
+}
+.spotlight-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-color, #0f172a);
+  line-height: 1.3;
+  margin: 0 0 4px 0;
+}
+:root[data-theme="dark"] .spotlight-title {
+  color: #f8fafc;
+}
+.spotlight-subtitle {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #0ea5e9;
+  margin: 0 0 10px 0;
+  line-height: 1.4;
+}
+.spotlight-description {
+  font-size: 13.5px;
+  color: var(--text-muted, #475569);
+  line-height: 1.6;
+  margin: 0 0 14px 0;
+}
+:root[data-theme="dark"] .spotlight-description {
+  color: #cbd5e1;
+}
+.spotlight-highlight-box {
+  background: var(--bg-soft, #f8fafc);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 10px;
+}
+:root[data-theme="dark"] .spotlight-highlight-box {
+  background: #0f172a;
+  border-color: #334155;
+}
+.shb-label {
+  font-size: 12.5px;
+  color: var(--text-color, #0f172a);
+  margin-bottom: 6px;
+}
+:root[data-theme="dark"] .shb-label {
+  color: #f8fafc;
+}
+.shb-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.spotlight-spec-chip {
+  font-size: 12px;
+  font-weight: 600;
+  background: rgba(2, 132, 199, 0.1);
+  color: #0284c7;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(2, 132, 199, 0.2);
+}
+.shb-text {
+  font-size: 13px;
+  color: #10b981;
+  font-weight: 600;
+  margin: 0;
+}
+.spotlight-actions {
+  margin-top: 10px;
+}
+.spotlight-cta-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: #ffffff;
+  font-size: 14.5px;
+  font-weight: 700;
+  padding: 13px 20px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+  transition: all 0.2s ease;
+}
+.spotlight-cta-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(2, 132, 199, 0.45);
+}
+
+/* Spotlight Fullscreen Modal */
+.spotlight-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.spotlight-modal-box {
+  position: relative;
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 18px;
+  max-width: 900px;
+  width: 100%;
+  overflow: hidden;
+  box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+}
+.spotlight-modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 16px;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.2s ease;
+}
+.spotlight-modal-close:hover {
+  background: #ef4444;
+}
+.spotlight-modal-img {
+  width: 100%;
+  max-height: 520px;
+  object-fit: contain;
+  background: #000;
+  display: block;
+}
+.spotlight-modal-footer {
+  padding: 16px 20px;
+  background: #1e293b;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.spotlight-modal-footer h4 {
+  color: #fff;
+  font-size: 16px;
+  margin: 0;
+}
+.spotlight-modal-thumbs {
+  display: flex;
+  gap: 8px;
+}
+.sm-thumb-btn {
+  width: 50px;
+  height: 40px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+}
+.sm-thumb-btn.active {
+  border-color: #0284c7;
+}
+.sm-thumb-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ========================================================
+   LỊCH TRÌNH KHỞI HÀNH & CHỌN NGÀY ĐI (YÊU CẦU 3 - SCREENSHOT 3)
+   ======================================================== */
+.departure-schedule-box {
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  background: var(--card-bg, #ffffff);
+  border: 1.5px solid var(--border-color, #e2e8f0);
+  border-radius: 16px;
+  padding: 18px 20px;
+  margin-top: 10px;
+  margin-bottom: 12px;
+}
+:root[data-theme="dark"] .departure-schedule-box {
+  background: #1e293b;
+  border-color: #334155;
+}
+.dsb-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.dsb-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.dsb-icon {
+  font-size: 24px;
+}
+.dsb-title {
+  font-size: 16.5px;
+  font-weight: 800;
+  color: var(--text-color, #0f172a);
+  margin: 0;
+}
+:root[data-theme="dark"] .dsb-title {
+  color: #f8fafc;
+}
+.dsb-subtitle {
+  font-size: 12.5px;
+  color: var(--text-muted, #64748b);
+  display: block;
+}
+.dsb-duration-tag {
+  font-size: 12px;
+  font-weight: 700;
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+/* Dãy nút chọn tháng kiểu viên thuốc (Screenshot 3) */
+.month-pills-row {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  margin-bottom: 14px;
+  -webkit-overflow-scrolling: touch;
+}
+.month-pill-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 18px;
+  min-width: 100px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border-color, #e2e8f0);
+  background: var(--card-bg, #ffffff);
+  color: var(--text-muted, #64748b);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+:root[data-theme="dark"] .month-pill-btn {
+  background: #0f172a;
+  border-color: #334155;
+  color: #94a3b8;
+}
+.month-pill-btn span {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.month-pill-btn strong {
+  font-size: 14px;
+  font-weight: 800;
+}
+.month-pill-btn:hover {
+  border-color: #0284c7;
+  color: #0284c7;
+}
+.month-pill-btn.active {
+  background: #0284c7 !important;
+  border-color: #0284c7 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+}
+
+/* KHỐI THỐNG NHẤT 4 TRƯỜNG ĐIỀU KHIỂN (YÊU CẦU 2) */
+.dsb-unified-controls-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 14px;
+  align-items: flex-end;
+}
+@media (max-width: 900px) {
+  .dsb-unified-controls-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 520px) {
+  .dsb-unified-controls-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.dsb-ctrl-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.dsb-ctrl-field label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-color, #334155);
+}
+:root[data-theme="dark"] .dsb-ctrl-field label {
+  color: #cbd5e1;
+}
+.dsb-stepper {
+  height: 42px;
+  display: flex;
+  align-items: center;
+  border-radius: 10px;
+  background: var(--input-bg, #ffffff);
+  border: 1.5px solid var(--border-color, #cbd5e1);
+  overflow: hidden;
+}
+:root[data-theme="dark"] .dsb-stepper {
+  background: #0f172a;
+  border-color: #334155;
+}
+.dsb-stepper button {
+  width: 40px;
+  height: 100%;
+  border: none;
+  background: transparent;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-color, #334155);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+}
+:root[data-theme="dark"] .dsb-stepper button {
+  color: #f1f5f9;
+}
+.dsb-stepper button:hover {
+  background: rgba(2, 132, 199, 0.15);
+  color: #0284c7;
+}
+.dsb-stepper-val {
+  flex: 1;
+  text-align: center;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-color, #0f172a);
+}
+:root[data-theme="dark"] .dsb-stepper-val {
+  color: #f8fafc;
+}
+
+/* Ô chọn ngày cụ thể (Dự phòng) */
+.departure-date-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+@media (max-width: 640px) {
+  .departure-date-row {
+    grid-template-columns: 1fr;
+  }
+}
+.ddr-field label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-color, #334155);
+  margin-bottom: 5px;
+}
+:root[data-theme="dark"] .ddr-field label {
+  color: #cbd5e1;
+}
+.departure-date-input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border-color, #cbd5e1);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+.disabled-input {
+  background: rgba(0, 0, 0, 0.03);
+  cursor: not-allowed;
+  opacity: 0.9;
+}
+:root[data-theme="dark"] .disabled-input {
+  background: rgba(255, 255, 255, 0.05);
+}
+.trip-date-summary-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(2, 132, 199, 0.08);
+  border: 1px solid rgba(2, 132, 199, 0.2);
+  border-radius: 10px;
+  padding: 9px 14px;
+  font-size: 13px;
+  color: #0369a1;
+}
+:root[data-theme="dark"] .trip-date-summary-banner {
+  background: rgba(2, 132, 199, 0.15);
+  color: #38bdf8;
+}
+.trip-date-summary-banner b {
+  font-weight: 700;
+}
+
+/* ========================================================
+   BỐ CỤC CHỌN VÉ XE GỌN GÀNG & HIỆN ĐẠI (YÊU CẦU 4 - SCREENSHOT 4)
+   ======================================================== */
+.bic-spec-times {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--card-bg, #fff);
+  padding: 8px 10px;
+  border-radius: 8px;
+}
+:root[data-theme="dark"] .bic-spec-times {
+  background: #0f172a;
+}
+.bst-label {
+  font-size: 11.5px;
+  color: var(--text-muted, #64748b);
+  font-weight: 600;
+}
+.bst-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.bst-chip {
+  font-size: 11.5px;
+  font-weight: 700;
+  background: rgba(2, 132, 199, 0.1);
+  color: #0284c7;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(2, 132, 199, 0.2);
+}
+.train-time-chip {
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+/* ========================================================
+   THANH TÌM KIẾM & BỘ CHỌN ĐỊA ĐIỂM TỐI GIẢN (YÊU CẦU 5 - SCREENSHOT 5)
+   ======================================================== */
+.place-picker-search-bar {
+  display: flex;
+  align-items: center;
+  position: relative;
+  background: var(--bg-soft, #f8fafc);
+  border: 1.5px solid var(--border-color, #cbd5e1);
+  border-radius: 12px;
+  padding: 2px 14px;
+  margin-top: 12px;
+  margin-bottom: 12px;
+  transition: all 0.2s ease;
+}
+.place-picker-search-bar:focus-within {
+  border-color: #0284c7;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+}
+:root[data-theme="dark"] .place-picker-search-bar {
+  background: #1e293b;
+  border-color: #334155;
+}
+.pps-icon {
+  font-size: 16px;
+  margin-right: 8px;
+  opacity: 0.7;
+}
+.pps-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 10px 0;
+  font-size: 13.5px;
+  color: var(--text-color);
+  outline: none;
+}
+.pps-clear-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+}
+.pps-clear-btn:hover {
+  color: #ef4444;
+}
+
+/* Tabs phân loại */
+.place-picker-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  margin-bottom: 14px;
+}
+.ppt-btn {
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1.5px solid var(--border-color, #e2e8f0);
+  background: var(--card-bg, #ffffff);
+  color: var(--text-muted, #64748b);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+:root[data-theme="dark"] .ppt-btn {
+  background: #0f172a;
+  border-color: #334155;
+  color: #94a3b8;
+}
+.ppt-btn:hover {
+  border-color: #0284c7;
+  color: #0284c7;
+}
+.ppt-btn.active {
+  background: #0284c7 !important;
+  border-color: #0284c7 !important;
+  color: #ffffff !important;
+}
+.ppt-selected-tab {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #059669;
+}
+.ppt-selected-tab.active {
+  background: #10b981 !important;
+  border-color: #10b981 !important;
+}
+
+/* Khay địa điểm đã chọn */
+.selected-places-tray {
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+}
+:root[data-theme="dark"] .selected-places-tray {
+  background: rgba(16, 185, 129, 0.12);
+}
+.spt-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.spt-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #065f46;
+}
+:root[data-theme="dark"] .spt-title {
+  color: #34d399;
+}
+.spt-clear-all {
+  background: transparent;
+  border: none;
+  color: #ef4444;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.spt-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.spt-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #065f46;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+:root[data-theme="dark"] .spt-chip {
+  background: #0f172a;
+  color: #6ee7b7;
+}
+.spt-chip button {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+.spt-chip button:hover {
+  color: #ef4444;
+}
+
+/* Nút Thu gọn / Xem thêm */
+.picker-row-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.picker-expand-toggle-btn {
+  background: rgba(2, 132, 199, 0.08);
+  border: 1px solid rgba(2, 132, 199, 0.2);
+  color: #0284c7;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.picker-expand-toggle-btn:hover {
+  background: rgba(2, 132, 199, 0.16);
+}
+.empty-search-places {
+  text-align: center;
+  padding: 30px 16px;
+  background: var(--bg-soft, #f8fafc);
+  border-radius: 12px;
+  margin-top: 10px;
+}
+:root[data-theme="dark"] .empty-search-places {
+  background: #1e293b;
+}
+.empty-search-places span {
+  font-size: 32px;
+  display: block;
+  margin-bottom: 8px;
+}
+.empty-search-places p {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
 
 /* WEATHER WIDGET */
 .app-weather-widget {
@@ -5475,6 +7995,16 @@ button { cursor: pointer; }
 }
 .app-field { display: flex; flex-direction: column; gap: 6px; }
 .app-field.full-width { grid-column: span 2; }
+.app-form-grid > .full-width,
+.app-form-grid > .departure-schedule-box,
+.app-form-grid > .bus-optimization-section,
+.app-form-grid > .route-overview-banner,
+.app-form-grid > .ai-hint-bubble,
+.bus-optimization-section {
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
 .app-field label { font-size: 11px; font-weight: 700; color: var(--text-sub); }
 .field-label-between { display: flex; justify-content: space-between; align-items: center; }
 .budget-highlight { font-size: 14px; color: var(--accent); }
@@ -5638,23 +8168,13 @@ button { cursor: pointer; }
 }
 .picker-row { margin-bottom: 16px; }
 .row-label { font-size: 12px; font-weight: 800; color: var(--text-main); display: block; margin-bottom: 7px; }
-.places-scroll-container {
-  max-height: 250px;
-  overflow-y: auto;
-  padding-right: 8px;
-  margin-bottom: 12px;
-}
-.places-scroll-container::-webkit-scrollbar { width: 6px; }
-.places-scroll-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-.places-scroll-container::-webkit-scrollbar-track { background: transparent; }
-
 .chips-wrap { 
   display: flex; 
   flex-wrap: wrap; 
   overflow-x: hidden; 
-  align-content: flex-start;
   gap: 8px; 
   padding-bottom: 8px; 
+  scroll-behavior: smooth;
 }
 .chips-wrap::-webkit-scrollbar {
   height: 4px;
@@ -5713,7 +8233,7 @@ button { cursor: pointer; }
   box-shadow: 0 8px 25px rgba(20, 184, 166, 0.4);
   background: var(--primary-dark);
 }
-.submit-plan-btn { width: 100%; margin-top: 18px; padding: 14px; }
+.submit-plan-btn { width: 100%; margin-top: 0; padding: 14px; }
 
 /* PLAN RESULTS */
 .plan-results-container {
@@ -5776,6 +8296,67 @@ button { cursor: pointer; }
   color: var(--accent);
   font-size: 17px;
   font-weight: 800;
+}
+/* SQUAD AVATARS CSS */
+.squad-avatars-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0;
+  padding: 8px 12px;
+  background: var(--input-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+}
+.squad-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-sub);
+}
+.squad-overlap {
+  display: flex;
+  align-items: center;
+}
+.squad-avatar-wrap {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2px solid var(--card-bg, #fff);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  margin-left: -12px;
+  position: relative;
+  transition: transform 0.2s, z-index 0.2s;
+  background: #1e1b4b;
+  overflow: hidden;
+  cursor: help;
+}
+.squad-avatar-wrap:first-child {
+  margin-left: 0;
+}
+.squad-avatar-wrap:hover {
+  transform: translateY(-4px) scale(1.1);
+  z-index: 10 !important;
+}
+.sq-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.sq-cyclo {
+  object-position: center 25%;
+}
+.sq-smirk {
+  object-position: center 20%;
+}
+.sq-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .budget-breakdown-row {
@@ -6852,197 +9433,44 @@ button { cursor: pointer; }
 }
 
 /* PROFILE & AUTH TAB */
-/* PROFILE & AUTH TAB PREMIUM */
-.profile-card-premium {
+.profile-card {
   background: #fff;
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: 0 10px 40px -10px rgba(0,0,0,0.1);
-  margin-bottom: 24px;
   border: 1px solid var(--border-color);
-}
-.profile-cover {
-  height: 120px;
-  background: linear-gradient(135deg, #0ea5e9, #10b981);
-  position: relative;
-}
-.edit-profile-btn {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  background: rgba(255,255,255,0.2);
-  color: white;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  backdrop-filter: blur(4px);
-  transition: 0.2s;
-}
-.edit-profile-btn:hover { background: rgba(255,255,255,0.3); }
-.profile-avatar-premium {
-  position: relative;
-  width: 100px;
-  height: 100px;
-  margin: -50px auto 16px;
-  border-radius: 50%;
-  border: 4px solid white;
-  background: white;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-.avatar-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
-}
-.avatar-placeholder {
-  width: 100%;
-  height: 100%;
-  background: var(--primary);
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 2.5rem;
-  font-weight: 800;
-}
-.level-badge {
-  position: absolute;
-  bottom: -5px;
-  background: #8b5cf6;
-  color: white;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 800;
-  border: 2px solid white;
-  white-space: nowrap;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}
-.profile-info-premium {
-  padding: 0 24px 24px;
+  border-radius: var(--radius-lg);
+  padding: 24px;
   text-align: center;
 }
-.profile-name {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: #0f172a;
-  margin-bottom: 4px;
-}
-.admin-badge {
-  background: #ef4444;
-  color: white;
-  font-size: 0.7rem;
-  padding: 2px 6px;
-  border-radius: 4px;
-  vertical-align: middle;
-}
-.profile-email {
-  color: #64748b;
-  font-size: 0.95rem;
-  margin-bottom: 12px;
-}
-.profile-bio {
-  color: #475569;
-  font-style: italic;
-  font-size: 0.95rem;
-  margin-bottom: 24px;
-  max-width: 400px;
-  margin-left: auto;
-  margin-right: auto;
-}
-.profile-stats-grid {
+.profile-avatar-large {
+  width: 60px;
+  height: 60px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 50%;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  background: #f8fafc;
-  padding: 20px;
-  border-radius: 16px;
-  margin-bottom: 24px;
-}
-.stat-box-premium {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-.stat-box-premium .stat-icon {
-  font-size: 1.5rem;
-  margin-bottom: 4px;
-}
-.stat-box-premium strong {
-  font-size: 1.4rem;
+  place-content: center;
+  font-size: 24px;
   font-weight: 800;
-  color: #0f172a;
+  margin: 0 auto 10px;
 }
-.stat-box-premium small {
-  color: #64748b;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  font-weight: 700;
-}
-.logout-btn-premium {
-  background: white;
-  color: #ef4444;
-  border: 1px solid #ef4444;
-  padding: 10px 24px;
-  border-radius: 8px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: 0.2s;
-}
-.logout-btn-premium:hover {
-  background: #fef2f2;
-}
-
-.profile-edit-form {
-  padding: 0 24px 24px;
-  text-align: left;
-}
-.profile-edit-form h3 {
-  margin-bottom: 20px;
-  text-align: center;
-}
-.edit-field {
+.profile-email { font-size: 12px; color: var(--text-sub); margin-bottom: 16px; }
+.profile-stats-row {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  border-block: 1px solid var(--border-color);
+  padding: 12px 0;
   margin-bottom: 16px;
 }
-.edit-field label {
-  display: block;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #475569;
-  margin-bottom: 6px;
-}
-.edit-actions {
-  display: flex;
-  gap: 12px;
-  margin-top: 24px;
-}
-.cancel-edit-btn {
-  flex: 1;
-  background: white;
-  border: 1px solid #cbd5e1;
-  color: #64748b;
-  padding: 12px;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-}
-.save-edit-btn {
-  flex: 2;
-  background: #10b981;
-  border: none;
-  color: white;
-  padding: 12px;
-  border-radius: 8px;
+.stat-box strong { font-size: 18px; color: var(--primary); display: block; }
+.stat-box small { font-size: 11px; color: var(--text-sub); }
+.logout-btn {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 0;
+  padding: 8px 18px;
+  border-radius: 20px;
+  font-size: 12px;
   font-weight: 700;
-  cursor: pointer;
 }
 
 .auth-card {
@@ -7251,6 +9679,189 @@ button { cursor: pointer; }
 }
 .pass-qr-sim small { display: block; font-size: 10px; color: var(--text-sub); }
 
+/* TIER INDICATOR BANNER IN STEP 2 */
+.tier-indicator-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: color-mix(in srgb, var(--input-bg) 85%, transparent);
+  border: 1.5px solid var(--primary);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  margin-top: 14px;
+  gap: 16px;
+  flex-wrap: wrap;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+}
+.tib-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.tib-icon {
+  font-size: 28px;
+  line-height: 1;
+}
+.tib-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+.tib-badge {
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 12px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.tib-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+.tib-rate {
+  font-size: 12px;
+  color: var(--text-sub);
+  margin: 0;
+}
+.tib-rate b {
+  color: var(--primary);
+}
+.tib-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.tib-tag {
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--border-color);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 6px;
+  color: var(--text-main);
+}
+
+/* PILL BADGE IN SUMMARY */
+.tier-pill-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 14px;
+  letter-spacing: 0.02em;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+.budget-luxury-callout {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  border: 1px solid #f59e0b;
+  color: #92400e;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 10px;
+}
+
+/* BUDGET AUDIT CARD */
+.budget-audit-card {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: #fff;
+  transition: all 0.2s ease;
+}
+.budget-audit-card.optimal {
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+.budget-audit-card.under {
+  background: #fefce8;
+  border-color: #fde047;
+}
+.budget-audit-card.over {
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+.bac-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.bac-title-group {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  flex: 1;
+}
+.bac-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+.bac-msg {
+  display: block;
+  font-size: 13px;
+  color: var(--text-main);
+  margin-bottom: 2px;
+}
+.bac-advice {
+  font-size: 12px;
+  color: var(--text-sub);
+  margin: 0;
+  line-height: 1.4;
+}
+.bac-stats {
+  text-align: right;
+  flex-shrink: 0;
+}
+.bac-stat-label {
+  display: block;
+  font-size: 11px;
+  color: var(--text-sub);
+  font-weight: 600;
+}
+.bac-stat-num {
+  font-size: 16px;
+  color: var(--primary);
+  font-weight: 800;
+}
+.bac-details-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(0, 0, 0, 0.1);
+}
+.bad-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 11px;
+}
+.bad-label {
+  color: var(--text-sub);
+  font-weight: 600;
+}
+.bad-item b {
+  font-size: 12px;
+  color: var(--text-main);
+}
+
 /* RESPONSIVE TRÊN MÁY TÍNH & MOBILE */
 @media (max-width: 640px) {
   .app-main { padding: 12px 10px; min-width: 0; overflow-x: hidden; }
@@ -7259,7 +9870,7 @@ button { cursor: pointer; }
   .planner-form-container { margin: 0; padding: 16px; width: 100%; box-sizing: border-box; max-width: 100%; min-width: 0; }
   .app-form-grid { grid-template-columns: 1fr; }
   .app-field, .origin-select-wrapper { min-width: 0; }
-  .app-field.full-width, .bus-optimization-section { grid-column: span 1; }
+  .app-field.full-width { grid-column: span 1; }
   .hotel-main-info { flex-direction: column; }
   .hotel-side { text-align: left; }
   .places-app-grid { grid-template-columns: 1fr; }
@@ -7346,41 +9957,65 @@ button { cursor: pointer; }
   animation: fadeIn 0.4s ease-out;
 }
 .wizard-footer {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 24px;
-  gap: 16px;
-  align-items: stretch;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-top: 24px !important;
+  gap: 16px !important;
+  width: 100% !important;
 }
-.wizard-footer .app-primary-btn {
-  flex: 1;
+.wizard-footer button,
+.wizard-footer .app-secondary-btn,
+.wizard-footer .app-primary-btn,
+.wizard-footer .submit-plan-btn {
+  flex: 1 !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  max-height: 48px !important;
+  margin: 0 !important;
+  padding: 0 24px !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  border-radius: 12px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+  line-height: normal !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
 }
 .wizard-footer .app-secondary-btn {
-  flex: 0 0 auto;
-  min-width: 120px;
-  background: #e2e8f0;
-  color: #334155;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  padding: 12px 20px;
-  font-weight: 600;
+  background: var(--input-bg, #f1f5f9) !important;
+  color: var(--text-main, #334155) !important;
+  border: 1.5px solid var(--border-color, #cbd5e1) !important;
 }
 .wizard-footer .app-secondary-btn:hover:not(:disabled) {
-  background: #cbd5e1;
-  color: #0f172a;
+  background: #e2e8f0 !important;
+  border-color: #94a3b8 !important;
+  transform: translateY(-1px) !important;
 }
-.app-secondary-btn {
-  background: var(--input-bg);
-  color: var(--text-main);
-  border: 1px solid var(--border-color);
-  padding: 14px;
-  border-radius: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
+:root[data-theme="dark"] .wizard-footer .app-secondary-btn {
+  background: #1e293b !important;
+  color: #f1f5f9 !important;
+  border-color: #334155 !important;
 }
-.app-secondary-btn:hover:not(:disabled) {
-  background: #e2e8f0;
+:root[data-theme="dark"] .wizard-footer .app-secondary-btn:hover:not(:disabled) {
+  background: #334155 !important;
+}
+.wizard-footer .app-primary-btn,
+.wizard-footer .submit-plan-btn {
+  background: var(--primary, #059669) !important;
+  color: #ffffff !important;
+  border: 1.5px solid var(--primary, #059669) !important;
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.3) !important;
+}
+.wizard-footer .app-primary-btn:hover:not(:disabled),
+.wizard-footer .submit-plan-btn:hover:not(:disabled) {
+  background: var(--primary-dark, #047857) !important;
+  border-color: var(--primary-dark, #047857) !important;
+  box-shadow: 0 6px 18px rgba(5, 150, 105, 0.4) !important;
+  transform: translateY(-1px) !important;
 }
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
@@ -7485,6 +10120,189 @@ button { cursor: pointer; }
   color: #fff;
   border-color: var(--primary);
   box-shadow: 0 4px 12px rgba(20, 184, 166, 0.35);
+}
+
+/* UNFEASIBLE WARNING BOX & FREE PLACES CHOICE */
+.unfeasible-warning-box {
+  margin-top: 14px;
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(245, 158, 11, 0.08));
+  border: 1.5px solid rgba(239, 68, 68, 0.35);
+  border-radius: var(--radius-md, 12px);
+  backdrop-filter: blur(8px);
+  animation: fadeIn 0.3s ease;
+}
+:root[data-theme="dark"] .unfeasible-warning-box {
+  background: linear-gradient(135deg, rgba(153, 27, 27, 0.25), rgba(180, 83, 9, 0.2));
+  border-color: rgba(239, 68, 68, 0.5);
+}
+.uwb-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.uwb-icon {
+  font-size: 24px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.uwb-header-text strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 800;
+  color: #dc2626;
+  margin-bottom: 4px;
+}
+:root[data-theme="dark"] .uwb-header-text strong {
+  color: #f87171;
+}
+.uwb-header-text p {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--text-main);
+  margin: 0;
+  opacity: 0.9;
+}
+.uwb-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.uwb-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+.btn-budget-fix {
+  background: #dc2626;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+}
+.btn-budget-fix:hover {
+  background: #b91c1c;
+  transform: translateY(-1px);
+}
+.btn-days-fix {
+  background: rgba(245, 158, 11, 0.15);
+  color: #b45309;
+  border-color: rgba(245, 158, 11, 0.4);
+}
+:root[data-theme="dark"] .btn-days-fix {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fde68a;
+  border-color: rgba(245, 158, 11, 0.45);
+}
+.btn-days-fix:hover {
+  background: rgba(245, 158, 11, 0.25);
+  transform: translateY(-1px);
+}
+.uwb-free-choice {
+  padding-top: 10px;
+  border-top: 1px dashed rgba(239, 68, 68, 0.25);
+}
+.uwb-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 12.5px;
+  color: var(--text-main);
+  user-select: none;
+}
+.uwb-checkbox {
+  width: 17px;
+  height: 17px;
+  accent-color: #10b981;
+  cursor: pointer;
+}
+
+/* FREE MODE BANNER */
+.free-mode-banner {
+  margin-top: 14px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(6, 182, 212, 0.1));
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: var(--radius-md, 12px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  animation: fadeIn 0.3s ease;
+}
+:root[data-theme="dark"] .free-mode-banner {
+  background: rgba(6, 78, 59, 0.3);
+  border-color: rgba(16, 185, 129, 0.4);
+}
+.fmb-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.fmb-icon {
+  font-size: 18px;
+}
+.fmb-left strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+  color: #059669;
+  margin-bottom: 2px;
+}
+:root[data-theme="dark"] .fmb-left strong {
+  color: #34d399;
+}
+.fmb-left p {
+  font-size: 12px;
+  margin: 0;
+  color: var(--text-main);
+  opacity: 0.9;
+}
+.fmb-turnoff {
+  background: rgba(128, 128, 128, 0.15);
+  border: 1px solid rgba(128, 128, 128, 0.25);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+.fmb-turnoff:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border-color: #ef4444;
+}
+
+/* STEP 3 UNFEASIBLE NOTICE */
+.unfeasible-step3-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 14px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: 8px;
+  color: #dc2626;
+  font-size: 12px;
+  margin-bottom: 12px;
+  line-height: 1.45;
+  text-align: left;
+}
+:root[data-theme="dark"] .unfeasible-step3-notice {
+  color: #fca5a5;
+  background: rgba(153, 27, 27, 0.25);
+  border-color: rgba(239, 68, 68, 0.45);
 }
 
 /* PERSONALITY BUDGET CARD (MỤC 8) */
@@ -7622,54 +10440,139 @@ button { cursor: pointer; }
 }
 .ai-gen-radar {
   position: relative;
-  width: 110px;
-  height: 110px;
-  margin-bottom: 20px;
+  width: 190px;
+  height: 190px;
+  margin-bottom: 22px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .radar-pulse {
   position: absolute;
-  inset: 0;
+  inset: 10px;
   border-radius: 50%;
-  border: 2px solid rgba(129, 140, 248, 0.6);
-  animation: radarWave 2s cubic-bezier(0.1, 0.8, 0.3, 1) infinite;
+  border: 1.5px solid rgba(129, 140, 248, 0.45);
+  animation: radarWave 2.4s cubic-bezier(0.1, 0.8, 0.3, 1) infinite;
+  pointer-events: none;
+}
+.pulse-2 {
+  animation-delay: -1.2s;
 }
 @keyframes radarWave {
-  0% { transform: scale(0.6); opacity: 1; }
-  100% { transform: scale(1.6); opacity: 0; }
+  0% { transform: scale(0.65); opacity: 0.9; }
+  100% { transform: scale(1.35); opacity: 0; }
+}
+.radar-track {
+  position: absolute;
+  width: 136px;
+  height: 136px;
+  border: 1.5px dashed rgba(167, 139, 250, 0.35);
+  border-radius: 50%;
+  pointer-events: none;
 }
 .radar-center {
-  width: 58px;
-  height: 58px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 28px;
-  box-shadow: 0 0 24px rgba(99, 102, 241, 0.7);
-  z-index: 2;
-  animation: floatCenter 2s ease-in-out infinite;
+  box-shadow: 0 0 24px rgba(251, 191, 36, 0.5), 0 0 35px rgba(99, 102, 241, 0.6);
+  z-index: 5;
+  animation: floatCenter 2.4s ease-in-out infinite;
+  border: 3px solid #fbbf24;
+  overflow: hidden;
+  background: #312e81;
+}
+.radar-center-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 @keyframes floatCenter {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
+  0%, 100% { transform: scale(1) translateY(0); }
+  50% { transform: scale(1.05) translateY(-3px); }
 }
+
+/* Orbiting Friends Ring (Quay xung quanh vòng tròn qua lại) */
+.radar-orb-ring {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  animation: ringOrbitSwing 6s cubic-bezier(0.42, 0, 0.58, 1) infinite alternate;
+}
+@keyframes ringOrbitSwing {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
 .radar-orb {
   position: absolute;
-  font-size: 18px;
-  animation: orbOrbit 6s linear infinite;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #1e1b4b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
-.orb-1 { top: 0; left: 45px; animation-delay: 0s; }
-.orb-2 { top: 45px; right: 0; animation-delay: -1.5s; }
-.orb-3 { bottom: 0; left: 45px; animation-delay: -3s; }
-.orb-4 { top: 45px; left: 0; animation-delay: -4.5s; }
+.radar-orb:hover {
+  transform: scale(1.18);
+  z-index: 10;
+}
+.orb-1 {
+  top: 6px;
+  left: calc(50% - 22px);
+  border: 2.5px solid #38bdf8;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.75), 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+.orb-2 {
+  top: calc(50% - 22px);
+  right: 6px;
+  border: 2.5px solid #34d399;
+  box-shadow: 0 0 14px rgba(52, 211, 153, 0.75), 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+.orb-3 {
+  bottom: 6px;
+  left: calc(50% - 22px);
+  border: 2.5px solid #f472b6;
+  box-shadow: 0 0 14px rgba(244, 114, 182, 0.75), 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+.orb-4 {
+  top: calc(50% - 22px);
+  left: 6px;
+  border: 2.5px solid #a78bfa;
+  box-shadow: 0 0 14px rgba(167, 139, 250, 0.75), 0 4px 10px rgba(0, 0, 0, 0.4);
+}
 
-@keyframes orbOrbit {
-  0% { transform: rotate(0deg) translateX(46px) rotate(0deg); }
-  100% { transform: rotate(360deg) translateX(46px) rotate(-360deg); }
+.orb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  animation: orbCounterRotate 6s cubic-bezier(0.42, 0, 0.58, 1) infinite alternate;
+}
+.orb-img-cyclo {
+  object-position: center 25%;
+}
+.orb-img-smirk {
+  object-position: center 20%;
+}
+@keyframes orbCounterRotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(-360deg);
+  }
 }
 
 .ai-gen-body {
@@ -7793,10 +10696,41 @@ button { cursor: pointer; }
 }
 .acb-content p {
   font-size: 13px;
-  margin: 0;
+  margin: 0 0 10px;
   color: rgba(255,255,255,0.92);
   line-height: 1.4;
 }
+.celebrating-squad {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.celeb-avatar-wrap {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  overflow: hidden;
+  background: #1e1b4b;
+  animation: squadBounce 1.2s cubic-bezier(0.36, 0, 0.66, -0.56) infinite alternate;
+}
+.celeb-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.celeb-1 { animation-delay: 0s; }
+.celeb-2 { animation-delay: 0.15s; }
+.celeb-3 { animation-delay: 0.3s; }
+.celeb-4 { animation-delay: 0.45s; }
+.celeb-5 { animation-delay: 0.6s; }
+
+@keyframes squadBounce {
+  0% { transform: translateY(0) scale(1); }
+  100% { transform: translateY(-8px) scale(1.1); }
+}
+
 .acb-close {
   background: rgba(255,255,255,0.18);
   border: 0;
@@ -7814,6 +10748,73 @@ button { cursor: pointer; }
 }
 .acb-close:hover {
   background: rgba(255,255,255,0.35);
+}
+
+/* SQUAD SPEECH BUBBLE (BÌNH LUẬN VUI NHỘN) */
+.squad-speech-bubble {
+  display: flex;
+  gap: 12px;
+  margin: 12px 0;
+  padding: 10px 12px;
+  background: rgba(56, 189, 248, 0.08);
+  border-radius: 12px;
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  align-items: center;
+  position: relative;
+}
+.squad-speech-bubble::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 20px;
+  border-width: 0 8px 8px 8px;
+  border-style: solid;
+  border-color: transparent transparent rgba(56, 189, 248, 0.2) transparent;
+}
+.sq-chat-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #38bdf8;
+  flex-shrink: 0;
+  background: #1e1b4b;
+}
+.sq-chat-text {
+  font-size: 13.5px;
+  color: var(--text-main);
+  font-style: italic;
+  line-height: 1.4;
+  font-weight: 500;
+}
+:root[data-theme="dark"] .sq-chat-text {
+  color: #e2e8f0;
+}
+
+/* CYCLO SCROLL INDICATOR */
+.cyclo-scroll-indicator {
+  position: sticky;
+  top: 180px;
+  left: -20px; /* Nhô ra bên trái timeline */
+  width: 48px;
+  height: 48px;
+  z-index: 50;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2.5px solid #38bdf8;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+  background: #1e1b4b;
+  margin-bottom: -48px; /* Để không chiếm không gian */
+  animation: cycloWobble 2s ease-in-out infinite alternate;
+}
+.cyclo-scroll-indicator img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+@keyframes cycloWobble {
+  0% { transform: rotate(-5deg) translateY(0); }
+  100% { transform: rotate(5deg) translateY(-4px); }
 }
 
 /* BUDGET HUMOR CALLOUT (MỤC 8 TRONG KẾT QUẢ) */
@@ -8266,8 +11267,6 @@ button { cursor: pointer; }
   padding: 20px;
   margin-top: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
-  min-width: 0;
-  grid-column: span 2;
 }
 .bos-header {
   display: flex;
@@ -8320,25 +11319,18 @@ button { cursor: pointer; }
 
 /* Grid So Sánh Phương Tiện */
 .transit-vehicles-grid {
-  display: flex;
-  overflow-x: auto;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  width: 100%;
   margin-bottom: 20px;
-  padding-bottom: 8px;
-  scroll-snap-type: x mandatory;
-  min-width: 0;
 }
-.transit-vehicles-grid::-webkit-scrollbar { height: 8px; }
-.transit-vehicles-grid::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
-.transit-vehicles-grid::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
-.transit-vehicles-grid {
-  scrollbar-width: thin;
-  scrollbar-color: #94a3b8 #f1f5f9;
+@media (max-width: 860px) {
+  .transit-vehicles-grid {
+    grid-template-columns: 1fr;
+  }
 }
-
 .tv-card {
-  flex: 0 0 240px;
-  scroll-snap-align: start;
   background: var(--bg-soft, #f8fafc);
   border: 1.5px solid var(--border-color, #e2e8f0);
   border-radius: 14px;
@@ -8445,31 +11437,17 @@ button { cursor: pointer; }
   color: var(--text-muted);
 }
 .bus-operators-grid {
-  display: flex;
-  overflow-x: auto;
-  gap: 14px;
-  padding-bottom: 8px;
-  scroll-snap-type: x mandatory;
-  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  width: 100%;
 }
-.bus-operators-grid::-webkit-scrollbar {
-  height: 8px;
-}
-.bus-operators-grid::-webkit-scrollbar-thumb {
-  background: #94a3b8;
-  border-radius: 4px;
-}
-.bus-operators-grid::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 4px;
-}
-.bus-operators-grid {
-  scrollbar-width: thin;
-  scrollbar-color: #94a3b8 #f1f5f9;
+@media (max-width: 860px) {
+  .bus-operators-grid {
+    grid-template-columns: 1fr;
+  }
 }
 .bus-item-card {
-  flex: 0 0 320px;
-  scroll-snap-align: start;
   background: var(--bg-soft, #f8fafc);
   border: 1.5px solid var(--border-color, #e2e8f0);
   border-radius: 14px;
@@ -8800,7 +11778,9 @@ button { cursor: pointer; }
   .transit-vehicles-grid {
     grid-template-columns: 1fr 1fr;
   }
-
+  .bus-operators-grid {
+    grid-template-columns: 1fr;
+  }
   .ttsc-main {
     flex-direction: column;
     align-items: flex-start;
@@ -9507,15 +12487,6 @@ button { cursor: pointer; }
 .cinematic-enhance {
   filter: contrast(1.15) saturate(1.2) brightness(1.05);
 }
-
-@media (max-width: 768px) {
-  .intro-video {
-    object-fit: contain;
-  }
-  .video-half {
-    background: #000;
-  }
-}
 .film-grain {
   position: absolute;
   top: 0; left: 0; width: 100%; height: 100%;
@@ -9797,6 +12768,651 @@ button { cursor: pointer; }
   border-color: var(--primary);
 }
 
+/* ==================== STYLES CHO HERO ACTION BAR (LƯU LỊCH TRÌNH & THAY ĐỔI LỊCH TRÌNH) ==================== */
+.itinerary-decision-actions-bar {
+  display: flex;
+  gap: 12px;
+  margin: 18px 0;
+  flex-wrap: wrap;
+}
+
+.it-dec-btn {
+  flex: 1;
+  min-width: 220px;
+  padding: 12px 18px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  border: none;
+}
+
+.it-save-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+}
+
+.it-save-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.45);
+}
+
+.it-save-btn.is-saved {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  box-shadow: 0 3px 10px rgba(5, 150, 105, 0.3);
+}
+
+.it-replan-btn {
+  background: rgba(14, 165, 233, 0.08);
+  color: #0284c7;
+  border: 1.5px solid rgba(14, 165, 233, 0.35);
+}
+
+.it-replan-btn:hover {
+  background: rgba(14, 165, 233, 0.16);
+  border-color: #0284c7;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.15);
+}
+
+.it-dec-icon {
+  font-size: 24px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.it-dec-text {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+}
+
+.it-dec-text strong {
+  font-size: 14.5px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.it-dec-text small {
+  font-size: 11.5px;
+  opacity: 0.85;
+  margin-top: 2px;
+}
+
+.save-success-banner {
+  background: #ecfdf5;
+  border: 1px solid #6ee7b7;
+  border-radius: 10px;
+  padding: 10px 16px;
+  margin: 12px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #065f46;
+  font-size: 13.5px;
+  animation: fadeIn 0.3s ease;
+}
+
+.ssb-view-btn {
+  background: #059669;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: 0.2s;
+}
+
+.ssb-view-btn:hover {
+  background: #047857;
+}
+
+.hotel-nights-calc-badge {
+  font-size: 12.5px;
+  color: #047857;
+  font-weight: 600;
+  margin-top: 5px;
+  background: rgba(16, 185, 129, 0.12);
+  padding: 4px 10px;
+  border-radius: 6px;
+  display: inline-block;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+/* ==================== STYLES CHO CHẶNG KHỞI HÀNH (ORIGIN TO DESTINATION JOURNEY) ==================== */
+.origin-departure-journey-card {
+  background: linear-gradient(135deg, rgba(240, 253, 250, 0.95) 0%, rgba(236, 253, 245, 0.95) 100%);
+  border: 1.5px solid #a7f3d0;
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 20px;
+  display: flex;
+  gap: 14px;
+  position: relative;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.08);
+}
+
+.odjc-time-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 50px;
+}
+
+.odjc-time {
+  font-size: 14px;
+  font-weight: 800;
+  color: #047857;
+}
+
+.odjc-bullet {
+  font-size: 20px;
+}
+
+.odjc-card-content {
+  flex: 1;
+}
+
+.odjc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.odjc-badge {
+  background: #059669;
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 20px;
+  letter-spacing: 0.5px;
+}
+
+.odjc-duration-pill {
+  background: #d1fae5;
+  color: #065f46;
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+.odjc-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 4px 0 10px;
+}
+
+.odjc-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.7);
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.odjc-meta-item {
+  font-size: 12.5px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.omi-label {
+  color: #64748b;
+  font-size: 11px;
+}
+
+.odjc-meta-item strong {
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.odjc-note {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  color: #334155;
+  line-height: 1.5;
+}
+
+/* ==================== DÒNG THỜI GIAN DI CHUYỂN DƯỚI ĐỊA ĐIỂM (SCREENSHOT 3) ==================== */
+.act-quick-travel-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(14, 165, 233, 0.08);
+  border: 1px solid rgba(14, 165, 233, 0.22);
+  color: #0369a1;
+  padding: 3px 9px;
+  border-radius: 6px;
+  font-size: 12px;
+  margin: 4px 0 8px;
+}
+
+.aqtb-time {
+  font-weight: 700;
+  color: #0284c7;
+}
+
+.aqtb-sep {
+  opacity: 0.6;
+}
+
+.aqtb-desc {
+  color: #475569;
+}
+
+/* ==================== STYLES CHO BẢN ĐỒ & THẺ CHI TIẾT PLACE (SCREENSHOT 4) ==================== */
+.sticky-map-inner {
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+}
+
+.map-floating-overlay-bar {
+  position: absolute;
+  top: 65px;
+  left: 14px;
+  z-index: 990;
+}
+
+.map-route-gmap-pill {
+  background: #ffffff;
+  color: #1e293b;
+  border-radius: 24px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+}
+
+.map-route-gmap-pill:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  color: #0284c7;
+}
+
+.gmap-g-logo {
+  font-weight: 900;
+  color: #4285F4;
+  font-size: 15px;
+}
+
+.map-place-detail-drawer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 320px;
+  max-width: 88%;
+  height: 100%;
+  background: #ffffff;
+  z-index: 1010;
+  box-shadow: -6px 0 24px rgba(0, 0, 0, 0.18);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  border-left: 1px solid #e2e8f0;
+  animation: slideInRight 0.3s ease;
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.mpd-close-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  transition: 0.2s;
+}
+
+.mpd-close-btn:hover {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.mpd-image-wrap {
+  position: relative;
+  width: 100%;
+  height: 160px;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: #e2e8f0;
+}
+
+.mpd-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mpd-badge {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: rgba(2, 132, 199, 0.95);
+  color: #fff;
+}
+
+.mpd-body {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.mpd-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.mpd-rating-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+}
+
+.mpd-score {
+  font-weight: 800;
+  color: #1e293b;
+}
+
+.mpd-stars {
+  color: #f59e0b;
+  font-size: 13px;
+}
+
+.mpd-reviews {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.mpd-addr {
+  font-size: 12.5px;
+  color: #475569;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.mpd-section {
+  border-top: 1px solid #f1f5f9;
+  padding-top: 10px;
+}
+
+.mpd-section h5 {
+  font-size: 13px;
+  font-weight: 800;
+  color: #334155;
+  margin: 0 0 6px;
+}
+
+.mpd-desc {
+  font-size: 12.5px;
+  color: #475569;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.mpd-gmap-btn-box {
+  margin: 4px 0;
+}
+
+.mpd-gmap-primary-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #0284c7;
+  color: #ffffff;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 13px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.mpd-gmap-primary-btn:hover {
+  background: #0369a1;
+  transform: translateY(-1px);
+}
+
+.mpd-review-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.mpd-rev-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.mpd-rev-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #ca8a04;
+  color: #fff;
+  font-weight: 700;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mpd-rev-name {
+  font-size: 12px;
+  color: #1e293b;
+}
+
+.mpd-rev-rating {
+  color: #f59e0b;
+  font-size: 11px;
+}
+
+.mpd-rev-body {
+  font-size: 12px;
+  color: #475569;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.mpd-actions-row {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 10px;
+}
+
+.mpd-fav-btn {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.mpd-fav-btn:hover {
+  background: #f1f5f9;
+}
+
+.mpd-change-btn {
+  flex: 2;
+  padding: 8px;
+  border: 1px solid #0284c7;
+  color: #0284c7;
+  border-radius: 8px;
+  background: rgba(2, 132, 199, 0.06);
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.mpd-change-btn:hover {
+  background: rgba(2, 132, 199, 0.15);
+}
+
+.map-bottom-prompt-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #0284c7;
+  color: #ffffff;
+  font-size: 11.5px;
+  font-weight: 600;
+  text-align: center;
+  padding: 6px 12px;
+  z-index: 990;
+  letter-spacing: 0.2px;
+}
+
+/* ==================== STYLES CHO REPLAN MODAL (THAY ĐỔI LỊCH TRÌNH KHÁC) ==================== */
+.replan-modal-card {
+  max-width: 480px;
+  width: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.replan-options-body {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.replan-option-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  background: #f8fafc;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.replan-option-card:hover {
+  border-color: #0284c7;
+  background: #f0f9ff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.12);
+}
+
+.roc-icon {
+  font-size: 26px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.roc-text {
+  flex: 1;
+}
+
+.roc-text h4 {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.roc-text p {
+  margin: 0;
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.roc-arrow {
+  font-size: 16px;
+  color: #94a3b8;
+  font-weight: 700;
+}
+
+.guest-saved-trips-banner {
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  border-radius: 10px;
+  padding: 10px 16px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  color: #166534;
+  flex-wrap: wrap;
+}
+
+.gstb-login-btn {
+  background: #16a34a;
+  color: #fff;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.gstb-login-btn:hover {
+  background: #15803d;
+}
+
 /* ABSOLUTE MOBILE OVERRIDES - MUST BE AT END OF FILE */
 @media (max-width: 992px) {
   .app-main { padding: 12px 10px !important; min-width: 0 !important; overflow-x: hidden !important; }
@@ -9805,7 +13421,7 @@ button { cursor: pointer; }
   .planner-form-container { margin: 0 !important; padding: 16px !important; width: 100% !important; box-sizing: border-box !important; max-width: 100% !important; min-width: 0 !important; flex-shrink: 1 !important; }
   .app-form-grid { grid-template-columns: 1fr !important; }
   .app-field, .origin-select-wrapper { min-width: 0 !important; }
-  .app-field.full-width, .bus-optimization-section { grid-column: span 1 !important; }
+  .app-field.full-width { grid-column: span 1 !important; }
   .hotel-main-info { flex-direction: column !important; }
   .hotel-side { text-align: left !important; }
   .places-app-grid { grid-template-columns: 1fr !important; }
@@ -9813,7 +13429,7 @@ button { cursor: pointer; }
 }
 
 @media (max-width: 768px) {
-  .app-main { padding: 10px 6px 90px !important; }
+  .app-main { padding: 10px 6px !important; }
   .planner-tab-bg { padding: 12px 8px 24px !important; }
   .planner-form-container { padding: 12px !important; }
   .wizard-progress { padding: 8px 10px !important; margin-bottom: 16px !important; gap: 4px !important; }
@@ -9876,4 +13492,949 @@ button { cursor: pointer; }
   .app-field .field-label-between { flex-direction: column !important; align-items: flex-start !important; gap: 4px !important; }
 }
 
+/* ==========================================================================
+   YÊU CẦU 1: GIAO DIỆN BÁO ĐỎ KHI KẾ HOẠCH VƯỢT QUÁ KHẢ NĂNG TÀI CHÍNH
+   ========================================================================== */
+.plan-summary-card.is-over-budget-card {
+  border: 2px solid #ef4444 !important;
+  box-shadow: 0 10px 36px rgba(239, 68, 68, 0.22) !important;
+  background: linear-gradient(175deg, rgba(239, 68, 68, 0.08) 0%, rgba(15, 23, 42, 0.96) 35%) !important;
+}
+
+.over-budget-pill-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 6px 14px;
+  border-radius: 999px;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.45);
+  animation: pulseOverBudget 2s infinite ease-in-out;
+  letter-spacing: 0.3px;
+}
+
+@keyframes pulseOverBudget {
+  0%, 100% { transform: scale(1); box-shadow: 0 4px 14px rgba(239, 68, 68, 0.45); }
+  50% { transform: scale(1.03); box-shadow: 0 6px 22px rgba(239, 68, 68, 0.7); }
+}
+
+.summary-budget.has-over-budget {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.sb-target {
+  color: #94a3b8;
+  font-size: 15px;
+}
+.sb-target b {
+  color: #f1f5f9;
+  font-size: 16px;
+}
+.sb-divider {
+  color: #64748b;
+}
+.sb-actual {
+  color: #cbd5e1;
+  font-size: 15px;
+}
+.red-calc-num {
+  color: #f87171 !important;
+  font-size: 19px !important;
+  font-weight: 800 !important;
+}
+.sb-diff-tag {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.over-budget-alert-box {
+  margin-top: 16px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.14) 0%, rgba(153, 27, 27, 0.2) 100%);
+  border: 1.5px solid #ef4444;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.15);
+}
+
+.oba-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.oba-icon-ring {
+  font-size: 26px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.25);
+  border: 1.5px solid #ef4444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.oba-texts h4 {
+  color: #f87171;
+  font-size: 16px;
+  font-weight: 800;
+  margin: 0 0 6px;
+  letter-spacing: -0.2px;
+}
+.oba-texts p {
+  color: #e2e8f0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  margin: 0;
+}
+.oba-texts b {
+  color: #fef08a;
+}
+
+.oba-actions-bar {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(239, 68, 68, 0.3);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.oba-act-title {
+  color: #fca5a5;
+  font-size: 13px;
+  font-weight: 700;
+  width: 100%;
+}
+.oba-action-btn {
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.oba-action-btn.btn-free {
+  background: linear-gradient(135deg, #059669, #10b981);
+  color: #ffffff;
+  box-shadow: 0 3px 10px rgba(16, 185, 129, 0.3);
+}
+.oba-action-btn.btn-free:hover {
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.45);
+}
+.oba-action-btn.btn-shorten {
+  background: linear-gradient(135deg, #d97706, #f59e0b);
+  color: #ffffff;
+  box-shadow: 0 3px 10px rgba(245, 158, 11, 0.3);
+}
+.oba-action-btn.btn-shorten:hover {
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.45);
+}
+.oba-action-btn.btn-replan {
+  background: rgba(255, 255, 255, 0.1);
+  color: #f1f5f9;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+.oba-action-btn.btn-replan:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+.oba-action-btn.btn-increase-budget {
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  color: #ffffff;
+  box-shadow: 0 3px 10px rgba(59, 130, 246, 0.35);
+}
+.oba-action-btn.btn-increase-budget:hover {
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.5);
+}
+.oba-done-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #6ee7b7;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   YÊU CẦU 2: TỐI ƯU DANH SÁCH LỊCH TRÌNH KHÔNG BỊ DÀI DÒNG
+   ========================================================================== */
+.app-timeline-wrap {
+  max-height: 860px;
+  overflow-y: auto;
+  padding-right: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(14, 165, 233, 0.4) transparent;
+}
+.app-timeline-wrap::-webkit-scrollbar {
+  width: 6px;
+}
+.app-timeline-wrap::-webkit-scrollbar-thumb {
+  background: rgba(14, 165, 233, 0.4);
+  border-radius: 999px;
+}
+
+.timeline-compact-filter-toolbar {
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.tc-day-tabs-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scrollbar-width: none;
+}
+.tc-day-tabs-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.tc-day-tab {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+.tc-day-tab:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #f1f5f9;
+}
+.tc-day-tab.active {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  border-color: #38bdf8;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);
+}
+.tc-day-tab.tc-all-tab.active {
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  border-color: #a78bfa;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.35);
+}
+
+.tc-controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  flex-wrap: wrap;
+}
+
+.tc-density-toggle {
+  display: inline-flex;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 10px;
+  padding: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.tc-density-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.tc-density-btn.active {
+  background: #0ea5e9;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.4);
+}
+
+.tc-session-filters {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.tc-session-pill {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.tc-session-pill:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+.tc-session-pill.active {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+/* THẺ THU GỌN (COMPACT ACT ROW - KHÔNG DÀI DÒNG) */
+.compact-act-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+.compact-act-row:hover {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(14, 165, 233, 0.4);
+  transform: translateX(2px);
+}
+.compact-act-row.is-expanded {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: #0ea5e9;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.car-time-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 48px;
+  flex-shrink: 0;
+}
+.car-time {
+  font-size: 13px;
+  font-weight: 800;
+  color: #38bdf8;
+  font-variant-numeric: tabular-nums;
+}
+.car-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #38bdf8;
+  margin-top: 3px;
+}
+
+.car-thumb {
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
+  background: #0f172a;
+}
+.car-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.car-idx {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
+.car-body {
+  flex: 1;
+  min-width: 0;
+}
+.car-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.badge-type-mini {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+}
+.car-title {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #f8fafc;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 280px;
+}
+.car-cost {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #4ade80;
+  margin-left: auto;
+}
+.car-sub {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.car-addr {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 250px;
+}
+.car-eta {
+  color: #38bdf8;
+  font-weight: 600;
+}
+
+.car-detail-drawer {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.12);
+}
+.cdd-desc {
+  font-size: 13px;
+  color: #cbd5e1;
+  line-height: 1.5;
+  margin: 0 0 6px;
+}
+.cdd-dishes {
+  font-size: 12.5px;
+  color: #fbbf24;
+  margin-bottom: 6px;
+}
+.cdd-meta-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.cdd-tag {
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 11.5px;
+  color: #94a3b8;
+  padding: 2px 7px;
+  border-radius: 5px;
+}
+
+.car-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.car-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-decoration: none;
+}
+.car-btn:hover {
+  background: #0ea5e9;
+  color: #fff;
+  border-color: #38bdf8;
+}
+.car-chevron {
+  font-size: 11px;
+  color: #64748b;
+  margin-left: 2px;
+}
+
+/* ==========================================================================
+   PHẦN 2: MODAL XÁC NHẬN LƯU LỊCH TRÌNH TRƯỚC KHI CHUYỂN TAB
+   ========================================================================== */
+.save-confirm-overlay {
+  z-index: 9999;
+}
+.save-confirm-card {
+  max-width: 420px;
+  width: 92%;
+  text-align: center;
+  padding: 36px 28px 28px;
+  border-radius: 20px;
+  background: var(--card-bg, #1e293b);
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  animation: scaleInModal 0.25s ease;
+}
+@keyframes scaleInModal {
+  from { transform: scale(0.88); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+.scm-icon-ring {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  box-shadow: 0 8px 20px rgba(99,102,241,0.4);
+}
+.save-confirm-card h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-primary, #f1f5f9);
+  margin: 0;
+}
+.save-confirm-card p {
+  font-size: 0.9rem;
+  color: var(--text-sub, #94a3b8);
+  line-height: 1.6;
+  margin: 0;
+}
+.save-confirm-card p b {
+  color: var(--text-primary, #f1f5f9);
+}
+.scm-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  margin-top: 6px;
+}
+.scm-btn {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.scm-btn-save {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(16,185,129,0.35);
+}
+.scm-btn-save:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(16,185,129,0.5);
+}
+.scm-btn-discard {
+  background: rgba(239,68,68,0.1);
+  color: #f87171;
+  border: 1px solid rgba(239,68,68,0.3);
+}
+.scm-btn-discard:hover {
+  background: rgba(239,68,68,0.2);
+}
+.scm-btn-cancel {
+  background: rgba(255,255,255,0.05);
+  color: var(--text-sub, #94a3b8);
+  border: 1px solid rgba(255,255,255,0.1);
+  font-size: 0.85rem;
+}
+.scm-btn-cancel:hover {
+  background: rgba(255,255,255,0.1);
+  color: var(--text-primary, #f1f5f9);
+}
+
+/* ==========================================================================
+   PHẦN 3: MODAL XEM CHI TIẾT CHUYẾN ĐI ĐÃ LƯU
+   ========================================================================== */
+.trip-detail-overlay {
+  z-index: 9998;
+  align-items: flex-start;
+  padding: 24px 16px;
+  overflow-y: auto;
+}
+.trip-detail-modal-card {
+  max-width: 680px;
+  width: 95%;
+  border-radius: 20px;
+  background: var(--card-bg, #1e293b);
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 30px 70px rgba(0,0,0,0.55);
+  overflow: hidden;
+  animation: scaleInModal 0.28s ease;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  margin: 0 auto;
+}
+
+/* TDM Header */
+.tdm-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px 24px 20px;
+  background: linear-gradient(135deg, #1e3a5f 0%, #1e293b 100%);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.tdm-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.tdm-dest-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  background: rgba(59,130,246,0.2);
+  border: 1px solid rgba(59,130,246,0.4);
+  color: #93c5fd;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 20px;
+  letter-spacing: 0.5px;
+  width: fit-content;
+}
+.tdm-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin: 0;
+  line-height: 1.3;
+}
+.tdm-meta-row {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.tdm-meta-item {
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+.tdm-close {
+  flex-shrink: 0;
+  margin-top: -2px;
+}
+
+/* TDM Days List View */
+.tdm-days-list-view {
+  padding: 20px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.tdm-section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary, #f1f5f9);
+  margin: 0;
+}
+.tdm-days-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.tdm-day-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: var(--bg-secondary, #0f172a);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.tdm-day-row:hover {
+  background: rgba(59,130,246,0.08);
+  border-color: rgba(59,130,246,0.25);
+  transform: translateX(3px);
+}
+.tdm-day-row-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.tdm-day-row-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary, #f1f5f9);
+}
+.tdm-day-row-meals {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+.tdm-day-row-arrow {
+  font-size: 22px;
+  color: #475569;
+  font-weight: 300;
+  line-height: 1;
+}
+
+/* TDM Budget Summary */
+.tdm-budget-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.tdm-budget-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.tdm-budget-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--bg-secondary, #0f172a);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
+}
+.tdm-budget-total {
+  grid-column: 1 / -1;
+  background: rgba(59,130,246,0.08);
+  border-color: rgba(59,130,246,0.25);
+}
+.tbi-icon {
+  font-size: 16px;
+}
+.tbi-label {
+  font-size: 0.82rem;
+  color: #64748b;
+  flex: 1;
+}
+.tbi-value {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary, #f1f5f9);
+}
+.tbi-total {
+  color: #60a5fa;
+  font-size: 1rem;
+}
+
+/* TDM Footer Actions */
+.tdm-footer-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.tdm-action-btn {
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.tdm-open-btn {
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(99,102,241,0.35);
+  flex: 1;
+}
+.tdm-open-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px rgba(99,102,241,0.5);
+}
+
+/* TDM Day Detail View */
+.tdm-day-detail-view {
+  padding: 20px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.tdm-back-btn {
+  background: none;
+  border: none;
+  color: #60a5fa;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  width: fit-content;
+  transition: color 0.2s;
+}
+.tdm-back-btn:hover {
+  color: #93c5fd;
+}
+.tdm-day-header-card {
+  display: flex;
+  gap: 16px;
+  background: rgba(59,130,246,0.06);
+  border: 1px solid rgba(59,130,246,0.2);
+  border-radius: 14px;
+  padding: 16px;
+  overflow: hidden;
+}
+.tdm-day-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.tdm-day-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #60a5fa;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+.tdm-day-route {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary, #f1f5f9);
+  margin: 0;
+  line-height: 1.4;
+}
+.tdm-day-meals {
+  font-size: 0.82rem;
+  color: #64748b;
+  margin: 0;
+}
+.tdm-day-img-wrap {
+  width: 130px;
+  height: 100px;
+  border-radius: 10px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.tdm-day-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.tdm-day-img-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.05);
+  font-size: 36px;
+}
+
+/* TDM Activities */
+.tdm-activities-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--bg-secondary, #0f172a);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px;
+  padding: 16px;
+}
+.tdm-activities-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary, #f1f5f9);
+  margin: 0;
+}
+.tdm-activities-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.tdm-act-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 10px;
+  border-left: 3px solid rgba(59,130,246,0.3);
+}
+.tdm-act-time {
+  font-size: 0.75rem;
+  color: #475569;
+  font-weight: 600;
+  min-width: 44px;
+  margin-top: 2px;
+}
+.tdm-act-icon {
+  font-size: 16px;
+  margin-top: 1px;
+}
+.tdm-act-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+}
+.tdm-act-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary, #f1f5f9);
+}
+.tdm-act-desc {
+  font-size: 0.8rem;
+  color: #64748b;
+  line-height: 1.5;
+}
+.tdm-act-cost {
+  font-size: 0.78rem;
+  color: #f59e0b;
+  font-weight: 600;
+}
+.tdm-act-cost.free-tag {
+  color: #10b981;
+}
 </style>

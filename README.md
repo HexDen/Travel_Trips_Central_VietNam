@@ -318,20 +318,6 @@ Trong đợt cập nhật gần nhất, hệ thống đã hoàn thiện và kh�
    - **Vấn đề cũ:** Khi chuyển đổi giữa các tỉnh thành, hệ thống mất nhiều thời gian (lên đến 30s) để truy vấn MongoDB Atlas do giới hạn băng thông và rào cản DNS tại Việt Nam.
    - **Cách thức hoạt động mới:** Triển khai nạp toàn bộ 5250+ địa điểm lên mảng RAM nội bộ (`RAM_PLACES`) ngay khi khởi động Server, kết hợp ép DNS `8.8.8.8` qua module `node:dns`. Kết quả là tốc độ phản hồi API tìm kiếm và tải địa điểm giảm xuống chỉ còn **0.001ms**, mang lại trải nghiệm tức thì.
 
-2. **Chế độ "Trợ Lý Du Lịch Ảo" (Live Travel Companion Mode):**
-   - **Vấn đề cũ:** Việc chỉ có danh sách lịch trình tĩnh gây khó khăn khi người dùng thực tế đang di chuyển, không biết nên đi đâu tiếp theo hoặc đã đi được bao nhiêu nơi.
-   - **Cách thức hoạt động mới:** Thêm nút "Bắt đầu chuyến đi" để chuyển giao diện sang chế độ **Live Tracking**. Màn hình tối giản hóa thành chế độ xem đôi (Split-Screen) với bản đồ thực tế bên trái và thẻ "Điểm đến tiếp theo" bên phải. Tích hợp thanh tiến độ (Progress Tracker) để người dùng nắm rõ số lượng địa điểm đã qua. Mỗi khi đến nơi, người dùng nhấn "Check-in", một hộp thoại (Modal) tùy chỉnh sẽ hiện ra để nhập chi phí thực tế. Hệ thống sẽ tự động gạch bỏ điểm đến đó và chuyển hướng dẫn đường tới địa điểm tiếp theo.
-
-3. **Hồ Sơ Cá Nhân Premium & Hệ Thống Cấp Bậc (Gamified Profile):**
-   - **Cách thức hoạt động mới:** Thay thế trang hồ sơ cơ bản bằng giao diện Premium cực đẹp. Người dùng có thể **tải trực tiếp ảnh đại diện từ thiết bị**. Ở frontend, công nghệ **HTML5 Canvas** được sử dụng để tự động nén dung lượng và thay đổi kích thước ảnh trước khi chuyển sang định dạng Base64, sau đó gửi lên máy chủ lưu trữ an toàn trong MongoDB. Máy chủ đã được nâng cấp Payload Size (`express.json({ limit: '10mb' })`) để tiếp nhận hình ảnh.
-   - **Hệ thống Xếp hạng (Ranking System) dựa trên số chuyến đi hoàn thành (Completed Trips):**
-     - **Dưới 2 chuyến đi:** `Tân binh 🌱` (Màu tím) - Khởi đầu hành trình khám phá.
-     - **Từ 2 - 4 chuyến đi:** `Tín đồ mê xê dịch 🎒` (Màu xanh ngọc) - Bắt đầu đam mê du lịch.
-     - **Từ 5 - 9 chuyến đi:** `Dân phượt chính hiệu 🚀` (Màu xanh dương) - Giàu kinh nghiệm, quen thuộc với mọi nẻo đường.
-     - **Từ 10 chuyến đi trở lên:** `Chuyên gia du lịch 👑` (Màu vàng gold) - Đạt cảnh giới cao nhất của sự xê dịch.
-   - Đi kèm là bảng thống kê điểm số nhằm mục đích tạo tính thi đua (Gamification) để người dùng chia sẻ thành tích với bạn bè.
-
-
 2. **Chức năng "Đổi Điểm" - Tùy Biến Lịch Trình AI:**
    - **Vấn đề cũ:** Sau khi AI sinh lịch trình, người dùng bị gò bó trong kế hoạch cố định, không thể thay đổi nếu có một địa điểm không vừa ý.
    - **Cách thức hoạt động mới:** Giao diện `App.vue` được tích hợp nút hành động **"Đổi điểm" (Change Place)** tại mỗi mốc thời gian trong dòng thời gian (Timeline). Khi người dùng nhấn đổi, hệ thống sẽ tự động hoán đổi địa điểm hiện tại bằng một địa điểm lân cận khác cùng thể loại, đảm bảo lộ trình vẫn hợp lý mà không cần nhờ AI tính toán lại toàn bộ.
