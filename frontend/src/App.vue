@@ -6975,15 +6975,15 @@ button { cursor: pointer; }
   background-position: center;
   border: 2px solid transparent;
   outline: none;
-  padding: 16px 12px;
+  padding: 12px 10px;
   border-radius: 18px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  min-width: 180px;
-  max-width: 210px;
-  height: 200px;
+  min-width: 130px;
+  max-width: 150px;
+  height: 140px;
   color: #ffffff;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
@@ -7045,7 +7045,7 @@ button { cursor: pointer; }
   z-index: 2;
 }
 .city-name {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 800;
   color: #ffffff;
   text-shadow: 0 2px 6px rgba(0,0,0,0.9);
@@ -7053,7 +7053,7 @@ button { cursor: pointer; }
   margin-bottom: 4px;
 }
 .city-tag {
-  font-size: 11.5px;
+  font-size: 10px;
   color: rgba(255,255,255,0.92);
   text-shadow: 0 1px 4px rgba(0,0,0,0.85);
   font-weight: 500;
@@ -7100,7 +7100,7 @@ button { cursor: pointer; }
 .spotlight-hero-wrap {
   position: relative;
   width: 100%;
-  height: 340px;
+  height: 240px;
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
@@ -7191,7 +7191,7 @@ button { cursor: pointer; }
 }
 .spotlight-thumb-btn {
   position: relative;
-  height: 72px;
+  height: 54px;
   border: 2px solid transparent;
   border-radius: 10px;
   overflow: hidden;
@@ -7262,7 +7262,7 @@ button { cursor: pointer; }
   font-weight: 500;
 }
 .spotlight-title {
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 800;
   color: var(--text-color, #0f172a);
   line-height: 1.3;
@@ -7272,7 +7272,7 @@ button { cursor: pointer; }
   color: #f8fafc;
 }
 .spotlight-subtitle {
-  font-size: 13.5px;
+  font-size: 12.5px;
   font-weight: 600;
   color: #0ea5e9;
   margin: 0 0 10px 0;
@@ -7321,7 +7321,7 @@ button { cursor: pointer; }
   border: 1px solid rgba(2, 132, 199, 0.2);
 }
 .shb-text {
-  font-size: 13px;
+  font-size: 12px;
   color: #10b981;
   font-weight: 600;
   margin: 0;
