@@ -372,8 +372,8 @@
         <!-- ==================== TAB 2: LẬP KẾ HOẠCH (PLANNER) ==================== -->
         <section v-if="activeTab === 'planner'" class="tab-pane planner-tab-bg">
 
-          <!-- Banner ảnh collage Miền Trung tại vị trí khoanh đỏ -->
-          <div class="planner-hero-banner">
+          <!-- Banner ảnh collage Miền Trung (Chỉ hiện khi chưa tạo lịch trình) -->
+          <div v-if="!lichTrinh" class="planner-hero-banner">
             <img
               src="/images/mientrung-collage.jpg"
               alt="Hành trình Miền Trung - Di sản & Biển xanh"
@@ -381,8 +381,8 @@
             />
           </div>
 
-          <!-- BƯỚC NHẬP THÔNG TIN KẾ HOẠCH -->
-          <div class="planner-form-container planner-glass-form">
+          <!-- BƯỚC NHẬP THÔNG TIN KẾ HOẠCH (Chỉ hiện khi chưa tạo lịch trình - Yêu cầu 4) -->
+          <div v-if="!lichTrinh" class="planner-form-container planner-glass-form">
             <div class="pane-header">
               <div>
                 <span class="sub-heading">AI TRIP PLANNER</span>
@@ -514,7 +514,8 @@
                       <small class="dsb-subtitle">Chọn tháng dự kiến, ngày bắt đầu, số ngày đi và số lượng thành viên</small>
                     </div>
                   </div>
-                  <span class="dsb-duration-tag">Trọn vẹn {{ formDuLieu.soNgay }} ngày {{ Math.max(0, formDuLieu.soNgay - 1) }} đêm • {{ formDuLieu.soNguoi }} người</span>
+                  <span class="dsb-duration-tag" v-if="formDuLieu.soNgay > 0 && formDuLieu.soNguoi > 0">Trọn vẹn {{ formDuLieu.soNgay }} ngày {{ formDuLieu.soDem }} đêm • {{ formDuLieu.soNguoi }} người</span>
+                  <span class="dsb-duration-tag" v-else>Chưa chọn thời gian & số người</span>
                 </div>
 
                 <!-- Dãy nút chọn tháng kiểu viên thuốc -->
@@ -531,7 +532,7 @@
                   </button>
                 </div>
 
-                <!-- Khối thống nhất 4 thông số: Ngày đi, Số ngày, Số người, Ngày về -->
+                <!-- Khối thống nhất 5 thông số: Ngày đi, Số ngày, Số đêm, Số người, Ngày về (Yêu cầu 5) -->
                 <div class="dsb-unified-controls-grid">
                   <div class="dsb-ctrl-field">
                     <label><AppIcon name="planetakeoff" :size="15" /> Ngày bắt đầu:</label>
@@ -546,16 +547,25 @@
                   <div class="dsb-ctrl-field">
                     <label><AppIcon name="clock" :size="15" /> Số ngày đi:</label>
                     <div class="stepper-input dsb-stepper">
-                      <button type="button" @click="formDuLieu.soNgay = Math.max(1, formDuLieu.soNgay - 1)">-</button>
+                      <button type="button" @click="giamSoNgay" :disabled="formDuLieu.soNgay <= 0">-</button>
                       <span class="dsb-stepper-val">{{ formDuLieu.soNgay }} ngày</span>
-                      <button type="button" @click="formDuLieu.soNgay++">+</button>
+                      <button type="button" @click="tangSoNgay">+</button>
+                    </div>
+                  </div>
+
+                  <div class="dsb-ctrl-field">
+                    <label><AppIcon name="moon" :size="15" /> Số đêm ở lại:</label>
+                    <div class="stepper-input dsb-stepper">
+                      <button type="button" @click="giamSoDem" :disabled="formDuLieu.soDem <= minSoDem">-</button>
+                      <span class="dsb-stepper-val">{{ formDuLieu.soDem }} đêm</span>
+                      <button type="button" @click="tangSoDem" :disabled="formDuLieu.soDem >= maxSoDem">+</button>
                     </div>
                   </div>
 
                   <div class="dsb-ctrl-field">
                     <label><AppIcon name="users" :size="15" /> Số người tham gia:</label>
                     <div class="stepper-input dsb-stepper">
-                      <button type="button" @click="formDuLieu.soNguoi = Math.max(1, formDuLieu.soNguoi - 1)">-</button>
+                      <button type="button" @click="formDuLieu.soNguoi = Math.max(0, formDuLieu.soNguoi - 1)">-</button>
                       <span class="dsb-stepper-val">{{ formDuLieu.soNguoi }} người</span>
                       <button type="button" @click="formDuLieu.soNguoi++">+</button>
                     </div>
@@ -565,7 +575,7 @@
                     <label><AppIcon name="planelanding" :size="15" /> Ngày về (Tự động):</label>
                     <input
                       type="date"
-                      :value="formDuLieu.ngayKetThuc || ngayKetThucDisplay"
+                      :value="formDuLieu.soNgay > 0 ? (formDuLieu.ngayKetThuc || ngayKetThucDisplay) : ''"
                       class="app-input departure-date-input disabled-input"
                       readonly
                     />
@@ -573,12 +583,12 @@
                 </div>
 
                 <!-- Tóm tắt lịch trình chi tiết -->
-                <div class="trip-date-summary-banner" v-if="formDuLieu.ngayBatDau">
+                <div class="trip-date-summary-banner" v-if="formDuLieu.ngayBatDau && formDuLieu.soNgay > 0">
                   <span class="tdsb-icon"><AppIcon name="sparkles" :size="16" /></span>
                   <div class="tdsb-text">
                     Lịch trình: <b>{{ dinhDangNgayTuan(formDuLieu.ngayBatDau) }}</b>
                     ➔ <b>{{ dinhDangNgayTuan(formDuLieu.ngayKetThuc || ngayKetThucDisplay) }}</b>
-                    <span>({{ formDuLieu.soNgay }} ngày {{ Math.max(0, formDuLieu.soNgay - 1) }} đêm • {{ formDuLieu.soNguoi }} khách tại {{ formDuLieu.diemDen }})</span>
+                    <span>({{ formDuLieu.soNgay }} ngày {{ formDuLieu.soDem }} đêm • {{ formDuLieu.soNguoi }} khách tại {{ formDuLieu.diemDen }})</span>
                   </div>
                 </div>
               </div>
@@ -587,10 +597,12 @@
 
             <!-- BƯỚC 2: TÀI CHÍNH & DI CHUYỂN -->
             <div v-show="currentPlannerStep === 2" class="app-form-grid wizard-step-content">
-              <!-- Ngân sách -->
-              <div class="app-field full-width">
+              <!-- KHUNG NGÂN SÁCH THỐNG NHẤT (TỪ THANH CHỌN ĐẾN THÔNG TIN CHI PHÍ TIẾT KIỆM TỐI ƯU - TRẢI NGHIỆM XA HOA) -->
+              <div class="unified-budget-card full-width">
                 <div class="field-label-between">
-                  <label>Ngân sách dự kiến (VND)</label>
+                  <label class="budget-section-label">
+                    <AppIcon name="wallet" :size="17" /> Ngân sách dự kiến (VND)
+                  </label>
                   <strong class="budget-highlight">{{ dinhDangTien(formDuLieu.nganSach) }}đ</strong>
                 </div>
                 <input
@@ -802,65 +814,6 @@
                 </div>
               </div>
 
-              <!-- Phương tiện & Khách sạn -->
-              <div class="app-field">
-                <label>Phương tiện di chuyển</label>
-                <select v-model="formDuLieu.phuongTien" class="app-select">
-                  <option value="xe khách">Xe khách chất lượng cao (Tiết kiệm nhất)</option>
-                  <option value="tàu hỏa">Tàu hỏa (Ngắm cảnh)</option>
-                  <option value="máy bay">Máy bay + Thuê xe</option>
-                  <option value="xe máy">Xe máy / Phượt</option>
-                  <option value="ô tô">Ô tô / Xe du lịch</option>
-                  <option value="linh hoạt">Linh hoạt</option>
-                </select>
-              </div>
-
-              <!-- TÙY CHỌN TỰ TÚC PHƯƠNG TIỆN ĐẾN -->
-              <div class="self-transit-card" :class="{ 'is-active': formDuLieu.tuTucPhuongTien }">
-                <label class="stc-label">
-                  <input
-                    type="checkbox"
-                    v-model="formDuLieu.tuTucPhuongTien"
-                    class="stc-checkbox"
-                  />
-                  <span class="stc-custom-indicator">
-                    <AppIcon name="check" size="14" v-if="formDuLieu.tuTucPhuongTien" />
-                  </span>
-                  <div class="stc-content">
-                    <div class="stc-title-row">
-                      <strong><AppIcon name="bike" size="16" /> Tự túc phương tiện đến điểm hẹn</strong>
-                      <span class="stc-badge" v-if="formDuLieu.tuTucPhuongTien">Không tính vé xe khứ hồi</span>
-                    </div>
-                    <p class="stc-desc">
-                      Tích chọn nếu bạn đi xe máy cá nhân hoặc đã tự đặt vé xe/máy bay từ trước. Hệ thống sẽ KHÔNG trừ tiền vé xe khách liên tỉnh vào ngân sách, dành trọn vẹn chi phí cho ăn uống và khách sạn!
-                    </p>
-                  </div>
-                </label>
-              </div>
-
-              <div class="app-field">
-                <div class="field-label-between">
-                  <label>Yêu cầu khách sạn</label>
-                  <small class="input-hint-small">Bấm chọn nhanh hoặc tự gõ</small>
-                </div>
-                <input
-                  v-model="formDuLieu.yeuCauKhachSan"
-                  class="app-input enhanced-input"
-                  placeholder="Gần biển, view hoàng hôn, có hồ bơi..."
-                />
-                <!-- Quick Tag Chips cho Khách sạn -->
-                <div class="quick-tags-wrap">
-                  <button
-                    v-for="tag in hotelQuickTags"
-                    :key="tag"
-                    type="button"
-                    :class="['quick-tag-chip', { active: isHotelTagActive(tag) }]"
-                    @click="toggleHotelTag(tag)"
-                  >
-                    <span>{{ tag }}</span>
-                  </button>
-                </div>
-              </div>
 
               <!-- TỐI ƯU CHI PHÍ GIÁ XE & GỢI Ý NHÀ XE GIÁ RẺ -->
               <div class="bus-optimization-section full-width">
@@ -916,14 +869,14 @@
                   <button
                     type="button"
                     :class="['transit-subtab-btn', { active: transitTab === 'bus' }]"
-                    @click="transitTab = 'bus'"
+                    @click="transitTab = 'bus'; formDuLieu.phuongTien = 'xe khách'"
                   >
                     <AppIcon name="bus" :size="15" /> Vé Xe Khách Giá Rẻ ({{ transitRouteInfo.operators?.length || 0 }})
                   </button>
                   <button
                     type="button"
                     :class="['transit-subtab-btn', { active: transitTab === 'train' }]"
-                    @click="transitTab = 'train'"
+                    @click="transitTab = 'train'; formDuLieu.phuongTien = 'tàu hỏa'"
                   >
                     <AppIcon name="train" :size="15" /> Vé Tàu Hỏa Thống Nhất ({{ transitRouteInfo.trains?.length || 3 }})
                   </button>
@@ -1094,30 +1047,28 @@
                     </div>
                   </div>
                 </div>
-              </div>
 
-              <!-- Sở thích -->
-              <div class="app-field full-width">
-                <div class="field-label-between">
-                  <label>Sở thích & Trải nghiệm (Không bắt buộc)</label>
-                  <small class="input-hint-small">Bấm chọn nhanh hoặc tự gõ</small>
-                </div>
-                <input
-                  v-model="chuoiSoThich"
-                  class="app-input enhanced-input"
-                  placeholder="Để trống hoặc nhập nếu bạn có yêu cầu riêng (ví dụ: hải sản, check-in, tắm biển...)"
-                />
-                <!-- Quick Tag Chips cho Sở thích -->
-                <div class="quick-tags-wrap">
-                  <button
-                    v-for="tag in interestQuickTags"
-                    :key="tag"
-                    type="button"
-                    :class="['quick-tag-chip', { active: isInterestTagActive(tag) }]"
-                    @click="toggleInterestTag(tag)"
-                  >
-                    <span>{{ tag }}</span>
-                  </button>
+                <!-- TÙY CHỌN TỰ TÚC PHƯƠNG TIỆN ĐẾN -->
+                <div class="self-transit-card" :class="{ 'is-active': formDuLieu.tuTucPhuongTien }" style="margin-top: 16px;">
+                  <label class="stc-label">
+                    <input
+                      type="checkbox"
+                      v-model="formDuLieu.tuTucPhuongTien"
+                      class="stc-checkbox"
+                    />
+                    <span class="stc-custom-indicator">
+                      <AppIcon name="check" size="14" v-if="formDuLieu.tuTucPhuongTien" />
+                    </span>
+                    <div class="stc-content">
+                      <div class="stc-title-row">
+                        <strong><AppIcon name="bike" size="16" /> Tự túc phương tiện đến điểm hẹn</strong>
+                        <span class="stc-badge" v-if="formDuLieu.tuTucPhuongTien">Không tính vé xe khứ hồi</span>
+                      </div>
+                      <p class="stc-desc">
+                        Tích chọn nếu bạn đi xe máy cá nhân hoặc đã tự đặt vé xe/máy bay từ trước. Hệ thống sẽ KHÔNG trừ tiền vé xe khách liên tỉnh vào ngân sách, dành trọn vẹn chi phí cho ăn uống và khách sạn!
+                      </p>
+                    </div>
+                  </label>
                 </div>
               </div>
             </div>
@@ -1379,7 +1330,7 @@
               
               <button 
                 v-if="currentPlannerStep < 3" 
-                @click="currentPlannerStep++" 
+                @click="tiepTheoWizard" 
                 class="app-primary-btn"
               >
                 Tiếp theo →
@@ -1453,8 +1404,23 @@
             </div>
           </div>
 
-          <!-- KẾT QUẢ LỊCH TRÌNH CHI TIẾT -->
+          <!-- KẾT QUẢ LỊCH TRÌNH CHI TIẾT (CHỈ HIỂN THỊ KHI ĐÃ LÊN LỊCH TRÌNH - YÊU CẦU 4) -->
           <div v-if="lichTrinh" class="plan-results-container">
+            <!-- THANH ĐIỀU HƯỚNG QUAY LẠI TRANG CHỌN LỊCH TRÌNH (YÊU CẦU 4) -->
+            <div class="plan-top-nav-bar">
+              <button type="button" class="plan-back-btn" @click="yeuCauQuayLai" title="Quay lại bước chọn thông số ban đầu">
+                <AppIcon name="arrowleft" size="18" /> Quay lại trang lập lịch trình
+              </button>
+              <div class="plan-top-nav-right">
+                <span class="plan-saved-status" v-if="daLuuLichTrinhHienTai">
+                  <AppIcon name="checkcircle2" size="16" /> Đã lưu vào Chuyến đi
+                </span>
+                <button v-else type="button" class="plan-quick-save-btn" @click="luuLichTrinhHienTai" title="Lưu nhanh lịch trình này">
+                  <AppIcon name="save" size="15" /> Lưu chuyến đi
+                </button>
+              </div>
+            </div>
+
             <!-- Personality Completion Banner (Khi AI tạo lịch trình xong) -->
             <transition name="fade-slide">
               <div v-if="hienCompletionBanner" class="ai-completion-banner confetti-celebration">
@@ -1491,7 +1457,7 @@
                   </span>
                   <span class="savings-badge"><AppIcon name="sparkles" size="14" /> Đã tối ưu tuyến đường & chi phí</span>
                 </div>
-                <h2>Hành trình {{ lichTrinh.daysList.length }} Ngày Tuyệt Vời</h2>
+                <h2>Hành trình {{ lichTrinh.daysList.length }} Ngày {{ lichTrinh.nights !== undefined ? lichTrinh.nights : formDuLieu.soDem }} Đêm Tuyệt Vời</h2>
                 
                 <!-- ĐỘI HÌNH PHÁ ĐẢO (SQUAD AVATARS) -->
                 <div class="squad-avatars-group" title="Đội hình phá đảo">
@@ -1598,13 +1564,13 @@
                 <button
                   type="button"
                   class="it-dec-btn it-replan-btn"
-                  @click="hienModalDoiLichTrinh = true"
-                  title="Thay đổi thông số hoặc yêu cầu AI tạo lịch trình khác"
+                  @click="yeuCauQuayLai"
+                  title="Quay lại thay đổi thông số hoặc lên phương án mới"
                 >
-                  <span class="it-dec-icon"><AppIcon name="refresh" size="22" /></span>
+                  <span class="it-dec-icon"><AppIcon name="arrowleft" size="22" /></span>
                   <div class="it-dec-text">
-                    <strong>Thay đổi lịch trình khác</strong>
-                    <small>Sửa thông số hoặc AI lên phương án mới</small>
+                    <strong>Quay lại / Đổi lịch trình</strong>
+                    <small>Quay về bước chọn thông số ban đầu</small>
                   </div>
                 </button>
               </div>
@@ -1693,106 +1659,7 @@
               </div>
             </div>
 
-            <!-- THẺ TỰ TÚC PHƯƠNG TIỆN ĐẾN (KHI ĐANG BẬT TỰ TÚC) -->
-            <div v-if="formDuLieu.tuTucPhuongTien" class="trip-transit-summary-card is-self-transit">
-              <div class="ttsc-main">
-                <div class="ttsc-left">
-                  <span class="ttsc-icon self-icon"><AppIcon name="bike" size="24" /></span>
-                  <div>
-                    <div class="ttsc-badge self-badge">CHẾ ĐỘ TỰ TÚC PHƯƠNG TIỆN ĐẾN ĐIỂM HẸN</div>
-                    <h3>Tự túc xe cá nhân / Tự đặt vé di chuyển</h3>
-                    <p class="ttsc-meta">
-                      <span>Tuyến: <b>{{ formDuLieu.diemKhoiHanh }} ➔ {{ lichTrinh.destination || formDuLieu.diemDen }}</b></span> ·
-                      <span>Vé liên tỉnh: <b>0đ (Đã trừ khỏi ngân sách)</b></span> ·
-                      <span>Nhiên liệu di chuyển nội tỉnh: <b>~{{ dinhDangTien(lichTrinh.budget_breakdown?.transportation || 120000) }}đ</b></span>
-                    </p>
-                    <p class="ttsc-desc-inline">
-                      Ngân sách không bị trừ vé xe khách khứ hồi, dành trọn vẹn chi phí cho ẩm thực và phòng nghỉ chất lượng!
-                    </p>
-                  </div>
-                </div>
-                <div class="ttsc-right">
-                  <button type="button" class="ttsc-switch-btn" @click="formDuLieu.tuTucPhuongTien = false; dongBoChiPhiLichTrinh()">
-                    <AppIcon name="bus" size="15" /> Tính vé xe khách khứ hồi
-                  </button>
-                </div>
-              </div>
-            </div>
 
-            <!-- TÓM TẮT PHƯƠNG ÁN XE KHÁCH TỐI ƯU CHI PHÍ (KHI ĐI XE KHÁCH) -->
-            <div v-else-if="(lichTrinh.transit_summary || formDuLieu.nhaXeDaChon) && !['xe máy', 'ô tô'].includes((formDuLieu.phuongTien || '').toLowerCase())" class="trip-transit-summary-card">
-              <div class="ttsc-main">
-                <div class="ttsc-left">
-                  <span class="ttsc-icon"><AppIcon name="bus" size="24" /></span>
-                  <div>
-                    <div class="ttsc-badge">PHƯƠNG ÁN XE KHÁCH TỐI ƯU DI CHUYỂN</div>
-                    <h3>{{ formDuLieu.nhaXeDaChon ? formDuLieu.nhaXeDaChon.name : (lichTrinh.transit_summary?.selected_bus?.name || 'Nhà xe khuyên dùng') }}</h3>
-                    <p class="ttsc-meta">
-                      <span>Loại xe: <b>{{ formDuLieu.nhaXeDaChon ? formDuLieu.nhaXeDaChon.type : 'Giường nằm cao cấp' }}</b></span> ·
-                      <span>Tuyến: <b>{{ formDuLieu.diemKhoiHanh }} ➔ {{ lichTrinh.destination || formDuLieu.diemDen }}</b></span> ·
-                      <span>Cự ly: <b>~{{ (lichTrinh.transit_summary?.estimated_distance_km || transitRouteInfo.estimatedDistanceKm) }} km</b></span>
-                    </p>
-                    <p class="ttsc-schedule" v-if="formDuLieu.nhaXeDaChon">
-                      <AppIcon name="clock" size="14" /> Giờ chạy: <b>{{ formDuLieu.nhaXeDaChon.depart_times }}</b> ({{ formDuLieu.nhaXeDaChon.duration }}) · Đón: {{ formDuLieu.nhaXeDaChon.pickup }}
-                    </p>
-                    <div class="ttsc-included-note">
-                      <AppIcon name="check" size="13" /> Đã cộng dồn vé xe khứ hồi (<b>{{ dinhDangTien(lichTrinh.budget_breakdown?.transportation || 0) }}đ</b>) vào tổng dự toán chi phí.
-                    </div>
-                  </div>
-                </div>
-                <div class="ttsc-right">
-                  <div class="ttsc-price-block">
-                    <span class="ttsc-label">Giá vé:</span>
-                    <strong class="ttsc-price">{{ dinhDangTien(formDuLieu.nhaXeDaChon?.price || 350000) }}đ</strong>
-                    <small>/vé/người</small>
-                    <div class="ttsc-total-calc" v-if="formDuLieu.soNguoi > 1">
-                      Tổng {{ formDuLieu.soNguoi }} người (khứ hồi): <b>{{ dinhDangTien((formDuLieu.nhaXeDaChon?.price || 350000) * formDuLieu.soNguoi * 2) }}đ</b>
-                    </div>
-                  </div>
-                  <div class="ttsc-actions-group" style="display: flex; gap: 8px; flex-direction: column; width: 100%;">
-                    <a href="https://futabus.vn/" target="_blank" rel="noreferrer" class="ttsc-book-btn" style="background: var(--primary); color: white; padding: 10px 16px; border-radius: 8px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s;">
-                      <AppIcon name="ticket" size="16" /> Đặt vé Web/App
-                    </a>
-                    <button type="button" class="ttsc-toggle-self-btn" @click="formDuLieu.tuTucPhuongTien = true; dongBoChiPhiLichTrinh()">
-                      <AppIcon name="bike" size="14" /> Đổi sang Tự túc xe đến
-                    </button>
-                    <a :href="`tel:${formDuLieu.nhaXeDaChon?.hotline || '19006067'}`" class="ttsc-call-btn" style="background: rgba(5, 150, 105, 0.1); color: var(--primary); padding: 8px 14px; border-radius: 8px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--primary); font-size: 12px;">
-                      <AppIcon name="phone" size="14" /> Tổng đài: {{ formDuLieu.nhaXeDaChon?.hotline || '1900 6067' }}
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Khách sạn đề xuất -->
-            <div v-if="lichTrinh.hotel_recommendation" class="app-hotel-card">
-              <div class="hotel-badge"><AppIcon name="hotel" size="14" /> GỢI Ý KHÁCH SẠN / RESORT NGHỈ DƯỠNG</div>
-              <div class="hotel-main-info">
-                <div>
-                  <h3>{{ lichTrinh.hotel_recommendation.name }}</h3>
-                  <p class="hotel-addr" v-if="lichTrinh.hotel_recommendation.address"><AppIcon name="pin" size="14" /> {{ lichTrinh.hotel_recommendation.address }}</p>
-                  <p class="hotel-desc">{{ lichTrinh.hotel_recommendation.description }}</p>
-                </div>
-                <div class="hotel-side">
-                  <span class="hotel-stars"><AppIcon name="star" size="14" filled color="#f59e0b" /> {{ lichTrinh.hotel_recommendation.rating || '4.8' }}</span>
-                  <span class="hotel-price">
-                    {{ dinhDangTien(lichTrinh.hotel_recommendation.price_per_night || 850000) }}đ
-                    <small>{{ (lichTrinh.hotel_recommendation.price_per_night || 850000) <= 300000 ? '/đêm/người' : '/đêm/phòng' }}</small>
-                  </span>
-                  <div class="hotel-nights-calc-badge" v-if="lichTrinh.daysList && lichTrinh.daysList.length">
-                    Tổng {{ lichTrinh.daysList.length }} đêm ({{ lichTrinh.people }} người): <b>{{ dinhDangTien(tinhChiPhiKhachSan(lichTrinh)) }}đ</b>
-                  </div>
-                  <a
-                    class="hotel-maps-link"
-                    :href="chiDuongUrl(lichTrinh.hotel_recommendation.name, lichTrinh.hotel_recommendation.address)"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <AppIcon name="map" size="14" /> Chỉ đường tới KS ↗
-                  </a>
-                </div>
-              </div>
-            </div>
 
             <!-- BỘ CHUYỂN ĐỔI CHẾ ĐỘ XEM (MAP VIEW TOGGLE - SEGMENTED CONTROL) -->
             <div class="itinerary-view-switcher" role="group" aria-label="Chế độ xem lịch trình">
@@ -2000,25 +1867,34 @@
                     </div>
 
                     <div class="activities-stream">
-                      <!-- CHẶNG KHỞI HÀNH LIÊN TỈNH: THỜI GIAN VÀ CỰ LY TỪ NƠI XUẤT PHÁT ĐẾN ĐIỂM ĐẾN (YÊU CẦU 3) -->
+                      <!-- CHẶNG KHỞI HÀNH LIÊN TỈNH: THỜI GIAN VÀ CỰ LY TỪ NƠI XUẤT PHÁT ĐẾN ĐIỂM ĐẾN (YÊU CẦU 6) -->
                       <div v-if="day.day === 1 && !day.activities.some(a => a.type === 'transit')" class="origin-departure-journey-card">
                         <div class="odjc-time-col">
-                          <span class="odjc-time">{{ formDuLieu.nhaXeDaChon?.depart_times ? formDuLieu.nhaXeDaChon.depart_times.split(',')[0].trim() : '06:30' }}</span>
-                          <div class="odjc-bullet"><AppIcon name="bus" size="16" /></div>
+                          <span class="odjc-time">{{ gioXuatPhatDi }}</span>
+                          <div class="odjc-bullet"><AppIcon :name="layIconPhuongTien(formDuLieu.phuongTien)" size="18" /></div>
+                          <span class="odjc-time-dest" title="Dự kiến đến nơi">➔ {{ gioDenNoiDuKien.time }}</span>
                         </div>
                         <div class="odjc-card-content">
                           <div class="odjc-header">
                             <span class="odjc-badge">CHẶNG KHỞI HÀNH TỪ NƠI XUẤT PHÁT</span>
-                            <span class="odjc-duration-pill"><AppIcon name="clock" size="13" /> Di chuyển: <b>{{ formDuLieu.nhaXeDaChon?.duration || '13 – 14 giờ' }}</b></span>
+                            <span class="odjc-duration-pill"><AppIcon name="clock" size="13" /> Di chuyển: <b>{{ thoiGianDiChuyenText }}</b></span>
                           </div>
                           <h4 class="odjc-title">{{ formDuLieu.diemKhoiHanh }} ➔ {{ lichTrinh.destination }}</h4>
                           <div class="odjc-meta-grid">
                             <div class="odjc-meta-item">
-                              <span class="omi-label">Phương tiện:</span>
-                              <strong>{{ formDuLieu.nhaXeDaChon ? (formDuLieu.nhaXeDaChon.name + ' - ' + formDuLieu.nhaXeDaChon.type) : (lichTrinh.transit_summary?.selected_bus?.name || 'Xe khách giường nằm VIP') }}</strong>
+                              <span class="omi-label">Thời gian xuất phát:</span>
+                              <strong class="text-emerald">{{ gioXuatPhatDi }} (Ngày 1)</strong>
                             </div>
                             <div class="odjc-meta-item">
-                              <span class="omi-label">Cự ly di chuyển:</span>
+                              <span class="omi-label">Dự kiến đến nơi:</span>
+                              <strong class="text-emerald">{{ gioDenNoiDuKien.text }}</strong>
+                            </div>
+                            <div class="odjc-meta-item">
+                              <span class="omi-label">Phương tiện di chuyển:</span>
+                              <strong>{{ formDuLieu.nhaXeDaChon ? (formDuLieu.nhaXeDaChon.name + ' - ' + formDuLieu.nhaXeDaChon.type) : (formDuLieu.tauDaChon ? (formDuLieu.tauDaChon.name + ' - ' + formDuLieu.tauDaChon.type) : (lichTrinh.transit_summary?.selected_bus?.name || (formDuLieu.phuongTien === 'máy bay' ? 'Chuyến bay nội địa' : (formDuLieu.phuongTien === 'tàu hỏa' ? 'Tàu Thống Nhất SE1' : (formDuLieu.phuongTien === 'xe máy' ? 'Xe máy tự túc' : 'Xe khách giường nằm VIP'))))) }}</strong>
+                            </div>
+                            <div class="odjc-meta-item">
+                              <span class="omi-label">Cự ly quãng đường:</span>
                               <strong>~{{ (lichTrinh.transit_summary?.estimated_distance_km || transitRouteInfo.estimatedDistanceKm || 669) }} km</strong>
                             </div>
                             <div class="odjc-meta-item">
@@ -2026,12 +1902,28 @@
                               <strong>{{ formDuLieu.nhaXeDaChon?.pickup || ('VP bến xe tại ' + formDuLieu.diemKhoiHanh) }}</strong>
                             </div>
                             <div class="odjc-meta-item">
-                              <span class="omi-label">Điểm đến / Check-in:</span>
-                              <strong>{{ lichTrinh.hotel_recommendation?.name || 'Khách sạn / Homestay lưu trú' }}</strong>
+                              <span class="omi-label">Chặng đích / Điểm trả:</span>
+                              <strong>{{ formDuLieu.nhaXeDaChon?.dropoff || ('Bến xe / Điểm dừng trung tâm ' + lichTrinh.destination) }}</strong>
+                            </div>
+                            <div class="odjc-meta-item" v-if="lichTrinh.hotel_recommendation">
+                              <span class="omi-label">Khách sạn lưu trú:</span>
+                              <strong>{{ lichTrinh.hotel_recommendation.name }}</strong>
+                            </div>
+                            <div class="odjc-meta-item" v-if="formDuLieu.nhaXeDaChon?.price">
+                              <span class="omi-label">Giá vé:</span>
+                              <strong>{{ dinhDangTien(formDuLieu.nhaXeDaChon.price) }}đ/người</strong>
                             </div>
                           </div>
+                          <div class="odjc-actions-inline" v-if="formDuLieu.nhaXeDaChon">
+                            <a :href="`tel:${formDuLieu.nhaXeDaChon.hotline || '19006067'}`" class="odjc-call-btn">
+                              <AppIcon name="phone" size="13" /> Hotline: {{ formDuLieu.nhaXeDaChon.hotline || '1900 6067' }}
+                            </a>
+                            <a href="https://futabus.vn/" target="_blank" rel="noreferrer" class="odjc-link-btn">
+                              <AppIcon name="ticket" size="13" /> Đặt vé xe trực tuyến ↗
+                            </a>
+                          </div>
                           <p class="odjc-note">
-                            <AppIcon name="plane" size="14" /> Chuyến đi khởi hành đúng giờ. Đoàn đến {{ lichTrinh.destination }}, cập bến và di chuyển về nhận phòng / gửi hành lý trước khi bắt đầu lịch trình tham quan.
+                            <AppIcon name="plane" size="14" /> Chuyến đi khởi hành lúc <b>{{ gioXuatPhatDi }}</b> từ {{ formDuLieu.diemKhoiHanh }}. Đoàn đến {{ lichTrinh.destination }} dự kiến vào <b>{{ gioDenNoiDuKien.text }}</b>, di chuyển về nhận phòng / gửi hành lý tại {{ lichTrinh.hotel_recommendation?.name || 'khách sạn' }} trước khi bắt đầu lịch trình tham quan.
                           </p>
                         </div>
                       </div>
@@ -2329,6 +2221,102 @@
                           </div>
                         </div>
                       </template>
+
+                      <!-- NGHỈ ĐÊM TẠI KHÁCH SẠN (DÀNH CHO CÁC ĐÊM TRONG CHUYẾN ĐI - YÊU CẦU 2 & 5) -->
+                      <div
+                        v-if="lichTrinh.hotel_recommendation && day.day <= (lichTrinh.nights !== undefined ? lichTrinh.nights : formDuLieu.soDem)"
+                        class="day-hotel-stay-card"
+                      >
+                        <div class="dhsc-time-col">
+                          <span class="dhsc-time">22:00</span>
+                          <div class="dhsc-bullet"><AppIcon name="moon" size="18" /></div>
+                        </div>
+                        <div class="dhsc-card-content">
+                          <div class="dhsc-header">
+                            <span class="dhsc-badge"><AppIcon name="hotel" size="12" /> NGHỈ ĐÊM TẠI KHÁCH SẠN (ĐÊM {{ day.day }})</span>
+                            <span class="dhsc-stars"><AppIcon name="star" size="12" filled color="#f59e0b" /> {{ lichTrinh.hotel_recommendation.rating || '4.8' }}</span>
+                          </div>
+                          <h4 class="dhsc-title">{{ lichTrinh.hotel_recommendation.name }}</h4>
+                          <p class="dhsc-addr" v-if="lichTrinh.hotel_recommendation.address">
+                            <AppIcon name="pin" size="12" /> {{ lichTrinh.hotel_recommendation.address }}
+                          </p>
+                          <div class="dhsc-footer-row">
+                            <span class="dhsc-price">
+                              Giá phòng: <b>{{ dinhDangTien(lichTrinh.hotel_recommendation.price_per_night || 850000) }}đ</b>
+                              <small>{{ (lichTrinh.hotel_recommendation.price_per_night || 850000) <= 300000 ? '/đêm/người' : '/đêm/phòng' }}</small>
+                            </span>
+                            <a
+                              :href="chiDuongUrl(lichTrinh.hotel_recommendation.name, lichTrinh.hotel_recommendation.address)"
+                              target="_blank"
+                              rel="noreferrer"
+                              class="dhsc-map-btn"
+                            >
+                              <AppIcon name="map" size="13" /> Chỉ đường tới KS ↗
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- CHẶNG RA VỀ Ở NGÀY CUỐI CÙNG (YÊU CẦU 6) -->
+                      <div v-if="day.day === lichTrinh.daysList.length" class="origin-return-journey-card">
+                        <div class="orjc-time-col">
+                          <span class="orjc-time">{{ gioXuatPhatVe }}</span>
+                          <div class="orjc-bullet"><AppIcon :name="layIconPhuongTien(formDuLieu.phuongTien)" size="18" /></div>
+                          <span class="orjc-time-dest" title="Dự kiến về đến nơi">➔ {{ gioVeDenNoiDuKien.time }}</span>
+                        </div>
+                        <div class="orjc-card-content">
+                          <div class="orjc-header">
+                            <span class="orjc-badge">CHẶNG RA VỀ / KẾT THÚC HÀNH TRÌNH</span>
+                            <span class="orjc-duration-pill"><AppIcon name="clock" size="13" /> Di chuyển về: <b>{{ thoiGianDiChuyenText }}</b></span>
+                          </div>
+                          <h4 class="orjc-title">{{ lichTrinh.destination }} ➔ {{ formDuLieu.diemKhoiHanh }}</h4>
+                          <div class="orjc-meta-grid">
+                            <div class="orjc-meta-item">
+                              <span class="omi-label">Thời gian xuất phát về:</span>
+                              <strong class="text-emerald">{{ gioXuatPhatVe }} (Ngày {{ day.day }})</strong>
+                            </div>
+                            <div class="orjc-meta-item">
+                              <span class="omi-label">Dự kiến về đến nơi:</span>
+                              <strong class="text-emerald">{{ gioVeDenNoiDuKien.text }}</strong>
+                            </div>
+                            <div class="orjc-meta-item">
+                              <span class="omi-label">Phương tiện về:</span>
+                              <strong>{{ formDuLieu.nhaXeDaChon ? (formDuLieu.nhaXeDaChon.name + ' - ' + formDuLieu.nhaXeDaChon.type) : (formDuLieu.tauDaChon ? (formDuLieu.tauDaChon.name + ' - ' + formDuLieu.tauDaChon.type) : (lichTrinh.transit_summary?.selected_bus?.name || (formDuLieu.phuongTien === 'máy bay' ? 'Chuyến bay nội địa khứ hồi' : (formDuLieu.phuongTien === 'tàu hỏa' ? 'Tàu Thống Nhất khứ hồi' : 'Xe khách giường nằm khứ hồi')))) }}</strong>
+                            </div>
+                            <div class="orjc-meta-item">
+                              <span class="omi-label">Cự ly di chuyển về:</span>
+                              <strong>~{{ (lichTrinh.transit_summary?.estimated_distance_km || transitRouteInfo.estimatedDistanceKm || 669) }} km</strong>
+                            </div>
+                            <div class="orjc-meta-item">
+                              <span class="omi-label">Điểm đón khách về:</span>
+                              <strong>{{ formDuLieu.nhaXeDaChon?.dropoff || ('Bến xe / VP tại ' + lichTrinh.destination) }}</strong>
+                            </div>
+                            <div class="orjc-meta-item">
+                              <span class="omi-label">Điểm trả khách tại quê nhà:</span>
+                              <strong>{{ formDuLieu.nhaXeDaChon?.pickup || ('VP bến xe tại ' + formDuLieu.diemKhoiHanh) }}</strong>
+                            </div>
+                            <div class="orjc-meta-item" v-if="lichTrinh.hotel_recommendation">
+                              <span class="omi-label">Check-out khách sạn:</span>
+                              <strong>12:00 Trả phòng {{ lichTrinh.hotel_recommendation.name }}</strong>
+                            </div>
+                            <div class="orjc-meta-item" v-if="formDuLieu.nhaXeDaChon?.price">
+                              <span class="omi-label">Giá vé lượt về:</span>
+                              <strong>{{ dinhDangTien(formDuLieu.nhaXeDaChon.price) }}đ/người</strong>
+                            </div>
+                          </div>
+                          <div class="orjc-actions-inline" v-if="formDuLieu.nhaXeDaChon">
+                            <a :href="`tel:${formDuLieu.nhaXeDaChon.hotline || '19006067'}`" class="orjc-call-btn">
+                              <AppIcon name="phone" size="13" /> Hotline: {{ formDuLieu.nhaXeDaChon.hotline || '1900 6067' }}
+                            </a>
+                            <a href="https://futabus.vn/" target="_blank" rel="noreferrer" class="orjc-link-btn">
+                              <AppIcon name="ticket" size="13" /> Đặt vé xe khứ hồi ↗
+                            </a>
+                          </div>
+                          <p class="orjc-note">
+                            <AppIcon name="heart" size="14" /> Chúc quý khách thượng lộ bình an! Đoàn khởi hành từ {{ lichTrinh.destination }} lúc <b>{{ gioXuatPhatVe }}</b> và dự kiến về đến {{ formDuLieu.diemKhoiHanh }} lúc <b>{{ gioVeDenNoiDuKien.text }}</b>. Toàn bộ chuyến đi kết thúc tốt đẹp!
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </article>
                 </div>
@@ -2968,6 +2956,26 @@
       <button class="skip-intro-btn" @click.stop="boQuaIntro">Bỏ qua <AppIcon name="arrowright" size="14" style="margin-left: 4px; vertical-align: -2px;" /></button>
     </div>
 
+    <!-- ==================== MODAL XÁC NHẬN LƯU LỊCH TRÌNH TRƯỚC KHI QUAY LẠI (YÊU CẦU 4) ==================== -->
+    <div v-if="hienModalXacNhanQuayLai" class="modal-overlay save-confirm-overlay" @click.self="hienModalXacNhanQuayLai = false">
+      <div class="modal-card save-confirm-card">
+        <div class="scm-icon-ring" style="background: linear-gradient(135deg, #10b981, #059669);"><AppIcon name="save" size="28" /></div>
+        <h3>Lưu lịch trình chuyến đi?</h3>
+        <p>Bạn có một lịch trình vừa tạo. Bạn có muốn <b>lưu lại lịch trình này</b> vào danh sách chuyến đi trước khi quay lại không?</p>
+        <div class="scm-actions">
+          <button class="scm-btn scm-btn-save" @click="xacNhanLuuVaQuayLai">
+            <AppIcon name="check" size="16" style="margin-right: 6px; vertical-align: -2px;" />Có, Lưu vào chuyến đi & Quay lại
+          </button>
+          <button class="scm-btn scm-btn-discard" @click="xacNhanHuyVaQuayLai">
+            <AppIcon name="trash2" size="16" style="margin-right: 6px; vertical-align: -2px;" />Không lưu & Hủy bỏ lịch trình
+          </button>
+          <button class="scm-btn scm-btn-cancel" @click="hienModalXacNhanQuayLai = false">
+            <AppIcon name="x" size="16" style="margin-right: 6px; vertical-align: -2px;" />Ở lại tiếp tục xem
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- ==================== MODAL XÁC NHẬN LƯU LỊCH TRÌNH TRƯỚC KHI CHUYỂN TAB (PHẦN 2) ==================== -->
     <div v-if="hienModalNhacLuu" class="modal-overlay save-confirm-overlay" @click.self="huyChuyenTab">
       <div class="modal-card save-confirm-card">
@@ -3168,12 +3176,13 @@ const ALL_DESTINATIONS = 'Tất cả miền Trung'
 const formDuLieu = reactive({
   diemKhoiHanh: 'Hà Nội',
   diemDen: 'Đà Nẵng',
-  soNgay: 3,
+  soNgay: 0,
+  soDem: 0,
   nganSach: 3500000,
-  soNguoi: 2,
+  soNguoi: 0,
   soThich: [],
   ngayBatDau: '2026-10-06',
-  ngayKetThuc: '2026-10-08',
+  ngayKetThuc: '',
   phuongTien: 'xe khách',
   yeuCauKhachSan: '',
   nhaXeDaChon: null,
@@ -3628,6 +3637,28 @@ onUnmounted(cleanUpTimers)
 // Form State
 const currentPlannerStep = ref(1)
 
+function tiepTheoWizard() {
+  if (currentPlannerStep.value === 1) {
+    if (!formDuLieu.soNgay || formDuLieu.soNgay <= 0) {
+      personalityToast.value = {
+        icon: 'clock',
+        title: 'Chưa chọn số ngày đi',
+        desc: 'Vui lòng tăng số ngày đi (tối thiểu 1 ngày) để tiếp tục lên kế hoạch.'
+      }
+      return
+    }
+    if (!formDuLieu.soNguoi || formDuLieu.soNguoi <= 0) {
+      personalityToast.value = {
+        icon: 'users',
+        title: 'Chưa chọn số người',
+        desc: 'Vui lòng tăng số lượng người tham gia (tối thiểu 1 người) để tính toán chi phí.'
+      }
+      return
+    }
+  }
+  currentPlannerStep.value++
+}
+
 // ===== AI BUBBLE: 10 câu hài hước luân phiên ngẫu nhiên =====
 const AI_HINTS = [
   `<strong>Chưa biết đi đâu à?</strong><br/>Không sao. Bạn có tiền, tôi có dữ liệu.<br/>Chúng ta đã có <em>50% điều kiện</em> để bắt đầu. 🎯`,
@@ -3693,7 +3724,7 @@ function chonThangKhoiHanh(m) {
 }
 
 const ngayKetThucDisplay = computed(() => {
-  if (!formDuLieu.ngayBatDau) return ''
+  if (!formDuLieu.ngayBatDau || !formDuLieu.soNgay || formDuLieu.soNgay <= 0) return ''
   try {
     const parts = formDuLieu.ngayBatDau.split('-')
     if (parts.length !== 3) return ''
@@ -3701,7 +3732,8 @@ const ngayKetThucDisplay = computed(() => {
     const month = parseInt(parts[1], 10) - 1
     const day = parseInt(parts[2], 10)
     const d = new Date(year, month, day)
-    const days = Math.max(1, parseInt(formDuLieu.soNgay, 10) || 1)
+    const days = parseInt(formDuLieu.soNgay, 10) || 0
+    if (days <= 0) return ''
     d.setDate(d.getDate() + (days - 1))
     const yyyy = d.getFullYear()
     const mm = String(d.getMonth() + 1).padStart(2, '0')
@@ -3967,7 +3999,7 @@ const tripFeasibility = computed(() => {
 // ==================== 5 PHÂN TẦNG NGÂN SÁCH THÔNG MINH ====================
 const currentBudgetTier = computed(() => {
   const total = Number(formDuLieu.nganSach) || 3500000
-  const days = Math.max(1, Number(formDuLieu.soNgay) || 3)
+  const days = Math.max(1, Number(formDuLieu.soNgay) || 1)
   const people = Math.max(1, Number(formDuLieu.soNguoi) || 1)
   const perDay = total / (days * people)
 
@@ -4063,9 +4095,9 @@ const currentBudgetTier = computed(() => {
 // ==================== DỰ TOÁN CHI PHÍ THÔNG MINH (DYNAMIC BUDGET BREAKDOWN) ====================
 const dynamicBudget = computed(() => {
   const total = Number(formDuLieu.nganSach) || 3500000
-  const days = Math.max(1, Number(formDuLieu.soNgay) || 3)
+  const days = Math.max(1, Number(formDuLieu.soNgay) || 1)
   const nights = Math.max(1, days - 1)
-  const people = Math.max(1, Number(formDuLieu.soNguoi) || 2)
+  const people = Math.max(1, Number(formDuLieu.soNguoi) || 1)
   const isFreeOnly = Boolean(formDuLieu.freePlacesOnly)
   const tier = currentBudgetTier.value
   
@@ -4327,19 +4359,18 @@ function chonPhuongTienTuSoSanh(v) {
   }
 }
 
-// Tự động cập nhật nhà xe tối ưu chi phí khi đổi điểm đi hoặc điểm đến
+// Cập nhật nhà xe tối ưu chi phí khi đổi điểm đi hoặc điểm đến (KHÔNG TỰ ĐỘNG CHỌN VÉ XE - YÊU CẦU 1)
 watch(
   () => [formDuLieu.diemKhoiHanh, formDuLieu.diemDen],
   () => {
-    if (transitRouteInfo.value?.operators?.length > 0) {
+    if (formDuLieu.nhaXeDaChon && transitRouteInfo.value?.operators?.length > 0) {
       const currentId = formDuLieu.nhaXeDaChon?.id
       const found = transitRouteInfo.value.operators.find(b => b.id === currentId)
-      formDuLieu.nhaXeDaChon = found || transitRouteInfo.value.operators[0]
+      formDuLieu.nhaXeDaChon = found || null
     } else {
       formDuLieu.nhaXeDaChon = null
     }
-  },
-  { immediate: true }
+  }
 )
 const dangTao = ref(false)
 const modalDeleteVisible = ref(false)
@@ -4348,6 +4379,163 @@ const taoPlanError = ref('')
 const lichTrinh = ref(null)
 const selectedPlaces = ref([])
 const customPlaceText = ref('')
+
+// ==================== THUẬT TOÁN RÀNG BUỘC SỐ NGÀY & SỐ ĐÊM (YÊU CẦU 5) ====================
+const minSoDem = computed(() => {
+  if (!formDuLieu.soNgay || formDuLieu.soNgay <= 0) return 0
+  return Math.max(0, formDuLieu.soNgay - 2)
+})
+
+const maxSoDem = computed(() => {
+  if (!formDuLieu.soNgay || formDuLieu.soNgay <= 0) return 0
+  return formDuLieu.soNgay
+})
+
+function tangSoNgay() {
+  formDuLieu.soNgay++
+  formDuLieu.soDem = Math.max(0, formDuLieu.soNgay - 1)
+}
+
+function giamSoNgay() {
+  formDuLieu.soNgay = Math.max(0, formDuLieu.soNgay - 1)
+  if (formDuLieu.soNgay === 0) {
+    formDuLieu.soDem = 0
+  } else {
+    formDuLieu.soDem = Math.max(0, formDuLieu.soNgay - 1)
+  }
+}
+
+function tangSoDem() {
+  if (formDuLieu.soDem < maxSoDem.value) {
+    formDuLieu.soDem++
+  }
+}
+
+function giamSoDem() {
+  if (formDuLieu.soDem > minSoDem.value) {
+    formDuLieu.soDem--
+  }
+}
+
+watch(() => formDuLieu.soNgay, (newVal) => {
+  const val = Number(newVal) || 0
+  if (val === 0) {
+    formDuLieu.soDem = 0
+  } else {
+    const minN = Math.max(0, val - 2)
+    const maxN = val
+    if (formDuLieu.soDem < minN || formDuLieu.soDem > maxN) {
+      formDuLieu.soDem = Math.max(0, val - 1)
+    }
+  }
+})
+
+// ==================== TÍNH TOÁN THỜI GIAN CHẶNG KHỞI HÀNH & CHẶNG RA VỀ (YÊU CẦU 6) ====================
+function tinhGioDenNoi(departTimeStr, durationStr) {
+  if (!departTimeStr) return { time: '08:30', nextDay: false, text: '08:30' }
+  const firstTime = departTimeStr.split(',')[0].trim().replace(/[^\d:]/g, '')
+  const [hStr, mStr] = firstTime.split(':')
+  let startH = parseInt(hStr, 10) || 7
+  let startM = parseInt(mStr, 10) || 0
+
+  let hours = 14
+  if (durationStr) {
+    const match = durationStr.match(/(\d+(\.\d+)?)/)
+    if (match) {
+      hours = parseFloat(match[1])
+    }
+  }
+
+  const totalMinutes = startH * 60 + startM + Math.round(hours * 60)
+  const endTotalHours = Math.floor(totalMinutes / 60)
+  const endMinutes = totalMinutes % 60
+  const daysDiff = Math.floor(endTotalHours / 24)
+  const endHours = endTotalHours % 24
+
+  const pad = (n) => String(n).padStart(2, '0')
+  const formattedTime = `${pad(endHours)}:${pad(endMinutes)}`
+  const dayTag = daysDiff > 0 ? ` (+${daysDiff} ngày)` : ''
+
+  return {
+    time: formattedTime,
+    nextDay: daysDiff > 0,
+    text: `${formattedTime}${dayTag}`
+  }
+}
+
+const gioXuatPhatDi = computed(() => {
+  if (formDuLieu.phuongTien === 'máy bay') return '08:00'
+  if (formDuLieu.phuongTien === 'tàu hỏa') return '20:55'
+  if (formDuLieu.phuongTien === 'xe máy') return '06:00'
+  if (formDuLieu.nhaXeDaChon?.depart_times) {
+    return formDuLieu.nhaXeDaChon.depart_times.split(',')[0].trim()
+  }
+  return '17:30'
+})
+
+const gioXuatPhatVe = computed(() => {
+  if (formDuLieu.phuongTien === 'máy bay') return '19:00'
+  if (formDuLieu.phuongTien === 'tàu hỏa') return '19:25'
+  if (formDuLieu.phuongTien === 'xe máy') return '14:00'
+  if (formDuLieu.nhaXeDaChon?.depart_times) {
+    const times = formDuLieu.nhaXeDaChon.depart_times.split(',').map(s => s.trim())
+    return times[times.length - 1] || '17:30'
+  }
+  return '17:30'
+})
+
+const thoiGianDiChuyenText = computed(() => {
+  if (formDuLieu.nhaXeDaChon?.duration) return formDuLieu.nhaXeDaChon.duration
+  if (formDuLieu.phuongTien === 'máy bay') return '1.5 giờ'
+  if (formDuLieu.phuongTien === 'tàu hỏa') return '14 – 15 giờ'
+  if (formDuLieu.phuongTien === 'xe máy') return `${Math.round((transitRouteInfo.value?.estimatedDistanceKm || 600) / 40)} giờ`
+  return transitRouteInfo.value?.durationText || '13 – 14 giờ'
+})
+
+const gioDenNoiDuKien = computed(() => {
+  return tinhGioDenNoi(gioXuatPhatDi.value, thoiGianDiChuyenText.value)
+})
+
+const gioVeDenNoiDuKien = computed(() => {
+  return tinhGioDenNoi(gioXuatPhatVe.value, thoiGianDiChuyenText.value)
+})
+
+function layIconPhuongTien(pt) {
+  const p = (pt || '').toLowerCase()
+  if (p.includes('máy bay')) return 'plane'
+  if (p.includes('tàu')) return 'train'
+  if (p.includes('máy') || p.includes('phượt')) return 'bike'
+  return 'bus'
+}
+
+// ==================== QUẢN LÝ QUAY LẠI TRANG TRƯỚC & XÁC NHẬN LƯU (YÊU CẦU 4) ====================
+const hienModalXacNhanQuayLai = ref(false)
+
+function yeuCauQuayLai() {
+  if (daLuuLichTrinhHienTai.value) {
+    lichTrinh.value = null
+    currentPlannerStep.value = 1
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  } else {
+    hienModalXacNhanQuayLai.value = true
+  }
+}
+
+async function xacNhanLuuVaQuayLai() {
+  await luuLichTrinhHienTai()
+  hienModalXacNhanQuayLai.value = false
+  lichTrinh.value = null
+  currentPlannerStep.value = 1
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+function xacNhanHuyVaQuayLai() {
+  hienModalXacNhanQuayLai.value = false
+  lichTrinh.value = null
+  daLuuLichTrinhHienTai.value = false
+  currentPlannerStep.value = 1
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
 
 function addCustomPlace() {
   const val = customPlaceText.value.trim()
@@ -5281,7 +5469,8 @@ const googleMapsDayRouteUrl = computed(() => {
 
 function tinhChiPhiKhachSan(plan) {
   if (!plan?.hotel_recommendation) return 0
-  const nights = Math.max(1, plan.daysList?.length || plan.days?.length || formDuLieu.soNgay || 5)
+  const nights = plan.nights !== undefined ? Number(plan.nights) : (formDuLieu.soDem !== undefined ? Number(formDuLieu.soDem) : Math.max(0, (plan.daysList?.length || 1) - 1))
+  if (nights <= 0) return 0
   const people = Number(plan.people) || Number(formDuLieu.soNguoi) || 2
   const budget = Number(plan.target_budget || formDuLieu.nganSach || 3000000)
   const aiPrice = Number(plan.hotel_recommendation.price_per_night) || 850000
@@ -5959,6 +6148,12 @@ async function taiDuLieuThanhPho() {
 }
 
 async function taoLichTrinh() {
+  if (!formDuLieu.soNgay || formDuLieu.soNgay <= 0 || !formDuLieu.soNguoi || formDuLieu.soNguoi <= 0) {
+    taoPlanError.value = 'Vui lòng chọn số ngày đi (tối thiểu 1 ngày) và số người tham gia (tối thiểu 1 người).'
+    currentPlannerStep.value = 1
+    return
+  }
+
   if (!tripFeasibility.value.feasible && !formDuLieu.freePlacesOnly) {
     taoPlanError.value = tripFeasibility.value.message || 'Yêu cầu không khả thi về ngân sách. Vui lòng tăng ngân sách hoặc chọn chế độ chỉ đi điểm miễn phí vé.';
     currentPlannerStep.value = 2;
@@ -5983,6 +6178,7 @@ async function taoLichTrinh() {
       origin: formDuLieu.diemKhoiHanh,
       destination: formDuLieu.diemDen,
       days: formDuLieu.soNgay,
+      nights: formDuLieu.soDem,
       budget: formDuLieu.nganSach,
       people: formDuLieu.soNguoi,
       free_places_only: Boolean(formDuLieu.freePlacesOnly),
@@ -5997,13 +6193,14 @@ async function taoLichTrinh() {
       tu_tuc_phuong_tien: Boolean(formDuLieu.tuTucPhuongTien)
     })
     lichTrinh.value = res.data
+    lichTrinh.value.nights = formDuLieu.soDem
     // Đảm bảo gắn thông tin di chuyển tối ưu chi phí
     if (!lichTrinh.value.transit_summary) {
       lichTrinh.value.transit_summary = {
         origin: formDuLieu.diemKhoiHanh,
         destination: formDuLieu.diemDen,
         estimated_distance_km: transitRouteInfo.value.estimatedDistanceKm,
-        selected_bus: formDuLieu.nhaXeDaChon || transitRouteInfo.value.cheapestOperator,
+        selected_bus: formDuLieu.nhaXeDaChon || null,
         comparison: transitRouteInfo.value.vehicleComparison,
         available_operators: transitRouteInfo.value.operators
       }
@@ -7606,15 +7803,20 @@ button { cursor: pointer; }
   box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
 }
 
-/* KHỐI THỐNG NHẤT 4 TRƯỜNG ĐIỀU KHIỂN (YÊU CẦU 2) */
+/* KHỐI THỐNG NHẤT 5 TRƯỜNG ĐIỀU KHIỂN (YÊU CẦU 5) */
 .dsb-unified-controls-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
   margin-bottom: 14px;
   align-items: flex-end;
 }
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
+  .dsb-unified-controls-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (max-width: 768px) {
   .dsb-unified-controls-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -10308,6 +10510,45 @@ button { cursor: pointer; }
   color: var(--text-main);
 }
 
+/* SỬA LỖI MẤT PHÔNG CHỮ & ĐỘ TƯƠNG PHẢN TRONG CHẾ ĐỘ TỐI (YÊU CẦU 3) */
+:root[data-theme="dark"] .budget-audit-card {
+  background: rgba(15, 23, 42, 0.9) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+:root[data-theme="dark"] .budget-audit-card.optimal {
+  background: rgba(6, 78, 59, 0.45) !important;
+  border-color: rgba(52, 211, 153, 0.45) !important;
+}
+:root[data-theme="dark"] .budget-audit-card.under {
+  background: rgba(113, 63, 18, 0.45) !important;
+  border-color: rgba(250, 204, 21, 0.45) !important;
+}
+:root[data-theme="dark"] .budget-audit-card.over {
+  background: rgba(127, 29, 29, 0.45) !important;
+  border-color: rgba(248, 113, 113, 0.45) !important;
+}
+:root[data-theme="dark"] .bac-msg {
+  color: #f8fafc !important;
+}
+:root[data-theme="dark"] .bac-advice {
+  color: #cbd5e1 !important;
+}
+:root[data-theme="dark"] .bac-stat-label {
+  color: #94a3b8 !important;
+}
+:root[data-theme="dark"] .bac-stat-num {
+  color: #34d399 !important;
+}
+:root[data-theme="dark"] .bac-details-row {
+  border-top-color: rgba(255, 255, 255, 0.15) !important;
+}
+:root[data-theme="dark"] .bad-label {
+  color: #94a3b8 !important;
+}
+:root[data-theme="dark"] .bad-item b {
+  color: #f1f5f9 !important;
+}
+
 /* RESPONSIVE TRÊN MÁY TÍNH & MOBILE */
 @media (max-width: 640px) {
   .app-main { padding: 12px 10px; min-width: 0; overflow-x: hidden; }
@@ -12517,6 +12758,45 @@ button { cursor: pointer; }
   color: #5eead4;
 }
 
+/* ==================== KHUNG NGÂN SÁCH THỐNG NHẤT (UNIFIED BUDGET CARD) ==================== */
+.unified-budget-card {
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  background: var(--card-bg, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 18px;
+  padding: 22px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+.ubc-slider-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.budget-section-label {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-main, #1e293b);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.unified-budget-card .tier-indicator-banner {
+  margin-top: 0;
+}
+.unified-budget-card .dynamic-budget-card {
+  margin-top: 0;
+}
+.unified-budget-card .personality-budget-card {
+  margin-top: 0;
+}
+
 /* ==================== 3. DỰ TOÁN CHI PHÍ THÔNG MINH (DYNAMIC BUDGET BREAKDOWN) ==================== */
 .dynamic-budget-card {
   margin-top: 14px;
@@ -13396,7 +13676,8 @@ button { cursor: pointer; }
 }
 
 /* ==================== STYLES CHO CHẶNG KHỞI HÀNH (ORIGIN TO DESTINATION JOURNEY) ==================== */
-.origin-departure-journey-card {
+.origin-departure-journey-card,
+.origin-return-journey-card {
   background: linear-gradient(135deg, rgba(240, 253, 250, 0.95) 0%, rgba(236, 253, 245, 0.95) 100%);
   border: 1.5px solid #a7f3d0;
   border-radius: 14px;
@@ -13407,30 +13688,45 @@ button { cursor: pointer; }
   position: relative;
   box-shadow: 0 4px 16px rgba(16, 185, 129, 0.08);
 }
+.origin-return-journey-card {
+  margin-top: 24px;
+  margin-bottom: 10px;
+  border-color: #93c5fd;
+  background: linear-gradient(135deg, rgba(239, 246, 255, 0.95) 0%, rgba(240, 253, 250, 0.95) 100%);
+}
 
-.odjc-time-col {
+.odjc-time-col, .orjc-time-col {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  min-width: 50px;
+  min-width: 54px;
 }
 
-.odjc-time {
+.odjc-time, .orjc-time {
   font-size: 14px;
   font-weight: 800;
   color: #047857;
 }
+.orjc-time {
+  color: #0284c7;
+}
 
-.odjc-bullet {
+.odjc-time-dest, .orjc-time-dest {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.odjc-bullet, .orjc-bullet {
   font-size: 20px;
 }
 
-.odjc-card-content {
+.odjc-card-content, .orjc-card-content {
   flex: 1;
 }
 
-.odjc-header {
+.odjc-header, .orjc-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -13439,7 +13735,7 @@ button { cursor: pointer; }
   flex-wrap: wrap;
 }
 
-.odjc-badge {
+.odjc-badge, .orjc-badge {
   background: #059669;
   color: #fff;
   font-size: 10.5px;
@@ -13448,8 +13744,11 @@ button { cursor: pointer; }
   border-radius: 20px;
   letter-spacing: 0.5px;
 }
+.orjc-badge {
+  background: #0284c7;
+}
 
-.odjc-duration-pill {
+.odjc-duration-pill, .orjc-duration-pill {
   background: #d1fae5;
   color: #065f46;
   font-size: 12px;
@@ -13457,15 +13756,19 @@ button { cursor: pointer; }
   border-radius: 20px;
   font-weight: 600;
 }
+.orjc-duration-pill {
+  background: #e0f2fe;
+  color: #0369a1;
+}
 
-.odjc-title {
+.odjc-title, .orjc-title {
   font-size: 16px;
   font-weight: 800;
   color: #0f172a;
   margin: 4px 0 10px;
 }
 
-.odjc-meta-grid {
+.odjc-meta-grid, .orjc-meta-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 8px;
@@ -13474,8 +13777,11 @@ button { cursor: pointer; }
   border-radius: 10px;
   border: 1px solid rgba(16, 185, 129, 0.2);
 }
+.orjc-meta-grid {
+  border-color: rgba(2, 132, 199, 0.2);
+}
 
-.odjc-meta-item {
+.odjc-meta-item, .orjc-meta-item {
   font-size: 12.5px;
   display: flex;
   flex-direction: column;
@@ -13487,16 +13793,298 @@ button { cursor: pointer; }
   font-size: 11px;
 }
 
-.odjc-meta-item strong {
+.odjc-meta-item strong, .orjc-meta-item strong {
   color: #1e293b;
   font-weight: 600;
 }
+.odjc-meta-item strong.text-emerald, .orjc-meta-item strong.text-emerald {
+  color: #059669;
+  font-weight: 700;
+}
 
-.odjc-note {
+.odjc-actions-inline, .orjc-actions-inline {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.odjc-call-btn, .orjc-call-btn, .odjc-link-btn, .orjc-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: 0.2s;
+}
+.odjc-call-btn, .orjc-call-btn {
+  background: rgba(5, 150, 105, 0.1);
+  color: var(--primary);
+  border: 1px solid var(--primary);
+}
+.odjc-link-btn, .orjc-link-btn {
+  background: var(--primary);
+  color: #fff;
+}
+
+.odjc-note, .orjc-note {
   margin: 10px 0 0;
   font-size: 12.5px;
   color: #334155;
   line-height: 1.5;
+}
+
+/* THẺ NGHỈ ĐÊM TẠI KHÁCH SẠN TRONG LỊCH TRÌNH (YÊU CẦU 2 & 5) */
+.day-hotel-stay-card {
+  background: linear-gradient(135deg, rgba(248, 250, 252, 0.95) 0%, rgba(241, 245, 249, 0.95) 100%);
+  border: 1.5px solid #cbd5e1;
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-top: 16px;
+  margin-bottom: 8px;
+  display: flex;
+  gap: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+.dhsc-time-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 50px;
+}
+.dhsc-time {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #475569;
+}
+.dhsc-bullet {
+  font-size: 18px;
+  color: #64748b;
+}
+.dhsc-card-content {
+  flex: 1;
+}
+.dhsc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+.dhsc-badge {
+  background: #64748b;
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+.dhsc-stars {
+  font-size: 12px;
+  font-weight: 700;
+  color: #f59e0b;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.dhsc-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 2px 0 4px;
+}
+.dhsc-addr {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.dhsc-footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(0, 0, 0, 0.08);
+}
+.dhsc-price {
+  font-size: 12.5px;
+  color: #334155;
+}
+.dhsc-price b {
+  color: #059669;
+}
+.dhsc-map-btn {
+  font-size: 12px;
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.dhsc-map-btn:hover {
+  text-decoration: underline;
+}
+
+/* THANH ĐIỀU HƯỚNG QUAY LẠI TRÊN ĐẦU KẾT QUẢ (YÊU CẦU 4) */
+.plan-top-nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 16px;
+  padding: 12px 18px;
+  background: var(--card-bg, rgba(255, 255, 255, 0.8));
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg, 16px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+.plan-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  background: rgba(15, 23, 42, 0.06);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  transition: all 0.2s ease;
+}
+.plan-back-btn:hover {
+  background: rgba(15, 23, 42, 0.12);
+  transform: translateX(-2px);
+}
+.plan-top-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.plan-saved-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #059669;
+  font-weight: 700;
+  font-size: 13px;
+  background: rgba(16, 185, 129, 0.12);
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+.plan-quick-save-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #fff;
+  border: none;
+  font-size: 13px;
+  font-weight: 700;
+  transition: opacity 0.2s;
+}
+.plan-quick-save-btn:hover {
+  opacity: 0.92;
+}
+
+/* DARK MODE OVERRIDES CHO CÁC THẺ MỚI & SỬA LỖI MẤT CHỮ TRONG CHẾ ĐỘ TỐI (YÊU CẦU 3) */
+:root[data-theme="dark"] .plan-top-nav-bar {
+  background: rgba(15, 23, 42, 0.85);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+:root[data-theme="dark"] .plan-back-btn {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f8fafc;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+:root[data-theme="dark"] .plan-back-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+:root[data-theme="dark"] .origin-departure-journey-card,
+:root[data-theme="dark"] .origin-return-journey-card {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(6, 78, 59, 0.35) 100%) !important;
+  border-color: rgba(52, 211, 153, 0.3) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+}
+:root[data-theme="dark"] .origin-return-journey-card {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 58, 138, 0.35) 100%) !important;
+  border-color: rgba(96, 165, 250, 0.3) !important;
+}
+:root[data-theme="dark"] .odjc-title,
+:root[data-theme="dark"] .orjc-title {
+  color: #f8fafc !important;
+}
+:root[data-theme="dark"] .odjc-time,
+:root[data-theme="dark"] .orjc-time {
+  color: #34d399 !important;
+}
+:root[data-theme="dark"] .orjc-time {
+  color: #38bdf8 !important;
+}
+:root[data-theme="dark"] .odjc-time-dest,
+:root[data-theme="dark"] .orjc-time-dest {
+  color: #94a3b8 !important;
+}
+:root[data-theme="dark"] .odjc-duration-pill {
+  background: rgba(6, 78, 59, 0.6) !important;
+  color: #a7f3d0 !important;
+}
+:root[data-theme="dark"] .orjc-duration-pill {
+  background: rgba(30, 58, 138, 0.6) !important;
+  color: #bae6fd !important;
+}
+:root[data-theme="dark"] .odjc-meta-grid,
+:root[data-theme="dark"] .orjc-meta-grid {
+  background: rgba(15, 23, 42, 0.75) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+:root[data-theme="dark"] .omi-label {
+  color: #94a3b8 !important;
+}
+:root[data-theme="dark"] .odjc-meta-item strong,
+:root[data-theme="dark"] .orjc-meta-item strong {
+  color: #e2e8f0 !important;
+}
+:root[data-theme="dark"] .odjc-meta-item strong.text-emerald,
+:root[data-theme="dark"] .orjc-meta-item strong.text-emerald {
+  color: #34d399 !important;
+}
+:root[data-theme="dark"] .odjc-note,
+:root[data-theme="dark"] .orjc-note {
+  color: #cbd5e1 !important;
+}
+:root[data-theme="dark"] .day-hotel-stay-card {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.92) 0%, rgba(30, 41, 59, 0.92) 100%) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+:root[data-theme="dark"] .dhsc-title {
+  color: #f8fafc !important;
+}
+:root[data-theme="dark"] .dhsc-addr {
+  color: #94a3b8 !important;
+}
+:root[data-theme="dark"] .dhsc-price {
+  color: #cbd5e1 !important;
+}
+:root[data-theme="dark"] .dhsc-price b {
+  color: #34d399 !important;
+}
+:root[data-theme="dark"] .dhsc-time {
+  color: #94a3b8 !important;
+}
+:root[data-theme="dark"] .dhsc-footer-row {
+  border-top-color: rgba(255, 255, 255, 0.1) !important;
 }
 
 /* ==================== DÒNG THỜI GIAN DI CHUYỂN DƯỚI ĐỊA ĐIỂM (SCREENSHOT 3) ==================== */
