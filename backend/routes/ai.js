@@ -86,4 +86,19 @@ router.post('/chat', async (req, res) => {
   }
 })
 
+// Parse natural language prompt into structured trip requirements
+router.post('/parse-prompt', async (req, res) => {
+  try {
+    const { prompt } = req.body
+    if (!prompt) {
+      return res.status(400).json({ error: 'Thiếu nội dung yêu cầu (prompt)' })
+    }
+    const parsedData = await dichVuAI.phanTichYeuCau(prompt)
+    res.json(parsedData)
+  } catch (error) {
+    console.error('Lỗi khi phân tích prompt:', error)
+    res.status(500).json({ error: error.message || 'Lỗi hệ thống khi phân tích yêu cầu' })
+  }
+})
+
 module.exports = router

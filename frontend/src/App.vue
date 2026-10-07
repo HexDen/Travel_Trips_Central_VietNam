@@ -39,11 +39,28 @@
             <div class="hero-content">
               <span class="hero-badge">AI TRAVEL ASSISTANT</span>
               <h2>Lên lịch đi chơi, đừng lên lịch cãi nhau.</h2>
-              <p>AI sắp xếp lịch trình, bạn chỉ cần quyết định... ai trả tiền.</p>
-              <button class="hero-cta-btn" @click="startPlannerTransition">
-                <span>Lên lịch trình ngay</span>
-                <strong>→</strong>
-              </button>
+              <p style="margin-bottom: 24px;">AI sắp xếp lịch trình, bạn chỉ cần quyết định... ai trả tiền.</p>
+              
+              <form class="hero-ai-chat-form" @submit.prevent="submitAiPrompt" style="display: flex; align-items: center; background: white; border-radius: 50px; padding: 6px 6px 6px 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); max-width: 600px; margin: 0 auto; transition: box-shadow 0.3s;" :style="isDark ? 'background: #1e293b; box-shadow: 0 10px 30px rgba(0,0,0,0.5);' : ''">
+                <span style="font-size: 1.5rem; margin-right: 12px; animation: robotBounce 2s infinite;">🤖</span>
+                  <input 
+                    type="text" 
+                    v-model="aiPromptText" 
+                    placeholder="Ví dụ: Phú Quốc 4N3Đ, 2 người..." 
+                    :disabled="isParsingPrompt"
+                    style="flex: 1; min-width: 0; border: none; outline: none; background: transparent; font-size: 1rem; color: var(--text-main); font-weight: 500;"
+                    :style="isDark ? 'color: white;' : ''"
+                  />
+                <button 
+                  type="submit" 
+                  :disabled="!aiPromptText || isParsingPrompt"
+                  style="width: 48px; height: 48px; border-radius: 50%; border: none; background: var(--primary); color: white; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: all 0.2s; margin-left: 12px; flex-shrink: 0;"
+                  :style="(!aiPromptText || isParsingPrompt) ? 'opacity: 0.5; cursor: not-allowed;' : 'box-shadow: 0 4px 12px rgba(13, 124, 118, 0.3);'"
+                >
+                  <span v-if="isParsingPrompt" style="width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 1s linear infinite;"></span>
+                  <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                </button>
+              </form>
             </div>
           </div>
 
@@ -2181,6 +2198,44 @@ function startPlannerTransition() {
   if (activeTab.value === 'planner') return
   activeTab.value = 'planner'
 }
+
+const aiPromptText = ref('')
+const isParsingPrompt = ref(false)
+
+async function submitAiPrompt() {
+  if (!aiPromptText.value.trim() || isParsingPrompt.value) return
+  isParsingPrompt.value = true
+  
+  try {
+    const res = await api.post('/ai/parse-prompt', { prompt: aiPromptText.value })
+    const data = res.data
+    
+    // Fill the planner form
+    formDuLieu.diemDen = data.diemDen || 'Đà Nẵng'
+    formDuLieu.ngay = data.soNgay || 3
+    formDuLieu.soNguoi = data.soNguoi || 1
+    formDuLieu.nganSach = data.nganSach || 5000000
+    formDuLieu.chuDe = data.kieuDuLich || 'Khám phá'
+    if (data.soThich) {
+      formDuLieu.ghiChu = data.soThich
+    }
+    
+    // Clear prompt & Transition to planner
+    aiPromptText.value = ''
+    startPlannerTransition()
+    
+    // Auto-generate itinerary immediately so the user doesn't have to interact with the long form
+    setTimeout(() => {
+      taoLichTrinh()
+    }, 100)
+    
+  } catch (e) {
+    alert('Không thể phân tích yêu cầu: ' + (e?.response?.data?.error || e.message))
+  } finally {
+    isParsingPrompt.value = false
+  }
+}
+
 
 // Dark Mode State
 const isDark = ref(false)
@@ -9758,7 +9813,7 @@ button { cursor: pointer; }
 }
 
 @media (max-width: 768px) {
-  .app-main { padding: 10px 6px !important; }
+  .app-main { padding: 10px 6px 90px !important; }
   .planner-tab-bg { padding: 12px 8px 24px !important; }
   .planner-form-container { padding: 12px !important; }
   .wizard-progress { padding: 8px 10px !important; margin-bottom: 16px !important; gap: 4px !important; }

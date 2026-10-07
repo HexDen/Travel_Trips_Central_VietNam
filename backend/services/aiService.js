@@ -983,13 +983,54 @@ Chỉ trả về JSON có cấu trúc: {"days":[{"day":number,"activities":[{"ti
   return trip.days
 }
 
-function taoPhanHoiChatMock(message, trip) {
-  const diaDiem = trip?.destination || 'Miền Trung'
-  return `Tại ${diaDiem}, bạn nhất định nên trải nghiệm các thắng cảnh nổi tiếng và thưởng thức ẩm thực đặc sản trứ danh địa phương. Bạn cần tôi gợi ý thêm về quán ăn, điểm check-in hay khách sạn nào không?`
+async function phanTichYeuCau(promptText) {
+  const apiKey = getGeminiKey()
+  if (!apiKey) {
+    throw new Error('Hệ thống chưa được cấu hình AI. Vui lòng liên hệ Admin.')
+  }
+
+  const model = 'gemini-1.5-flash'
+  const prompt = `Bạn là chuyên gia phân tích ngôn ngữ tự nhiên. Yêu cầu của người dùng về chuyến đi: "${promptText}"
+
+Hãy trích xuất các thông tin sau và trả về định dạng JSON:
+- diemDen: (string) Tên địa điểm, ưu tiên ở Miền Trung Việt Nam (ví dụ: Đà Nẵng, Phú Quốc, Huế). Nếu không tìm thấy, mặc định là "Đà Nẵng".
+- soNgay: (number) Số ngày đi (ví dụ: 4N3Đ -> 4). Mặc định là 3.
+- soNguoi: (number) Số người. Mặc định là 1.
+- nganSach: (number) Tổng ngân sách (VNĐ) (ví dụ: 15 triệu -> 15000000). Mặc định là 5000000.
+- kieuDuLich: (string) Kiểu du lịch phù hợp (Nghỉ dưỡng, Khám phá, Trải nghiệm...).
+- soThich: (string) Các ghi chú, sở thích thêm.
+
+Chỉ trả về JSON có dạng: {"diemDen": "...", "soNgay": 3, "soNguoi": 2, "nganSach": 15000000, "kieuDuLich": "...", "soThich": "..."}
+Tuyệt đối không kèm text nào khác ngoài JSON.`
+
+  try {
+    const res = await axios.post(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+      { contents: [{ parts: [{ text: prompt }] }] },
+      { headers: { 'Content-Type': 'application/json' }, timeout: 15000 }
+    )
+    const raw = res.data.candidates?.[0]?.content?.parts?.[0]?.text
+    const parsed = parseJsonResponse(raw || '')
+    return {
+      diemDen: parsed.diemDen || 'Đà Nẵng',
+      soNgay: parsed.soNgay || 3,
+      soNguoi: parsed.soNguoi || 1,
+      nganSach: parsed.nganSach || 5000000,
+      kieuDuLich: parsed.kieuDuLich || 'Khám phá',
+      soThich: parsed.soThich || ''
+    }
+  } catch (err) {
+    console.error('Lỗi phân tích AI:', err.message)
+    // Fallback if AI fails
+    return {
+      diemDen: 'Đà Nẵng', soNgay: 3, soNguoi: 2, nganSach: 6000000, kieuDuLich: 'Khám phá', soThich: promptText
+    }
+  }
 }
 
 module.exports = {
   taoLichTrinh,
   taoPhanHoiChat,
-  taoLichTrinhLai
+  taoLichTrinhLai,
+  phanTichYeuCau
 }
