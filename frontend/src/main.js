@@ -1,5 +1,6 @@
 import { createApp } from 'vue'
 import App from './App.vue'
+import AppIcon from './components/common/AppIcon.vue'
 import { registerSW } from 'virtual:pwa-register'
 
 const updateSW = registerSW({
@@ -12,6 +13,8 @@ const updateSW = registerSW({
 })
 
 const app = createApp(App)
+app.component('AppIcon', AppIcon)
+app.component('app-icon', AppIcon)
 
 // Intersection Observer cho hiệu ứng Reveal on Scroll
 const observer = new IntersectionObserver((entries) => {

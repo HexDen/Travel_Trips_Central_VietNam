@@ -15,12 +15,12 @@
       <!-- FLOATING PERSONALITY TOAST (KHI AI TẠO XONG LỊCH TRÌNH HOẶC THÔNG BÁO QUAN TRỌNG) -->
       <transition name="toast-slide">
         <div v-if="personalityToast" class="personality-floating-toast" @click="personalityToast = null">
-          <div class="pft-icon">{{ personalityToast.icon }}</div>
+          <div class="pft-icon"><AppIcon :name="personalityToast.icon" :size="20" /></div>
           <div class="pft-body">
             <strong>{{ personalityToast.title }}</strong>
             <p>{{ personalityToast.desc }}</p>
           </div>
-          <button class="pft-close">✕</button>
+          <button class="pft-close"><AppIcon name="x" :size="16" /></button>
         </div>
       </transition>
 
@@ -60,8 +60,8 @@
                   @click="toggleMusicMute"
                   :aria-label="musicMuted ? 'Bật nhạc' : 'Tắt nhạc'"
                   :aria-pressed="!musicMuted"
-                >{{ musicMuted ? '🔇' : '🔊' }}</button>
-                <label class="music-volume-label" for="city-music-volume">🔊</label>
+                ><AppIcon :name="musicMuted ? 'volumex' : 'volume2'" :size="16" /></button>
+                <label class="music-volume-label" for="city-music-volume"><AppIcon name="volume2" :size="16" /></label>
                 <input
                   id="city-music-volume"
                   v-model.number="musicVolume"
@@ -95,10 +95,7 @@
               >
                 <!-- SVG location pin thay emoji -->
                 <span class="city-pin-icon">
-                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="18" height="18">
-                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="rgba(255,255,255,0.85)" stroke="rgba(255,255,255,0.5)" stroke-width="0.5"/>
-                    <circle cx="12" cy="9" r="2.5" fill="rgba(0,0,0,0.3)"/>
-                  </svg>
+                  <AppIcon name="pin" :size="16" />
                 </span>
                 <span class="city-name">{{ city.displayName || city.name }}</span>
                 <small class="city-tag">{{ city.tag }}</small>
@@ -119,12 +116,12 @@
                   <div class="spotlight-overlay"></div>
                   <!-- Badge ESG & LEI chuẩn quốc tế bên dưới góc trái ảnh -->
                   <div class="spotlight-badge-esg">
-                    <span class="esg-icon">🌿</span>
+                    <span class="esg-icon"><AppIcon name="leaf" :size="16" /></span>
                     <strong>{{ currentSpotlight.esgText }}</strong>
                   </div>
                   <!-- Badge chứng nhận góc trên bên phải -->
                   <div class="spotlight-badge-cert" v-if="currentSpotlight.badge">
-                    <span>🏅 {{ currentSpotlight.badge }}</span>
+                    <span><AppIcon name="award" :size="16" /> {{ currentSpotlight.badge }}</span>
                   </div>
                   <!-- Nút bấm phóng to ảnh toàn màn hình góc dưới bên phải -->
                   <button
@@ -161,7 +158,7 @@
               <!-- Cột thông tin chi tiết về Tỉnh / Thành phố -->
               <div class="spotlight-info-column">
                 <div class="spotlight-header-meta">
-                  <span class="spotlight-tag-kicker">✨ ĐIỂM ĐẾN NỔI BẬT MIỀN TRUNG</span>
+                  <span class="spotlight-tag-kicker"><AppIcon name="sparkles" :size="14" /> ĐIỂM ĐẾN NỔI BẬT MIỀN TRUNG</span>
                   <span class="spotlight-cert-sub">{{ currentSpotlight.certText }}</span>
                 </div>
                 <h3 class="spotlight-title">{{ currentSpotlight.title }}</h3>
@@ -170,7 +167,7 @@
 
                 <!-- Đặc sản nổi tiếng -->
                 <div class="spotlight-highlight-box">
-                  <div class="shb-label">🍲 <b>Đặc sản trứ danh:</b></div>
+                  <div class="shb-label"><AppIcon name="utensils" :size="16" /> <b>Đặc sản trứ danh:</b></div>
                   <div class="shb-chips">
                     <span v-for="spec in currentSpotlight.specialties" :key="spec" class="spotlight-spec-chip">
                       {{ spec }}
@@ -180,7 +177,7 @@
 
                 <!-- Mùa du lịch lý tưởng -->
                 <div class="spotlight-highlight-box">
-                  <div class="shb-label">🌤️ <b>Thời điểm lý tưởng:</b></div>
+                  <div class="shb-label"><AppIcon name="sun" :size="16" /> <b>Thời điểm lý tưởng:</b></div>
                   <p class="shb-text">{{ currentSpotlight.bestSeason }}</p>
                 </div>
 
@@ -191,7 +188,7 @@
                     class="spotlight-cta-btn"
                     @click="chuyenSangLenLichTrinh(formDuLieu.diemDen)"
                   >
-                    <span>✨ Lên lịch trình đến {{ formDuLieu.diemDen === ALL_DESTINATIONS ? 'Miền Trung' : formDuLieu.diemDen }} ngay</span>
+                    <span><AppIcon name="sparkles" :size="16" /> Lên lịch trình đến {{ formDuLieu.diemDen === ALL_DESTINATIONS ? 'Miền Trung' : formDuLieu.diemDen }} ngay</span>
                     <strong>→</strong>
                   </button>
                 </div>
@@ -209,7 +206,7 @@
                   type="button"
                   class="spotlight-modal-close"
                   @click="isSpotlightModalOpen = false"
-                >✕</button>
+                ><AppIcon name="x" :size="20" /></button>
                 <img :src="activeHeroImage" :alt="currentSpotlight.title" class="spotlight-modal-img" />
                 <div class="spotlight-modal-footer">
                   <h4>{{ currentSpotlight.title }}</h4>
@@ -237,7 +234,7 @@
                 <h4>{{ thoiTiet.location.name }}</h4>
               </div>
               <div class="weather-temp-now">
-                <span class="weather-icon-large">{{ bieuTuongThoiTiet(thoiTiet.current.weatherCode) }}</span>
+                <span class="weather-icon-large"><AppIcon :name="bieuTuongThoiTiet(thoiTiet.current.weatherCode)" :size="28" /></span>
                 <strong>{{ Math.round(thoiTiet.current.temperature) }}°C</strong>
               </div>
             </div>
@@ -247,7 +244,7 @@
             <div class="weather-forecast-strip">
               <div v-for="day in thoiTiet.daily" :key="day.date" class="forecast-item">
                 <small>{{ dinhDangNgay(day.date) }}</small>
-                <span>{{ bieuTuongThoiTiet(day.weatherCode) }}</span>
+                <span><AppIcon :name="bieuTuongThoiTiet(day.weatherCode)" :size="16" /></span>
                 <b>{{ Math.round(day.max) }}°</b>
               </div>
             </div>
@@ -269,19 +266,19 @@
                 <button
                   :class="['filter-pill', { active: filterExploreType === 'attraction' }]"
                   @click="filterExploreType = 'attraction'"
-                >🏛️ Thắng cảnh ({{ attractionsList.length }})</button>
+                ><AppIcon name="landmark" :size="15" /> Thắng cảnh ({{ attractionsList.length }})</button>
                 <button
                   :class="['filter-pill', { active: filterExploreType === 'restaurant' }]"
                   @click="filterExploreType = 'restaurant'"
-                >🍜 Đặc sản ({{ restaurantsList.length }})</button>
+                ><AppIcon name="utensils" :size="15" /> Đặc sản ({{ restaurantsList.length }})</button>
                 <button
                   :class="['filter-pill', { active: filterExploreType === 'hotel' }]"
                   @click="filterExploreType = 'hotel'"
-                >🏨 Khách sạn ({{ hotelsList.length }})</button>
+                ><AppIcon name="hotel" :size="15" /> Khách sạn ({{ hotelsList.length }})</button>
                 <button
                   :class="['filter-pill', { active: filterExploreType === 'cafe' }]"
                   @click="filterExploreType = 'cafe'"
-                >☕ Cafe ({{ cafesList.length }})</button>
+                ><AppIcon name="coffee" :size="15" /> Cafe ({{ cafesList.length }})</button>
               </div>
             </div>
 
@@ -290,9 +287,9 @@
               <input
                 v-model="searchExploreQuery"
                 class="explore-search-input"
-                :placeholder="'🔍 Tìm kiếm địa danh, di tích, món ăn, bãi biển tại ' + (formDuLieu.diemDen === ALL_DESTINATIONS ? 'Miền Trung' : formDuLieu.diemDen) + '...'"
+                :placeholder="'Tìm kiếm địa danh, di tích, món ăn, bãi biển tại ' + (formDuLieu.diemDen === ALL_DESTINATIONS ? 'Miền Trung' : formDuLieu.diemDen) + '...'"
               />
-              <button v-if="searchExploreQuery" class="clear-search-btn" @click="searchExploreQuery = ''">✕</button>
+              <button v-if="searchExploreQuery" class="clear-search-btn" @click="searchExploreQuery = ''"><AppIcon name="x" :size="14" /></button>
             </div>
 
             <!-- Grid Thẻ Địa điểm CÓ HÌNH ẢNH NỔI BẬT -->
@@ -306,7 +303,7 @@
                     <span :class="['place-card-type', 'type-' + place.type]">
                       {{ getPlaceTypeLabel(place.type) }}
                     </span>
-                    <span class="place-img-rating">★ {{ place.rating || '4.8' }}</span>
+                    <span class="place-img-rating"><AppIcon name="star" :size="13" filled color="#f59e0b" /> {{ place.rating || '4.8' }}</span>
                     <button
                       v-if="nguoiDung"
                       class="heart-action-btn"
@@ -314,13 +311,13 @@
                       @click.stop="doiYeuThich(place._id)"
                       title="Lưu yêu thích"
                     >
-                      {{ isFavorite(place._id) ? '♥' : '♡' }}
+                      <AppIcon name="heart" :size="18" :filled="isFavorite(place._id)" :color="isFavorite(place._id) ? '#ef4444' : 'currentColor'" />
                     </button>
                   </div>
                   <div class="place-card-content">
                     <h4>{{ place.name }}</h4>
                     <p class="place-card-desc">{{ place.description }}</p>
-                    <p v-if="place.address" class="place-card-address">📍 {{ place.address }}</p>
+                    <p v-if="place.address" class="place-card-address"><AppIcon name="pin" :size="14" /> {{ place.address }}</p>
                     <div class="place-card-bottom">
                       <button class="add-to-plan-btn" @click="themVaoLichTrinhVaMoPlanner(place.name)">
                         + Lên lịch trình
@@ -331,7 +328,7 @@
                         target="_blank"
                         rel="noreferrer"
                       >
-                        🗺️ Chỉ đường
+                        <AppIcon name="navigation" :size="14" /> Chỉ đường
                       </a>
                     </div>
                   </div>
@@ -347,7 +344,7 @@
                 >
                   <span class="load-more-text">Xem thêm địa điểm</span>
                   <span class="load-more-count">(Còn {{ filteredExplorePlaces.length - exploreLimit }})</span>
-                  <span class="load-more-icon">▾</span>
+                  <AppIcon name="chevrondown" :size="14" class="load-more-icon" />
                 </button>
                 <button
                   v-if="exploreLimit > 5"
@@ -355,7 +352,7 @@
                   @click="thuGonDiaDiem"
                 >
                   <span>Thu gọn</span>
-                  <span class="load-more-icon">▴</span>
+                  <AppIcon name="chevronup" :size="14" class="load-more-icon" />
                 </button>
               </div>
             </div>
@@ -364,7 +361,7 @@
             <!-- BẢN ĐỒ TƯƠNG TÁC (MapComponent) -->
             <div v-if="!loadingPlaces && filteredExplorePlaces.length > 0" style="margin-top: 32px;">
               <div class="section-title-row">
-                <h3>🗺️ Bản đồ các điểm đến</h3>
+                <h3><AppIcon name="map" :size="20" /> Bản đồ các điểm đến</h3>
               </div>
               <MapComponent :places="filteredExplorePlaces" :centerCity="formDuLieu.diemDen" />
             </div>
@@ -399,8 +396,8 @@
                   @click="toggleMusicMute"
                   :aria-label="musicMuted ? 'Bật nhạc' : 'Tắt nhạc'"
                   :aria-pressed="!musicMuted"
-                >{{ musicMuted ? '🔇' : '🔊' }}</button>
-                <span class="planner-icon">✈</span>
+                ><AppIcon :name="musicMuted ? 'volumex' : 'volume2'" :size="16" /></button>
+                <span class="planner-icon"><AppIcon name="plane" :size="20" /></span>
               </div>
             </div>
 
@@ -423,20 +420,20 @@
                     <p v-html="aiCurrentHint"></p>
                   </div>
                   <div class="ai-hint-chips">
-                    <span class="ai-chip" @click="chonNhanhDiemDen('Đà Nẵng')">🌉 Đà Nẵng</span>
-                    <span class="ai-chip" @click="chonNhanhDiemDen('Huế')">👑 Huế</span>
-                    <span class="ai-chip" @click="chonNhanhDiemDen('Nghệ An')">🌾 Nghệ An</span>
-                    <span class="ai-chip" @click="chonNhanhDiemDen('Lâm Đồng')">🌲 Đà Lạt</span>
-                    <span class="ai-chip" @click="chonNhanhDiemDen('Khánh Hòa')">⛵ Nha Trang</span>
-                    <span class="ai-chip ai-chip-refresh" @click="refreshAiHint()">🔀 Câu khác</span>
+                    <span class="ai-chip" @click="chonNhanhDiemDen('Đà Nẵng')"><AppIcon name="pin" :size="12" /> Đà Nẵng</span>
+                    <span class="ai-chip" @click="chonNhanhDiemDen('Huế')"><AppIcon name="crown" :size="12" /> Huế</span>
+                    <span class="ai-chip" @click="chonNhanhDiemDen('Nghệ An')"><AppIcon name="leaf" :size="12" /> Nghệ An</span>
+                    <span class="ai-chip" @click="chonNhanhDiemDen('Lâm Đồng')"><AppIcon name="leaf" :size="12" /> Đà Lạt</span>
+                    <span class="ai-chip" @click="chonNhanhDiemDen('Khánh Hòa')"><AppIcon name="compass" :size="12" /> Nha Trang</span>
+                    <span class="ai-chip ai-chip-refresh" @click="refreshAiHint()"><AppIcon name="shuffle" :size="12" /> Câu khác</span>
                   </div>
                 </div>
-                <button class="ai-hint-close" @click="showAiHintBubble = false" title="Dong goi y">✕</button>
+                <button class="ai-hint-close" @click="showAiHintBubble = false" title="Dong goi y"><AppIcon name="x" :size="14" /></button>
               </div>
               <!-- CHỌN ĐIỂM BẮT ĐẦU (KHỞI HÀNH) GỌN GÀNG -->
               <div class="app-field full-width">
                 <div class="field-label-between">
-                  <label>🚩 Điểm bắt đầu (Khởi hành)</label>
+                  <label><AppIcon name="pin" :size="15" /> Điểm bắt đầu (Khởi hành)</label>
 
                   <span class="route-origin-tag" v-if="formDuLieu.diemKhoiHanh">Xuất phát: <b>{{ formDuLieu.diemKhoiHanh }}</b></span>
                 </div>
@@ -445,7 +442,7 @@
                     v-model="formDuLieu.diemKhoiHanh"
                     class="app-input origin-combo-input"
                     :list="'origin-list-' + originProvinceMode"
-                    placeholder="🔍 Tìm hoặc chọn tỉnh/thành xuất phát..."
+                    placeholder="Tìm hoặc chọn tỉnh/thành xuất phát..."
                     autocomplete="off"
                   />
                   <datalist :id="'origin-list-' + originProvinceMode">
@@ -453,7 +450,7 @@
                       v-for="city in popularOrigins"
                       :key="city.name"
                       :value="city.name"
-                    >{{ city.icon }} {{ city.name }}</option>
+                    >{{ city.name }}</option>
                   </datalist>
                   <!-- Gợi ý nhanh: chỉ hiện 6 thành phố phổ biến nhất -->
                   <div class="origin-quick-picks">
@@ -478,7 +475,7 @@
                 </div>
                 <div class="rob-mid-compact">
                   <span class="rob-dash-line"></span>
-                  <span class="rob-dist-pill">🛣️ ~{{ transitRouteInfo.estimatedDistanceKm || transitRouteInfo.distanceKm || 350 }} km</span>
+                  <span class="rob-dist-pill"><AppIcon name="route" :size="14" /> ~{{ transitRouteInfo.estimatedDistanceKm || transitRouteInfo.distanceKm || 350 }} km</span>
                 </div>
                 <div class="rob-point">
                   <span class="rob-dot end"></span>
@@ -511,7 +508,7 @@
               <div class="departure-schedule-box full-width">
                 <div class="dsb-header">
                   <div class="dsb-title-wrap">
-                    <span class="dsb-icon">📅</span>
+                    <span class="dsb-icon"><AppIcon name="calendar" :size="18" /></span>
                     <div>
                       <h4 class="dsb-title">Lịch trình khởi hành & Quy mô chuyến đi</h4>
                       <small class="dsb-subtitle">Chọn tháng dự kiến, ngày bắt đầu, số ngày đi và số lượng thành viên</small>
@@ -537,7 +534,7 @@
                 <!-- Khối thống nhất 4 thông số: Ngày đi, Số ngày, Số người, Ngày về -->
                 <div class="dsb-unified-controls-grid">
                   <div class="dsb-ctrl-field">
-                    <label>🛫 Ngày bắt đầu:</label>
+                    <label><AppIcon name="planetakeoff" :size="15" /> Ngày bắt đầu:</label>
                     <input
                       type="date"
                       v-model="formDuLieu.ngayBatDau"
@@ -547,7 +544,7 @@
                   </div>
 
                   <div class="dsb-ctrl-field">
-                    <label>⏱️ Số ngày đi:</label>
+                    <label><AppIcon name="clock" :size="15" /> Số ngày đi:</label>
                     <div class="stepper-input dsb-stepper">
                       <button type="button" @click="formDuLieu.soNgay = Math.max(1, formDuLieu.soNgay - 1)">-</button>
                       <span class="dsb-stepper-val">{{ formDuLieu.soNgay }} ngày</span>
@@ -556,7 +553,7 @@
                   </div>
 
                   <div class="dsb-ctrl-field">
-                    <label>👥 Số người tham gia:</label>
+                    <label><AppIcon name="users" :size="15" /> Số người tham gia:</label>
                     <div class="stepper-input dsb-stepper">
                       <button type="button" @click="formDuLieu.soNguoi = Math.max(1, formDuLieu.soNguoi - 1)">-</button>
                       <span class="dsb-stepper-val">{{ formDuLieu.soNguoi }} người</span>
@@ -565,7 +562,7 @@
                   </div>
 
                   <div class="dsb-ctrl-field">
-                    <label>🛬 Ngày về (Tự động):</label>
+                    <label><AppIcon name="planelanding" :size="15" /> Ngày về (Tự động):</label>
                     <input
                       type="date"
                       :value="formDuLieu.ngayKetThuc || ngayKetThucDisplay"
@@ -577,7 +574,7 @@
 
                 <!-- Tóm tắt lịch trình chi tiết -->
                 <div class="trip-date-summary-banner" v-if="formDuLieu.ngayBatDau">
-                  <span class="tdsb-icon">✨</span>
+                  <span class="tdsb-icon"><AppIcon name="sparkles" :size="16" /></span>
                   <div class="tdsb-text">
                     Lịch trình: <b>{{ dinhDangNgayTuan(formDuLieu.ngayBatDau) }}</b>
                     ➔ <b>{{ dinhDangNgayTuan(formDuLieu.ngayKetThuc || ngayKetThucDisplay) }}</b>
@@ -613,7 +610,7 @@
                     :class="{ active: formDuLieu.nganSach === 1000000 }"
                     @click="formDuLieu.nganSach = 1000000"
                   >
-                    1 Tr 🎒
+                    1 Tr <AppIcon name="luggage" :size="13" />
                   </button>
                   <button
                     type="button"
@@ -621,7 +618,7 @@
                     :class="{ active: formDuLieu.nganSach === 2000000 }"
                     @click="formDuLieu.nganSach = 2000000"
                   >
-                    2 Tr 🌿
+                    2 Tr <AppIcon name="leaf" :size="13" />
                   </button>
                   <button
                     type="button"
@@ -629,7 +626,7 @@
                     :class="{ active: formDuLieu.nganSach === 3500000 }"
                     @click="formDuLieu.nganSach = 3500000"
                   >
-                    3.5 Tr ✨
+                    3.5 Tr <AppIcon name="sparkles" :size="13" />
                   </button>
                   <button
                     type="button"
@@ -637,7 +634,7 @@
                     :class="{ active: formDuLieu.nganSach === 7000000 }"
                     @click="formDuLieu.nganSach = 7000000"
                   >
-                    7 Tr 🏖️
+                    7 Tr <AppIcon name="sun" :size="13" />
                   </button>
                   <button
                     type="button"
@@ -645,7 +642,7 @@
                     :class="{ active: formDuLieu.nganSach === 15000000 }"
                     @click="formDuLieu.nganSach = 15000000"
                   >
-                    15 Tr 💎
+                    15 Tr <AppIcon name="gem" :size="13" />
                   </button>
                   <button
                     type="button"
@@ -653,14 +650,14 @@
                     :class="{ active: formDuLieu.nganSach === 30000000 }"
                     @click="formDuLieu.nganSach = 30000000"
                   >
-                    30 Tr 👑
+                    30 Tr <AppIcon name="crown" :size="13" />
                   </button>
                 </div>
 
                 <!-- CẢNH BÁO CHUYẾN ĐI BẤT KHẢ THI HOẶC CHỌN ĐIỂM FREE -->
                 <div v-if="!tripFeasibility.feasible" class="unfeasible-warning-box">
                   <div class="uwb-header">
-                    <span class="uwb-icon">🚨</span>
+                    <span class="uwb-icon"><AppIcon name="alert" :size="18" /></span>
                     <div class="uwb-header-text">
                       <strong class="uwb-title">Yêu cầu chưa khả thi về mặt tài chính</strong>
                       <p class="uwb-desc">{{ tripFeasibility.message }}</p>
@@ -673,7 +670,7 @@
                       class="uwb-btn btn-budget-fix"
                       @click="formDuLieu.nganSach = tripFeasibility.minFeasibleBudget"
                     >
-                      ⚡ Tự động nâng ngân sách lên {{ dinhDangTien(tripFeasibility.minFeasibleBudget) }}đ
+                      <AppIcon name="sparkles" :size="14" /> Tự động nâng ngân sách lên {{ dinhDangTien(tripFeasibility.minFeasibleBudget) }}đ
                     </button>
                     <button
                       v-if="tripFeasibility.maxFeasibleDays < formDuLieu.soNgay"
@@ -681,7 +678,7 @@
                       class="uwb-btn btn-days-fix"
                       @click="formDuLieu.soNgay = tripFeasibility.maxFeasibleDays"
                     >
-                      ⏱️ Rút ngắn lịch trình xuống {{ tripFeasibility.maxFeasibleDays }} ngày
+                      <AppIcon name="clock" :size="14" /> Rút ngắn lịch trình xuống {{ tripFeasibility.maxFeasibleDays }} ngày
                     </button>
                   </div>
 
@@ -693,7 +690,7 @@
                         v-model="formDuLieu.freePlacesOnly"
                         class="uwb-checkbox"
                       />
-                      <span>🏖️ <strong>Chấp nhận phượt tự túc:</strong> Chỉ gợi ý các địa điểm 100% MIỄN PHÍ VÉ (Tự lo ăn ở tiết kiệm)</span>
+                      <span><AppIcon name="compass" :size="14" /> <strong>Chấp nhận phượt tự túc:</strong> Chỉ gợi ý các địa điểm 100% MIỄN PHÍ VÉ (Tự lo ăn ở tiết kiệm)</span>
                     </label>
                   </div>
                 </div>
@@ -701,19 +698,19 @@
                 <!-- BANNER BÁO ĐANG Ở CHẾ ĐỘ 100% FREE VÉ -->
                 <div v-else-if="formDuLieu.freePlacesOnly" class="free-mode-banner">
                   <div class="fmb-left">
-                    <span class="fmb-icon">🟢</span>
+                    <span class="fmb-icon"><AppIcon name="checkcircle" :size="16" /></span>
                     <div>
                       <strong>Đang bật chế độ: 100% Địa điểm Miễn Phí Vé</strong>
                       <p>AI sẽ chỉ chọn các danh lam thắng cảnh 0đ (bãi biển, phố đi bộ, cầu biểu tượng, chợ đêm, chùa...). Vé tham quan = 0đ.</p>
                     </div>
                   </div>
-                  <button type="button" class="fmb-turnoff" @click="formDuLieu.freePlacesOnly = false">✕ Tắt</button>
+                  <button type="button" class="fmb-turnoff" @click="formDuLieu.freePlacesOnly = false"><AppIcon name="x" :size="14" /> Tắt</button>
                 </div>
 
                 <!-- THẺ NHẬN DIỆN PHÂN TẦNG NGÂN SÁCH THÔNG MINH (TIER INDICATOR) -->
                 <div class="tier-indicator-banner" :style="{ borderColor: currentBudgetTier.color }">
                   <div class="tib-left">
-                    <span class="tib-icon">{{ currentBudgetTier.icon }}</span>
+                    <span class="tib-icon"><AppIcon :name="currentBudgetTier.icon" :size="18" /></span>
                     <div>
                       <div class="tib-badge-row">
                         <span class="tib-badge" :style="{ backgroundColor: currentBudgetTier.color }">{{ currentBudgetTier.badge }}</span>
@@ -725,9 +722,9 @@
                     </div>
                   </div>
                   <div class="tib-tags">
-                    <span class="tib-tag" title="Tiêu chuẩn chỗ nghỉ">🏨 {{ currentBudgetTier.hotelDesc }}</span>
-                    <span class="tib-tag" title="Tiêu chuẩn ẩm thực">🍜 {{ currentBudgetTier.foodDesc }}</span>
-                    <span class="tib-tag" title="Tiêu chuẩn di chuyển">🚌 {{ currentBudgetTier.transportDesc }}</span>
+                    <span class="tib-tag" title="Tiêu chuẩn chỗ nghỉ"><AppIcon name="hotel" :size="13" /> {{ currentBudgetTier.hotelDesc }}</span>
+                    <span class="tib-tag" title="Tiêu chuẩn ẩm thực"><AppIcon name="utensils" :size="13" /> {{ currentBudgetTier.foodDesc }}</span>
+                    <span class="tib-tag" title="Tiêu chuẩn di chuyển"><AppIcon name="bus" :size="13" /> {{ currentBudgetTier.transportDesc }}</span>
                   </div>
                 </div>
 
@@ -735,7 +732,7 @@
                 <div class="dynamic-budget-card">
                   <div class="dbc-header">
                     <div class="dbc-title-group">
-                      <span class="dbc-icon">📊</span>
+                      <span class="dbc-icon"><AppIcon name="barchart" :size="16" /></span>
                       <div>
                         <strong>Dự toán phân bổ thông minh theo ngân sách</strong>
                         <small>AI tự động tính toán chi phí ước tính theo số người ({{ formDuLieu.soNguoi }} người) & số ngày ({{ formDuLieu.soNgay }} ngày)</small>
@@ -757,7 +754,7 @@
                     <div class="dbc-item">
                       <div class="dbc-item-top">
                         <span class="dbc-dot dot-hotel"></span>
-                        <span class="dbc-cat">🏨 Khách sạn (~35%)</span>
+                        <span class="dbc-cat"><AppIcon name="hotel" :size="13" /> Khách sạn (~35%)</span>
                       </div>
                       <strong class="dbc-amount">{{ dinhDangTien(dynamicBudget.hotel) }}đ</strong>
                       <small class="dbc-sub">{{ dynamicBudget.hotelDesc }}</small>
@@ -766,7 +763,7 @@
                     <div class="dbc-item">
                       <div class="dbc-item-top">
                         <span class="dbc-dot dot-food"></span>
-                        <span class="dbc-cat">🍜 Ăn uống (~35%)</span>
+                        <span class="dbc-cat"><AppIcon name="utensils" :size="13" /> Ăn uống (~35%)</span>
                       </div>
                       <strong class="dbc-amount">{{ dinhDangTien(dynamicBudget.food) }}đ</strong>
                       <small class="dbc-sub">{{ dynamicBudget.foodDesc }}</small>
@@ -775,7 +772,7 @@
                     <div class="dbc-item">
                       <div class="dbc-item-top">
                         <span class="dbc-dot dot-transit"></span>
-                        <span class="dbc-cat">🚗 Di chuyển & Vé (~20%)</span>
+                        <span class="dbc-cat"><AppIcon name="car" :size="13" /> Di chuyển & Vé (~20%)</span>
                       </div>
                       <strong class="dbc-amount">{{ dinhDangTien(dynamicBudget.transportAndTickets) }}đ</strong>
                       <small class="dbc-sub">{{ dynamicBudget.transitDesc }}</small>
@@ -784,7 +781,7 @@
                     <div class="dbc-item">
                       <div class="dbc-item-top">
                         <span class="dbc-dot dot-reserve"></span>
-                        <span class="dbc-cat">🛡️ Dự phòng (~10%)</span>
+                        <span class="dbc-cat"><AppIcon name="shield" :size="13" /> Dự phòng (~10%)</span>
                       </div>
                       <strong class="dbc-amount">{{ dinhDangTien(dynamicBudget.reserve) }}đ</strong>
                       <small class="dbc-sub">{{ dynamicBudget.reserveDesc }}</small>
@@ -795,7 +792,7 @@
                 <!-- Lời khuyên tính cách AI theo ngân sách -->
                 <div :class="['personality-budget-card', thongDiepNganSach.type]">
                   <div class="pbc-header">
-                    <span class="pbc-icon">{{ thongDiepNganSach.icon }}</span>
+                    <span class="pbc-icon"><AppIcon :name="thongDiepNganSach.icon" :size="16" /></span>
                     <span class="pbc-tag">{{ thongDiepNganSach.tag }}</span>
                   </div>
                   <div class="pbc-text">
@@ -809,12 +806,12 @@
               <div class="app-field">
                 <label>Phương tiện di chuyển</label>
                 <select v-model="formDuLieu.phuongTien" class="app-select">
-                  <option value="xe khách">🚌 Xe khách chất lượng cao (Tiết kiệm nhất)</option>
-                  <option value="tàu hỏa">🚆 Tàu hỏa (Ngắm cảnh)</option>
-                  <option value="máy bay">✈️ Máy bay + Thuê xe</option>
-                  <option value="xe máy">🏍️ Xe máy / Phượt</option>
-                  <option value="ô tô">🚗 Ô tô / Xe du lịch</option>
-                  <option value="linh hoạt">🌐 Linh hoạt</option>
+                  <option value="xe khách">Xe khách chất lượng cao (Tiết kiệm nhất)</option>
+                  <option value="tàu hỏa">Tàu hỏa (Ngắm cảnh)</option>
+                  <option value="máy bay">Máy bay + Thuê xe</option>
+                  <option value="xe máy">Xe máy / Phượt</option>
+                  <option value="ô tô">Ô tô / Xe du lịch</option>
+                  <option value="linh hoạt">Linh hoạt</option>
                 </select>
               </div>
 
@@ -846,13 +843,13 @@
               <div class="bus-optimization-section full-width">
                 <div class="bos-header">
                   <div>
-                    <span class="bos-kicker">🚌 TỐI ƯU CHI PHÍ GIÁ XE & DI CHUYỂN</span>
+                    <span class="bos-kicker"><AppIcon name="bus" :size="16" /> TỐI ƯU CHI PHÍ GIÁ XE & DI CHUYỂN</span>
                     <h3>Gợi ý nhà xe giá rẻ tuyến {{ formDuLieu.diemKhoiHanh }} ➔ {{ formDuLieu.diemDen }}</h3>
                   </div>
                   <div class="bos-badges-group">
                     <span class="bos-dist-badge">Cự ly: ~{{ transitRouteInfo.estimatedDistanceKm || transitRouteInfo.distanceKm || 350 }} km</span>
                     <span class="bos-crawler-badge" title="Tự động cập nhật giá vé từ các nhà xe và đường sắt">
-                      🤖 Cào dữ liệu vé xe & vé tàu: Sẵn sàng
+                      <AppIcon name="bot" :size="14" /> Cào dữ liệu vé xe & vé tàu: Sẵn sàng
                     </span>
                   </div>
                 </div>
@@ -874,9 +871,9 @@
                     tabindex="0"
                   >
                     <div class="tv-top">
-                      <span class="tv-icon">{{ v.icon }}</span>
-                      <span v-if="v.is_cheapest" class="tv-badge cheapest">💡 Rẻ nhất</span>
-                      <span v-else-if="v.is_fastest" class="tv-badge fastest">⚡ Nhanh nhất</span>
+                      <span class="tv-icon"><AppIcon :name="v.icon" :size="20" /></span>
+                      <span v-if="v.is_cheapest" class="tv-badge cheapest"><AppIcon name="sparkles" :size="12" /> Rẻ nhất</span>
+                      <span v-else-if="v.is_fastest" class="tv-badge fastest"><AppIcon name="sparkles" :size="12" /> Nhanh nhất</span>
                     </div>
                     <div class="tv-title">{{ v.name }}</div>
                     <div class="tv-price-row">
@@ -886,7 +883,7 @@
                     <div class="tv-total" v-if="formDuLieu.soNguoi > 1">
                       Tổng {{ formDuLieu.soNguoi }} người: <b>{{ dinhDangTien(v.estimated_cost_per_person * formDuLieu.soNguoi) }}đ</b>
                     </div>
-                    <div class="tv-duration">⏱️ {{ v.duration }}</div>
+                    <div class="tv-duration"><AppIcon name="clock" :size="13" /> {{ v.duration }}</div>
                     <p class="tv-advantage">{{ v.advantage }}</p>
                   </div>
                 </div>
@@ -898,14 +895,14 @@
                     :class="['transit-subtab-btn', { active: transitTab === 'bus' }]"
                     @click="transitTab = 'bus'"
                   >
-                    🚌 Vé Xe Khách Giá Rẻ ({{ transitRouteInfo.operators?.length || 0 }})
+                    <AppIcon name="bus" :size="15" /> Vé Xe Khách Giá Rẻ ({{ transitRouteInfo.operators?.length || 0 }})
                   </button>
                   <button
                     type="button"
                     :class="['transit-subtab-btn', { active: transitTab === 'train' }]"
                     @click="transitTab = 'train'"
                   >
-                    🚆 Vé Tàu Hỏa Thống Nhất ({{ transitRouteInfo.trains?.length || 3 }})
+                    <AppIcon name="train" :size="15" /> Vé Tàu Hỏa Thống Nhất ({{ transitRouteInfo.trains?.length || 3 }})
                   </button>
                 </div>
 
@@ -931,17 +928,17 @@
                           <span class="bic-type">{{ bus.type }}</span>
                         </div>
                         <div class="bic-rating">
-                          ⭐ {{ bus.rating }} <small>({{ bus.reviews }} đánh giá)</small>
+                          <AppIcon name="star" :size="13" filled color="#f59e0b" /> {{ bus.rating }} <small>({{ bus.reviews }} đánh giá)</small>
                         </div>
                       </div>
 
                       <div class="bic-specs">
                         <div class="bic-spec">
-                          <span>⏱️ Thời gian:</span>
+                          <span><AppIcon name="clock" :size="13" /> Thời gian:</span>
                           <b>{{ bus.duration }}</b>
                         </div>
                         <div class="bic-spec-times">
-                          <span class="bst-label">🕒 Giờ xuất bến:</span>
+                          <span class="bst-label"><AppIcon name="clock" :size="13" /> Giờ xuất bến:</span>
                           <div class="bst-chips">
                             <span
                               v-for="timeStr in (bus.depart_times ? bus.depart_times.split(',') : [])"
@@ -953,7 +950,7 @@
                           </div>
                         </div>
                         <div class="bic-spec">
-                          <span>📍 Điểm đón ➔ trả:</span>
+                          <span><AppIcon name="pin" :size="13" /> Điểm đón ➔ trả:</span>
                           <small :title="bus.pickup + ' ➔ ' + bus.dropoff">{{ bus.pickup }} ➔ {{ bus.dropoff }}</small>
                         </div>
                       </div>
@@ -976,14 +973,15 @@
                         <!-- Hàng 2: Hai nút hành động chia đều 50/50 -->
                         <div class="bic-actions-row">
                           <a :href="`tel:${bus.hotline}`" class="bic-action-call" title="Gọi tổng đài đặt vé">
-                            📞 {{ bus.hotline }}
+                            <AppIcon name="phone" :size="14" /> {{ bus.hotline }}
                           </a>
                           <button
                             type="button"
                             :class="['bic-action-select', { active: formDuLieu.nhaXeDaChon && formDuLieu.nhaXeDaChon.id === bus.id }]"
                             @click="chonNhaXe(bus)"
                           >
-                            {{ formDuLieu.nhaXeDaChon && formDuLieu.nhaXeDaChon.id === bus.id ? '✓ Đã chọn xe' : 'Chọn xe này' }}
+                            <AppIcon v-if="formDuLieu.nhaXeDaChon && formDuLieu.nhaXeDaChon.id === bus.id" name="check" :size="14" />
+                            {{ formDuLieu.nhaXeDaChon && formDuLieu.nhaXeDaChon.id === bus.id ? 'Đã chọn xe' : 'Chọn xe này' }}
                           </button>
                         </div>
                       </div>
@@ -1013,17 +1011,17 @@
                           <span class="bic-type">{{ train.type }}</span>
                         </div>
                         <div class="bic-rating">
-                          ⭐ {{ train.rating }} <small>(Tàu Thống Nhất)</small>
+                          <AppIcon name="star" :size="13" filled color="#f59e0b" /> {{ train.rating }} <small>(Tàu Thống Nhất)</small>
                         </div>
                       </div>
 
                       <div class="bic-specs">
                         <div class="bic-spec">
-                          <span>⏱️ Thời gian:</span>
+                          <span><AppIcon name="clock" :size="13" /> Thời gian:</span>
                           <b>{{ train.duration }}</b>
                         </div>
                         <div class="bic-spec-times">
-                          <span class="bst-label">🕒 Giờ xuất phát:</span>
+                          <span class="bst-label"><AppIcon name="clock" :size="13" /> Giờ xuất phát:</span>
                           <div class="bst-chips">
                             <span
                               v-for="timeStr in (train.depart_times ? train.depart_times.split(',') : [])"
@@ -1035,7 +1033,7 @@
                           </div>
                         </div>
                         <div class="bic-spec">
-                          <span>🚉 Ga đi ➔ Ga đến:</span>
+                          <span><AppIcon name="train" :size="13" /> Ga đi ➔ Ga đến:</span>
                           <small :title="train.depart_station + ' ➔ ' + train.arrive_station">{{ train.depart_station }} ➔ {{ train.arrive_station }}</small>
                         </div>
                       </div>
@@ -1058,14 +1056,15 @@
                         <!-- Hàng 2: Hai nút hành động đặt vé và chọn tàu -->
                         <div class="bic-actions-row">
                           <a :href="train.booking_url" target="_blank" rel="noopener noreferrer" class="bic-action-call train-call" title="Đặt vé trực tuyến tại dsvn.vn">
-                            🎫 Đặt tại dsvn.vn ↗
+                            <AppIcon name="ticket" :size="14" /> Đặt tại dsvn.vn ↗
                           </a>
                           <button
                             type="button"
                             :class="['bic-action-select train-select-btn', { active: formDuLieu.tauDaChon && formDuLieu.tauDaChon.id === train.id }]"
                             @click="chonTauHoa(train)"
                           >
-                            {{ formDuLieu.tauDaChon && formDuLieu.tauDaChon.id === train.id ? '✓ Đã chọn tàu' : 'Chọn tàu này' }}
+                            <AppIcon v-if="formDuLieu.tauDaChon && formDuLieu.tauDaChon.id === train.id" name="check" :size="14" />
+                            {{ formDuLieu.tauDaChon && formDuLieu.tauDaChon.id === train.id ? 'Đã chọn tàu' : 'Chọn tàu này' }}
                           </button>
                         </div>
                       </div>
@@ -1110,13 +1109,13 @@
                   <h4>Bạn muốn ghé địa điểm & quán ngon nào tại {{ formDuLieu.diemDen }}?</h4>
                 </div>
                 <span v-if="selectedPlaces.length" class="badge-selected-count">
-                  ✓ Đã chọn {{ selectedPlaces.length }} điểm
+                  <AppIcon name="check" size="14" /> Đã chọn {{ selectedPlaces.length }} điểm
                 </span>
               </div>
 
               <!-- THANH TÌM KIẾM ĐỊA ĐIỂM & MÓN ĂN NHANH (TỐI GIẢN GIAO DIỆN) -->
               <div class="place-picker-search-bar">
-                <span class="pps-icon">🔍</span>
+                <span class="pps-icon"><AppIcon name="search" size="16" /></span>
                 <input
                   v-model="searchPlacePickerQuery"
                   type="text"
@@ -1129,7 +1128,7 @@
                   class="pps-clear-btn"
                   @click="searchPlacePickerQuery = ''"
                   title="Xóa tìm kiếm"
-                >✕</button>
+                ><AppIcon name="x" size="14" /></button>
               </div>
 
               <!-- CÁC TAB PHÂN LOẠI DANH MỤC GỌN GÀNG -->
@@ -1146,28 +1145,28 @@
                   :class="['ppt-btn', { active: placePickerActiveTab === 'attraction' }]"
                   @click="placePickerActiveTab = 'attraction'"
                 >
-                  🏛️ Thắng cảnh ({{ filteredAttractions.length }})
+                  <AppIcon name="landmark" size="15" /> Thắng cảnh ({{ filteredAttractions.length }})
                 </button>
                 <button
                   type="button"
                   :class="['ppt-btn', { active: placePickerActiveTab === 'restaurant' }]"
                   @click="placePickerActiveTab = 'restaurant'"
                 >
-                  🍜 Đặc sản ({{ filteredRestaurants.length }})
+                  <AppIcon name="utensils" size="15" /> Đặc sản ({{ filteredRestaurants.length }})
                 </button>
                 <button
                   type="button"
                   :class="['ppt-btn', { active: placePickerActiveTab === 'hotel' }]"
                   @click="placePickerActiveTab = 'hotel'"
                 >
-                  🏨 Khách sạn ({{ filteredHotels.length }})
+                  <AppIcon name="hotel" size="15" /> Khách sạn ({{ filteredHotels.length }})
                 </button>
                 <button
                   type="button"
                   :class="['ppt-btn', { active: placePickerActiveTab === 'cafe' }]"
                   @click="placePickerActiveTab = 'cafe'"
                 >
-                  ☕ Cafe ({{ filteredCafes.length }})
+                  <AppIcon name="coffee" size="15" /> Cafe ({{ filteredCafes.length }})
                 </button>
                 <button
                   v-if="selectedPlaces.length"
@@ -1175,20 +1174,20 @@
                   :class="['ppt-btn ppt-selected-tab', { active: placePickerActiveTab === 'selected' }]"
                   @click="placePickerActiveTab = 'selected'"
                 >
-                  ⭐ Đã chọn ({{ selectedPlaces.length }})
+                  <AppIcon name="star" size="15" filled color="#f59e0b" /> Đã chọn ({{ selectedPlaces.length }})
                 </button>
               </div>
 
               <!-- KHAY ĐỊA ĐIỂM ĐÃ CHỌN (TIỆN LỢI & DỄ QUẢN LÝ) -->
               <div v-if="selectedPlaces.length" class="selected-places-tray">
                 <div class="spt-header">
-                  <span class="spt-title">📍 Danh sách bạn đã chọn ({{ selectedPlaces.length }} địa điểm):</span>
+                  <span class="spt-title"><AppIcon name="pin" size="15" /> Danh sách bạn đã chọn ({{ selectedPlaces.length }} địa điểm):</span>
                   <button type="button" class="spt-clear-all" @click="clearAllSelectedPlaces">Xóa tất cả</button>
                 </div>
                 <div class="spt-chips">
                   <span v-for="name in selectedPlaces" :key="name" class="spt-chip">
                     {{ name }}
-                    <button type="button" @click="removeSelectedPlace(name)" title="Bỏ chọn">✕</button>
+                    <button type="button" @click="removeSelectedPlace(name)" title="Bỏ chọn"><AppIcon name="x" size="12" /></button>
                   </span>
                 </div>
               </div>
@@ -1204,7 +1203,7 @@
                 class="picker-row"
               >
                 <div class="picker-row-header">
-                  <span class="row-label">📸 Thắng cảnh & Di tích ({{ filteredAttractions.length }}):</span>
+                  <span class="row-label"><AppIcon name="camera" size="16" /> Thắng cảnh & Di tích ({{ filteredAttractions.length }}):</span>
                   <button
                     v-if="!searchPlacePickerQuery && filteredAttractions.length > 8 && placePickerActiveTab === 'all'"
                     type="button"
@@ -1222,7 +1221,7 @@
                     :class="['app-chip', { active: isPlaceSelected(p.name) }]"
                     @click="togglePlaceSelection(p.name)"
                   >
-                    <span class="chip-status">{{ isPlaceSelected(p.name) ? '✓' : '+' }}</span>
+                    <span class="chip-status"><AppIcon :name="isPlaceSelected(p.name) ? 'check' : 'plus'" size="12" /></span>
                     <span>{{ p.name }}</span>
                   </button>
                 </div>
@@ -1234,7 +1233,7 @@
                 class="picker-row"
               >
                 <div class="picker-row-header">
-                  <span class="row-label">🍜 Quán đặc sản & Ẩm thực ({{ filteredRestaurants.length }}):</span>
+                  <span class="row-label"><AppIcon name="utensils" size="16" /> Quán đặc sản & Ẩm thực ({{ filteredRestaurants.length }}):</span>
                   <button
                     v-if="!searchPlacePickerQuery && filteredRestaurants.length > 8 && placePickerActiveTab === 'all'"
                     type="button"
@@ -1252,7 +1251,7 @@
                     :class="['app-chip', { active: isPlaceSelected(p.name) }]"
                     @click="togglePlaceSelection(p.name)"
                   >
-                    <span class="chip-status">{{ isPlaceSelected(p.name) ? '✓' : '+' }}</span>
+                    <span class="chip-status"><AppIcon :name="isPlaceSelected(p.name) ? 'check' : 'plus'" size="12" /></span>
                     <span>{{ p.name }}</span>
                   </button>
                 </div>
@@ -1264,7 +1263,7 @@
                 class="picker-row"
               >
                 <div class="picker-row-header">
-                  <span class="row-label">🏨 Khách sạn & Homestay ({{ filteredHotels.length }}):</span>
+                  <span class="row-label"><AppIcon name="hotel" size="16" /> Khách sạn & Homestay ({{ filteredHotels.length }}):</span>
                   <button
                     v-if="!searchPlacePickerQuery && filteredHotels.length > 8 && placePickerActiveTab === 'all'"
                     type="button"
@@ -1282,7 +1281,7 @@
                     :class="['app-chip', { active: isPlaceSelected(p.name) }]"
                     @click="togglePlaceSelection(p.name)"
                   >
-                    <span class="chip-status">{{ isPlaceSelected(p.name) ? '✓' : '+' }}</span>
+                    <span class="chip-status"><AppIcon :name="isPlaceSelected(p.name) ? 'check' : 'plus'" size="12" /></span>
                     <span>{{ p.name }}</span>
                   </button>
                 </div>
@@ -1294,7 +1293,7 @@
                 class="picker-row"
               >
                 <div class="picker-row-header">
-                  <span class="row-label">☕ Quán Cafe & Check-in ({{ filteredCafes.length }}):</span>
+                  <span class="row-label"><AppIcon name="coffee" size="16" /> Quán Cafe & Check-in ({{ filteredCafes.length }}):</span>
                   <button
                     v-if="!searchPlacePickerQuery && filteredCafes.length > 8 && placePickerActiveTab === 'all'"
                     type="button"
@@ -1312,7 +1311,7 @@
                     :class="['app-chip', { active: isPlaceSelected(p.name) }]"
                     @click="togglePlaceSelection(p.name)"
                   >
-                    <span class="chip-status">{{ isPlaceSelected(p.name) ? '✓' : '+' }}</span>
+                    <span class="chip-status"><AppIcon :name="isPlaceSelected(p.name) ? 'check' : 'plus'" size="12" /></span>
                     <span>{{ p.name }}</span>
                   </button>
                 </div>
@@ -1320,7 +1319,7 @@
 
               <!-- Khi không tìm thấy kết quả tìm kiếm -->
               <div v-if="searchPlacePickerQuery && totalFilteredPlacesCount === 0" class="empty-search-places">
-                <span>🔍</span>
+                <AppIcon name="search" size="28" />
                 <p>Không tìm thấy địa điểm nào khớp với từ khóa "<b>{{ searchPlacePickerQuery }}</b>".</p>
                 <button type="button" class="app-secondary-btn" @click="searchPlacePickerQuery = ''">Xóa tìm kiếm</button>
               </div>
@@ -1330,7 +1329,7 @@
                 <span class="row-label">Thêm địa điểm / quán khác (Tự nhập):</span>
                 <div style="display:flex; gap:8px;">
                   <input type="text" v-model="customPlaceText" placeholder="Nhập tên địa điểm bạn muốn đi..." class="enhanced-input" style="flex:1; padding:10px 14px;" @keyup.enter="addCustomPlace" />
-                  <button class="app-primary-btn" @click="addCustomPlace" type="button" style="padding: 10px 20px; font-size:13px; white-space:nowrap;">+ Thêm</button>
+                  <button class="app-primary-btn" @click="addCustomPlace" type="button" style="padding: 10px 20px; font-size:13px; white-space:nowrap; display:inline-flex; align-items:center; gap:4px;"><AppIcon name="plus" size="14" /> Thêm</button>
                 </div>
               </div>
 
@@ -1340,8 +1339,8 @@
             </div>
 
             <!-- LỖI KHI TẠO LỊCH TRÌNH -->
-            <div v-if="taoPlanError" class="crawl-alert-banner" style="background:#fef2f2; border:1px solid #fca5a5; color:#991b1b; margin-top:16px; font-weight:600;">
-              ⚠ {{ taoPlanError }}
+            <div v-if="taoPlanError" class="crawl-alert-banner" style="background:#fef2f2; border:1px solid #fca5a5; color:#991b1b; margin-top:16px; font-weight:600; display:flex; align-items:center; gap:8px;">
+              <AppIcon name="alert" size="18" /> {{ taoPlanError }}
             </div>
 
             <!-- WIZARD FOOTER NAVIGATION -->
@@ -1364,7 +1363,7 @@
               </button>
 
               <div v-if="currentPlannerStep === 3 && !tripFeasibility.feasible && !formDuLieu.freePlacesOnly" class="unfeasible-step3-notice">
-                <span>⛔</span>
+                <AppIcon name="alertcircle" size="20" />
                 <div>
                   <strong>Yêu cầu không khả thi:</strong>
                   Ngân sách {{ dinhDangTien(formDuLieu.nganSach) }}đ không đủ cho {{ formDuLieu.soNgay }} ngày {{ formDuLieu.soNguoi }} người. Vui lòng quay lại Bước 2 để tăng ngân sách hoặc chọn "Chỉ gợi ý các địa điểm 100% MIỄN PHÍ VÉ".
@@ -1378,7 +1377,12 @@
                 :disabled="dangTao || (!tripFeasibility.feasible && !formDuLieu.freePlacesOnly)"
               >
                 <span v-if="dangTao" class="btn-spinner"></span>
-                <span>{{ dangTao ? 'AI đang lên kế hoạch...' : (!tripFeasibility.feasible && !formDuLieu.freePlacesOnly ? '⛔ Yêu Cầu Không Khả Thi' : '✨ Tạo Lịch Trình') }}</span>
+                <span v-else-if="!tripFeasibility.feasible && !formDuLieu.freePlacesOnly" style="display:inline-flex; align-items:center; gap:6px;">
+                  <AppIcon name="alertcircle" size="16" /> Yêu Cầu Không Khả Thi
+                </span>
+                <span v-else style="display:inline-flex; align-items:center; gap:6px;">
+                  <AppIcon name="sparkles" size="16" /> Tạo Lịch Trình
+                </span>
               </button>
             </div>
           </div>
@@ -1432,7 +1436,7 @@
             <transition name="fade-slide">
               <div v-if="hienCompletionBanner" class="ai-completion-banner confetti-celebration">
                 <div class="acb-left">
-                  <div class="acb-icon">🎉</div>
+                  <div class="acb-icon"><AppIcon name="sparkles" size="28" /></div>
                 </div>
                 <div class="acb-content">
                   <div class="acb-badge">ĐỘI HÌNH ĐÃ SẴN SÀNG PHÁ ĐẢO THẾ GIỚI ẢO!</div>
@@ -1447,7 +1451,7 @@
                     <div class="celeb-avatar-wrap celeb-5" title="Hoa tiêu / Google Maps chạy bằng cơm"><img src="/avatars/friend4.jpg" class="celeb-avatar" style="object-position: center 20%;" alt="Hoa tiêu"></div>
                   </div>
                 </div>
-                <button class="acb-close" @click="hienCompletionBanner = false" title="Đóng banner">✕</button>
+                <button class="acb-close" @click="hienCompletionBanner = false" title="Đóng banner"><AppIcon name="x" size="14" /></button>
               </div>
             </transition>
 
@@ -1457,12 +1461,12 @@
                 <div class="summary-top-tag">
                   <span class="plan-dest-badge">{{ lichTrinh.destination }}</span>
                   <span v-if="lichTrinh.is_over_budget" class="over-budget-pill-badge">
-                    🚨 VƯỢT QUÁ KHẢ NĂNG TÀI CHÍNH (+{{ lichTrinh.over_percent }}%)
+                    <AppIcon name="alertcircle" size="14" /> VƯỢT QUÁ KHẢ NĂNG TÀI CHÍNH (+{{ lichTrinh.over_percent }}%)
                   </span>
                   <span v-else-if="lichTrinh.budget_tier" class="tier-pill-badge" :style="{ backgroundColor: lichTrinh.budget_tier.color || '#10b981' }">
-                    {{ lichTrinh.budget_tier.icon }} {{ lichTrinh.budget_tier.badge }}
+                    <AppIcon :name="lichTrinh.budget_tier.icon || 'gem'" size="14" /> {{ lichTrinh.budget_tier.badge }}
                   </span>
-                  <span class="savings-badge">💡 Đã tối ưu tuyến đường & chi phí</span>
+                  <span class="savings-badge"><AppIcon name="sparkles" size="14" /> Đã tối ưu tuyến đường & chi phí</span>
                 </div>
                 <h2>Hành trình {{ lichTrinh.daysList.length }} Ngày Tuyệt Vời</h2>
                 
@@ -1493,10 +1497,10 @@
 
                 <p class="summary-budget" :class="{ 'has-over-budget': lichTrinh.is_over_budget }">
                   <template v-if="lichTrinh.is_over_budget">
-                    <span class="sb-target">🎯 Ngân sách bạn chọn: <b>{{ dinhDangTien(lichTrinh.target_budget || formDuLieu.nganSach) }}đ</b></span>
+                    <span class="sb-target"><AppIcon name="trophy" size="14" /> Ngân sách bạn chọn: <b>{{ dinhDangTien(lichTrinh.target_budget || formDuLieu.nganSach) }}đ</b></span>
                     <span class="sb-divider">·</span>
                     <span class="sb-actual">Chi phí thực tế tính toán: <strong class="red-calc-num">{{ dinhDangTien(lichTrinh.total_budget) }}đ</strong></span>
-                    <span class="sb-diff-tag">🚨 Vượt +{{ dinhDangTien(lichTrinh.over_amount) }}đ</span>
+                    <span class="sb-diff-tag"><AppIcon name="alertcircle" size="14" /> Vượt +{{ dinhDangTien(lichTrinh.over_amount) }}đ</span>
                   </template>
                   <template v-else>
                     Tổng dự toán: <strong>{{ dinhDangTien(lichTrinh.total_budget) }}đ</strong> ({{ lichTrinh.people }} người · TB {{ dinhDangTien(Math.round(lichTrinh.total_budget / lichTrinh.people)) }}đ/người)
@@ -1506,7 +1510,7 @@
                 <!-- KHỐI BÁO ĐỎ: CẢNH BÁO KẾ HOẠCH VƯỢT QUÁ KHẢ NĂNG TÀI CHÍNH (YÊU CẦU 1) -->
                 <div v-if="lichTrinh.is_over_budget" class="over-budget-alert-box">
                   <div class="oba-header">
-                    <div class="oba-icon-ring">🚨</div>
+                    <div class="oba-icon-ring"><AppIcon name="alertcircle" size="24" /></div>
                     <div class="oba-texts">
                       <h4>CẢNH BÁO BÁO ĐỎ: CHI PHÍ VƯỢT QUÁ NGÂN SÁCH {{ dinhDangTien(lichTrinh.target_budget || formDuLieu.nganSach) }}đ!</h4>
                       <p>
@@ -1515,34 +1519,34 @@
                     </div>
                   </div>
                   <div class="oba-actions-bar">
-                    <span class="oba-act-title">⚡ Giải pháp xử lý ngay:</span>
+                    <span class="oba-act-title"><AppIcon name="sparkles" size="14" /> Giải pháp xử lý ngay:</span>
                     <button v-if="!formDuLieu.freePlacesOnly" type="button" class="oba-action-btn btn-free" @click="kichHoatCheDoFreePlaces">
-                      🌿 1. Bật chế độ 100% Điểm Miễn Phí (Cắt vé về 0đ)
+                      <AppIcon name="leaf" size="14" /> 1. Bật chế độ 100% Điểm Miễn Phí (Cắt vé về 0đ)
                     </button>
-                    <span v-else class="oba-done-tag">✅ Đã bật Free Places — vé tham quan = 0đ</span>
+                    <span v-else class="oba-done-tag"><AppIcon name="check" size="14" /> Đã bật Free Places — vé tham quan = 0đ</span>
                     <button v-if="Number(formDuLieu.soNgay) > 1" type="button" class="oba-action-btn btn-shorten" @click="rutNganNgayPhuHop">
-                      ✂️ 2. Rút ngắn ngày đi vừa vặn {{ dinhDangTien(formDuLieu.nganSach) }}đ
+                      <AppIcon name="clock" size="14" /> 2. Rút ngắn ngày đi vừa vặn {{ dinhDangTien(formDuLieu.nganSach) }}đ
                     </button>
-                    <span v-else class="oba-done-tag">✅ Đã rút ngắn tối đa (1 ngày)</span>
+                    <span v-else class="oba-done-tag"><AppIcon name="check" size="14" /> Đã rút ngắn tối đa (1 ngày)</span>
                     <button type="button" class="oba-action-btn btn-increase-budget" @click="formDuLieu.nganSach = lichTrinh.total_budget; taoLichTrinh()">
-                      💰 3. Nâng ngân sách lên {{ dinhDangTien(lichTrinh.total_budget) }}đ (vừa đủ)
+                      <AppIcon name="wallet" size="14" /> 3. Nâng ngân sách lên {{ dinhDangTien(lichTrinh.total_budget) }}đ (vừa đủ)
                     </button>
                     <button type="button" class="oba-action-btn btn-replan" @click="hienModalDoiLichTrinh = true">
-                      🔄 4. Điều chỉnh thông số khác
+                      <AppIcon name="refresh" size="14" /> 4. Điều chỉnh thông số khác
                     </button>
                   </div>
                 </div>
 
                 <!-- Personality Low Budget Callout in Plan Result -->
                 <div v-else-if="lichTrinh.total_budget <= 500000" class="budget-humor-callout">
-                  <span class="bhc-icon">{{ lichTrinh.total_budget <= 150000 ? '🚨' : '💸' }}</span>
+                  <span class="bhc-icon"><AppIcon :name="lichTrinh.total_budget <= 150000 ? 'alerttriangle' : 'wallet'" size="18" /></span>
                   <span class="bhc-text">
                     {{ lichTrinh.total_budget <= 150000 ? 'Cảnh báo ví nguy hiểm: Nhớ ngắm cảnh miễn phí và hạn chế nhìn menu nhé!' : 'Du lịch tối giản: Chúng ta không nghèo, chúng ta đang du lịch phong cách tối giản (tạm né hải sản 😭)!' }}
                   </span>
                 </div>
                 <!-- Personality Luxury Budget Callout -->
                 <div v-else-if="lichTrinh.total_budget >= 20000000" class="budget-luxury-callout">
-                  <span class="bhc-icon">👑</span>
+                  <span class="bhc-icon"><AppIcon name="crown" size="18" /></span>
                   <span class="bhc-text">
                     Đẳng cấp thượng lưu: Toàn bộ dịch vụ đã được nâng cấp lên chuẩn 5 sao, resort cao cấp và fine dining sang trọng!
                   </span>
@@ -1558,7 +1562,7 @@
                   @click="luuLichTrinhHienTai"
                   title="Lưu lại lịch trình này để xem lại bất cứ lúc nào"
                 >
-                  <span class="it-dec-icon">{{ daLuuLichTrinhHienTai ? '✅' : '💾' }}</span>
+                  <span class="it-dec-icon"><AppIcon :name="daLuuLichTrinhHienTai ? 'checkcircle2' : 'save'" size="22" /></span>
                   <div class="it-dec-text">
                     <strong>{{ daLuuLichTrinhHienTai ? 'Đã lưu lịch trình' : 'Lưu lại lịch trình này' }}</strong>
                     <small>{{ daLuuLichTrinhHienTai ? 'Bấm để xem danh sách chuyến đi đã lưu' : 'Lưu vào tài khoản / bộ nhớ máy' }}</small>
@@ -1571,7 +1575,7 @@
                   @click="hienModalDoiLichTrinh = true"
                   title="Thay đổi thông số hoặc yêu cầu AI tạo lịch trình khác"
                 >
-                  <span class="it-dec-icon">🔄</span>
+                  <span class="it-dec-icon"><AppIcon name="refresh" size="22" /></span>
                   <div class="it-dec-text">
                     <strong>Thay đổi lịch trình khác</strong>
                     <small>Sửa thông số hoặc AI lên phương án mới</small>
@@ -1582,25 +1586,25 @@
               <!-- Thông báo khi lưu thành công -->
               <transition name="fade">
                 <div v-if="thongBaoLuuThanhCong" class="save-success-banner">
-                  <span>🎉 <strong>Đã lưu lịch trình thành công!</strong> Bạn có thể mở lại tại tab "Chuyến đi đã lưu".</span>
+                  <span><AppIcon name="sparkles" size="16" /> <strong>Đã lưu lịch trình thành công!</strong> Bạn có thể mở lại tại tab "Chuyến đi đã lưu".</span>
                   <button type="button" class="ssb-view-btn" @click="activeTab = 'mytrips'">Xem ngay ↗</button>
                 </div>
               </transition>
 
               <!-- Thanh phân bổ ngân sách khoa học -->
               <div v-if="lichTrinh.budget_breakdown" class="budget-breakdown-row">
-                <div class="bb-pill"><span>🏨 Khách sạn:</span> <b>{{ dinhDangTien(lichTrinh.budget_breakdown.hotel) }}đ</b></div>
-                <div class="bb-pill"><span>🍜 Ăn uống:</span> <b>{{ dinhDangTien(lichTrinh.budget_breakdown.food) }}đ</b></div>
-                <div class="bb-pill"><span>🚗 Di chuyển:</span> <b>{{ dinhDangTien(lichTrinh.budget_breakdown.transportation) }}đ</b></div>
-                <div class="bb-pill"><span>🎫 Vé & Check-in:</span> <b>{{ dinhDangTien(lichTrinh.budget_breakdown.tickets) }}đ</b></div>
-                <div class="bb-pill"><span>🛡️ Dự phòng:</span> <b>{{ dinhDangTien(lichTrinh.budget_breakdown.reserve) }}đ</b></div>
+                <div class="bb-pill"><span><AppIcon name="hotel" size="14" /> Khách sạn:</span> <b>{{ dinhDangTien(lichTrinh.budget_breakdown.hotel) }}đ</b></div>
+                <div class="bb-pill"><span><AppIcon name="utensils" size="14" /> Ăn uống:</span> <b>{{ dinhDangTien(lichTrinh.budget_breakdown.food) }}đ</b></div>
+                <div class="bb-pill"><span><AppIcon name="car" size="14" /> Di chuyển:</span> <b>{{ dinhDangTien(lichTrinh.budget_breakdown.transportation) }}đ</b></div>
+                <div class="bb-pill"><span><AppIcon name="ticket" size="14" /> Vé & Check-in:</span> <b>{{ dinhDangTien(lichTrinh.budget_breakdown.tickets) }}đ</b></div>
+                <div class="bb-pill"><span><AppIcon name="shield" size="14" /> Dự phòng:</span> <b>{{ dinhDangTien(lichTrinh.budget_breakdown.reserve) }}đ</b></div>
               </div>
 
               <!-- Thẻ nghiệm thu chi phí thực tế (Budget Audit & Balance) -->
               <div v-if="lichTrinh.budget_audit" class="budget-audit-card" :class="lichTrinh.budget_audit.fit_status">
                 <div class="bac-header">
                   <div class="bac-title-group">
-                    <span class="bac-icon">{{ lichTrinh.budget_audit.fit_status === 'optimal' ? '✅' : (lichTrinh.budget_audit.fit_status === 'under' ? '💡' : '⚠️') }}</span>
+                    <span class="bac-icon"><AppIcon :name="lichTrinh.budget_audit.fit_status === 'optimal' ? 'checkcircle2' : (lichTrinh.budget_audit.fit_status === 'under' ? 'sparkles' : 'alerttriangle')" size="20" /></span>
                     <div>
                       <strong class="bac-msg">{{ lichTrinh.budget_audit.fit_message }}</strong>
                       <p class="bac-advice">{{ lichTrinh.budget_audit.advice }}</p>
@@ -1614,19 +1618,19 @@
 
                 <div class="bac-details-row">
                   <div class="bad-item">
-                    <span class="bad-label">🚌 Vé xe / Đi lại:</span>
+                    <span class="bad-label"><AppIcon name="bus" size="14" /> Vé xe / Đi lại:</span>
                     <b>{{ dinhDangTien(lichTrinh.budget_audit.audit_breakdown?.transit || lichTrinh.budget_breakdown?.transportation || 0) }}đ</b>
                   </div>
                   <div class="bad-item">
-                    <span class="bad-label">🏨 Phòng nghỉ / Resort:</span>
+                    <span class="bad-label"><AppIcon name="hotel" size="14" /> Phòng nghỉ / Resort:</span>
                     <b>{{ dinhDangTien(lichTrinh.budget_audit.audit_breakdown?.hotel || lichTrinh.budget_breakdown?.hotel || 0) }}đ</b>
                   </div>
                   <div class="bad-item">
-                    <span class="bad-label">🍜 Toàn bộ ăn uống:</span>
+                    <span class="bad-label"><AppIcon name="utensils" size="14" /> Toàn bộ ăn uống:</span>
                     <b>{{ dinhDangTien(lichTrinh.budget_audit.audit_breakdown?.food || lichTrinh.budget_breakdown?.food || 0) }}đ</b>
                   </div>
                   <div class="bad-item">
-                    <span class="bad-label">🎟️ Vé vui chơi check-in:</span>
+                    <span class="bad-label"><AppIcon name="ticket" size="14" /> Vé vui chơi check-in:</span>
                     <b>{{ dinhDangTien(lichTrinh.budget_audit.audit_breakdown?.tickets || lichTrinh.budget_breakdown?.tickets || 0) }}đ</b>
                   </div>
                 </div>
@@ -1634,7 +1638,7 @@
 
               <div class="plan-tool-actions">
                 <button class="tool-btn ai-opt-highlight-btn" @click="toiUuCungDuongToanBo" title="Sắp xếp toàn bộ điểm đến theo vòng cung tối ưu di chuyển">
-                  ⚡ AI Tối ưu thứ tự điểm đến
+                  <AppIcon name="sparkles" size="15" /> AI Tối ưu thứ tự điểm đến
                 </button>
                 <a
                   :href="googleMapsAllStopsUrl"
@@ -1643,22 +1647,22 @@
                   class="tool-btn gmap-all-stops-btn"
                   title="Mở toàn bộ lộ trình trên Google Maps có sẵn GPS dẫn đường liên tục"
                 >
-                  🗺️ Mở toàn bộ trên Google Maps ↗
+                  <AppIcon name="map" size="15" /> Mở toàn bộ trên Google Maps ↗
                 </a>
                 <button class="tool-btn zalo-share-btn" @click="moModalInfographic" title="Xuất lịch trình dạng thẻ Infographic để gửi nhóm Zalo/Messenger">
-                  📱 Xuất thẻ chia sẻ Zalo
+                  <AppIcon name="phone" size="15" /> Xuất thẻ chia sẻ Zalo
                 </button>
                 <button class="tool-btn" @click="hienBillSplitter = true" title="Tính tiền chia đều cho nhóm">
-                  💰 Chia tiền nhóm
+                  <AppIcon name="wallet" size="15" /> Chia tiền nhóm
                 </button>
                 <button class="tool-btn" @click="hienTravelPass = true" title="Xuất vé hành trình offline">
-                  🎫 Xuất vé Offline
+                  <AppIcon name="ticket" size="15" /> Xuất vé Offline
                 </button>
                 <button class="tool-btn rain-btn" @click="moModalTranhMua(0)" :disabled="dangDieuChinh" title="Tự động đổi điểm tham quan trong nhà nếu trời mưa">
-                  🌧️ Đổi lịch tránh mưa
+                  <AppIcon name="cloudrain" size="15" /> Đổi lịch tránh mưa
                 </button>
                 <button class="tool-btn" @click="xuatPdf" title="In hoặc lưu PDF">
-                  📄 Lưu PDF
+                  <AppIcon name="filetext" size="15" /> Lưu PDF
                 </button>
               </div>
             </div>
@@ -1667,7 +1671,7 @@
             <div v-if="(lichTrinh.transit_summary || formDuLieu.nhaXeDaChon) && !['xe máy', 'ô tô'].includes((formDuLieu.phuongTien || '').toLowerCase())" class="trip-transit-summary-card">
               <div class="ttsc-main">
                 <div class="ttsc-left">
-                  <span class="ttsc-icon">🚌</span>
+                  <span class="ttsc-icon"><AppIcon name="bus" size="24" /></span>
                   <div>
                     <div class="ttsc-badge">PHƯƠNG ÁN XE KHÁCH TỐI ƯU DI CHUYỂN</div>
                     <h3>{{ formDuLieu.nhaXeDaChon ? formDuLieu.nhaXeDaChon.name : (lichTrinh.transit_summary?.selected_bus?.name || 'Nhà xe khuyên dùng') }}</h3>
@@ -1677,7 +1681,7 @@
                       <span>Cự ly: <b>~{{ (lichTrinh.transit_summary?.estimated_distance_km || transitRouteInfo.estimatedDistanceKm) }} km</b></span>
                     </p>
                     <p class="ttsc-schedule" v-if="formDuLieu.nhaXeDaChon">
-                      🕒 Giờ chạy: <b>{{ formDuLieu.nhaXeDaChon.depart_times }}</b> ({{ formDuLieu.nhaXeDaChon.duration }}) · Đón: {{ formDuLieu.nhaXeDaChon.pickup }}
+                      <AppIcon name="clock" size="14" /> Giờ chạy: <b>{{ formDuLieu.nhaXeDaChon.depart_times }}</b> ({{ formDuLieu.nhaXeDaChon.duration }}) · Đón: {{ formDuLieu.nhaXeDaChon.pickup }}
                     </p>
                   </div>
                 </div>
@@ -1692,10 +1696,10 @@
                   </div>
                   <div class="ttsc-actions-group" style="display: flex; gap: 8px; flex-direction: column; width: 100%;">
                     <a href="https://futabus.vn/" target="_blank" rel="noreferrer" class="ttsc-book-btn" style="background: var(--primary); color: white; padding: 10px 16px; border-radius: 8px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s;">
-                      🎫 Đặt vé Web/App
+                      <AppIcon name="ticket" size="16" /> Đặt vé Web/App
                     </a>
                     <a :href="`tel:${formDuLieu.nhaXeDaChon?.hotline || '19006067'}`" class="ttsc-call-btn" style="background: rgba(5, 150, 105, 0.1); color: var(--primary); padding: 10px 16px; border-radius: 8px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--primary);">
-                      📞 Tổng đài: {{ formDuLieu.nhaXeDaChon?.hotline || '1900 6067' }}
+                      <AppIcon name="phone" size="16" /> Tổng đài: {{ formDuLieu.nhaXeDaChon?.hotline || '1900 6067' }}
                     </a>
                   </div>
                 </div>
@@ -1704,15 +1708,15 @@
 
             <!-- Khách sạn đề xuất -->
             <div v-if="lichTrinh.hotel_recommendation" class="app-hotel-card">
-              <div class="hotel-badge">🏨 GỢI Ý KHÁCH SẠN / RESORT NGHỈ DƯỠNG</div>
+              <div class="hotel-badge"><AppIcon name="hotel" size="14" /> GỢI Ý KHÁCH SẠN / RESORT NGHỈ DƯỠNG</div>
               <div class="hotel-main-info">
                 <div>
                   <h3>{{ lichTrinh.hotel_recommendation.name }}</h3>
-                  <p class="hotel-addr" v-if="lichTrinh.hotel_recommendation.address">📍 {{ lichTrinh.hotel_recommendation.address }}</p>
+                  <p class="hotel-addr" v-if="lichTrinh.hotel_recommendation.address"><AppIcon name="pin" size="14" /> {{ lichTrinh.hotel_recommendation.address }}</p>
                   <p class="hotel-desc">{{ lichTrinh.hotel_recommendation.description }}</p>
                 </div>
                 <div class="hotel-side">
-                  <span class="hotel-stars">★ {{ lichTrinh.hotel_recommendation.rating || '4.8' }}</span>
+                  <span class="hotel-stars"><AppIcon name="star" size="14" filled color="#f59e0b" /> {{ lichTrinh.hotel_recommendation.rating || '4.8' }}</span>
                   <span class="hotel-price">
                     {{ dinhDangTien(lichTrinh.hotel_recommendation.price_per_night || 850000) }}đ
                     <small>{{ (lichTrinh.hotel_recommendation.price_per_night || 850000) <= 300000 ? '/đêm/người' : '/đêm/phòng' }}</small>
@@ -1726,7 +1730,7 @@
                     target="_blank"
                     rel="noreferrer"
                   >
-                    🗺️ Chỉ đường tới KS ↗
+                    <AppIcon name="map" size="14" /> Chỉ đường tới KS ↗
                   </a>
                 </div>
               </div>
@@ -1800,7 +1804,7 @@
                         @click="selectedDay = d.day; showAllDays = false"
                         :title="`Xem chi tiết Ngày ${d.day}`"
                       >
-                        📅 Ngày {{ d.day }}
+                        <AppIcon name="calendar" size="14" /> Ngày {{ d.day }}
                       </button>
                       <button
                         type="button"
@@ -1808,7 +1812,7 @@
                         @click="showAllDays = true"
                         :title="`Xem toàn bộ ${lichTrinh.daysList.length} ngày liên tục`"
                       >
-                        📋 Xem tất cả ({{ lichTrinh.daysList.length }} ngày)
+                        <AppIcon name="filetext" size="14" /> Xem tất cả ({{ lichTrinh.daysList.length }} ngày)
                       </button>
                     </div>
 
@@ -1821,7 +1825,7 @@
                           @click="timelineDensity = 'compact'"
                           title="Chế độ Thu gọn: hiển thị dạng hàng ngang thanh lịch, không phải cuộn chuột dài"
                         >
-                          <span class="tcd-icon">📱</span>
+                          <span class="tcd-icon"><AppIcon name="smartphone" size="14" /></span>
                           <span>Thu gọn</span>
                         </button>
                         <button
@@ -1830,7 +1834,7 @@
                           @click="timelineDensity = 'expanded'"
                           title="Chế độ Chi tiết: hiển thị dạng thẻ lớn đầy đủ ảnh"
                         >
-                          <span class="tcd-icon">📖</span>
+                          <span class="tcd-icon"><AppIcon name="bookopen" size="14" /></span>
                           <span>Chi tiết</span>
                         </button>
                       </div>
@@ -1848,28 +1852,28 @@
                           :class="['tc-session-pill', { active: selectedSessionFilter === 'morning' }]"
                           @click="selectedSessionFilter = 'morning'"
                         >
-                          🌅 Sáng
+                          <AppIcon name="sunrise" size="14" /> Sáng
                         </button>
                         <button
                           type="button"
                           :class="['tc-session-pill', { active: selectedSessionFilter === 'noon' }]"
                           @click="selectedSessionFilter = 'noon'"
                         >
-                          ☀️ Trưa
+                          <AppIcon name="sun" size="14" /> Trưa
                         </button>
                         <button
                           type="button"
                           :class="['tc-session-pill', { active: selectedSessionFilter === 'afternoon' }]"
                           @click="selectedSessionFilter = 'afternoon'"
                         >
-                          🌆 Chiều
+                          <AppIcon name="sunset" size="14" /> Chiều
                         </button>
                         <button
                           type="button"
                           :class="['tc-session-pill', { active: selectedSessionFilter === 'evening' }]"
                           @click="selectedSessionFilter = 'evening'"
                         >
-                          🌙 Tối
+                          <AppIcon name="moon" size="14" /> Tối
                         </button>
                       </div>
                     </div>
@@ -1895,7 +1899,7 @@
                           class="day-gmaps-route-btn"
                           title="Mở toàn bộ lộ trình Ngày này trên Google Maps dẫn đường liên tục"
                         >
-                          🗺️ Lộ trình cả ngày ↗
+                          <AppIcon name="map" size="14" /> Lộ trình cả ngày ↗
                         </a>
 
                         <button
@@ -1904,14 +1908,14 @@
                           @click.stop="toiUuCungDuongNgay(dayIdx)"
                           title="AI sắp xếp lại thứ tự điểm đến theo vòng cung để không bị đi ngược đường và tiết kiệm xăng xe"
                         >
-                          ⚡ AI Tối ưu thứ tự
+                          <AppIcon name="sparkles" size="14" /> AI Tối ưu thứ tự
                         </button>
                       </div>
                     </div>
 
                     <!-- Thông báo kết quả tối ưu thứ tự cung đường -->
                     <div v-if="toiUuThanhCongDay === dayIdx" class="route-opt-toast-banner">
-                      <span class="rotb-icon">🎉</span>
+                      <span class="rotb-icon"><AppIcon name="sparkles" size="18" /></span>
                       <div class="rotb-content">
                         <strong>Đã tối ưu cung đường Ngày {{ day.day }}!</strong>
                         <p>Các điểm được sắp xếp theo vòng cung liên tục (Nearest Neighbor), giảm thiểu tối đa đi zíc-zắc và quay đầu xe.</p>
@@ -1921,7 +1925,7 @@
                     <!-- Cảnh báo thời tiết trực tiếp trong ngày (Weather-aware Planning) -->
                     <div v-if="getDayWeatherAlert(day.day)" class="day-weather-alert-card">
                       <div class="dwac-left">
-                        <span class="dwac-icon">🌧️</span>
+                        <span class="dwac-icon"><AppIcon name="cloudrain" size="20" /></span>
                         <div class="dwac-text">
                           <strong>Cảnh báo thời tiết: {{ getDayWeatherAlert(day.day).desc }} (~{{ getDayWeatherAlert(day.day).temp }}°C)</strong>
                           <p>{{ getDayWeatherAlert(day.day).advice }}</p>
@@ -1933,7 +1937,7 @@
                         @click.stop="moModalTranhMua(dayIdx)"
                         title="Xem phương án chuyển các hoạt động buổi chiều sang không gian bảo tàng/cafe trong nhà"
                       >
-                        🔄 Tự động đổi điểm trong nhà
+                        <AppIcon name="refresh" size="14" /> Tự động đổi điểm trong nhà
                       </button>
                     </div>
 
@@ -1942,12 +1946,12 @@
                       <div v-if="day.day === 1 && !day.activities.some(a => a.type === 'transit')" class="origin-departure-journey-card">
                         <div class="odjc-time-col">
                           <span class="odjc-time">{{ formDuLieu.nhaXeDaChon?.depart_times ? formDuLieu.nhaXeDaChon.depart_times.split(',')[0].trim() : '06:30' }}</span>
-                          <div class="odjc-bullet">🚌</div>
+                          <div class="odjc-bullet"><AppIcon name="bus" size="16" /></div>
                         </div>
                         <div class="odjc-card-content">
                           <div class="odjc-header">
                             <span class="odjc-badge">CHẶNG KHỞI HÀNH TỪ NƠI XUẤT PHÁT</span>
-                            <span class="odjc-duration-pill">⏱️ Di chuyển: <b>{{ formDuLieu.nhaXeDaChon?.duration || '13 – 14 giờ' }}</b></span>
+                            <span class="odjc-duration-pill"><AppIcon name="clock" size="13" /> Di chuyển: <b>{{ formDuLieu.nhaXeDaChon?.duration || '13 – 14 giờ' }}</b></span>
                           </div>
                           <h4 class="odjc-title">{{ formDuLieu.diemKhoiHanh }} ➔ {{ lichTrinh.destination }}</h4>
                           <div class="odjc-meta-grid">
@@ -1969,7 +1973,7 @@
                             </div>
                           </div>
                           <p class="odjc-note">
-                            🚀 Chuyến đi khởi hành đúng giờ. Đoàn đến {{ lichTrinh.destination }}, cập bến và di chuyển về nhận phòng / gửi hành lý trước khi bắt đầu lịch trình tham quan.
+                            <AppIcon name="plane" size="14" /> Chuyến đi khởi hành đúng giờ. Đoàn đến {{ lichTrinh.destination }}, cập bến và di chuyển về nhận phòng / gửi hành lý trước khi bắt đầu lịch trình tham quan.
                           </p>
                         </div>
                       </div>
@@ -2004,15 +2008,15 @@
                           <div class="car-body">
                             <div class="car-top">
                               <span :class="['badge-type-mini', getBadgeInfo(act).class]">
-                                {{ getBadgeInfo(act).icon }} {{ getBadgeInfo(act).label }}
+                                <AppIcon :name="getBadgeInfo(act).icon" size="13" /> {{ getBadgeInfo(act).label }}
                               </span>
                               <h4 class="car-title" @click.stop="panToActivity(act)">{{ act.place }}</h4>
-                              <span class="car-cost" v-if="act.estimated_cost">💵 {{ dinhDangTien(act.estimated_cost) }}đ</span>
+                              <span class="car-cost" v-if="act.estimated_cost"><AppIcon name="wallet" size="12" /> {{ dinhDangTien(act.estimated_cost) }}đ</span>
                             </div>
                             <div class="car-sub">
-                              <span class="car-addr" v-if="act.address">📍 {{ act.address }}</span>
+                              <span class="car-addr" v-if="act.address"><AppIcon name="pin" size="12" /> {{ act.address }}</span>
                               <span class="car-eta" v-if="getTravelEstimate(act, day, actIndex)">
-                                ⏱️ {{ getTravelEstimate(act, day, actIndex).duration }} ({{ getTravelEstimate(act, day, actIndex).distance }} km)
+                                <AppIcon name="clock" size="12" /> {{ getTravelEstimate(act, day, actIndex).duration }} ({{ getTravelEstimate(act, day, actIndex).distance }} km)
                               </span>
                             </div>
 
@@ -2020,21 +2024,21 @@
                             <div v-if="expandedCardKey === `act-${day.day}-${actIndex}`" class="car-detail-drawer" @click.stop>
                               <p class="cdd-desc">{{ lamSachMoTa(act.activity, act) }}</p>
                               <div v-if="act.signature_dishes && act.signature_dishes.length" class="cdd-dishes">
-                                🍲 <b>Món đặc sản:</b> {{ act.signature_dishes.join(', ') }}
+                                <AppIcon name="utensils" size="14" /> <b>Món đặc sản:</b> {{ act.signature_dishes.join(', ') }}
                               </div>
                               <div class="cdd-meta-tags">
-                                <span class="cdd-tag">⭐ {{ act.rating || '4.7' }}</span>
-                                <span class="cdd-tag">🕒 {{ act.open_hours || getGioMoCua(act.type) }}</span>
-                                <span class="cdd-tag" v-if="act.is_indoor === true">☔ Có mái che</span>
-                                <span class="cdd-tag" v-else-if="act.is_indoor === false">☀️ Ngoài trời</span>
+                                <span class="cdd-tag"><AppIcon name="star" size="12" filled color="#f59e0b" /> {{ act.rating || '4.7' }}</span>
+                                <span class="cdd-tag"><AppIcon name="clock" size="12" /> {{ act.open_hours || getGioMoCua(act.type) }}</span>
+                                <span class="cdd-tag" v-if="act.is_indoor === true"><AppIcon name="cloudrain" size="12" /> Có mái che</span>
+                                <span class="cdd-tag" v-else-if="act.is_indoor === false"><AppIcon name="sun" size="12" /> Ngoài trời</span>
                               </div>
                             </div>
                           </div>
 
                           <div class="car-actions">
-                            <button type="button" class="car-btn" @click.stop="moModalDoiDiaDiem(day.day - 1, actIndex, act.type)" title="Đổi điểm">🔄</button>
-                            <a class="car-btn" :href="chiDuongUrl(act.place, act.address)" target="_blank" rel="noreferrer" title="Google Maps" @click.stop>🗺️</a>
-                            <span class="car-chevron">{{ expandedCardKey === `act-${day.day}-${actIndex}` ? '▲' : '▼' }}</span>
+                            <button type="button" class="car-btn" @click.stop="moModalDoiDiaDiem(day.day - 1, actIndex, act.type)" title="Đổi điểm"><AppIcon name="refresh" size="14" /></button>
+                            <a class="car-btn" :href="chiDuongUrl(act.place, act.address)" target="_blank" rel="noreferrer" title="Google Maps" @click.stop><AppIcon name="map" size="14" /></a>
+                            <span class="car-chevron"><AppIcon :name="expandedCardKey === `act-${day.day}-${actIndex}` ? 'chevronup' : 'chevrondown'" size="14" /></span>
                           </div>
                         </div>
 
@@ -2088,7 +2092,7 @@
                               <div class="activity-top-line">
                                 <div class="act-title-cluster">
                                   <span :class="['badge-type', getBadgeInfo(act).class]">
-                                    {{ getBadgeInfo(act).icon }} {{ getBadgeInfo(act).label }}
+                                    <AppIcon :name="getBadgeInfo(act).icon" size="14" /> {{ getBadgeInfo(act).label }}
                                   </span>
                                   <h4 class="place-name" :title="act.place" @click="panToActivity(act)">{{ act.place }}</h4>
                                 </div>
@@ -2099,7 +2103,7 @@
                                     @click.stop="moModalDoiDiaDiem(day.day - 1, actIndex, act.type)"
                                     title="Đổi sang địa điểm khác"
                                   >
-                                    🔄 Đổi điểm
+                                    <AppIcon name="refresh" size="14" /> Đổi điểm
                                   </button>
                                   <a
                                     class="act-direction-btn"
@@ -2109,20 +2113,20 @@
                                     title="Mở chỉ đường Google Maps"
                                     @click.stop
                                   >
-                                    🗺️ Chỉ đường ↗
+                                    <AppIcon name="map" size="14" /> Chỉ đường ↗
                                   </a>
                                 </div>
                               </div>
 
                               <!-- Cảnh báo xung đột thời gian mở cửa -->
                               <div v-if="act.time_conflict" class="act-time-conflict-card" style="background-color: #fffbeb; color: #b45309; padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: 500; display: flex; gap: 8px; align-items: center; margin-bottom: 12px; border: 1px solid #fde68a;">
-                                <span style="font-size: 16px;">⚠️</span> {{ act.time_conflict_msg }}
+                                <AppIcon name="alerttriangle" size="16" /> {{ act.time_conflict_msg }}
                               </div>
 
                               <!-- Thẻ ETA dự kiến thời gian di chuyển từ vị trí hiện tại tới điểm đến -->
                               <div v-if="getTravelEstimate(act, day, actIndex)" class="act-travel-eta-card">
                                 <div class="eta-card-left">
-                                  <span class="eta-pulse-icon">🚗</span>
+                                  <span class="eta-pulse-icon"><AppIcon name="car" size="18" /></span>
                                   <div class="eta-content">
                                     <div class="eta-from-to">
                                       <span class="eta-origin">Từ <strong>{{ getTravelEstimate(act, day, actIndex).from }}</strong></span>
@@ -2130,10 +2134,10 @@
                                       <span class="eta-dest">tới điểm đến:</span>
                                     </div>
                                     <div class="eta-metrics-row">
-                                      <span class="eta-pill eta-time">⏱️ Đi khoảng <b>{{ getTravelEstimate(act, day, actIndex).duration }}</b></span>
-                                      <span class="eta-pill eta-dist">📍 ~{{ getTravelEstimate(act, day, actIndex).distance }} km</span>
-                                      <span class="eta-pill eta-mode" v-if="getTravelEstimate(act, day, actIndex).mode">🧭 {{ getTravelEstimate(act, day, actIndex).mode }}</span>
-                                      <span class="eta-pill eta-taxi" v-if="getTravelEstimate(act, day, actIndex).cost">🚕 Taxi: <b>{{ getTravelEstimate(act, day, actIndex).cost }}</b></span>
+                                      <span class="eta-pill eta-time"><AppIcon name="clock" size="12" /> Đi khoảng <b>{{ getTravelEstimate(act, day, actIndex).duration }}</b></span>
+                                      <span class="eta-pill eta-dist"><AppIcon name="pin" size="12" /> ~{{ getTravelEstimate(act, day, actIndex).distance }} km</span>
+                                      <span class="eta-pill eta-mode" v-if="getTravelEstimate(act, day, actIndex).mode"><AppIcon name="compass" size="12" /> {{ getTravelEstimate(act, day, actIndex).mode }}</span>
+                                      <span class="eta-pill eta-taxi" v-if="getTravelEstimate(act, day, actIndex).cost"><AppIcon name="car" size="12" /> Taxi: <b>{{ getTravelEstimate(act, day, actIndex).cost }}</b></span>
                                     </div>
                                   </div>
                                 </div>
@@ -2142,36 +2146,36 @@
                               <!-- Thẻ tag / Badges thông tin thực tế -->
                               <div class="act-meta-badges">
                                 <span class="meta-tag-pill tag-rating">
-                                  ⭐ {{ act.rating || '4.7' }} <small>({{ act.review_count || '1.2k' }})</small>
+                                  <AppIcon name="star" size="12" filled color="#f59e0b" /> {{ act.rating || '4.7' }} <small>({{ act.review_count || '1.2k' }})</small>
                                 </span>
                                 <span class="meta-tag-pill tag-hours">
-                                  🕒 {{ act.open_hours || getGioMoCua(act.type) }}
+                                  <AppIcon name="clock" size="12" /> {{ act.open_hours || getGioMoCua(act.type) }}
                                 </span>
                                 <span class="meta-tag-pill tag-dwell" v-if="act.dwell_time">
-                                  ⏳ Lưu lại: {{ act.dwell_time }}
+                                  <AppIcon name="clock" size="12" /> Lưu lại: {{ act.dwell_time }}
                                 </span>
                                 <span class="meta-tag-pill tag-best-time" v-if="act.best_time">
-                                  🌅 Khung giờ: {{ act.best_time }}
+                                  <AppIcon name="sunrise" size="12" /> Khung giờ: {{ act.best_time }}
                                 </span>
                                 <span class="meta-tag-pill tag-indoor" v-if="act.is_indoor === true">
-                                  ☔ Có mái che (Trong nhà)
+                                  <AppIcon name="cloudrain" size="12" /> Có mái che (Trong nhà)
                                 </span>
                                 <span class="meta-tag-pill tag-outdoor" v-else-if="act.is_indoor === false">
-                                  ☀️ Ngoài trời
+                                  <AppIcon name="sun" size="12" /> Ngoài trời
                                 </span>
                                 <span class="meta-tag-pill tag-dress" v-if="act.dress_code">
-                                  👗 {{ act.dress_code }}
+                                  <AppIcon name="sparkles" size="12" /> {{ act.dress_code }}
                                 </span>
                                 <span v-for="tag in (act.tags || []).slice(0, 1)" :key="tag" class="meta-tag-pill tag-theme">
-                                  🏷️ {{ tag }}
+                                  <AppIcon name="tag" size="12" /> {{ tag }}
                                 </span>
                               </div>
 
-                              <p v-if="act.address" class="act-address">📍 {{ act.address }}</p>
+                              <p v-if="act.address" class="act-address"><AppIcon name="pin" size="14" /> {{ act.address }}</p>
 
                               <!-- Dòng thời gian di chuyển từ nơi xuất phát đến điểm đến (Yêu cầu 3 - Screenshot 3) -->
                               <div v-if="getTravelEstimate(act, day, actIndex)" class="act-quick-travel-bar">
-                                <span class="aqtb-time">⏱️ {{ getTravelEstimate(act, day, actIndex).duration }}</span>
+                                <span class="aqtb-time"><AppIcon name="clock" size="12" /> {{ getTravelEstimate(act, day, actIndex).duration }}</span>
                                 <span class="aqtb-sep">·</span>
                                 <span class="aqtb-desc">Từ <strong>{{ getTravelEstimate(act, day, actIndex).from }}</strong> (~{{ getTravelEstimate(act, day, actIndex).distance }} km · {{ getTravelEstimate(act, day, actIndex).mode }})</span>
                               </div>
@@ -2202,13 +2206,13 @@
                               </div>
 
                               <div v-if="act.signature_dishes && act.signature_dishes.length > 0" class="act-signature-box">
-                                <span class="asb-title">🍲 Món phải thử (Signature):</span>
+                                <span class="asb-title"><AppIcon name="utensils" size="14" /> Món phải thử (Signature):</span>
                                 <span class="asb-dishes">{{ act.signature_dishes.join(', ') }}</span>
                               </div>
 
                               <div class="act-cost-box">
-                                <span v-if="act.price_range">💵 Khoảng giá thực tế: <b>{{ act.price_range }}</b></span>
-                                <span v-else-if="act.estimated_cost">💵 Chi phí dự kiến: <b>{{ dinhDangTien(act.estimated_cost) }}đ</b></span>
+                                <span v-if="act.price_range"><AppIcon name="wallet" size="12" /> Khoảng giá thực tế: <b>{{ act.price_range }}</b></span>
+                                <span v-else-if="act.estimated_cost"><AppIcon name="wallet" size="12" /> Chi phí dự kiến: <b>{{ dinhDangTien(act.estimated_cost) }}đ</b></span>
                               </div>
                             </div>
                           </div>
@@ -2234,7 +2238,7 @@
                                 class="transit-badge"
                                 :title="`Xem lộ trình ${tinhKhoangCachVaThoiGian(act, day.activities[actIndex + 1]).labelPhuongTien} trên Google Maps`"
                               >
-                                <span class="transit-icon">{{ tinhKhoangCachVaThoiGian(act, day.activities[actIndex + 1]).phuongTien }}</span>
+                                <span class="transit-icon"><AppIcon :name="tinhKhoangCachVaThoiGian(act, day.activities[actIndex + 1]).phuongTien" size="15" /></span>
                                 <span class="transit-info">
                                   <b>{{ tinhKhoangCachVaThoiGian(act, day.activities[actIndex + 1]).phut }} phút</b>
                                   <span class="dot-sep">·</span>
@@ -2250,7 +2254,7 @@
                               :class="['transit-warning-alert', tinhKhoangCachVaThoiGian(act, day.activities[actIndex + 1]).canhBao.type]"
                               role="alert"
                             >
-                              <span class="twa-icon">{{ tinhKhoangCachVaThoiGian(act, day.activities[actIndex + 1]).canhBao.icon }}</span>
+                              <span class="twa-icon"><AppIcon :name="tinhKhoangCachVaThoiGian(act, day.activities[actIndex + 1]).canhBao.icon" size="18" /></span>
                               <div class="twa-content">
                                 <strong>{{ tinhKhoangCachVaThoiGian(act, day.activities[actIndex + 1]).canhBao.title }}</strong>
                                 <p>{{ tinhKhoangCachVaThoiGian(act, day.activities[actIndex + 1]).canhBao.desc }}</p>
@@ -2261,7 +2265,7 @@
                                 @click="moModalDoiDiaDiem(day.day - 1, actIndex + 1, day.activities[actIndex + 1].type)"
                                 title="Đổi địa điểm tiếp theo để tối ưu tuyến"
                               >
-                                🔄 Đổi điểm
+                                <AppIcon name="refresh" size="14" /> Đổi điểm
                               </button>
                             </div>
                           </div>
@@ -2283,7 +2287,7 @@
                       <div class="map-title-row">
                         <h4>Bản đồ hành trình</h4>
                         <span v-if="itineraryViewMode === 'map'" class="map-badge-expanded">Toàn cảnh vệ tinh</span>
-                        <span v-else class="map-live-hint">📌 Tuyến đường nối tự động & rê chuột để xem</span>
+                        <span v-else class="map-live-hint"><AppIcon name="pin" size="14" /> Tuyến đường nối tự động & rê chuột để xem</span>
                       </div>
                       <div class="day-switcher-pills">
                         <button
@@ -2314,7 +2318,7 @@
                     <!-- THẺ CHI TIẾT ĐỊA ĐIỂM TRÊN GOOGLE MAPS KHI CLICK (YÊU CẦU 4 - THEO ĐÚNG SCREENSHOT 4) -->
                     <transition name="drawer-fade">
                       <div v-if="selectedMapPlace" class="map-place-detail-drawer">
-                        <button class="mpd-close-btn" @click="selectedMapPlace = null" title="Đóng chi tiết">✕</button>
+                        <button class="mpd-close-btn" @click="selectedMapPlace = null" title="Đóng chi tiết"><AppIcon name="x" size="16" /></button>
                         
                         <div class="mpd-image-wrap">
                           <img
@@ -2335,11 +2339,11 @@
                           
                           <div class="mpd-rating-row">
                             <span class="mpd-score">{{ selectedMapPlace.rating || '4.6' }}</span>
-                            <span class="mpd-stars">★★★★★</span>
+                            <span class="mpd-stars"><AppIcon v-for="i in 5" :key="i" name="star" size="13" filled color="#f59e0b" /></span>
                             <span class="mpd-reviews">{{ selectedMapPlace.review_count || '7550' }} nhận xét</span>
                           </div>
 
-                          <p class="mpd-addr">📍 {{ selectedMapPlace.address || selectedMapPlace.place }}</p>
+                          <p class="mpd-addr"><AppIcon name="pin" size="14" /> {{ selectedMapPlace.address || selectedMapPlace.place }}</p>
 
                           <div class="mpd-section">
                             <h5>Tổng quan</h5>
@@ -2353,7 +2357,7 @@
                               rel="noreferrer"
                               class="mpd-gmap-primary-btn"
                             >
-                              🗺️ Xem trên Google Maps ↗
+                              <AppIcon name="map" size="15" /> Xem trên Google Maps ↗
                             </a>
                           </div>
 
@@ -2365,7 +2369,7 @@
                                 <div class="mpd-rev-avatar">{{ (selectedMapPlace.reviewer_name || 'Thuy Pham')[0] }}</div>
                                 <div>
                                   <strong class="mpd-rev-name">{{ selectedMapPlace.reviewer_name || 'Thuy Pham' }}</strong>
-                                  <div class="mpd-rev-rating">★★★★★ <small>một tháng trước</small></div>
+                                  <div class="mpd-rev-rating"><span style="display:inline-flex;gap:1px;"><AppIcon v-for="i in 5" :key="i" name="star" size="12" filled color="#f59e0b" /></span> <small>một tháng trước</small></div>
                                 </div>
                               </div>
                               <p class="mpd-rev-body">
@@ -2382,14 +2386,14 @@
                               @click="doiYeuThich(selectedMapPlace._id || selectedMapPlace.place)"
                               :title="laYeuThich(selectedMapPlace._id || selectedMapPlace.place) ? 'Bỏ yêu thích' : 'Lưu yêu thích'"
                             >
-                              {{ laYeuThich(selectedMapPlace._id || selectedMapPlace.place) ? '❤️ Đã thích' : '🤍 Yêu thích' }}
+                              <AppIcon name="heart" size="14" :filled="laYeuThich(selectedMapPlace._id || selectedMapPlace.place)" :color="laYeuThich(selectedMapPlace._id || selectedMapPlace.place) ? '#ef4444' : 'currentColor'" /> {{ laYeuThich(selectedMapPlace._id || selectedMapPlace.place) ? 'Đã thích' : 'Yêu thích' }}
                             </button>
                             <button
                               type="button"
                               class="mpd-change-btn"
                               @click="moModalDoiDiaDiemTuMap(selectedMapPlace)"
                             >
-                              🔄 Đổi địa điểm khác
+                              <AppIcon name="refresh" size="14" /> Đổi địa điểm khác
                             </button>
                           </div>
                         </div>
@@ -2419,7 +2423,7 @@
           </div>
 
           <div v-if="!nguoiDung" class="auth-prompt-card">
-            <span class="prompt-icon">🔒</span>
+            <span class="prompt-icon"><AppIcon name="lock" size="32" /></span>
             <h3>Đăng nhập để xem các chuyến đi đã lưu</h3>
             <p>Lịch trình du lịch được đồng bộ và lưu an toàn trên đám mây để bạn xem lại bất cứ lúc nào.</p>
             <button class="app-primary-btn" @click="hienAuthModal = true">Đăng nhập / Đăng ký</button>
@@ -2435,20 +2439,20 @@
               <p>Dự toán: <b>{{ dinhDangTien(trip.total_budget) }}đ</b> · {{ trip.people || 1 }} người</p>
               <div class="trip-actions">
                 <button class="open-trip-btn" @click="moLaiLichTrinh(trip)">Xem chi tiết ↗</button>
-                <button class="share-trip-btn" @click="chiaSeChuyenDi(trip)">🔗 Chia sẻ</button>
+                <button class="share-trip-btn" @click="chiaSeChuyenDi(trip)"><AppIcon name="share" size="14" /> Chia sẻ</button>
                 <button
                   class="delete-trip-btn"
                   @click="xoaChuyenDi(trip)"
                   title="Xóa chuyến đi này"
                 >
-                  🗑️
+                  <AppIcon name="trash" size="16" />
                 </button>
               </div>
             </article>
           </div>
 
           <div v-else class="empty-state-box">
-            <span class="empty-icon">🧳</span>
+            <span class="empty-icon"><AppIcon name="luggage" size="36" /></span>
             <h3>Bạn chưa lưu chuyến đi nào</h3>
             <p>Hãy tạo lịch trình đầu tiên để bắt đầu hành trình khám phá Miền Trung.</p>
             <button class="app-primary-btn" @click="activeTab = 'planner'">Lên lịch ngay</button>
@@ -2462,15 +2466,15 @@
           <div v-if="nguoiDung" class="profile-card-premium">
             <div class="profile-cover">
               <button class="edit-profile-btn" @click="editProfile" v-if="!editProfileMode">
-                ✏️ Chỉnh sửa hồ sơ
+                <AppIcon name="pencil" size="14" /> Chỉnh sửa hồ sơ
               </button>
             </div>
             <div class="profile-avatar-premium">
               <img v-if="nguoiDung.avatar" :src="nguoiDung.avatar" alt="Avatar" class="avatar-img" />
               <div v-else class="avatar-placeholder">{{ nguoiDung.name ? nguoiDung.name[0].toUpperCase() : 'U' }}</div>
               
-              <div class="level-badge" :style="{ backgroundColor: userLevelInfo.color }" :title="`Hoàn thành ${nguoiDung.completed_trips || 0} chuyến đi`">
-                {{ userLevelInfo.icon }} {{ userLevelInfo.title }}
+              <div class="level-badge" :style="{ backgroundColor: userLevelInfo?.color || '#10b981' }" :title="`Hoàn thành ${nguoiDung.completed_trips || 0} chuyến đi`">
+                <AppIcon :name="userLevelInfo?.icon || 'sprout'" size="14" /> {{ userLevelInfo?.title || 'Thành viên' }}
               </div>
             </div>
             
@@ -2481,22 +2485,22 @@
               
               <div class="profile-stats-grid">
                 <div class="stat-box-premium">
-                  <div class="stat-icon">🗺️</div>
+                  <div class="stat-icon"><AppIcon name="map" size="20" /></div>
                   <strong>{{ myTripsList.length }}</strong>
                   <small>Đã lên lịch</small>
                 </div>
                 <div class="stat-box-premium">
-                  <div class="stat-icon">✅</div>
+                  <div class="stat-icon"><AppIcon name="checkcircle2" size="20" /></div>
                   <strong>{{ nguoiDung.completed_trips || 0 }}</strong>
                   <small>Hoàn thành</small>
                 </div>
                 <div class="stat-box-premium">
-                  <div class="stat-icon">❤️</div>
+                  <div class="stat-icon"><AppIcon name="heart" size="20" filled color="#ef4444" /></div>
                   <strong>{{ favoritesList.length }}</strong>
                   <small>Yêu thích</small>
                 </div>
                 <div class="stat-box-premium">
-                  <div class="stat-icon">🏆</div>
+                  <div class="stat-icon"><AppIcon name="trophy" size="20" /></div>
                   <strong>{{ nguoiDung.points || 0 }}</strong>
                   <small>Điểm số</small>
                 </div>
@@ -2524,7 +2528,7 @@
               </div>
               <div class="edit-actions">
                 <button class="cancel-edit-btn" @click="editProfileMode = false">Hủy</button>
-                <button class="save-edit-btn" @click="saveProfile">💾 Lưu thay đổi</button>
+                <button class="save-edit-btn" @click="saveProfile"><AppIcon name="save" size="14" /> Lưu thay đổi</button>
               </div>
             </div>
           </div>
@@ -2545,13 +2549,13 @@
               <article v-for="place in favoritesList" :key="place._id" class="app-place-card" v-reveal>
                 <div class="place-card-top">
                   <span class="place-card-type">{{ getPlaceTypeLabel(place.type) }}</span>
-                  <button class="heart-action-btn active" @click="doiYeuThich(place._id)">♥</button>
+                  <button class="heart-action-btn active" @click="doiYeuThich(place._id)"><AppIcon name="heart" size="16" filled color="#ef4444" /></button>
                 </div>
                 <h4>{{ place.name }}</h4>
                 <p class="place-card-desc">{{ place.description }}</p>
-                <p class="place-card-address" v-if="place.address">📍 {{ place.address }}</p>
+                <p class="place-card-address" v-if="place.address"><AppIcon name="pin" size="14" /> {{ place.address }}</p>
                 <div class="place-card-bottom">
-                  <a class="place-maps-btn" :href="chiDuongUrl(place.name, place.address)" target="_blank">🗺️ Chỉ đường</a>
+                  <a class="place-maps-btn" :href="chiDuongUrl(place.name, place.address)" target="_blank"><AppIcon name="map" size="14" /> Chỉ đường</a>
                 </div>
               </article>
             </div>
@@ -2570,7 +2574,7 @@
         <div class="modal-card auth-card-glass">
         <div class="modal-header">
           <h3>{{ dangKyMode ? 'Đăng Ký Tài Khoản' : 'Đăng Nhập' }}</h3>
-          <button class="close-modal-btn" @click="hienAuthModal = false">✕</button>
+          <button class="close-modal-btn" @click="hienAuthModal = false"><AppIcon name="x" size="16" /></button>
         </div>
         <div class="auth-tabs">
           <button :class="['auth-tab', { active: !dangKyMode }]" @click="dangKyMode = false">Đăng nhập</button>
@@ -2604,18 +2608,18 @@
       <div class="modal-card replan-modal-card">
         <div class="modal-header">
           <div class="rmc-title-group">
-            <span class="rmc-icon">🔄</span>
+            <span class="rmc-icon"><AppIcon name="refresh" size="24" /></span>
             <div>
               <h3 style="margin: 0; font-size: 1.15rem;">Thay Đổi Lịch Trình Khác</h3>
               <p class="rmc-sub" style="margin: 2px 0 0; font-size: 0.82rem; color: #64748b;">Chọn phương thức bạn muốn điều chỉnh hành trình</p>
             </div>
           </div>
-          <button class="close-modal-btn" @click="hienModalDoiLichTrinh = false">✕</button>
+          <button class="close-modal-btn" @click="hienModalDoiLichTrinh = false"><AppIcon name="x" size="16" /></button>
         </div>
         <div class="replan-options-body">
           <!-- Lựa chọn 1: Chỉnh sửa thông số -->
           <div class="replan-option-card" @click="chonDoiThongSo">
-            <div class="roc-icon">✏️</div>
+            <div class="roc-icon"><AppIcon name="pencil" size="22" /></div>
             <div class="roc-text">
               <h4>Chỉnh sửa thông số chuyến đi</h4>
               <p>Thay đổi số ngày, số người, mức kinh phí, phương tiện xe hoặc ngày khởi hành.</p>
@@ -2625,7 +2629,7 @@
 
           <!-- Lựa chọn 2: AI Tạo phương án ngẫu nhiên mới -->
           <div class="replan-option-card" @click="chonAILenPhuongAnMoi">
-            <div class="roc-icon">🎲</div>
+            <div class="roc-icon"><AppIcon name="dices" size="22" /></div>
             <div class="roc-text">
               <h4>AI Đề xuất phương án mới ngay</h4>
               <p>Giữ nguyên số ngày và ngân sách, AI sẽ làm mới và gợi ý các điểm check-in & quán ăn khác.</p>
@@ -2635,7 +2639,7 @@
 
           <!-- Lựa chọn 3: Đổi sang tỉnh thành khác -->
           <div class="replan-option-card" @click="chonDoiTinhThanh">
-            <div class="roc-icon">📍</div>
+            <div class="roc-icon"><AppIcon name="pin" size="22" /></div>
             <div class="roc-text">
               <h4>Khám phá tỉnh thành khác</h4>
               <p>Chọn các điểm đến hấp dẫn khác như Huế, Đà Nẵng, Hội An, Quy Nhơn, Nha Trang...</p>
@@ -2651,8 +2655,8 @@
     <div v-if="hienBillSplitter" class="modal-overlay" @click.self="hienBillSplitter = false">
       <div class="modal-card">
         <div class="modal-header">
-          <h3>💸 Tính Tiền Chia Đều Cho Nhóm</h3>
-          <button class="close-modal-btn" @click="hienBillSplitter = false">✕</button>
+          <h3><AppIcon name="wallet" size="20" style="margin-right: 8px; vertical-align: -3px;" />Tính Tiền Chia Đều Cho Nhóm</h3>
+          <button class="close-modal-btn" @click="hienBillSplitter = false" aria-label="Đóng"><AppIcon name="x" size="16" /></button>
         </div>
         <div class="splitter-body">
           <div class="app-field">
@@ -2681,8 +2685,8 @@
     <div v-if="hienTravelPass && lichTrinh" class="modal-overlay" @click.self="hienTravelPass = false">
       <div class="modal-card travel-pass-card">
         <div class="modal-header">
-          <h3>🎫 Thẻ Vé Hành Trình Du Lịch</h3>
-          <button class="close-modal-btn" @click="hienTravelPass = false">✕</button>
+          <h3><AppIcon name="ticket" size="20" style="margin-right: 8px; vertical-align: -3px;" />Thẻ Vé Hành Trình Du Lịch</h3>
+          <button class="close-modal-btn" @click="hienTravelPass = false" aria-label="Đóng"><AppIcon name="x" size="16" /></button>
         </div>
         <div class="boarding-pass">
           <div class="pass-header">
@@ -2706,7 +2710,9 @@
             </div>
           </div>
         </div>
-        <button class="app-primary-btn" @click="xuatPdf">In / Lưu PDF Thẻ Vé</button>
+        <button class="app-primary-btn" @click="xuatPdf">
+          <AppIcon name="filetext" size="16" style="margin-right: 6px; vertical-align: -2px;" />In / Lưu PDF Thẻ Vé
+        </button>
       </div>
     </div>
 
@@ -2714,8 +2720,8 @@
     <div v-if="showChangePlaceModal" class="modal-overlay" @click.self="showChangePlaceModal = false">
       <div class="modal-card">
         <div class="modal-header">
-          <h3>🔄 Chọn địa điểm thay thế</h3>
-          <button class="close-modal-btn" @click="showChangePlaceModal = false">✕</button>
+          <h3><AppIcon name="refresh" size="20" style="margin-right: 8px; vertical-align: -3px;" />Chọn địa điểm thay thế</h3>
+          <button class="close-modal-btn" @click="showChangePlaceModal = false" aria-label="Đóng"><AppIcon name="x" size="16" /></button>
         </div>
         <div class="modal-body" style="max-height: 60vh; overflow-y: auto; padding: 15px;">
           <div v-if="alternativePlaces.length === 0" style="text-align:center; padding: 20px; color: #666;">
@@ -2729,7 +2735,7 @@
               </div>
               <h4>{{ p.name }}</h4>
               <p class="place-card-desc">{{ p.description }}</p>
-              <p class="place-card-address" v-if="p.address">📍 {{ p.address }}</p>
+              <p class="place-card-address" v-if="p.address"><AppIcon name="pin" size="14" style="margin-right: 4px; vertical-align: -2px;" />{{ p.address }}</p>
             </article>
           </div>
         </div>
@@ -2740,16 +2746,16 @@
     <div v-if="showRainModal" class="modal-overlay" @click.self="showRainModal = false">
       <div class="rain-modal-card">
         <div class="rmc-header">
-          <div class="rmc-icon-badge">🌧️</div>
+          <div class="rmc-icon-badge"><AppIcon name="cloudrain" size="24" color="var(--primary-color, #0284c7)" /></div>
           <div>
             <h3>Đổi Lịch Tránh Mưa Thông Minh</h3>
             <p class="rmc-sub">Trợ lý AI tự động tối ưu chuyến đi theo dự báo thời tiết</p>
           </div>
-          <button class="close-modal-btn" @click="showRainModal = false">✕</button>
+          <button class="close-modal-btn" @click="showRainModal = false" aria-label="Đóng"><AppIcon name="x" size="16" /></button>
         </div>
         <div class="rmc-body">
           <div class="rmc-weather-alert-box">
-            <span class="rmc-wa-icon">⛅ ➔ 🌧️</span>
+            <span class="rmc-wa-icon" style="display: inline-flex; align-items: center; gap: 6px;"><AppIcon name="cloudsun" size="20" /> ➔ <AppIcon name="cloudrain" size="20" /></span>
             <div class="rmc-wa-content">
               <strong>Dự báo {{ lichTrinh?.destination || formDuLieu.diemDen }} chiều mai có mưa lúc 15:00</strong>
               <p>Khả năng mưa rào 75%, gió nhẹ, nhiệt độ ~26°C. AI đã chuẩn bị phương án hoán đổi điểm ngoài trời sang buổi sáng và chọn cafe/bảo tàng trong nhà lúc 15:30.</p>
@@ -2758,19 +2764,19 @@
 
           <div class="rmc-ai-proposal">
             <div class="rmc-proposal-title">
-              <span>🤖 ĐỐI CHIẾU LỊCH TRÌNH (PREVIEW):</span>
+              <span style="display: inline-flex; align-items: center; gap: 6px;"><AppIcon name="bot" size="16" /> ĐỐI CHIẾU LỊCH TRÌNH (PREVIEW):</span>
             </div>
             <div class="diff-preview-box" style="background: rgba(128,128,128,0.05); padding: 16px; border-radius: 8px; margin-top: 12px; display: flex; flex-direction: column; gap: 12px; border: 1px solid var(--border-color);">
               <div class="diff-old" style="background: #fee2e2; padding: 12px; border-radius: 6px;">
-                <div class="diff-label" style="color: #b91c1c; font-weight: 700; font-size: 13px; margin-bottom: 4px;">❌ Lịch cũ (Ngoài trời)</div>
+                <div class="diff-label" style="color: #b91c1c; font-weight: 700; font-size: 13px; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;"><AppIcon name="x" size="14" /> Lịch cũ (Ngoài trời)</div>
                 <div class="diff-content" style="color: #7f1d1d; text-decoration: line-through; font-size: 14px;" v-for="p in rainModalOldPlaces" :key="p">{{ p }}</div>
                 <div v-if="rainModalOldPlaces.length === 0" style="font-size: 13px; color: #7f1d1d;">Không có điểm nào vào chiều nay cần đổi.</div>
               </div>
               
-              <div class="diff-arrow" style="text-align: center; font-size: 20px;">⬇️ Tự động đổi thành</div>
+              <div class="diff-arrow" style="text-align: center; font-size: 14px; font-weight: 600; color: var(--text-sub); display: flex; align-items: center; justify-content: center; gap: 6px;"><AppIcon name="arrowdown" size="16" /> Tự động đổi thành</div>
               
               <div class="diff-new" style="background: #d1fae5; padding: 12px; border-radius: 6px;">
-                <div class="diff-label" style="color: #047857; font-weight: 700; font-size: 13px; margin-bottom: 4px;">✅ Lịch mới (Trong nhà)</div>
+                <div class="diff-label" style="color: #047857; font-weight: 700; font-size: 13px; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;"><AppIcon name="check" size="14" /> Lịch mới (Trong nhà)</div>
                 <div class="diff-content" style="color: #064e3b; font-weight: 600; font-size: 14px;" v-for="p in rainModalNewPlaces" :key="p">{{ p }}</div>
                 <div v-if="rainModalNewPlaces.length === 0" style="font-size: 13px; color: #064e3b;">Vẫn giữ nguyên lịch trình.</div>
               </div>
@@ -2799,10 +2805,10 @@
       <div class="modal-card infographic-share-card">
         <div class="modal-header">
           <div class="m-head-title">
-            <span class="m-head-icon">📱</span>
+            <span class="m-head-icon"><AppIcon name="phone" size="20" /></span>
             <h3>Thẻ Lịch Trình Infographic (Zalo / Messenger)</h3>
           </div>
-          <button class="close-modal-btn" @click="hienModalInfographic = false">✕</button>
+          <button class="close-modal-btn" @click="hienModalInfographic = false" aria-label="Đóng"><AppIcon name="x" size="16" /></button>
         </div>
 
         <div class="infographic-scroll-wrap">
@@ -2810,26 +2816,26 @@
           <div class="infographic-poster" id="infographic-poster-target">
             <!-- Header Poster -->
             <div class="ip-header">
-              <span class="ip-tag">🌴 AI TRAVEL TRIPS · MIỀN TRUNG VIỆT NAM</span>
+              <span class="ip-tag"><AppIcon name="sprout" size="14" style="margin-right: 4px; vertical-align: -2px;" />AI TRAVEL TRIPS · MIỀN TRUNG VIỆT NAM</span>
               <h2 class="ip-title">KẾ HOẠCH DU LỊCH {{ (lichTrinh.destination || formDuLieu.diemDen).toUpperCase() }}</h2>
               <div class="ip-meta-strip">
-                <span>⏱️ {{ lichTrinh.daysList.length }} Ngày</span>
-                <span>👥 {{ lichTrinh.people || formDuLieu.soNguoi }} Khách</span>
-                <span>💰 {{ dinhDangTien(lichTrinh.total_budget) }}đ</span>
+                <span style="display: inline-flex; align-items: center; gap: 4px;"><AppIcon name="clock" size="14" />{{ lichTrinh.daysList.length }} Ngày</span>
+                <span style="display: inline-flex; align-items: center; gap: 4px;"><AppIcon name="users" size="14" />{{ lichTrinh.people || formDuLieu.soNguoi }} Khách</span>
+                <span style="display: inline-flex; align-items: center; gap: 4px;"><AppIcon name="wallet" size="14" />{{ dinhDangTien(lichTrinh.total_budget) }}đ</span>
               </div>
             </div>
 
             <!-- Khối Nhà xe & Khách sạn đã chọn -->
             <div class="ip-highlight-box" v-if="formDuLieu.nhaXeDaChon || lichTrinh.hotel_recommendation">
               <div v-if="formDuLieu.nhaXeDaChon" class="ip-hl-row">
-                <span class="ip-hl-icon">🚌</span>
+                <span class="ip-hl-icon"><AppIcon name="bus" size="20" /></span>
                 <div>
                   <strong>{{ formDuLieu.nhaXeDaChon.name }} ({{ formDuLieu.nhaXeDaChon.type }})</strong>
                   <small>{{ formDuLieu.diemKhoiHanh }} ➔ {{ lichTrinh.destination || formDuLieu.diemDen }} · Hotline: {{ formDuLieu.nhaXeDaChon.hotline }}</small>
                 </div>
               </div>
               <div v-if="lichTrinh.hotel_recommendation" class="ip-hl-row">
-                <span class="ip-hl-icon">🏨</span>
+                <span class="ip-hl-icon"><AppIcon name="hotel" size="20" /></span>
                 <div>
                   <strong>{{ lichTrinh.hotel_recommendation.name }}</strong>
                   <small>{{ lichTrinh.hotel_recommendation.address || 'Khu vực trung tâm' }}</small>
@@ -2840,7 +2846,7 @@
             <!-- Tóm tắt lịch trình từng ngày -->
             <div class="ip-days-list">
               <div v-for="day in lichTrinh.daysList" :key="day.day" class="ip-day-block">
-                <div class="ip-day-title">📅 NGÀY {{ day.day }}</div>
+                <div class="ip-day-title"><AppIcon name="calendar" size="15" style="margin-right: 6px; vertical-align: -2px;" />NGÀY {{ day.day }}</div>
                 <div class="ip-activities-list">
                   <div v-for="act in day.activities" :key="act.time + act.place" class="ip-act-item">
                     <span class="ip-act-time">{{ act.time }}</span>
@@ -2854,7 +2860,7 @@
             <div class="ip-footer">
               <div class="ip-footer-left">
                 <small>Bản quyền thuộc Trợ lý Du lịch Miền Trung AI</small>
-                <span>🗺️ GPS Google Maps: Đã tạo tuyến đường tự động</span>
+                <span style="display: inline-flex; align-items: center; gap: 4px;"><AppIcon name="map" size="14" />GPS Google Maps: Đã tạo tuyến đường tự động</span>
               </div>
               <div class="ip-watermark">TRAVEL TRIPS</div>
             </div>
@@ -2868,15 +2874,16 @@
             :class="['app-primary-btn', { 'copied-success': daSaoChepZalo }]"
             @click="saoChepLichTrinhZalo"
           >
-            <span>{{ daSaoChepZalo ? '✓ Đã sao chép vào bộ nhớ!' : '📋 Sao chép tóm tắt gửi Zalo' }}</span>
+            <span style="display: inline-flex; align-items: center; gap: 6px;"><AppIcon :name="daSaoChepZalo ? 'check' : 'copy'" size="16" />{{ daSaoChepZalo ? 'Đã sao chép vào bộ nhớ!' : 'Sao chép tóm tắt gửi Zalo' }}</span>
           </button>
           <a
             :href="googleMapsAllStopsUrl"
             target="_blank"
             rel="noreferrer"
             class="app-secondary-btn"
+            style="display: inline-flex; align-items: center; gap: 6px;"
           >
-            🗺️ Mở toàn tuyến trên Google Maps ↗
+            <AppIcon name="map" size="16" />Mở toàn tuyến trên Google Maps ↗
           </a>
         </div>
       </div>
@@ -2900,24 +2907,24 @@
         <div class="film-grain"></div>
       </div>
 
-      <button class="skip-intro-btn" @click.stop="boQuaIntro">Bỏ qua ⏭️</button>
+      <button class="skip-intro-btn" @click.stop="boQuaIntro">Bỏ qua <AppIcon name="arrowright" size="14" style="margin-left: 4px; vertical-align: -2px;" /></button>
     </div>
 
     <!-- ==================== MODAL XÁC NHẬN LƯU LỊCH TRÌNH TRƯỚC KHI CHUYỂN TAB (PHẦN 2) ==================== -->
     <div v-if="hienModalNhacLuu" class="modal-overlay save-confirm-overlay" @click.self="huyChuyenTab">
       <div class="modal-card save-confirm-card">
-        <div class="scm-icon-ring">💾</div>
+        <div class="scm-icon-ring"><AppIcon name="save" size="28" /></div>
         <h3>Lưu lịch trình trước khi rời đi?</h3>
         <p>Bạn có một lịch trình <b>chưa được lưu</b>. Nếu rời trang này mà không lưu, lịch trình sẽ bị mất.</p>
         <div class="scm-actions">
           <button class="scm-btn scm-btn-save" @click="dongYLuuVaChuyenTab">
-            💾 Lưu lịch trình
+            <AppIcon name="save" size="16" style="margin-right: 6px; vertical-align: -2px;" />Lưu lịch trình
           </button>
           <button class="scm-btn scm-btn-discard" @click="khongLuuVaChuyenTab">
-            🚫 Bỏ qua, không lưu
+            <AppIcon name="alertcircle" size="16" style="margin-right: 6px; vertical-align: -2px;" />Bỏ qua, không lưu
           </button>
           <button class="scm-btn scm-btn-cancel" @click="huyChuyenTab">
-            ✕ Ở lại trang này
+            <AppIcon name="x" size="16" style="margin-right: 6px; vertical-align: -2px;" />Ở lại trang này
           </button>
         </div>
       </div>
@@ -2932,12 +2939,12 @@
             <span class="tdm-dest-tag">{{ xemTripChiTiet.destination }}</span>
             <h2 class="tdm-title">Chuyến đi {{ (xemTripChiTiet.daysList || xemTripChiTiet.days || []).length }} Ngày tại {{ xemTripChiTiet.destination }}</h2>
             <div class="tdm-meta-row">
-              <span class="tdm-meta-item">👥 {{ xemTripChiTiet.people || 1 }} người</span>
-              <span class="tdm-meta-item">💰 {{ dinhDangTien(xemTripChiTiet.total_budget) }}đ</span>
-              <span class="tdm-meta-item">📅 {{ dinhDangNgayNgan(xemTripChiTiet.created_at) }}</span>
+              <span class="tdm-meta-item"><AppIcon name="users" size="14" style="margin-right: 4px; vertical-align: -2px;" />{{ xemTripChiTiet.people || 1 }} người</span>
+              <span class="tdm-meta-item"><AppIcon name="wallet" size="14" style="margin-right: 4px; vertical-align: -2px;" />{{ dinhDangTien(xemTripChiTiet.total_budget) }}đ</span>
+              <span class="tdm-meta-item"><AppIcon name="calendar" size="14" style="margin-right: 4px; vertical-align: -2px;" />{{ dinhDangNgayNgan(xemTripChiTiet.created_at) }}</span>
             </div>
           </div>
-          <button class="close-modal-btn tdm-close" @click="hienModalChiTietTrip = false">✕</button>
+          <button class="close-modal-btn tdm-close" @click="hienModalChiTietTrip = false" aria-label="Đóng"><AppIcon name="x" size="16" /></button>
         </div>
 
         <!-- Body: Nếu đang xem ngày cụ thể -->
@@ -2949,14 +2956,14 @@
               <span class="tdm-day-label">Ngày {{ xemNgayChiTiet.day }}</span>
               <h3 class="tdm-day-route">{{ xemNgayChiTiet.title || xemNgayChiTiet.route || ('Ngày ' + xemNgayChiTiet.day) }}</h3>
               <p class="tdm-day-meals">
-                🍽️ {{ ['breakfast','lunch','dinner'].filter(m => (xemNgayChiTiet.activities||[]).some(a => a.type === m)).map(m => m === 'breakfast' ? 'Sáng' : m === 'lunch' ? 'Trưa' : 'Tối').join(', ') || 'Ăn sáng, trưa, tối' }}
+                <AppIcon name="utensils" size="14" style="margin-right: 4px; vertical-align: -2px;" />{{ ['breakfast','lunch','dinner'].filter(m => (xemNgayChiTiet.activities||[]).some(a => a.type === m)).map(m => m === 'breakfast' ? 'Sáng' : m === 'lunch' ? 'Trưa' : 'Tối').join(', ') || 'Ăn sáng, trưa, tối' }}
               </p>
             </div>
             <div class="tdm-day-img-wrap" v-if="xemNgayChiTiet.activities && xemNgayChiTiet.activities[0]?.image_url">
               <img :src="xemNgayChiTiet.activities[0].image_url" :alt="xemNgayChiTiet.title" class="tdm-day-img" />
             </div>
             <div class="tdm-day-img-wrap tdm-day-img-placeholder" v-else>
-              <span>🗺️</span>
+              <AppIcon name="map" size="24" color="var(--primary-color, #0284c7)" />
             </div>
           </div>
 
@@ -2968,7 +2975,7 @@
             <ul class="tdm-activities-list">
               <li v-for="(act, idx) in (xemNgayChiTiet.activities || [])" :key="idx" class="tdm-act-item">
                 <span class="tdm-act-time" v-if="act.time">{{ act.time }}</span>
-                <span class="tdm-act-icon">{{ act.type === 'breakfast' ? '🌅' : act.type === 'lunch' ? '☀️' : act.type === 'dinner' ? '🌙' : act.type === 'attraction' || act.type === 'checkin' ? '📍' : act.type === 'transport' ? '🚌' : '✨' }}</span>
+                <span class="tdm-act-icon"><AppIcon :name="act.type === 'breakfast' ? 'sunrise' : act.type === 'lunch' ? 'sun' : act.type === 'dinner' ? 'moon' : act.type === 'attraction' || act.type === 'checkin' ? 'pin' : act.type === 'transport' ? 'bus' : 'sparkles'" size="16" /></span>
                 <div class="tdm-act-info">
                   <span class="tdm-act-name">{{ act.name }}</span>
                   <span class="tdm-act-desc" v-if="act.description">{{ act.description }}</span>
@@ -2982,7 +2989,7 @@
 
         <!-- Body: Danh sách ngày (giống hình 2 — list clickable) -->
         <div v-else class="tdm-days-list-view">
-          <h3 class="tdm-section-title">📅 Lịch trình</h3>
+          <h3 class="tdm-section-title"><AppIcon name="calendar" size="18" style="margin-right: 6px; vertical-align: -2px;" />Lịch trình</h3>
           <div class="tdm-days-list">
             <div
               v-for="day in (xemTripChiTiet.daysList || xemTripChiTiet.days || [])"
@@ -2993,7 +3000,7 @@
               <div class="tdm-day-row-info">
                 <span class="tdm-day-row-title">Ngày {{ day.day }}: {{ day.title || day.route || ('Ngày ' + day.day) }}</span>
                 <span class="tdm-day-row-meals">
-                  🍽️ {{ ['breakfast','lunch','dinner'].filter(m => (day.activities||[]).some(a => a.type === m)).map(m => m === 'breakfast' ? 'Ăn sáng' : m === 'lunch' ? 'trưa' : 'tối').join(', ') || 'Ăn sáng, trưa, tối' }}
+                  <AppIcon name="utensils" size="13" style="margin-right: 4px; vertical-align: -2px;" />{{ ['breakfast','lunch','dinner'].filter(m => (day.activities||[]).some(a => a.type === m)).map(m => m === 'breakfast' ? 'Ăn sáng' : m === 'lunch' ? 'trưa' : 'tối').join(', ') || 'Ăn sáng, trưa, tối' }}
                 </span>
               </div>
               <span class="tdm-day-row-arrow">›</span>
@@ -3002,30 +3009,30 @@
 
           <!-- Budget summary -->
           <div class="tdm-budget-summary" v-if="xemTripChiTiet.budget_breakdown">
-            <h3 class="tdm-section-title">💰 Chi phí ước tính</h3>
+            <h3 class="tdm-section-title"><AppIcon name="wallet" size="18" style="margin-right: 6px; vertical-align: -2px;" />Chi phí ước tính</h3>
             <div class="tdm-budget-grid">
               <div class="tdm-budget-item" v-if="xemTripChiTiet.budget_breakdown.hotel">
-                <span class="tbi-icon">🏨</span>
+                <span class="tbi-icon"><AppIcon name="hotel" size="18" /></span>
                 <span class="tbi-label">Khách sạn</span>
                 <span class="tbi-value">{{ dinhDangTien(xemTripChiTiet.budget_breakdown.hotel) }}đ</span>
               </div>
               <div class="tdm-budget-item" v-if="xemTripChiTiet.budget_breakdown.transportation">
-                <span class="tbi-icon">🚌</span>
+                <span class="tbi-icon"><AppIcon name="bus" size="18" /></span>
                 <span class="tbi-label">Di chuyển</span>
                 <span class="tbi-value">{{ dinhDangTien(xemTripChiTiet.budget_breakdown.transportation) }}đ</span>
               </div>
               <div class="tdm-budget-item" v-if="xemTripChiTiet.budget_breakdown.food">
-                <span class="tbi-icon">🍜</span>
+                <span class="tbi-icon"><AppIcon name="utensils" size="18" /></span>
                 <span class="tbi-label">Ăn uống</span>
                 <span class="tbi-value">{{ dinhDangTien(xemTripChiTiet.budget_breakdown.food) }}đ</span>
               </div>
               <div class="tdm-budget-item" v-if="xemTripChiTiet.budget_breakdown.tickets">
-                <span class="tbi-icon">🎫</span>
+                <span class="tbi-icon"><AppIcon name="ticket" size="18" /></span>
                 <span class="tbi-label">Vé tham quan</span>
                 <span class="tbi-value">{{ dinhDangTien(xemTripChiTiet.budget_breakdown.tickets) }}đ</span>
               </div>
               <div class="tdm-budget-item tdm-budget-total">
-                <span class="tbi-icon">💵</span>
+                <span class="tbi-icon"><AppIcon name="wallet" size="18" /></span>
                 <span class="tbi-label">Tổng cộng</span>
                 <span class="tbi-value tbi-total">{{ dinhDangTien(xemTripChiTiet.total_budget) }}đ</span>
               </div>
@@ -3035,7 +3042,7 @@
           <!-- Action buttons -->
           <div class="tdm-footer-actions">
             <button class="tdm-action-btn tdm-open-btn" @click="moLaiLichTrinh(xemTripChiTiet); hienModalChiTietTrip = false">
-              🗺️ Mở và xem đầy đủ lịch trình
+              <AppIcon name="map" size="16" style="margin-right: 6px; vertical-align: -2px;" />Mở và xem đầy đủ lịch trình
             </button>
           </div>
         </div>
@@ -4422,6 +4429,14 @@ const authError = ref('')
 const myTripsList = ref([])
 const favoritesList = ref([])
 
+const userLevelInfo = computed(() => {
+  const trips = nguoiDung.value?.completed_trips || 0
+  if (trips >= 10) return { title: 'Thám Hiểm Gia', icon: 'crown', color: '#8b5cf6' }
+  if (trips >= 5) return { title: 'Lữ Khách Sành Sỏi', icon: 'rocket', color: '#f59e0b' }
+  if (trips >= 2) return { title: 'Phượt Thủ Tích Cực', icon: 'luggage', color: '#3b82f6' }
+  return { title: 'Tân Thủ Khám Phá', icon: 'sprout', color: '#10b981' }
+})
+
 // Tool Modals
 const hienBillSplitter = ref(false)
 const splitterTongTien = ref(3500000)
@@ -5460,15 +5475,15 @@ function tinhKhoangCachVaThoiGian(act1, act2) {
 
   // Ước lượng thời gian di chuyển: trung bình đô thị 25-30 km/h + 4 phút dừng/đỗ
   let phut = Math.max(8, Math.round(distKm * 2.5) + 4)
-  let phuongTien = '🚗'
+  let phuongTien = 'car'
   let labelPhuongTien = 'Ô tô / Taxi'
 
   if (distKm < 1.2) {
-    phuongTien = '🚶'
+    phuongTien = 'walk'
     phut = Math.max(5, Math.round(distKm * 12))
     labelPhuongTien = 'Đi bộ thư thả'
   } else if (distKm < 5) {
-    phuongTien = '🛵'
+    phuongTien = 'bike'
     phut = Math.max(7, Math.round(distKm * 2) + 3)
     labelPhuongTien = 'Xe máy tiện lợi'
   }
@@ -5483,7 +5498,7 @@ function tinhKhoangCachVaThoiGian(act1, act2) {
     if (gapPhut > 0 && gapPhut <= 40) {
       canhBao = {
         type: 'warning-tight',
-        icon: '⚠️',
+        icon: 'alerttriangle',
         title: 'Lịch trình sát giờ',
         desc: `Hai điểm chỉ cách nhau ${gapPhut} phút nhưng cần ~${phut} phút di chuyển. Bạn có thể bị vội!`
       }
@@ -5493,7 +5508,7 @@ function tinhKhoangCachVaThoiGian(act1, act2) {
   if (distKm > 18) {
     canhBao = {
       type: 'warning-far',
-      icon: '🚨',
+      icon: 'alertcircle',
       title: 'Khoảng cách xa (> 18 km)',
       desc: `Hai điểm cách nhau tới ${distKm} km (~${phut} phút xe). Cân nhắc gộp điểm cùng khu vực!`
     }
@@ -5631,29 +5646,29 @@ function dinhDangNgayNgan(date) {
 
 function getPlaceTypeLabel(type) {
   const map = {
-    attraction: '📸 Thắng cảnh',
-    restaurant: '🍲 Ẩm thực',
-    cafe: '☕ Cafe & Bar',
-    hotel: '🏨 Khách sạn'
+    attraction: 'Thắng cảnh',
+    restaurant: 'Ẩm thực',
+    cafe: 'Cafe & Bar',
+    hotel: 'Khách sạn'
   }
-  return map[type] || '📍 Địa điểm'
+  return map[type] || 'Địa điểm'
 }
 
 function getBadgeInfo(act) {
-  if (!act) return { icon: '📍', label: 'Hoạt động', class: 'badge-attraction' }
+  if (!act) return { icon: 'pin', label: 'Hoạt động', class: 'badge-attraction' }
   if (act.type) {
     const map = {
-      breakfast: { icon: '🥢', label: act.label || 'Ăn sáng', class: 'badge-breakfast' },
-      lunch: { icon: '🍜', label: act.label || 'Ăn trưa', class: 'badge-lunch' },
-      dinner: { icon: '🍲', label: act.label || 'Ăn tối', class: 'badge-dinner' },
-      checkin: { icon: '🛖', label: act.label || 'Nhận phòng', class: 'badge-hotel' },
-      checkout: { icon: '🚪', label: act.label || 'Trả phòng', class: 'badge-hotel' },
-      cafe: { icon: '☕', label: act.label || 'Cafe & Chill', class: 'badge-cafe' },
-      attraction: { icon: '⛩️', label: act.label || 'Tham quan / Check-in', class: 'badge-attraction' }
+      breakfast: { icon: 'sunrise', label: act.label || 'Ăn sáng', class: 'badge-breakfast' },
+      lunch: { icon: 'utensils', label: act.label || 'Ăn trưa', class: 'badge-lunch' },
+      dinner: { icon: 'utensils', label: act.label || 'Ăn tối', class: 'badge-dinner' },
+      checkin: { icon: 'hotel', label: act.label || 'Nhận phòng', class: 'badge-hotel' },
+      checkout: { icon: 'hotel', label: act.label || 'Trả phòng', class: 'badge-hotel' },
+      cafe: { icon: 'coffee', label: act.label || 'Cafe & Chill', class: 'badge-cafe' },
+      attraction: { icon: 'landmark', label: act.label || 'Tham quan / Check-in', class: 'badge-attraction' }
     }
     if (map[act.type]) return map[act.type]
   }
-  return { icon: '📸', label: 'Tham quan / Check-in', class: 'badge-attraction' }
+  return { icon: 'camera', label: 'Tham quan / Check-in', class: 'badge-attraction' }
 }
 
 function chiDuongUrl(place, address = '') {
@@ -6054,11 +6069,11 @@ function xuatPdf() {
 }
 
 function bieuTuongThoiTiet(code) {
-  if (code === 0) return '☀️'
-  if (code <= 3) return '⛅'
-  if (code <= 48) return '🌫️'
-  if (code <= 67 || code <= 82) return '🌧️'
-  return '⚡'
+  if (code === 0) return 'sun'
+  if (code <= 3) return 'cloudsun'
+  if (code <= 48) return 'wind'
+  if (code <= 67 || code <= 82) return 'cloudrain'
+  return 'cloudlightning'
 }
 
 function moTaThoiTiet(code) {

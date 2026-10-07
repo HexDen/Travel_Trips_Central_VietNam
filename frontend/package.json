@@ -8,10 +8,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@lucide/vue": "^1.52.0",
     "@vue-leaflet/vue-leaflet": "^0.10.1",
     "axios": "^1.4.0",
     "html2pdf.js": "^0.14.0",
     "leaflet": "^1.9.4",
+    "lucide-vue-next": "^1.0.0",
     "marked": "^18.1.0",
     "vue": "^3.3.0"
   },

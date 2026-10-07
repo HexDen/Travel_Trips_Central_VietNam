@@ -22,7 +22,7 @@
         </div>
       </button>
 
-      <!-- THANH ĐIỀU HƯỚNG CHÍNH (NAVIGATION WITH ARIA ROLES & SVG ICONS) -->
+      <!-- THANH ĐIỀU HƯỚNG CHÍNH (NAVIGATION WITH ARIA ROLES & LUCIDE ICONS) -->
       <nav class="desktop-nav" aria-label="Điều hướng chính" role="tablist">
         <button
           type="button"
@@ -32,10 +32,7 @@
           :class="['nav-item', { active: activeTab === 'explore' }]"
           @click="$emit('update:activeTab', 'explore')"
         >
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="10" />
-            <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
-          </svg>
+          <AppIcon name="compass" :size="19" class="nav-icon" />
           <span class="nav-label">Khám phá</span>
         </button>
 
@@ -47,13 +44,7 @@
           :class="['nav-item', { active: activeTab === 'planner' }]"
           @click="$emit('update:activeTab', 'planner')"
         >
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-            <line x1="16" y1="2" x2="16" y2="6" />
-            <line x1="8" y1="2" x2="8" y2="6" />
-            <line x1="3" y1="10" x2="21" y2="10" />
-            <path d="m9 16 2 2 4-4" />
-          </svg>
+          <AppIcon name="calendar" :size="19" class="nav-icon" />
           <span class="nav-label">Lên lịch</span>
         </button>
 
@@ -65,10 +56,7 @@
           :class="['nav-item', { active: activeTab === 'mytrips' }]"
           @click="$emit('update:activeTab', 'mytrips')"
         >
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
-            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-          </svg>
+          <AppIcon name="luggage" :size="19" class="nav-icon" />
           <span class="nav-label">Chuyến đi</span>
         </button>
 
@@ -81,12 +69,7 @@
           :class="['nav-item', { active: activeTab === 'admin' }]"
           @click="$emit('update:activeTab', 'admin')"
         >
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <rect x="3" y="3" width="7" height="7" rx="1" />
-            <rect x="14" y="3" width="7" height="7" rx="1" />
-            <rect x="14" y="14" width="7" height="7" rx="1" />
-            <rect x="3" y="14" width="7" height="7" rx="1" />
-          </svg>
+          <AppIcon name="dashboard" :size="19" class="nav-icon" />
           <span class="nav-label">Admin</span>
         </button>
       </nav>
@@ -101,20 +84,7 @@
           :title="isDark ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối'"
           @click="$emit('toggleDark')"
         >
-          <svg v-if="isDark" class="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="5" />
-            <line x1="12" y1="1" x2="12" y2="3" />
-            <line x1="12" y1="21" x2="12" y2="23" />
-            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-            <line x1="1" y1="12" x2="3" y2="12" />
-            <line x1="21" y1="12" x2="23" y2="12" />
-            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-          </svg>
-          <svg v-else class="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-          </svg>
+          <AppIcon :name="isDark ? 'sun' : 'moon'" :size="20" class="theme-icon" />
         </button>
 
         <!-- Thẻ người dùng đã đăng nhập hoặc Nút Đăng nhập -->
@@ -139,11 +109,7 @@
           aria-label="Đăng nhập tài khoản"
           @click="$emit('openAuth')"
         >
-          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
-            <polyline points="10 17 15 12 10 7" />
-            <line x1="15" y1="12" x2="3" y2="12" />
-          </svg>
+          <AppIcon name="login" :size="18" class="btn-icon" />
           <span>Đăng nhập</span>
         </button>
       </div>

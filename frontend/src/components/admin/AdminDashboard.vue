@@ -3,7 +3,7 @@
     <!-- SIDEBAR TỐI MÀU THUẦN TÚY -->
     <aside class="admin-sidebar">
       <div class="sidebar-brand">
-        <div class="brand-icon">🛡️</div>
+        <div class="brand-icon"><AppIcon name="shield" :size="24" /></div>
         <div class="brand-text">
           <h2>TravelAdmin</h2>
           <span>Central Command</span>
@@ -17,7 +17,7 @@
           :class="['menu-item', { active: currentTab === item.id }]"
           @click="currentTab = item.id"
         >
-          <span class="menu-icon">{{ item.icon }}</span>
+          <span class="menu-icon"><AppIcon :name="item.icon" :size="18" /></span>
           <span class="menu-label">{{ item.label }}</span>
         </button>
       </nav>
@@ -41,8 +41,8 @@
           Admin / <span>{{ currentMenuLabel }}</span>
         </div>
         <div class="header-actions">
-          <button class="icon-btn" title="Thông báo">🔔 <span class="badge">3</span></button>
-          <button class="icon-btn" title="Làm mới">🔄</button>
+          <button class="icon-btn" title="Thông báo"><AppIcon name="bell" :size="18" /> <span class="badge">3</span></button>
+          <button class="icon-btn" title="Làm mới"><AppIcon name="refresh" :size="18" /></button>
         </div>
       </header>
 
@@ -97,21 +97,21 @@
                   <td><span class="badge-tag">{{ place.category }}</span></td>
                   <td>
                     <div class="gps-cell" @click="openMapEditor(place)">
-                      📍 {{ place.lat.toFixed(4) }}, {{ place.lng.toFixed(4) }}
+                      <AppIcon name="pin" :size="14" /> {{ place.lat.toFixed(4) }}, {{ place.lng.toFixed(4) }}
                     </div>
                   </td>
                   <td>
                     <div class="warning-badges">
-                      <span v-if="place.missingHours" class="warn-badge" title="Thiếu giờ mở cửa">🕒</span>
-                      <span v-if="place.missingIndoor" class="warn-badge" title="Chưa gắn cờ Indoor/Outdoor">🏠</span>
-                      <span v-if="place.unroundedPrice" class="warn-badge" title="Giá tiền lẻ">💰</span>
+                      <span v-if="place.missingHours" class="warn-badge" title="Thiếu giờ mở cửa"><AppIcon name="clock" :size="14" /></span>
+                      <span v-if="place.missingIndoor" class="warn-badge" title="Chưa gắn cờ Indoor/Outdoor"><AppIcon name="hotel" :size="14" /></span>
+                      <span v-if="place.unroundedPrice" class="warn-badge" title="Giá tiền lẻ"><AppIcon name="wallet" :size="14" /></span>
                     </div>
                   </td>
                   <td>
                     <div class="action-btns">
-                      <button class="btn-sm btn-approve" title="Duyệt">✅</button>
-                      <button class="btn-sm btn-edit" title="Sửa" @click="openDrawer(place)">✏️</button>
-                      <button class="btn-sm btn-reject" title="Loại bỏ">❌</button>
+                      <button class="btn-sm btn-approve" title="Duyệt"><AppIcon name="check" :size="14" /></button>
+                      <button class="btn-sm btn-edit" title="Sửa" @click="openDrawer(place)"><AppIcon name="pencil" :size="14" /></button>
+                      <button class="btn-sm btn-reject" title="Loại bỏ"><AppIcon name="x" :size="14" /></button>
                     </div>
                   </td>
                 </tr>
@@ -183,8 +183,8 @@
               <h4>Radar Thời Tiết Miền Trung</h4>
               <div class="radar-mockup mt-3">
                 <div class="radar-scan"></div>
-                <div class="storm-blip" style="top: 30%; left: 40%;" title="Dông bão tại Quảng Bình">⚡</div>
-                <div class="storm-blip" style="top: 60%; left: 50%;" title="Mưa lớn tại Huế">🌧️</div>
+                <div class="storm-blip" style="top: 30%; left: 40%;" title="Dông bão tại Quảng Bình"><AppIcon name="cloudlightning" :size="14" /></div>
+                <div class="storm-blip" style="top: 60%; left: 50%;" title="Mưa lớn tại Huế"><AppIcon name="cloudrain" :size="14" /></div>
               </div>
             </div>
 
@@ -249,7 +249,7 @@
           </div>
 
           <div class="card-box mt-4">
-            <h4>Top Địa Điểm Bị Yêu Cầu "Đổi Điểm" 🔄</h4>
+            <h4>Top Địa Điểm Bị Yêu Cầu "Đổi Điểm" <AppIcon name="refresh" :size="16" /></h4>
             <table class="admin-table mt-2">
               <thead>
                 <tr>
@@ -286,7 +286,7 @@
         <div class="admin-drawer">
           <div class="drawer-header">
             <h3>Chi tiết địa điểm</h3>
-            <button class="icon-btn" @click="drawerOpen = false">✕</button>
+            <button class="icon-btn" @click="drawerOpen = false"><AppIcon name="x" :size="18" /></button>
           </div>
           <div class="drawer-body" v-if="selectedPlace">
             <img class="drawer-img" :src="selectedPlace.image || 'https://images.unsplash.com/photo-1559564289-4e785501fb3a?auto=format&fit=crop&w=300&q=80'" />
@@ -296,8 +296,8 @@
             <div class="form-group mt-4">
               <label style="font-weight: 600; display: block; margin-bottom: 8px;">Loại không gian</label>
               <div class="toggle-group">
-                <button :class="['toggle-btn', { active: selectedPlace.isIndoor === true }]" @click="selectedPlace.isIndoor = true">🏠 Có mái che</button>
-                <button :class="['toggle-btn', { active: selectedPlace.isIndoor === false }]" @click="selectedPlace.isIndoor = false">🌳 Ngoài trời</button>
+                <button :class="['toggle-btn', { active: selectedPlace.isIndoor === true }]" @click="selectedPlace.isIndoor = true"><AppIcon name="hotel" :size="14" /> Có mái che</button>
+                <button :class="['toggle-btn', { active: selectedPlace.isIndoor === false }]" @click="selectedPlace.isIndoor = false"><AppIcon name="leaf" :size="14" /> Ngoài trời</button>
               </div>
             </div>
             
@@ -320,11 +320,11 @@ import { ref, computed } from 'vue'
 const currentTab = ref('crawler')
 
 const menuItems = [
-  { id: 'intelligence', label: 'Travel Intelligence', icon: '📊' },
-  { id: 'crawler', label: 'Crawler Queue', icon: '🕷️' },
-  { id: 'ai', label: 'AI Prompts & Config', icon: '🧠' },
-  { id: 'weather', label: 'Weather Hub', icon: '⛈️' },
-  { id: 'settings', label: 'System Settings', icon: '⚙️' }
+  { id: 'intelligence', label: 'Travel Intelligence', icon: 'barchart' },
+  { id: 'crawler', label: 'Crawler Queue', icon: 'globe' },
+  { id: 'ai', label: 'AI Prompts & Config', icon: 'cpu' },
+  { id: 'weather', label: 'Weather Hub', icon: 'cloudrain' },
+  { id: 'settings', label: 'System Settings', icon: 'settings' }
 ]
 
 const currentMenuLabel = computed(() => {

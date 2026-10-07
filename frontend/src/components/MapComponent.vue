@@ -9,21 +9,21 @@
           :class="['mode-btn', { active: currentLayer === 'roadmap' }]"
           @click="currentLayer = 'roadmap'"
         >
-          🗺️ Bản đồ
+          <AppIcon name="map" size="14" style="margin-right: 4px; vertical-align: -2px;" /> Bản đồ
         </button>
         <button
           type="button"
           :class="['mode-btn', { active: currentLayer === 'satellite' }]"
           @click="currentLayer = 'satellite'"
         >
-          🛰️ Vệ tinh
+          <AppIcon name="globe" size="14" style="margin-right: 4px; vertical-align: -2px;" /> Vệ tinh
         </button>
         <button
           type="button"
           :class="['mode-btn', { active: currentLayer === 'terrain' }]"
           @click="currentLayer = 'terrain'"
         >
-          ⛰️ Địa hình
+          <AppIcon name="mountain" size="14" style="margin-right: 4px; vertical-align: -2px;" /> Địa hình
         </button>
       </div>
 
@@ -35,11 +35,11 @@
           @click="toggleClustering"
           :title="enableClustering ? 'Đang bật gom cụm chống ngợp ghim. Bấm để bung toàn bộ' : 'Bấm để bật gom cụm ghim gọn gàng'"
         >
-          <span class="cluster-icon">🧩</span>
+          <span class="cluster-icon" style="display: inline-flex; align-items: center;"><AppIcon name="sparkles" size="14" /></span>
           <span>{{ enableClustering ? 'Gom cụm: BẬT' : 'Gom cụm: TẮT' }}</span>
         </button>
-        <span class="map-pin-badge">
-          📍 {{ displayedItemsCount }} / {{ validPlaces.length }} điểm
+        <span class="map-pin-badge" style="display: inline-flex; align-items: center; gap: 4px;">
+          <AppIcon name="pin" size="13" /> {{ displayedItemsCount }} / {{ validPlaces.length }} điểm
           <small v-if="enableClustering && zoom < 14" class="clustering-tag">(Gom {{ clusters.length }} cụm)</small>
         </span>
         <a
@@ -63,42 +63,42 @@
           :class="['map-filter-chip', { active: categoryFilter === 'all' }]"
           @click="categoryFilter = 'all'"
         >
-          🌐 Tất cả ({{ validPlaces.length }})
+          <AppIcon name="globe" size="14" style="margin-right: 4px; vertical-align: -2px;" /> Tất cả ({{ validPlaces.length }})
         </button>
         <button
           type="button"
           :class="['map-filter-chip highlight-chip', { active: categoryFilter === 'top25' }]"
           @click="categoryFilter = 'top25'"
         >
-          ⭐ Top 25 nổi bật
+          <AppIcon name="star" size="14" style="margin-right: 4px; vertical-align: -2px;" /> Top 25 nổi bật
         </button>
         <button
           type="button"
           :class="['map-filter-chip', { active: categoryFilter === 'attraction' }]"
           @click="categoryFilter = 'attraction'"
         >
-          🏛️ Thắng cảnh ({{ countByType('attraction') }})
+          <AppIcon name="landmark" size="14" style="margin-right: 4px; vertical-align: -2px;" /> Thắng cảnh ({{ countByType('attraction') }})
         </button>
         <button
           type="button"
           :class="['map-filter-chip', { active: categoryFilter === 'restaurant' }]"
           @click="categoryFilter = 'restaurant'"
         >
-          🍲 Ẩm thực ({{ countByType('restaurant') }})
+          <AppIcon name="utensils" size="14" style="margin-right: 4px; vertical-align: -2px;" /> Ẩm thực ({{ countByType('restaurant') }})
         </button>
         <button
           type="button"
           :class="['map-filter-chip', { active: categoryFilter === 'hotel' }]"
           @click="categoryFilter = 'hotel'"
         >
-          🏨 Khách sạn ({{ countByType('hotel') }})
+          <AppIcon name="hotel" size="14" style="margin-right: 4px; vertical-align: -2px;" /> Khách sạn ({{ countByType('hotel') }})
         </button>
         <button
           type="button"
           :class="['map-filter-chip', { active: categoryFilter === 'cafe' }]"
           @click="categoryFilter = 'cafe'"
         >
-          ☕ Cafe ({{ countByType('cafe') }})
+          <AppIcon name="coffee" size="14" style="margin-right: 4px; vertical-align: -2px;" /> Cafe ({{ countByType('cafe') }})
         </button>
       </div>
     </div>
@@ -135,7 +135,7 @@
             <l-popup>
               <div class="gmap-popup cluster-popup">
                 <div class="cluster-popup-head">
-                  <span class="cluster-badge">🧩 Cụm địa điểm</span>
+                  <span class="cluster-badge" style="display: inline-flex; align-items: center; gap: 4px;"><AppIcon name="sparkles" size="13" /> Cụm địa điểm</span>
                   <span class="cluster-count-label">{{ cluster.count }} địa điểm</span>
                 </div>
                 <strong class="cluster-popup-title">Khu vực tập trung nhiều điểm đến</strong>
@@ -146,8 +146,9 @@
                   type="button"
                   class="popup-zoom-btn"
                   @click="zoomToCluster(cluster)"
+                  style="display: inline-flex; align-items: center; justify-content: center; gap: 6px;"
                 >
-                  🔍 Phóng to để xem chi tiết từng điểm ➔
+                  <AppIcon name="search" size="13" /> Phóng to để xem chi tiết từng điểm ➔
                 </button>
               </div>
             </l-popup>
@@ -166,18 +167,19 @@
               <div class="gmap-popup">
                 <div class="gmap-popup-header">
                   <span :class="['popup-badge', 'type-' + place.type]">{{ typeLabel(place.type) }}</span>
-                  <span class="popup-rating">★ {{ place.rating || '4.8' }}</span>
+                  <span class="popup-rating" style="display: inline-flex; align-items: center; gap: 4px;"><AppIcon name="star" size="12" filled color="#f59e0b" /> {{ place.rating || '4.8' }}</span>
                 </div>
                 <strong class="popup-title">{{ place.name }}</strong>
-                <p v-if="place.address" class="popup-address">📍 {{ place.address }}</p>
+                <p v-if="place.address" class="popup-address" style="display: flex; align-items: center; gap: 4px;"><AppIcon name="pin" size="13" /> {{ place.address }}</p>
                 <div class="popup-actions">
                   <a
                     :href="getDirectionUrl(place)"
                     target="_blank"
                     rel="noreferrer"
                     class="popup-dir-btn"
+                    style="display: inline-flex; align-items: center; gap: 6px;"
                   >
-                    🗺️ Chỉ đường trên Google Maps ↗
+                    <AppIcon name="map" size="13" /> Chỉ đường trên Google Maps ↗
                   </a>
                 </div>
               </div>
@@ -482,12 +484,28 @@ onMounted(() => {
 // Tạo Marker Pin dạng giọt nước SVG với màu sắc riêng cho từng loại địa điểm
 function getCustomPin(type) {
   const configs = {
-    attraction: { color: '#0d9488', emoji: '🏛️' }, // Đồng bộ Teal chủ đạo
-    restaurant: { color: '#e65100', emoji: '🍲' },
-    cafe:       { color: '#8b5cf6', emoji: '☕' },
-    hotel:      { color: '#0284c7', emoji: '🏨' }
+    attraction: { 
+      color: '#0d9488', 
+      svg: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>' 
+    },
+    restaurant: { 
+      color: '#e65100', 
+      svg: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2v6a3 3 0 0 1-3 3 3 3 0 0 1-3-3V2"/><path d="M15 11v11"/><path d="M5 2v4a3 3 0 0 0 3 3v13"/></svg>' 
+    },
+    cafe: { 
+      color: '#8b5cf6', 
+      svg: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg>' 
+    },
+    hotel: { 
+      color: '#0284c7', 
+      svg: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2Z"/><path d="m9 16 .348-.24c1.465-1.013 3.84-1.013 5.304 0L15 16"/><path d="M8 7h.01"/><path d="M16 7h.01"/><path d="M12 7h.01"/><path d="M12 11h.01"/><path d="M16 11h.01"/><path d="M8 11h.01"/></svg>' 
+    }
   }
-  const cfg = configs[type] || { color: '#0d9488', emoji: '📍' }
+  const defaultCfg = { 
+    color: '#0d9488', 
+    svg: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>' 
+  }
+  const cfg = configs[type] || defaultCfg
 
   const html = `
     <div style="
@@ -505,7 +523,7 @@ function getCustomPin(type) {
       cursor: pointer;
       transition: transform 0.2s ease;
     ">
-      <span style="transform: rotate(45deg); font-size: 14px; user-select: none;">${cfg.emoji}</span>
+      <span style="transform: rotate(45deg); display: flex; align-items: center; justify-content: center; user-select: none;">${cfg.svg}</span>
     </div>
   `
 
