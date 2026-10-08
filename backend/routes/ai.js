@@ -10,9 +10,9 @@ router.post('/plan', optionalAuth, async (req, res) => {
   try{
     const duLieu = req.body
     const lichTrinh = await dichVuAI.taoLichTrinh(duLieu)
-    // save to DB
+    // save draft plan to DB without owner (draft mode until user explicitly clicks Save)
     const doc = new Trip({
-      owner: req.userId || null,
+      owner: null,
       destination: lichTrinh.destination,
       start_date: duLieu.start_date || null,
       end_date: duLieu.end_date || null,

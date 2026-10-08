@@ -85,12 +85,58 @@ router.get('/trips/shared/:token', async (req, res) => {
   res.json(trip)
 })
 
-// Xóa chuyến đi (chỉ chủ sở hữu mới được xóa)
-router.delete('/trips/:tripId', requireAuth, async (req, res) => {
+// Lưu chuyến đi vào tài khoản cá nhân
+router.post('/my-trips', requireAuth, async (req, res) => {
   try {
-    const trip = await Trip.findOne({ _id: req.params.tripId, owner: req.userId })
-    if (!trip) return res.status(404).json({ error: 'Chuyến đi không tồn tại hoặc không thuộc tài khoản của bạn' })
-    await Trip.deleteOne({ _id: req.params.tripId })
+    const data = req.body
+    let trip = null
+    const tid = data.tripId || data._id
+    if (tid && String(tid).match(/^[0-9a-fA-F]{24}$/)) {
+      trip = await Trip.findById(tid)
+    }
+    if (trip) {
+      trip.owner = req.userId
+      if (data.destination) trip.destination = data.destination
+      if (data.total_budget) trip.total_budget = data.total_budget
+      if (data.days) trip.days = data.days
+      if (data.hotel_recommendation) trip.hotel_recommendation = data.hotel_recommendation
+      if (data.budget_breakdown) trip.budget_breakdown = data.budget_breakdown
+      trip.created_at = new Date()
+      await trip.save()
+      return res.json(trip)
+    } else {
+      const newTrip = new Trip({
+        owner: req.userId,
+        destination: data.destination,
+        start_date: data.start_date || null,
+        end_date: data.end_date || null,
+        total_budget: data.total_budget,
+        people: data.people || 1,
+        interests: data.interests || [],
+        selected_places: data.selected_places || [],
+        transportation: data.transportation,
+        hotel_request: data.hotel_request,
+        hotel_recommendation: data.hotel_recommendation,
+        budget_breakdown: data.budget_breakdown,
+        days: data.days || data.daysList || []
+      })
+      const saved = await newTrip.save()
+      return res.json(saved)
+    }
+  } catch (err) {
+    console.error('Lỗi lưu trip:', err)
+    res.status(500).json({ error: err.message || 'Không thể lưu chuyến đi' })
+  }
+})
+
+// Xóa chuyến đi (chủ sở hữu hoặc bản nháp chưa lưu)
+router.delete('/trips/:tripId', async (req, res) => {
+  try {
+    const tid = req.params.tripId
+    // Xóa theo ID nếu là ObjectId hợp lệ
+    if (String(tid).match(/^[0-9a-fA-F]{24}$/)) {
+      await Trip.deleteOne({ _id: tid })
+    }
     res.json({ success: true, message: 'Đã xóa chuyến đi thành công' })
   } catch (err) {
     res.status(500).json({ error: err.message || 'Không thể xóa chuyến đi' })
