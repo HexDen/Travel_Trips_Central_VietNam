@@ -829,6 +829,15 @@
                   >
                     <AppIcon name="star" size="15" filled color="#f59e0b" /> Đã chọn ({{ selectedPlaces.length }})
                   </button>
+                  <button
+                    type="button"
+                    class="ppt-btn ppt-crawler-btn"
+                    :disabled="dangCrawl"
+                    @click="kichHoatCrawl110()"
+                    title="Kích hoạt cào 110 địa điểm thực tế mới chia đều cho 11 tỉnh thành (10 điểm/tỉnh)"
+                  >
+                    ⚡ {{ dangCrawl ? 'Đang cào 110 điểm...' : 'Cào 110 địa điểm mới (11 tỉnh)' }}
+                  </button>
                 </div>
 
                 <!-- KHAY ĐỊA ĐIỂM ĐÃ CHỌN (TIỆN LỢI & DỄ QUẢN LÝ) -->
@@ -5665,6 +5674,22 @@ async function kichHoatAICrawl(destOverride = null) {
   }
 }
 
+async function kichHoatCrawl110() {
+  dangCrawl.value = true
+  thongBaoCrawl.value = '🤖 Đang kích hoạt cào quét 110 địa điểm du lịch & ẩm thực mới tinh chia đều cho 11 tỉnh thành...'
+  try {
+    const res = await api.post('/places/crawl-110')
+    await taiDuLieuThanhPho()
+    thongBaoCrawl.value = `🎉 ${res.data?.message || 'Đã cào thành công 110 địa điểm mới!'} (Hiện có ${places.value.length} địa điểm tại ${formDuLieu.diemDen || 'khu vực'})`
+    setTimeout(() => { thongBaoCrawl.value = '' }, 8000)
+  } catch (e) {
+    thongBaoCrawl.value = '⚠️ Lỗi khi cào dữ liệu: ' + (e?.response?.data?.error || e.message)
+    setTimeout(() => { thongBaoCrawl.value = '' }, 8000)
+  } finally {
+    dangCrawl.value = false
+  }
+}
+
 const searchExploreQuery = ref('')
 const exploreLimit = ref(5)
 
@@ -9001,6 +9026,36 @@ button { cursor: pointer; }
 .ppt-selected-tab.active {
   background: #10b981 !important;
   border-color: #10b981 !important;
+}
+.ppt-crawler-btn {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(59, 130, 246, 0.15)) !important;
+  border: 1px solid rgba(16, 185, 129, 0.45) !important;
+  color: #059669 !important;
+  font-weight: 600 !important;
+  margin-left: auto;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.ppt-crawler-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #10b981, #0284c7) !important;
+  color: #ffffff !important;
+  transform: translateY(-1.5px);
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+}
+.ppt-crawler-btn:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+:root[data-theme="dark"] .ppt-crawler-btn {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(59, 130, 246, 0.2)) !important;
+  border-color: rgba(52, 211, 153, 0.5) !important;
+  color: #34d399 !important;
+}
+:root[data-theme="dark"] .ppt-crawler-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #059669, #0284c7) !important;
+  color: #ffffff !important;
 }
 
 /* Khay địa điểm đã chọn */

@@ -26,6 +26,12 @@ const PlaceSchema = new mongoose.Schema({
   reviews_count: Number,    // Số lượng đánh giá Google Maps
   source_target: String,    // Nguồn dữ liệu đích (Foody, Cổng thông tin du lịch, Google Maps)
   district: String,         // Phân vùng cụm / micro-district
+  // Bổ sung dữ liệu dành riêng cho khách sạn (Hotel & Accommodation)
+  stars: Number,            // Xếp hạng sao (3 sao, 4 sao, 5 sao)
+  price_from: Number,       // Giá phòng từ (khởi điểm)
+  gallery: [String],        // Bộ sưu tập ảnh phòng / không gian
+  amenities: [String],      // Tiện ích khách sạn (Hồ bơi, Buffet, Spa, Wifi...)
+  rooms: [mongoose.Schema.Types.Mixed], // Danh sách các loại phòng và giá chi tiết
   created_at: { type: Date, default: Date.now }
 })
 

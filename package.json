@@ -1,4 +1,14 @@
 {
+  "name": "travel-trips-central-vietnam",
+  "version": "1.0.0",
+  "scripts": {
+    "seed": "npm --prefix backend/crawler run seed",
+    "seed:mongo": "npm --prefix backend/crawler run seed:mongo",
+    "seed:bullmq": "npm --prefix backend/crawler run seed:bullmq",
+    "crawler": "npm --prefix backend/crawler start",
+    "crawler:producer": "npm --prefix backend/crawler run producer",
+    "crawler:install": "npm install --prefix backend/crawler"
+  },
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "jsonwebtoken": "^9.0.3"

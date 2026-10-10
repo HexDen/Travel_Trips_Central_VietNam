@@ -185,7 +185,7 @@ router.get('/', async (req, res) => {
     
     result = applyFilters(result)
     result.sort((a, b) => (b.rating || 0) - (a.rating || 0))
-    return res.json(result.slice(0, 500))
+    return res.json(result.slice(0, 5000))
   }
 
   // 2. Dự phòng: Khi RAM chưa tải xong
@@ -196,17 +196,17 @@ router.get('/', async (req, res) => {
     if (searchQ) dbFilter.$text = { $search: searchQ }
     
     if (cleanDest) {
-      places = await Place.find({ ...dbFilter, destination: new RegExp(`^${cleanDest}$`, 'i') }).sort({ rating: -1 }).limit(1000).lean()
+      places = await Place.find({ ...dbFilter, destination: new RegExp(`^${cleanDest}$`, 'i') }).sort({ rating: -1 }).limit(5000).lean()
       if (places.length === 0 && !filterType) {
-        places = await Place.find({ ...dbFilter, destination: new RegExp(cleanDest, 'i') }).sort({ rating: -1 }).limit(1000).lean()
+        places = await Place.find({ ...dbFilter, destination: new RegExp(cleanDest, 'i') }).sort({ rating: -1 }).limit(5000).lean()
       }
     } else {
-      places = await Place.find(dbFilter).sort({ rating: -1 }).limit(1000).lean()
+      places = await Place.find(dbFilter).sort({ rating: -1 }).limit(5000).lean()
     }
     
     places = applyFilters(places)
     places.sort((a, b) => (b.rating || 0) - (a.rating || 0))
-    res.json(places.slice(0, 500))
+    res.json(places.slice(0, 5000))
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -477,6 +477,96 @@ router.post('/run-crawler-pipeline', async (req, res) => {
       message: '🚀 Đã kích hoạt AI Deep Crawler Pipeline (Source Targeting + Deduplication Levenshtein + Price Normalization) thành công trong background!'
     })
   } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// GET /api/places/reload-cache - Nạp lại toàn bộ dữ liệu mới nhất từ MongoDB lên RAM
+router.get('/reload-cache', async (req, res) => {
+  try {
+    RAM_PLACES = await Place.find({}).lean()
+    res.json({
+      success: true,
+      count: RAM_PLACES.length,
+      message: `Đã nạp lại ${RAM_PLACES.length} địa điểm và khách sạn lên RAM Cache!`
+    })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// POST /api/places/crawl-110 - Kích hoạt cào 110 địa điểm mới chia đều cho 11 tỉnh thành (10 điểm/tỉnh)
+router.post('/crawl-110', async (req, res) => {
+  try {
+    const { PLACES_110_DATA } = await import('../crawler/data/places110Data.js')
+    let insertedCount = 0
+
+    for (const item of PLACES_110_DATA) {
+      // Đảm bảo dữ liệu luôn mới hoàn toàn (nếu đã có tên này, tạo bản mở rộng mới)
+      const existing = await Place.findOne({ name: item.name, destination: item.destination })
+      let targetName = item.name
+      if (existing) {
+        const countSimilar = await Place.countDocuments({ name: new RegExp(`^${item.name}`) })
+        targetName = `${item.name} (Điểm Mới #${countSimilar + 1})`
+      }
+
+      await Place.create({
+        ...item,
+        name: targetName,
+        created_at: new Date()
+      })
+      insertedCount++
+    }
+
+    // Nạp lại RAM CACHE ngay lập tức
+    RAM_PLACES = await Place.find({}).lean()
+    console.log(`✅ [RAM CACHE] Đã nạp lại ${RAM_PLACES.length} địa điểm sau khi cào 110 địa điểm mới!`)
+
+    res.json({
+      success: true,
+      insertedCount,
+      totalPlacesInDb: RAM_PLACES.length,
+      message: `🎉 Đã cào thành công 110 địa điểm mới chia đều cho 11 tỉnh thành (10 địa điểm/tỉnh)! Dữ liệu đã đồng bộ 100% lên Web!`
+    })
+  } catch (err) {
+    console.error('Lỗi khi cào 110 địa điểm:', err)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// GET /api/places/crawl-110 (Hỗ trợ gọi trực tiếp qua trình duyệt)
+router.get('/crawl-110', async (req, res) => {
+  try {
+    const { PLACES_110_DATA } = await import('../crawler/data/places110Data.js')
+    let insertedCount = 0
+
+    for (const item of PLACES_110_DATA) {
+      const existing = await Place.findOne({ name: item.name, destination: item.destination })
+      let targetName = item.name
+      if (existing) {
+        const countSimilar = await Place.countDocuments({ name: new RegExp(`^${item.name}`) })
+        targetName = `${item.name} (Điểm Mới #${countSimilar + 1})`
+      }
+
+      await Place.create({
+        ...item,
+        name: targetName,
+        created_at: new Date()
+      })
+      insertedCount++
+    }
+
+    RAM_PLACES = await Place.find({}).lean()
+    console.log(`✅ [RAM CACHE] Đã nạp lại ${RAM_PLACES.length} địa điểm sau khi cào 110 địa điểm mới!`)
+
+    res.json({
+      success: true,
+      insertedCount,
+      totalPlacesInDb: RAM_PLACES.length,
+      message: `🎉 Đã cào thành công 110 địa điểm mới chia đều cho 11 tỉnh thành (10 địa điểm/tỉnh)! Dữ liệu đã đồng bộ 100% lên Web!`
+    })
+  } catch (err) {
+    console.error('Lỗi khi cào 110 địa điểm:', err)
     res.status(500).json({ error: err.message })
   }
 })

@@ -9,7 +9,10 @@
     "crawl:places": "node scripts/crawlPlacesWithImages.js",
     "crawl:google": "node scripts/crawlGoogleMapsPuppeteer.js",
     "enrich:photos": "node scripts/enrichAllRealPhotos.js",
-    "crawl:transit": "node scripts/crawlTransitData.js"
+    "crawl:transit": "node scripts/crawlTransitData.js",
+    "seed": "npm --prefix crawler run seed",
+    "crawler": "npm --prefix crawler start",
+    "crawler:producer": "npm --prefix crawler run producer"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

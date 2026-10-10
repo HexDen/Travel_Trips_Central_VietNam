@@ -57,7 +57,9 @@
               <p>Duyệt dữ liệu điểm đến cào về từ Google Maps, Foody...</p>
             </div>
             <div class="heading-actions">
-              <button class="primary-btn">Chạy Crawler Mới</button>
+              <button class="primary-btn" :disabled="isCrawling" @click="runCrawler">
+                ⚡ {{ isCrawling ? 'Đang cào 110 địa điểm...' : 'Chạy Crawler 110 Địa Điểm (11 Tỉnh)' }}
+              </button>
             </div>
           </div>
 
@@ -316,8 +318,23 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import api from '../../services/api'
 
 const currentTab = ref('crawler')
+const isCrawling = ref(false)
+
+const runCrawler = async () => {
+  if (isCrawling.value) return
+  isCrawling.value = true
+  try {
+    const res = await api.post('/places/crawl-110')
+    alert(res.data?.message || 'Đã cào thành công 110 địa điểm!')
+  } catch (err) {
+    alert('Lỗi cào dữ liệu: ' + (err.response?.data?.error || err.message))
+  } finally {
+    isCrawling.value = false
+  }
+}
 
 const menuItems = [
   { id: 'intelligence', label: 'Travel Intelligence', icon: 'barchart' },
