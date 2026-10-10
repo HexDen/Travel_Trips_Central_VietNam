@@ -387,6 +387,11 @@
               alt="Hành trình Miền Trung - Di sản & Biển xanh"
               class="planner-hero-banner-img"
             />
+            <div class="planner-hero-vignette"></div>
+            <div class="planner-hero-badge">
+              <span class="hero-badge-sub">AI Trip Planner</span>
+              <span class="hero-badge-title">Hành trình<br/>Miền Trung</span>
+            </div>
           </div>
 
           <!-- BƯỚC NHẬP THÔNG TIN KẾ HOẠCH (Chỉ hiện khi chưa tạo lịch trình - Yêu cầu 4) -->
