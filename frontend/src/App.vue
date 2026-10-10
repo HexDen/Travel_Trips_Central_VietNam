@@ -14335,13 +14335,12 @@ button { cursor: pointer; }
 
 /* ==================== PLANNER HERO BANNER (VỊ TRÍ KHOANH ĐỎ) ==================== */
 .planner-hero-banner {
-  width: 100%;
-  border-radius: 16px;
+  width: calc(100% - 40px);
+  max-width: 900px;
+  margin: 0 auto 20px auto;
+  border-radius: 20px;
   overflow: hidden;
-  box-shadow:
-    0 20px 60px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(255, 255, 255, 0.08),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.4);
   position: relative;
   flex-shrink: 0;
   animation: fadeInBanner 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -14349,10 +14348,8 @@ button { cursor: pointer; }
 }
 
 .planner-hero-banner:hover {
-  transform: translateY(-4px) scale(1.003);
-  box-shadow:
-    0 28px 70px rgba(0, 0, 0, 0.55),
-    0 0 0 1px rgba(255, 255, 255, 0.12);
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 0 30px 60px -10px rgba(0, 0, 0, 0.5);
 }
 
 .planner-hero-banner-img {
