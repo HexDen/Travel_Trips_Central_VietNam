@@ -255,8 +255,8 @@ defineEmits(['update:activeTab', 'openAuth', 'toggleDark'])
 
 .nav-item.active {
   color: #ffffff;
-  background: var(--primary, #0d7c76);
-  box-shadow: 0 4px 12px rgba(13, 124, 118, 0.3);
+  background: var(--primary, #0284c7);
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.3);
 }
 
 .nav-item.active .nav-icon {
@@ -270,14 +270,14 @@ defineEmits(['update:activeTab', 'openAuth', 'toggleDark'])
   gap: 10px;
 }
 
-/* THEME TOGGLE (MIN TARGET 44px x 44px) */
+/* THEME TOGGLE (MIN TARGET 44px x 44px CHUẨN A11Y) */
 .theme-toggle-btn {
-  width: 42px;
-  height: 42px;
-  min-width: 42px;
-  min-height: 42px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
   border: 1px solid var(--border-color, #e2e8f0);
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.85);
   color: var(--text-main, #1e293b);
   border-radius: 50%;
   display: inline-flex;
@@ -327,14 +327,14 @@ defineEmits(['update:activeTab', 'openAuth', 'toggleDark'])
 
 .user-chip-btn.active {
   border-color: var(--primary, #0d7c76);
-  box-shadow: 0 0 0 2px rgba(13, 124, 118, 0.2);
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2);
 }
 
 .user-avatar {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary, #0d7c76), #0ea5e9);
+  background: linear-gradient(135deg, var(--primary, #0284c7), #0ea5e9);
   color: #ffffff;
   font-weight: 800;
   font-size: 0.85rem;
@@ -342,7 +342,7 @@ defineEmits(['update:activeTab', 'openAuth', 'toggleDark'])
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 2px 6px rgba(13, 124, 118, 0.25);
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
 }
 
 .user-name {
@@ -359,7 +359,7 @@ defineEmits(['update:activeTab', 'openAuth', 'toggleDark'])
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  background: var(--primary, #0d7c76);
+  background: var(--primary, #0284c7);
   color: #ffffff;
   border: 0;
   padding: 8px 18px;
@@ -368,7 +368,7 @@ defineEmits(['update:activeTab', 'openAuth', 'toggleDark'])
   font-size: 0.86rem;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(13, 124, 118, 0.25);
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.25);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -378,9 +378,9 @@ defineEmits(['update:activeTab', 'openAuth', 'toggleDark'])
 }
 
 .login-header-btn:hover {
-  background: var(--primary-dark, #0a635e);
+  background: var(--primary-dark, #0369a1);
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(13, 124, 118, 0.35);
+  box-shadow: 0 6px 18px rgba(2, 132, 199, 0.35);
 }
 
 .login-header-btn:active {
@@ -416,8 +416,8 @@ button:focus-visible {
 
 :root[data-theme="dark"] .nav-item.active {
   color: #ffffff;
-  background: var(--primary, #0d7c76);
-  box-shadow: 0 4px 16px rgba(13, 124, 118, 0.45);
+  background: var(--primary, #38bdf8);
+  box-shadow: 0 4px 16px rgba(56, 189, 248, 0.4);
 }
 
 :root[data-theme="dark"] .theme-toggle-btn {
@@ -428,7 +428,7 @@ button:focus-visible {
 
 :root[data-theme="dark"] .theme-toggle-btn:hover {
   background: rgba(51, 65, 85, 0.9);
-  border-color: var(--primary, #0d7c76);
+  border-color: var(--primary, #38bdf8);
   color: #38bdf8;
 }
 
@@ -439,7 +439,7 @@ button:focus-visible {
 
 :root[data-theme="dark"] .user-chip-btn:hover {
   background: rgba(51, 65, 85, 0.9);
-  border-color: var(--primary, #0d7c76);
+  border-color: var(--primary, #38bdf8);
 }
 
 :root[data-theme="dark"] .user-name {
@@ -447,7 +447,7 @@ button:focus-visible {
 }
 
 :root[data-theme="dark"] .brand-title {
-  color: #2dd4bf;
+  color: #38bdf8;
 }
 
 :root[data-theme="dark"] .brand-tagline {

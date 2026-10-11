@@ -250,8 +250,14 @@
             </div>
           </div>
 
-          <!-- Danh sách địa điểm đặc sắc theo thành phố CÓ HÌNH ẢNH SỐNG ĐỘNG -->
-          <div class="explore-section" v-reveal>
+          <!-- TỔNG QUAN BỀ DÀY LỊCH SỬ & DI SẢN MIỀN TRUNG KHI CHỌN "TẤT CẢ" -->
+          <CentralHeritageOverview
+            v-if="formDuLieu.diemDen === ALL_DESTINATIONS"
+            @select-destination="chonDiemDenExplore"
+          />
+
+          <!-- Danh sách địa điểm đặc sắc theo thành phố CÓ HÌNH ẢNH SỐNG ĐỘNG (KHI CHỌN TỈNH THÀNH CỤ THỂ) -->
+          <div v-else class="explore-section" v-reveal>
             <div class="section-title-row">
               <div>
                 <h3>Địa điểm & Đặc sản tại {{ formDuLieu.diemDen === ALL_DESTINATIONS ? 'Miền Trung' : formDuLieu.diemDen }}</h3>
@@ -441,18 +447,154 @@
               <!-- CHỌN ĐIỂM BẮT ĐẦU (KHỞI HÀNH) GỌN GÀNG -->
               <div class="app-field full-width">
                 <div class="field-label-between">
-                  <label><AppIcon name="pin" :size="15" /> Điểm bắt đầu (Khởi hành)</label>
+                  <div class="field-label-main">
+                    <label><AppIcon name="pin" :size="15" /> Điểm bắt đầu (Khởi hành)</label>
+                    <button
+                      type="button"
+                      class="toggle-manual-ward-btn"
+                      :class="{ active: showManualWardPicker }"
+                      @click="toggleManualWardPicker"
+                      title="Chọn thủ công từ Tỉnh/Thành đến Quận/Huyện và Xã/Phường"
+                    >
+                      <AppIcon name="landmark" :size="13" />
+                      <span>{{ showManualWardPicker ? 'Đóng chọn Xã/Phường' : 'Tùy chọn: Chọn Xã / Phường thủ công' }}</span>
+                      <span class="mwp-arrow-icon">{{ showManualWardPicker ? '▲' : '▼' }}</span>
+                    </button>
+                  </div>
 
                   <span class="route-origin-tag" v-if="formDuLieu.diemKhoiHanh">Xuất phát: <b>{{ formDuLieu.diemKhoiHanh }}</b></span>
                 </div>
                 <div class="origin-select-wrapper">
-                  <input
-                    v-model="formDuLieu.diemKhoiHanh"
-                    class="app-input origin-combo-input"
-                    :list="'origin-list-' + originProvinceMode"
-                    placeholder="Tìm hoặc chọn tỉnh/thành xuất phát..."
-                    autocomplete="off"
-                  />
+                  <div class="origin-input-row">
+                    <input
+                      v-model="formDuLieu.diemKhoiHanh"
+                      class="app-input origin-combo-input has-gps"
+                      :list="'origin-list-' + originProvinceMode"
+                      placeholder="Tìm hoặc chọn tỉnh/thành xuất phát..."
+                      autocomplete="off"
+                    />
+                    <button
+                      type="button"
+                      class="origin-gps-btn"
+                      :class="{ 'is-locating': isLocatingOrigin }"
+                      @click="layViTriHienTaiChoDiemXuatPhat"
+                      title="Lấy vị trí hiện tại của bạn qua GPS"
+                      aria-label="Lấy vị trí hiện tại của bạn qua GPS"
+                    >
+                      <span v-if="isLocatingOrigin" class="gps-spinner" aria-hidden="true"></span>
+                      <AppIcon v-else name="compass" :size="18" />
+                      <span class="gps-btn-tooltip">{{ isLocatingOrigin ? 'Đang định vị GPS...' : 'Vị trí hiện tại' }}</span>
+                    </button>
+                  </div>
+
+                  <!-- BỘ CHỌN XÃ / PHƯỜNG / QUẬN / HUYỆN THỦ CÔNG -->
+                  <transition name="expand-fade">
+                    <div v-if="showManualWardPicker" class="manual-ward-picker-card">
+                      <div class="mwp-header">
+                        <div class="mwp-title">
+                          <AppIcon name="landmark" :size="15" />
+                          <span>Lựa chọn đơn vị hành chính chi tiết</span>
+                        </div>
+                        <small class="mwp-sub">Chọn Tỉnh/Thành ➔ Quận/Huyện ➔ Phường/Xã cho điểm khởi hành</small>
+                      </div>
+
+                      <div class="mwp-grid">
+                        <!-- 1. TỈNH / THÀNH PHỐ -->
+                        <div class="mwp-field">
+                          <label class="mwp-label">1. Tỉnh / Thành phố *</label>
+                          <select
+                            v-model="selectedManualProvinceCode"
+                            class="mwp-select"
+                            @change="onManualProvinceChange"
+                          >
+                            <option :value="null">-- Chọn Tỉnh / Thành --</option>
+                            <option
+                              v-for="p in manualProvincesList"
+                              :key="p.code"
+                              :value="p.code"
+                            >
+                              {{ p.name }}
+                            </option>
+                          </select>
+                        </div>
+
+                        <!-- 2. QUẬN / HUYỆN / THỊ XÃ -->
+                        <div class="mwp-field">
+                          <label class="mwp-label">2. Quận / Huyện / Thị xã *</label>
+                          <select
+                            v-model="selectedManualDistrictCode"
+                            class="mwp-select"
+                            :disabled="!selectedManualProvinceCode || loadingDistricts"
+                            @change="onManualDistrictChange"
+                          >
+                            <option :value="null">{{ loadingDistricts ? 'Đang tải...' : '-- Chọn Quận / Huyện --' }}</option>
+                            <option
+                              v-for="d in manualDistrictsList"
+                              :key="d.code"
+                              :value="d.code"
+                            >
+                              {{ d.name }}
+                            </option>
+                          </select>
+                        </div>
+
+                        <!-- 3. PHƯỜNG / XÃ / THỊ TRẤN -->
+                        <div class="mwp-field">
+                          <label class="mwp-label">3. Phường / Xã / Thị trấn *</label>
+                          <select
+                            v-model="selectedManualWardCode"
+                            class="mwp-select"
+                            :disabled="!selectedManualDistrictCode || loadingWards"
+                            @change="onManualWardChange"
+                          >
+                            <option :value="null">{{ loadingWards ? 'Đang tải...' : '-- Chọn Phường / Xã --' }}</option>
+                            <option
+                              v-for="w in manualWardsList"
+                              :key="w.code"
+                              :value="w.code"
+                            >
+                              {{ w.name }}
+                            </option>
+                          </select>
+                        </div>
+
+                        <!-- 4. SỐ NHÀ, TÊN ĐƯỜNG (TÙY CHỌN) -->
+                        <div class="mwp-field">
+                          <label class="mwp-label">4. Số nhà, tên đường (tùy chọn)</label>
+                          <input
+                            v-model="manualStreetAddress"
+                            class="mwp-input"
+                            placeholder="Ví dụ: 120 Nguyễn Văn Linh..."
+                          />
+                        </div>
+                      </div>
+
+                      <!-- DÒNG PREVIEW VÀ NÚT ÁP DỤNG -->
+                      <div class="mwp-footer">
+                        <div class="mwp-preview-box" v-if="manualComputedAddress">
+                          <span class="mwp-preview-tag">Địa chỉ hoàn chỉnh:</span>
+                          <strong class="mwp-preview-val">{{ manualComputedAddress }}</strong>
+                        </div>
+                        <div class="mwp-action-btns">
+                          <button
+                            type="button"
+                            class="mwp-apply-btn"
+                            :disabled="!selectedManualProvinceCode"
+                            @click="apDungDiaChiThuCong"
+                          >
+                            ✓ Áp dụng địa chỉ này
+                          </button>
+                          <button
+                            type="button"
+                            class="mwp-close-btn"
+                            @click="showManualWardPicker = false"
+                          >
+                            Đóng
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </transition>
                   <datalist :id="'origin-list-' + originProvinceMode">
                     <option
                       v-for="city in popularOrigins"
@@ -483,7 +625,7 @@
                 </div>
                 <div class="rob-mid-compact">
                   <span class="rob-dash-line"></span>
-                  <span class="rob-dist-pill"><AppIcon name="route" :size="14" /> ~{{ transitRouteInfo.estimatedDistanceKm || transitRouteInfo.distanceKm || 350 }} km</span>
+                  <span class="rob-dist-pill"><AppIcon name="route" :size="14" /> Khoảng {{ Math.abs(transitRouteInfo.estimatedDistanceKm || transitRouteInfo.distanceKm || 350) }} km</span>
                 </div>
                 <div class="rob-point">
                   <span class="rob-dot end"></span>
@@ -3528,12 +3670,15 @@ import api from './services/api'
 import AppHeader from './components/layout/AppHeader.vue'
 import SkeletonCard from './components/SkeletonCard.vue'
 import MapComponent from './components/MapComponent.vue'
+import CentralHeritageOverview from './components/home/CentralHeritageOverview.vue'
 import AdminDashboard from './components/admin/AdminDashboard.vue'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import html2pdf from 'html2pdf.js'
 import { getBusOperatorsForRoute, getEstimatedDistance } from './services/busService'
 import { getHotelsForDestination } from './services/hotelService'
+import { detectCurrentLocationCity } from './services/locationService'
+import { fetchProvinces, fetchDistricts, fetchWards } from './services/administrativeService'
 
 // Fix default icon issue for Leaflet in Vite
 delete L.Icon.Default.prototype._getIconUrl;
@@ -4753,6 +4898,120 @@ const transitRouteInfo = computed(() => {
 
 function chonDiemKhoiHanh(city) {
   formDuLieu.diemKhoiHanh = typeof city === 'object' && city !== null ? city.name : city
+}
+
+const isLocatingOrigin = ref(false)
+
+async function layViTriHienTaiChoDiemXuatPhat() {
+  if (isLocatingOrigin.value) return
+  isLocatingOrigin.value = true
+
+  try {
+    const res = await detectCurrentLocationCity()
+    const fullAddress = res?.detailedAddress || res?.cityName || ''
+    if (fullAddress) {
+      formDuLieu.diemKhoiHanh = fullAddress
+      personalityToast.value = {
+        icon: 'compass',
+        title: 'Đã định vị chính xác địa chỉ!',
+        desc: fullAddress
+      }
+      setTimeout(() => { personalityToast.value = null }, 5000)
+    }
+  } catch (err) {
+    personalityToast.value = {
+      icon: 'alert-triangle',
+      title: 'Không thể định vị GPS',
+      desc: err.message || 'Vui lòng kiểm tra quyền truy cập vị trí trên trình duyệt.'
+    }
+    setTimeout(() => { personalityToast.value = null }, 4500)
+  } finally {
+    isLocatingOrigin.value = false
+  }
+}
+
+// ==================== BỘ CHỌN XÃ / PHƯỜNG / QUẬN / HUYỆN THỦ CÔNG ====================
+const showManualWardPicker = ref(false)
+const manualProvincesList = ref([])
+const manualDistrictsList = ref([])
+const manualWardsList = ref([])
+const selectedManualProvinceCode = ref(null)
+const selectedManualDistrictCode = ref(null)
+const selectedManualWardCode = ref(null)
+const manualStreetAddress = ref('')
+const loadingDistricts = ref(false)
+const loadingWards = ref(false)
+
+const manualComputedAddress = computed(() => {
+  const parts = []
+  if (manualStreetAddress.value.trim()) {
+    parts.push(manualStreetAddress.value.trim())
+  }
+  if (selectedManualWardCode.value) {
+    const w = manualWardsList.value.find(item => item.code === selectedManualWardCode.value)
+    if (w) parts.push(w.name)
+  }
+  if (selectedManualDistrictCode.value) {
+    const d = manualDistrictsList.value.find(item => item.code === selectedManualDistrictCode.value)
+    if (d) parts.push(d.name)
+  }
+  if (selectedManualProvinceCode.value) {
+    const p = manualProvincesList.value.find(item => item.code === selectedManualProvinceCode.value)
+    if (p) parts.push(p.name)
+  }
+  return parts.join(', ')
+})
+
+async function toggleManualWardPicker() {
+  showManualWardPicker.value = !showManualWardPicker.value
+  if (showManualWardPicker.value && manualProvincesList.value.length === 0) {
+    manualProvincesList.value = await fetchProvinces()
+  }
+}
+
+async function onManualProvinceChange() {
+  selectedManualDistrictCode.value = null
+  selectedManualWardCode.value = null
+  manualDistrictsList.value = []
+  manualWardsList.value = []
+  if (!selectedManualProvinceCode.value) return
+
+  loadingDistricts.value = true
+  try {
+    manualDistrictsList.value = await fetchDistricts(selectedManualProvinceCode.value)
+  } finally {
+    loadingDistricts.value = false
+  }
+}
+
+async function onManualDistrictChange() {
+  selectedManualWardCode.value = null
+  manualWardsList.value = []
+  if (!selectedManualDistrictCode.value) return
+
+  loadingWards.value = true
+  try {
+    manualWardsList.value = await fetchWards(selectedManualDistrictCode.value)
+  } finally {
+    loadingWards.value = false
+  }
+}
+
+function onManualWardChange() {
+  // Trigger computed update
+}
+
+function apDungDiaChiThuCong() {
+  if (manualComputedAddress.value) {
+    formDuLieu.diemKhoiHanh = manualComputedAddress.value
+    personalityToast.value = {
+      icon: 'landmark',
+      title: 'Đã áp dụng địa chỉ xuất phát!',
+      desc: manualComputedAddress.value
+    }
+    setTimeout(() => { personalityToast.value = null }, 4500)
+    showManualWardPicker.value = false
+  }
 }
 
 const transitTab = ref('bus') // 'bus' hoặc 'train'
@@ -7778,67 +8037,129 @@ function boQuaIntro() {
 
 
 :root {
-  --primary: #059669; /* emerald-600 */
-  --primary-dark: #065f46; /* emerald-800 */
-  --primary-light: #ecfdf5;
-  --accent: #f59e0b; /* Vàng Hội An */
-  --accent-light: #fef3c7;
-  --bg-app: #f1f5f9;
-  --card-bg: rgba(255, 255, 255, 0.6); /* Glass light mode */
-  --text-main: #1e293b;
-  --text-sub: #475569;
-  --border-color: rgba(253, 230, 138, 0.4); /* border-amber-200/40 */
-  --radius-sm: 8px; /* rounded-lg */
-  --radius-md: 12px; /* rounded-xl */
+  /* ==================== UI PRO MAX DESIGN SYSTEM TOKENS ==================== */
+  /* Palette: Aurora Ocean & Heritage Coral (Chuẩn nhận diện du lịch Duyên hải & Di sản Miền Trung) */
+  --primary: #0284c7; /* Sky / Ocean Blue 600 - Tươi mới, chuyên nghiệp, tin cậy */
+  --primary-dark: #0369a1; /* Ocean Blue 700 */
+  --primary-light: #e0f2fe; /* Sky 100 */
+  --primary-surface: #f0f9ff; /* Sky 50 */
+  --secondary: #0d9488; /* Teal 600 - Điểm xuyết ngọc bích ven biển */
+  --accent: #ea580c; /* Coral Orange 600 - Tương phản nổi bật, ánh đèn lồng Hội An */
+  --accent-hover: #c2410c; /* Coral Orange 700 */
+  --accent-light: #ffedd5; /* Orange 100 */
+
+  /* Backgrounds & Bề mặt phẳng đạt chuẩn tương phản cao (Không dùng kính mờ loang lổ) */
+  --bg-app: #f8fafc; /* Slate 50 - Nền sáng dịu mắt, sạch sẽ */
+  --card-bg: #ffffff; /* Thẻ trắng đặc 100% - Chữ sắc nét, dễ đọc nhất */
+  --card-bg-elevated: #ffffff;
+  --card-bg-subtle: #f1f5f9;
+
+  /* Typography & Đạt chuẩn tương phản WCAG 2.2 AA / AAA (Tối thiểu 4.5:1) */
+  --text-main: #0f172a; /* Slate 900 - Tương phản 13:1 so với nền trắng */
+  --text-sub: #475569; /* Slate 600 - Tương phản 5.5:1, vượt chuẩn WCAG AA */
+  --text-muted: #64748b; /* Slate 500 */
+
+  /* Đường viền tinh tế, chuẩn xác (Thay thế viền vàng đục cũ) */
+  --border-color: #e2e8f0; /* Slate 200 - Viền xám trung tính tinh tế */
+  --border-hover: #cbd5e1; /* Slate 300 */
+  --border-strong: #94a3b8;
+
+  /* Bo góc hài hòa */
+  --radius-sm: 8px;
+  --radius-md: 12px;
   --radius-lg: 16px;
-  --shadow-sm: 0 4px 20px rgba(0,0,0,0.04);
-  --shadow-md: 0 12px 32px rgba(0,0,0,0.06);
-  --shadow-lg: 0 0 40px rgba(245, 158, 11, 0.15); /* Warm Glow */
+  --radius-full: 9999px;
+
+  /* Đổ bóng tự nhiên nhiều tầng (Layered Shadows) */
+  --shadow-sm: 0 1px 3px 0 rgba(15, 23, 42, 0.06), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 4px 16px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -2px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 12px 28px -4px rgba(15, 23, 42, 0.12), 0 4px 10px -2px rgba(15, 23, 42, 0.06);
+  --shadow-primary: 0 4px 14px rgba(2, 132, 199, 0.25);
+  --shadow-accent: 0 4px 14px rgba(234, 88, 12, 0.25);
+
+  /* Form Inputs & Weather */
   --input-bg: #f8fafc;
   --input-bg-focus: #ffffff;
+  --weather-bg: #f0f9ff;
+  --weather-border: #bae6fd;
 }
 
 :root[data-theme="dark"] {
-  --bg-app: #0f172a; /* Keep dark background, we'll use teal/emerald gradient on containers */
-  --card-bg: rgba(255, 255, 255, 0.1); /* Glass dark mode */
-  --text-main: #f8fafc;
-  --text-sub: #cbd5e1;
-  --border-color: rgba(253, 230, 138, 0.3); /* border-amber-200/30 */
-  --primary-light: rgba(5, 150, 105, 0.15);
-  --accent-light: rgba(245, 158, 11, 0.15);
-  --shadow-sm: 0 4px 20px rgba(0,0,0,0.2);
-  --shadow-md: 0 10px 30px rgba(0,0,0,0.3);
-  --shadow-lg: 0 0 40px rgba(245, 158, 11, 0.15); /* Warm Glow */
-  --input-bg: rgba(0,0,0,0.2);
-  --input-bg-focus: rgba(0,0,0,0.4);
-  --weather-bg: rgba(5, 150, 105, 0.1);
-  --weather-border: rgba(5, 150, 105, 0.2);
+  /* Brand Colors Dark Mode - Sáng rõ, nổi bật trên nền tối */
+  --primary: #38bdf8; /* Sky 400 - Độ sáng cao, không chìm trên nền đen */
+  --primary-dark: #0284c7;
+  --primary-light: rgba(56, 189, 248, 0.16);
+  --primary-surface: rgba(56, 189, 248, 0.08);
+  --secondary: #2dd4bf; /* Mint Teal 400 */
+  --accent: #f97316; /* Warm Coral 500 */
+  --accent-hover: #ea580c;
+  --accent-light: rgba(249, 115, 22, 0.16);
+
+  /* Bề mặt tối chuyên nghiệp (Deep Ocean Navy) */
+  --bg-app: #0b1329; /* Xanh than vũ trụ sâu thẳm, không bị chói mắt */
+  --card-bg: #162036; /* Slate 800 - Thẻ màu đặc độ tương phản cao */
+  --card-bg-elevated: #1e293b;
+  --card-bg-subtle: #0f172a;
+
+  /* Typography Dark Mode */
+  --text-main: #f8fafc; /* Slate 50 - Tương phản cực cao */
+  --text-sub: #cbd5e1; /* Slate 300 - Dễ đọc */
+  --text-muted: #94a3b8; /* Slate 400 */
+
+  /* Borders Dark Mode */
+  --border-color: rgba(51, 65, 85, 0.7); /* Slate 700 */
+  --border-hover: rgba(100, 116, 139, 0.85);
+  --border-strong: rgba(148, 163, 184, 0.5);
+
+  /* Shadows Dark Mode */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 16px 36px rgba(0, 0, 0, 0.55);
+  --shadow-primary: 0 4px 16px rgba(56, 189, 248, 0.3);
+  --shadow-accent: 0 4px 16px rgba(249, 115, 22, 0.3);
+
+  /* Form Inputs Dark Mode */
+  --input-bg: rgba(15, 23, 42, 0.75);
+  --input-bg-focus: #0f172a;
+  --weather-bg: rgba(15, 23, 42, 0.8);
+  --weather-border: rgba(56, 189, 248, 0.25);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
-  font-family: 'Be Vietnam Pro', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: url('/images/app-bg.jpg') no-repeat center center fixed;
-  background-size: cover;
+  /* Phông chữ Be Vietnam Pro tối ưu tuyệt đối cho tiếng Việt có dấu, khoảng cách quang học hoàn hảo */
+  font-family: 'Be Vietnam Pro', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background-color: var(--bg-app);
   color: var(--text-main);
   -webkit-tap-highlight-color: transparent;
-  transition: background-color 0.3s, color 0.3s;
+  transition: background-color 0.25s ease, color 0.25s ease;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Thêm lớp overlay mờ nhẹ để đảm bảo chữ trên web vẫn dễ đọc */
+/* Ánh sáng nền Ambient Mesh nhẹ nhàng, không gây nhiễu chữ */
 body::before {
   content: '';
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: var(--bg-app);
-  opacity: 0.7; /* Chế độ sáng tối sẽ tự động điều chỉnh độ tối qua --bg-app */
+  background: radial-gradient(circle at 12% 15%, rgba(2, 132, 199, 0.04) 0%, transparent 45%),
+              radial-gradient(circle at 88% 85%, rgba(234, 88, 12, 0.03) 0%, transparent 45%);
   z-index: -1;
   pointer-events: none;
 }
 
-h1, h2, h3, h4, .place-name, .hero-content h2, .app-header h1 {
-  font-family: 'Playfair Display', 'Lora', serif;
+:root[data-theme="dark"] body::before {
+  background: radial-gradient(circle at 12% 15%, rgba(56, 189, 248, 0.05) 0%, transparent 50%),
+              radial-gradient(circle at 88% 85%, rgba(249, 115, 22, 0.04) 0%, transparent 50%);
+}
+
+/* Tiêu đề loại bỏ serif Playfair Display để tiếng Việt không bị dính dấu, dùng Be Vietnam Pro đậm nét sang trọng */
+h1, h2, h3, h4, h5, h6, .place-name, .hero-content h2, .app-header h1 {
+  font-family: 'Be Vietnam Pro', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+  color: var(--text-main);
 }
 
 button, input, select { font: inherit; outline: none; }
@@ -8034,7 +8355,7 @@ button { cursor: pointer; }
 }
 .hero-cta-btn {
   background: #ffffff;
-  color: #059669;
+  color: var(--primary);
   border: none;
   padding: 12px 24px;
   border-radius: var(--radius-lg);
@@ -9884,10 +10205,9 @@ button { cursor: pointer; }
   transition: all 0.3s ease;
 }
 :root[data-theme="dark"] .plan-summary-card {
-  background: rgba(15, 23, 42, 0.88);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(253, 230, 138, 0.25);
-  box-shadow: 0 0 40px rgba(245, 158, 11, 0.12);
+  background: #162036;
+  border: 1px solid rgba(51, 65, 85, 0.7);
+  box-shadow: var(--shadow-md);
 }
 .summary-top-tag {
   display: flex;
@@ -9918,7 +10238,8 @@ button { cursor: pointer; }
   font-size: 22px;
   font-weight: 800;
   color: var(--text-main);
-  font-family: 'Playfair Display', serif;
+  font-family: inherit;
+  letter-spacing: -0.02em;
 }
 .summary-budget {
   font-size: 13.5px;
@@ -14327,13 +14648,20 @@ button { cursor: pointer; }
   gap: 24px;
   width: 100%;
   padding: 24px 20px 48px;
-  /* Lớp lưới gradient: Xanh bóng đêm, Tím than, Xanh ngọc sẫm, Đỏ hồng hoàng hôn */
-  background: linear-gradient(-45deg, #0f172a, #312e81, #0f766e, #9f1239);
-  background-size: 400% 400%;
-  animation: liquidGradient 15s ease infinite;
+  /* Lưới màu chuyển dịu nhẹ miền Trung: Biển xanh - Trời trong - Nắng Hội An */
+  background: linear-gradient(135deg, #f0f9ff 0%, #e2e8f0 35%, #f8fafc 70%, #ffedd5 100%);
+  background-size: 300% 300%;
+  animation: liquidGradient 20s ease infinite;
 }
 
-/* ==================== PLANNER HERO BANNER (VỊ TRÍ KHOANH ĐỎ) ==================== */
+:root[data-theme="dark"] .planner-tab-bg {
+  /* Biển đêm huyền bí miền Trung (Deep Ocean Night Sky) */
+  background: linear-gradient(135deg, #0b1329 0%, #0f172a 40%, #162036 75%, #0d9488 100%);
+  background-size: 300% 300%;
+  animation: liquidGradient 20s ease infinite;
+}
+
+/* ==================== PLANNER HERO BANNER ==================== */
 .planner-hero-banner {
   width: 100%;
   border-radius: 16px;
@@ -14439,22 +14767,22 @@ button { cursor: pointer; }
   100% { background-position: 0% 50%; }
 }
 
-/* Glassmorphism cho Form thông tin */
+/* Form Container - Nền đặc, tương phản cao, chống lóa mắt */
 .planner-glass-form {
-  background: rgba(255, 255, 255, 0.75) !important;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.4) !important;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
+  background: #ffffff !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.08) !important;
   position: relative;
   z-index: 1;
 }
 
-/* Tối ưu chữ trong form mờ để không bị chìm */
+/* Chế độ Dark Mode: Nền thẻ Slate 800 đặc sắc nét */
 :root[data-theme="dark"] .planner-glass-form {
-  background: rgba(15, 23, 42, 0.6) !important;
-  border: 1px solid rgba(255, 255, 255, 0.05) !important;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+  background: #162036 !important;
+  border: 1px solid rgba(51, 65, 85, 0.7) !important;
+  box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.55) !important;
 }
 
 /* ==================== REVEAL ON SCROLL ==================== */
@@ -14480,8 +14808,272 @@ button { cursor: pointer; }
 .field-label-between {
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: space-between;
+  gap: 8px;
   flex-wrap: wrap;
+}
+
+.field-label-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.toggle-manual-ward-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(14, 165, 233, 0.1);
+  border: 1px solid rgba(14, 165, 233, 0.3);
+  color: #0284c7;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+:root[data-theme="dark"] .toggle-manual-ward-btn {
+  background: rgba(56, 189, 248, 0.12);
+  border-color: rgba(56, 189, 248, 0.35);
+  color: #38bdf8;
+}
+
+.toggle-manual-ward-btn:hover,
+.toggle-manual-ward-btn.active {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #0284c7;
+}
+
+:root[data-theme="dark"] .toggle-manual-ward-btn.active {
+  background: #0284c7;
+  color: #ffffff;
+}
+
+.mwp-arrow-icon {
+  font-size: 0.65rem;
+  opacity: 0.8;
+}
+
+/* ==================== MANUAL WARD PICKER CARD ==================== */
+.manual-ward-picker-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  margin-top: 4px;
+  margin-bottom: 6px;
+}
+
+:root[data-theme="dark"] .manual-ward-picker-card {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+.mwp-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mwp-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: #0f172a;
+}
+
+:root[data-theme="dark"] .mwp-title {
+  color: #f8fafc;
+}
+
+.mwp-sub {
+  font-size: 0.74rem;
+  color: #64748b;
+}
+
+:root[data-theme="dark"] .mwp-sub {
+  color: #94a3b8;
+}
+
+.mwp-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+@media (max-width: 900px) {
+  .mwp-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 540px) {
+  .mwp-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mwp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mwp-label {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+:root[data-theme="dark"] .mwp-label {
+  color: #cbd5e1;
+}
+
+.mwp-select,
+.mwp-input {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #0f172a;
+  font-size: 0.82rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+}
+
+:root[data-theme="dark"] .mwp-select,
+:root[data-theme="dark"] .mwp-input {
+  background: #0f172a;
+  border-color: #334155;
+  color: #f1f5f9;
+}
+
+.mwp-select:focus,
+.mwp-input:focus {
+  border-color: #0284c7;
+}
+
+.mwp-select:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.mwp-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #e2e8f0;
+  flex-wrap: wrap;
+}
+
+:root[data-theme="dark"] .mwp-footer {
+  border-top-color: #334155;
+}
+
+.mwp-preview-box {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 65%;
+}
+
+.mwp-preview-tag {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #0284c7;
+  text-transform: uppercase;
+}
+
+:root[data-theme="dark"] .mwp-preview-tag {
+  color: #38bdf8;
+}
+
+.mwp-preview-val {
+  font-size: 0.85rem;
+  color: #0f172a;
+  word-break: break-word;
+}
+
+:root[data-theme="dark"] .mwp-preview-val {
+  color: #f8fafc;
+}
+
+.mwp-action-btns {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.mwp-apply-btn {
+  background: #0284c7;
+  color: #ffffff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.mwp-apply-btn:hover:not(:disabled) {
+  background: #0369a1;
+}
+
+.mwp-apply-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mwp-close-btn {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+:root[data-theme="dark"] .mwp-close-btn {
+  background: #0f172a;
+  border-color: #334155;
+  color: #94a3b8;
+}
+
+.mwp-close-btn:hover {
+  background: #e2e8f0;
+}
+
+:root[data-theme="dark"] .mwp-close-btn:hover {
+  background: #1e293b;
+}
+
+.expand-fade-enter-active,
+.expand-fade-leave-active {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.expand-fade-enter-from,
+.expand-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
 }
 
 /* ==================== ORIGIN COMPACT PICKER ==================== */
@@ -14494,6 +15086,101 @@ button { cursor: pointer; }
 
 .origin-combo-input {
   width: 100%;
+}
+
+.origin-input-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.origin-combo-input.has-gps {
+  padding-right: 46px;
+}
+
+.origin-gps-btn {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid rgba(14, 165, 233, 0.35);
+  background: rgba(14, 165, 233, 0.12);
+  color: #0284c7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 2;
+  padding: 0;
+}
+
+:root[data-theme="dark"] .origin-gps-btn {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: rgba(56, 189, 248, 0.35);
+  color: #38bdf8;
+}
+
+.origin-gps-btn:hover {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #0284c7;
+  transform: translateY(-50%) scale(1.08);
+  box-shadow: 0 2px 10px rgba(2, 132, 199, 0.45);
+}
+
+:root[data-theme="dark"] .origin-gps-btn:hover {
+  background: #38bdf8;
+  color: #0f172a;
+}
+
+.origin-gps-btn.is-locating {
+  pointer-events: none;
+  background: rgba(14, 165, 233, 0.25);
+}
+
+.gps-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(2, 132, 199, 0.3);
+  border-top-color: #0284c7;
+  border-radius: 50%;
+  animation: gpsSpin 0.7s linear infinite;
+  display: inline-block;
+}
+
+:root[data-theme="dark"] .gps-spinner {
+  border-color: rgba(56, 189, 248, 0.3);
+  border-top-color: #38bdf8;
+}
+
+@keyframes gpsSpin {
+  to { transform: rotate(360deg); }
+}
+
+.gps-btn-tooltip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  right: 0;
+  background: rgba(15, 23, 42, 0.92);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 10;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.origin-gps-btn:hover .gps-btn-tooltip {
+  display: block;
 }
 
 .origin-quick-picks {

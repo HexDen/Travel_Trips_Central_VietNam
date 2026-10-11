@@ -33,7 +33,7 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
   return R * c;
 }
 
-// Thuật toán K-Means++ gom cụm các địa điểm gần nhau
+// Thuật toán K-Means++ gom cụm địa điểm với hội tụ Lloyd 3 vòng & Tối ưu hóa lộ trình liên ngày (TSP Nearest Neighbor Tour)
 function clusterPlaces(places, numClusters) {
   if (!places || places.length === 0) return [];
   const validPlaces = places.filter(p => p.latitude && p.longitude);
@@ -46,10 +46,11 @@ function clusterPlaces(places, numClusters) {
     return chunks;
   }
   
-  let centroids = [validPlaces[0]];
+  // 1. K-Means++ Seeding (Khởi tạo tâm cụm cách xa nhau tối đa)
+  let centroids = [{ latitude: validPlaces[0].latitude, longitude: validPlaces[0].longitude }];
   for (let i = 1; i < numClusters; i++) {
     let furthest = validPlaces[0];
-    let maxDist = 0;
+    let maxDist = -1;
     for (const p of validPlaces) {
       let minDist = Math.min(...centroids.map(c => calculateDistance(c.latitude, c.longitude, p.latitude, p.longitude)));
       if (minDist > maxDist) {
@@ -57,27 +58,72 @@ function clusterPlaces(places, numClusters) {
         furthest = p;
       }
     }
-    centroids.push(furthest);
+    centroids.push({ latitude: furthest.latitude, longitude: furthest.longitude });
   }
 
+  // 2. Vòng lặp hội tụ Lloyd (3 vòng lặp giúp gom cụm cực kỳ chặt chẽ, bán kính di chuyển nhỏ nhất)
   let clusters = Array.from({ length: numClusters }, () => []);
+  for (let iter = 0; iter < 3; iter++) {
+    clusters = Array.from({ length: numClusters }, () => []);
+    for (const p of validPlaces) {
+      let minDist = Infinity;
+      let clusterIdx = 0;
+      for (let i = 0; i < numClusters; i++) {
+        const dist = calculateDistance(centroids[i].latitude, centroids[i].longitude, p.latitude, p.longitude);
+        if (dist < minDist) {
+          minDist = dist;
+          clusterIdx = i;
+        }
+      }
+      clusters[clusterIdx].push(p);
+    }
+
+    // Tái tính toán tọa độ trọng tâm (Centroid Mean)
+    for (let i = 0; i < numClusters; i++) {
+      if (clusters[i].length > 0) {
+        const avgLat = clusters[i].reduce((sum, p) => sum + p.latitude, 0) / clusters[i].length;
+        const avgLng = clusters[i].reduce((sum, p) => sum + p.longitude, 0) / clusters[i].length;
+        centroids[i] = { latitude: avgLat, longitude: avgLng };
+      }
+    }
+  }
+
+  // Gán các điểm thiếu tọa độ vào cụm 0
   for (const p of places) {
     if (!p.latitude || !p.longitude) {
       clusters[0].push(p);
-      continue;
     }
+  }
+
+  // 3. TSP Tour sắp xếp thứ tự cụm: Ngày 1 -> Ngày 2 -> Ngày 3 liền kề, không bị nhảy cóc từ Bắc vào Nam rồi quay lại Bắc
+  const orderedClusters = [];
+  const visited = new Set();
+  let currentIdx = 0;
+  orderedClusters.push(clusters[currentIdx]);
+  visited.add(currentIdx);
+
+  while (orderedClusters.length < clusters.length) {
+    let nextIdx = -1;
     let minDist = Infinity;
-    let clusterIdx = 0;
-    for (let i = 0; i < numClusters; i++) {
-      const dist = calculateDistance(centroids[i].latitude, centroids[i].longitude, p.latitude, p.longitude);
-      if (dist < minDist) {
-        minDist = dist;
-        clusterIdx = i;
+    for (let i = 0; i < clusters.length; i++) {
+      if (!visited.has(i)) {
+        const d = calculateDistance(centroids[currentIdx].latitude, centroids[currentIdx].longitude, centroids[i].latitude, centroids[i].longitude);
+        if (d < minDist) {
+          minDist = d;
+          nextIdx = i;
+        }
       }
     }
-    clusters[clusterIdx].push(p);
+    if (nextIdx !== -1) {
+      visited.add(nextIdx);
+      orderedClusters.push(clusters[nextIdx]);
+      currentIdx = nextIdx;
+    } else {
+      break;
+    }
   }
-  return clusters;
+
+  return orderedClusters;
 }
 
 async function taoLichTrinh(duLieu) {
@@ -160,7 +206,7 @@ async function taoLichTrinh(duLieu) {
 
 async function goiGemini(duLieu, diaDiemDatabase, apiKey) {
   const prompt = `${buildPrompt(duLieu, diaDiemDatabase)}\n\nChỉ trả về JSON duy nhất tuân thủ cấu trúc trên.`
-  const model = process.env.GEMINI_MODEL || 'gemini-1.5-flash'
+  const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash'
   const res = await axios.post(
     `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
     {
@@ -170,7 +216,7 @@ async function goiGemini(duLieu, diaDiemDatabase, apiKey) {
         temperature: 0.2
       }
     },
-    { headers: { 'Content-Type': 'application/json' }, timeout: 5000 }
+    { headers: { 'Content-Type': 'application/json' }, timeout: 25000 }
   )
 
   const raw = res.data.candidates?.[0]?.content?.parts?.[0]?.text
@@ -1004,7 +1050,7 @@ YÊU CẦU QUAN TRỌNG:
 Chỉ trả về JSON có cấu trúc: {"days":[{"day":number,"activities":[{"time":"HH:MM","type":"...","label":"...","place":"...","address":"...","activity":"...","estimated_cost":number}]}]}`
 
       const res = await axios.post(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`,
         { contents: [{ parts: [{ text: prompt }] }] },
         { headers: { 'Content-Type': 'application/json' }, timeout: 60000 }
       )
@@ -1025,7 +1071,7 @@ async function phanTichYeuCau(promptText) {
     throw new Error('Hệ thống chưa được cấu hình AI. Vui lòng liên hệ Admin.')
   }
 
-  const model = 'gemini-1.5-flash'
+  const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash'
   const prompt = `Bạn là chuyên gia phân tích ngôn ngữ tự nhiên. Yêu cầu của người dùng về chuyến đi: "${promptText}"
 
 Hãy trích xuất các thông tin sau và trả về định dạng JSON:

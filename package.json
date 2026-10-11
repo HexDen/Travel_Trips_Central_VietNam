@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "seed": "npm --prefix backend/crawler run seed",
+    "seep": "npm --prefix backend/crawler run seed",
     "seed:mongo": "npm --prefix backend/crawler run seed:mongo",
     "seed:bullmq": "npm --prefix backend/crawler run seed:bullmq",
     "crawler": "npm --prefix backend/crawler start",
