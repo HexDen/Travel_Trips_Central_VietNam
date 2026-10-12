@@ -1,5 +1,16 @@
 <template>
-  <div class="app-root" :class="{ 'app-intro-zoom': showIntroSplash && !introSplitting }">
+  <!-- GIAO DIỆN MOBILE TINH GỌN (CHỈ KHI THIẾT BỊ MÀN HÌNH DI ĐỘNG <= 768px) -->
+  <MobileExperience
+    v-if="isMobileDevice"
+    :nguoiDung="nguoiDung"
+    :isDark="isDark"
+    @toggleDark="toggleDark"
+    @openAuth="hienAuthModal = true"
+    @logout="dangXuat"
+  />
+
+  <!-- GIAO DIỆN DESKTOP / PC ĐẦY ĐỦ NGUYÊN BẢN -->
+  <div v-else class="app-root" :class="{ 'app-intro-zoom': showIntroSplash && !introSplitting }">
     <div class="app-container">
       
       <!-- TOP HEADER CỦA APP (ĐÃ TÁCH COMPONENT) -->
@@ -78,220 +89,7 @@
         <!-- ==================== TAB 2: LẬP KẾ HOẠCH (PLANNER) ==================== -->
         <section v-if="activeTab === 'planner'" class="tab-pane planner-tab-bg">
 
-          <!-- BƯỚC NHẬP THÔNG TIN KẾ HOẠCH & COLLAGE HERO (ĐÃ TÁCH COMPONENT) -->
-          <TripPlannerWizard
-            v-if="!lichTrinh"
-            :formDuLieu="formDuLieu"
-            :ALL_DESTINATIONS="ALL_DESTINATIONS"
-            :visibleCities="visibleCities"
-            :musicMuted="musicMuted"
-            :toggleMusicMute="toggleMusicMute"
-            :currentPlannerStep="currentPlannerStep"
-            @update:currentPlannerStep="val => currentPlannerStep = val"
-            :showAiHintBubble="showAiHintBubble"
-            @update:showAiHintBubble="val => showAiHintBubble = val"
-            :aiCurrentHint="aiCurrentHint"
-            :refreshAiHint="refreshAiHint"
-            :chonNhanhDiemDen="chonNhanhDiemDen"
-            :showManualWardPicker="showManualWardPicker"
-            @update:showManualWardPicker="val => showManualWardPicker = val"
-            :toggleManualWardPicker="toggleManualWardPicker"
-            :originProvinceMode="originProvinceMode"
-            :popularOrigins="popularOrigins"
-            :isLocatingOrigin="isLocatingOrigin"
-            :layViTriHienTaiChoDiemXuatPhat="layViTriHienTaiChoDiemXuatPhat"
-            :selectedManualProvinceCode="selectedManualProvinceCode"
-            @update:selectedManualProvinceCode="val => selectedManualProvinceCode = val"
-            :selectedManualDistrictCode="selectedManualDistrictCode"
-            @update:selectedManualDistrictCode="val => selectedManualDistrictCode = val"
-            :selectedManualWardCode="selectedManualWardCode"
-            @update:selectedManualWardCode="val => selectedManualWardCode = val"
-            :manualStreetAddress="manualStreetAddress"
-            @update:manualStreetAddress="val => manualStreetAddress = val"
-            :manualProvincesList="manualProvincesList"
-            :manualDistrictsList="manualDistrictsList"
-            :manualWardsList="manualWardsList"
-            :loadingDistricts="loadingDistricts"
-            :loadingWards="loadingWards"
-            :manualComputedAddress="manualComputedAddress"
-            :onManualProvinceChange="onManualProvinceChange"
-            :onManualDistrictChange="onManualDistrictChange"
-            :onManualWardChange="onManualWardChange"
-            :apDungDiaChiThuCong="apDungDiaChiThuCong"
-            :chonDiemKhoiHanh="chonDiemKhoiHanh"
-            :todayIso="todayIso"
-            :DEPARTURE_MONTHS="DEPARTURE_MONTHS"
-            :selectedMonthKey="selectedMonthKey"
-            :chonThangKhoiHanh="chonThangKhoiHanh"
-            :ngayKetThucDisplay="ngayKetThucDisplay"
-            :dinhDangNgayTuan="dinhDangNgayTuan"
-            :dinhDangTien="dinhDangTien"
-            :giamSoNgay="giamSoNgay"
-            :tangSoNgay="tangSoNgay"
-            :giamSoDem="giamSoDem"
-            :tangSoDem="tangSoDem"
-            :tripFeasibility="tripFeasibility"
-            :currentBudgetTier="currentBudgetTier"
-            :thongDiepNganSach="thongDiepNganSach"
-            :transitRouteInfo="transitRouteInfo"
-            :transitTab="transitTab"
-            @update:transitTab="val => transitTab = val"
-            :step3ActiveSubtab="step3ActiveSubtab"
-            @update:step3ActiveSubtab="val => step3ActiveSubtab = val"
-            :daXongPhuongTien="daXongPhuongTien"
-            :daXongKhachSan="daXongKhachSan"
-            :daXongBuoc3="daXongBuoc3"
-            :chonPhuongTienTuSoSanh="chonPhuongTienTuSoSanh"
-            :chonNhaXe="chonNhaXe"
-            :chonGioXuatPhatBus="chonGioXuatPhatBus"
-            :chonTauHoa="chonTauHoa"
-            :chonGioXuatPhatTau="chonGioXuatPhatTau"
-            :toggleTuTucPhuongTien="toggleTuTucPhuongTien"
-            :chuyenSangChonKhachSan="chuyenSangChonKhachSan"
-            :toggleTuTucKhachSan="toggleTuTucKhachSan"
-            :apDungNangNganSachKhachSan="apDungNangNganSachKhachSan"
-            :chonPhongTietKiemHon="chonPhongTietKiemHon"
-            :giamSoDemKhachSan="giamSoDemKhachSan"
-            :moModalXemPhong="moModalXemPhong"
-            :huyChonKhachSan="huyChonKhachSan"
-            :hotelSortBy="hotelSortBy"
-            @update:hotelSortBy="val => hotelSortBy = val"
-            :hotelStarFilter="hotelStarFilter"
-            @update:hotelStarFilter="val => hotelStarFilter = val"
-            :hotelDisplayLimit="hotelDisplayLimit"
-            :filteredSortedHotels="filteredSortedHotels"
-            :displayedHotels="displayedHotels"
-            :xemThemKhachSan="xemThemKhachSan"
-            :xemTatCaKhachSan="xemTatCaKhachSan"
-            :thuGonKhachSan="thuGonKhachSan"
-            :soPhongCan="soPhongCan"
-            :tongChiPhiKhachSanChon="tongChiPhiKhachSanChon"
-            :hotelBudgetAlert="hotelBudgetAlert"
-            :places="places"
-            :selectedPlaces="selectedPlaces"
-            :customPlaceText="customPlaceText"
-            @update:customPlaceText="val => customPlaceText = val"
-            :minSoDem="minSoDem"
-            :maxSoDem="maxSoDem"
-            :searchPlacePickerQuery="searchPlacePickerQuery"
-            @update:searchPlacePickerQuery="val => searchPlacePickerQuery = val"
-            :placePickerActiveTab="placePickerActiveTab"
-            @update:placePickerActiveTab="val => placePickerActiveTab = val"
-            :isPickerExpanded="isPickerExpanded"
-            :filteredAttractions="filteredAttractions"
-            :filteredRestaurants="filteredRestaurants"
-            :filteredCafes="filteredCafes"
-            :totalFilteredPlacesCount="totalFilteredPlacesCount"
-            :togglePickerExpand="togglePickerExpand"
-            :getVisiblePlaces="getVisiblePlaces"
-            :removeSelectedPlace="removeSelectedPlace"
-            :clearAllSelectedPlaces="clearAllSelectedPlaces"
-            :togglePlaceSelection="togglePlaceSelection"
-            :isPlaceSelected="isPlaceSelected"
-            :addCustomPlace="addCustomPlace"
-            :dangCrawl="dangCrawl"
-            :thongBaoCrawl="thongBaoCrawl"
-            :kichHoatCrawl110="kichHoatCrawl110"
-            :dangTao="dangTao"
-            :taoPlanError="taoPlanError"
-            :tiepTheoWizard="tiepTheoWizard"
-            :taoLichTrinh="taoLichTrinh"
-          />
 
-          <!-- AI STARRY LOADING OVERLAY (BẦU TRỜI SAO VŨ TRỤ & BÓNG BAY/HOA ĐĂNG LƠ LỬNG) -->
-          <AiStarryLoadingOverlay
-            v-if="dangTao"
-            :destination="formDuLieu.diemDen"
-            :origin="formDuLieu.diemKhoiHanh"
-            :days="formDuLieu.soNgay"
-            :nights="formDuLieu.soDem"
-            :loadingMessage="currentLoadingMessage"
-            :messageIndex="currentLoadingMessageIndex"
-          />
-
-          <!-- KẾT QUẢ LỊCH TRÌNH CHI TIẾT (ĐÃ TÁCH COMPONENT) -->
-          <ItineraryTimeline
-            v-if="lichTrinh"
-            :lichTrinh="lichTrinh"
-            :formDuLieu="formDuLieu"
-            :daLuuLichTrinhHienTai="daLuuLichTrinhHienTai"
-            :thongBaoLuuThanhCong="thongBaoLuuThanhCong"
-            :hienCompletionBanner="hienCompletionBanner"
-            @update:hienCompletionBanner="val => hienCompletionBanner = val"
-            :activeCompletionQuote="activeCompletionQuote"
-            :itineraryViewMode="itineraryViewMode"
-            :selectedDay="selectedDay"
-            @update:selectedDay="val => selectedDay = val"
-            :showAllDays="showAllDays"
-            @update:showAllDays="val => showAllDays = val"
-            :timelineDensity="timelineDensity"
-            @update:timelineDensity="val => timelineDensity = val"
-            :selectedSessionFilter="selectedSessionFilter"
-            @update:selectedSessionFilter="val => selectedSessionFilter = val"
-            :expandedCardKey="expandedCardKey"
-            :selectedMapPlace="selectedMapPlace"
-            @update:selectedMapPlace="val => selectedMapPlace = val"
-            :transitRouteInfo="transitRouteInfo"
-            :gioXuatPhatDi="gioXuatPhatDi"
-            :gioXuatPhatVe="gioXuatPhatVe"
-            :thoiGianDiChuyenText="thoiGianDiChuyenText"
-            :gioDenNoiDuKien="gioDenNoiDuKien"
-            :gioVeDenNoiDuKien="gioVeDenNoiDuKien"
-            :googleMapsAllStopsUrl="googleMapsAllStopsUrl"
-            :googleMapsDayRouteUrl="googleMapsDayRouteUrl"
-            :toiUuThanhCongDay="toiUuThanhCongDay"
-            :dangDieuChinh="dangDieuChinh"
-            :hoveredActIndex="hoveredActIndex"
-            :dangKeoDayIdx="dangKeoDayIdx"
-            :dangKeoActIdx="dangKeoActIdx"
-            :dragOverDayIdx="dragOverDayIdx"
-            :dragOverActIdx="dragOverActIdx"
-            :dinhDangTien="dinhDangTien"
-            :layIconPhuongTien="layIconPhuongTien"
-            :getDayWeatherAlert="getDayWeatherAlert"
-            :taoLinkGoogleMapsChoNgay="taoLinkGoogleMapsChoNgay"
-            :getGioMoCua="getGioMoCua"
-            :lamSachMoTa="lamSachMoTa"
-            :getTravelEstimate="getTravelEstimate"
-            :tinhKhoangCachVaThoiGian="tinhKhoangCachVaThoiGian"
-            :getBadgeInfo="getBadgeInfo"
-            :getPlaceImage="getPlaceImage"
-            :getSampleReviewText="getSampleReviewText"
-            :laYeuThich="laYeuThich"
-            :doiYeuThich="doiYeuThich"
-            :chiDuongUrl="chiDuongUrl"
-            :googleMapsSearchUrl="googleMapsSearchUrl"
-            :filterActivitiesBySession="filterActivitiesBySession"
-            :onImageError="onImageError"
-            :toggleExpandCard="toggleExpandCard"
-            :hoverActivity="hoverActivity"
-            :unhoverActivity="unhoverActivity"
-            :panToActivity="panToActivity"
-            :onDragStart="onDragStart"
-            :onDragOver="onDragOver"
-            :onDragLeave="onDragLeave"
-            :onDragEnd="onDragEnd"
-            :onDrop="onDrop"
-            :moModalDoiDiaDiem="moModalDoiDiaDiem"
-            :moModalDoiDiaDiemTuMap="moModalDoiDiaDiemTuMap"
-            :moModalXemPhong="moModalXemPhong"
-            :moModalTranhMua="moModalTranhMua"
-            :moModalInfographic="moModalInfographic"
-            :toiUuCungDuongNgay="toiUuCungDuongNgay"
-            :toiUuCungDuongToanBo="toiUuCungDuongToanBo"
-            :doiViewMode="doiViewMode"
-            :kichHoatCheDoFreePlaces="kichHoatCheDoFreePlaces"
-            :rutNganNgayPhuHop="rutNganNgayPhuHop"
-            :luuLichTrinhHienTai="luuLichTrinhHienTai"
-            :yeuCauQuayLai="yeuCauQuayLai"
-            :xuatPdf="xuatPdf"
-            @enableSelfTransit="formDuLieu.tuTucPhuongTien = true; dongBoChiPhiLichTrinh()"
-            @matchBudgetAndReplan="formDuLieu.nganSach = lichTrinh.total_budget; taoLichTrinh()"
-            @openReplan="hienModalDoiLichTrinh = true"
-            @goMyTrips="activeTab = 'mytrips'"
-            @openBillSplitter="hienBillSplitter = true"
-            @openTravelPass="hienTravelPass = true"
-          />
         </section>
 
 
@@ -501,18 +299,8 @@ import TripPlannerWizard from './components/planner/TripPlannerWizard.vue';
 import ItineraryTimeline from './components/planner/ItineraryTimeline.vue';
 import FavoritePlaces from './components/FavoritePlaces.vue';
 import UserProfile from './components/UserProfile.vue';
-import AuthModal from './components/modals/AuthModal.vue';
-import ReplanModal from './components/modals/ReplanModal.vue';
-import BillSplitterModal from './components/modals/BillSplitterModal.vue';
-import TravelPassModal from './components/modals/TravelPassModal.vue';
-import ChangePlaceModal from './components/modals/ChangePlaceModal.vue';
-import RainModal from './components/modals/RainModal.vue';
-import InfographicModal from './components/modals/InfographicModal.vue';
-import SaveConfirmModal from './components/modals/SaveConfirmModal.vue';
-import TripDetailModal from './components/trips/TripDetailModal.vue';
-import HotelDetailModal from './components/hotel/HotelDetailModal.vue';
-import FloatingChatbot from './components/chatbot/FloatingChatbot.vue';
-import AiStarryLoadingOverlay from './components/common/AiStarryLoadingOverlay.vue';
+
+
 import { reactive, ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import api from './services/api'
 import AppHeader from './components/layout/AppHeader.vue'
@@ -539,6 +327,11 @@ L.Icon.Default.mergeOptions({
 // Navigation Tab State
 const activeTab = ref('explore')
 const isPlannerTransitioning = ref(false)
+const isMobileDevice = ref(false)
+
+function checkMobileDevice() {
+  isMobileDevice.value = window.innerWidth <= 768
+}
 
 function cuonLenDauTrang() {
   window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
@@ -3984,6 +3777,9 @@ onMounted(() => {
     });
   }
 
+  checkMobileDevice()
+  window.addEventListener('resize', checkMobileDevice)
+
   const handleGlobalEsc = (e) => {
     if (e.key === 'Escape' && showHotelDetailModal.value) {
       dongModalXemPhong()
@@ -3992,6 +3788,7 @@ onMounted(() => {
   window.addEventListener('keydown', handleGlobalEsc)
   onUnmounted(() => {
     window.removeEventListener('keydown', handleGlobalEsc)
+    window.removeEventListener('resize', checkMobileDevice)
     try { document.body.style.overflow = '' } catch (err) {}
   })
 })
@@ -11675,13 +11472,12 @@ button { cursor: pointer; }
 
 /* ==================== PLANNER HERO BANNER ==================== */
 .planner-hero-banner {
-  width: 100%;
-  border-radius: 16px;
+  width: calc(100% - 40px);
+  max-width: 900px;
+  margin: 0 auto 20px auto;
+  border-radius: 20px;
   overflow: hidden;
-  box-shadow:
-    0 20px 60px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(255, 255, 255, 0.08),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.4);
   position: relative;
   flex-shrink: 0;
   animation: fadeInBanner 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -11689,10 +11485,8 @@ button { cursor: pointer; }
 }
 
 .planner-hero-banner:hover {
-  transform: translateY(-4px) scale(1.003);
-  box-shadow:
-    0 28px 70px rgba(0, 0, 0, 0.55),
-    0 0 0 1px rgba(255, 255, 255, 0.12);
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 0 30px 60px -10px rgba(0, 0, 0, 0.5);
 }
 
 .planner-hero-banner-img {

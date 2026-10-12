@@ -127,7 +127,8 @@
           @click="$emit('update:activeTab', 'profile')"
         >
           <span class="user-avatar" aria-hidden="true">
-            {{ nguoiDung.name ? nguoiDung.name.trim()[0].toUpperCase() : 'U' }}
+            <img v-if="nguoiDung.avatar" :src="nguoiDung.avatar" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />
+            <template v-else>{{ nguoiDung.name ? nguoiDung.name.trim()[0].toUpperCase() : 'U' }}</template>
           </span>
           <span class="user-name">{{ nguoiDung.name }}</span>
         </button>
@@ -601,3 +602,4 @@ button:focus-visible {
   }
 }
 </style>
+
