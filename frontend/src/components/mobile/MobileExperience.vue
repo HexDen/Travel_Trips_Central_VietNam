@@ -83,9 +83,23 @@
                   v-model="quickPromptText"
                   type="text"
                   class="capsule-prompt-input"
-                  placeholder="VD: 3 ngày Đà Nẵng - Hội An, thích ẩm thực và nghỉ dưỡng..."
+                  :placeholder="isListening ? '🎙️ Đang lắng nghe bạn nói...' : 'VD: 3 ngày Đà Nẵng - Hội An, thích ẩm thực...'"
                   @keyup.enter="handleGenerateFromPrompt"
                 />
+                <!-- NÚT MICRO NHẬP GIỌNG NÓI TIẾNG VIỆT -->
+                <button
+                  type="button"
+                  :class="['capsule-mic-btn', { listening: isListening }]"
+                  :title="isListening ? 'Đang nghe... Bấm để dừng' : 'Nói để lên lịch trình'"
+                  @click="toggleVoiceInput"
+                >
+                  <svg v-if="!isListening" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                    <line x1="12" y1="19" x2="12" y2="22"></line>
+                  </svg>
+                  <span v-else class="mic-wave-pulse"></span>
+                </button>
                 <button
                   class="capsule-submit-btn"
                   :disabled="isGenerating || !quickPromptText.trim()"
@@ -407,6 +421,8 @@ const emit = defineEmits(['toggleDark', 'openAuth', 'logout', 'showToast'])
 const currentTab = ref('explore')
 const quickPromptText = ref('')
 const isGenerating = ref(false)
+const isListening = ref(false)
+let speechRecognition = null
 const generatedPlan = ref(null)
 const currentActiveDayIndex = ref(0)
 const isPlanSaved = ref(false)
@@ -498,6 +514,61 @@ function togglePill(pill) {
   } else {
     // Bật chọn: thêm vào ô nhập
     quickPromptText.value = `${current}, ${pill}`
+  }
+}
+
+// TÍNH NĂNG NHẬP LIỆU BẰNG GIỌNG NÓI TIẾNG VIỆT (WEB SPEECH API)
+function toggleVoiceInput() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+  if (!SpeechRecognition) {
+    alert('Trình duyệt của bạn chưa hỗ trợ nhận diện giọng nói. Hãy thử trên Chrome hoặc Safari!')
+    return
+  }
+
+  if (isListening.value) {
+    if (speechRecognition) {
+      speechRecognition.stop()
+    }
+    isListening.value = false
+    return
+  }
+
+  try {
+    speechRecognition = new SpeechRecognition()
+    speechRecognition.lang = 'vi-VN' // Nhận diện tiếng Việt
+    speechRecognition.continuous = false
+    speechRecognition.interimResults = true
+
+    speechRecognition.onstart = () => {
+      isListening.value = true
+    }
+
+    speechRecognition.onresult = (event) => {
+      let transcript = ''
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        transcript += event.results[i][0].transcript
+      }
+      if (transcript.trim()) {
+        quickPromptText.value = transcript.trim()
+      }
+    }
+
+    speechRecognition.onerror = (event) => {
+      console.warn('Lỗi nhận diện giọng nói:', event.error)
+      isListening.value = false
+      if (event.error === 'not-allowed') {
+        alert('Vui lòng cấp quyền truy cập micro trong cài đặt trình duyệt để sử dụng tính năng này!')
+      }
+    }
+
+    speechRecognition.onend = () => {
+      isListening.value = false
+    }
+
+    speechRecognition.start()
+  } catch (err) {
+    console.error('Không thể khởi động SpeechRecognition:', err)
+    isListening.value = false
   }
 }
 
@@ -933,6 +1004,55 @@ function getWeatherDesc(code) {
 .capsule-prompt-input::placeholder {
   color: #64748b;
   font-size: 0.75rem;
+}
+
+/* NÚT MICRO GIỌNG NÓI */
+.capsule-mic-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #475569;
+  display: grid;
+  place-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.capsule-mic-btn:hover {
+  background: #f1f5f9;
+  color: #059669;
+  border-color: #cbd5e1;
+}
+
+.capsule-mic-btn.listening {
+  background: #ef4444 !important;
+  color: #ffffff !important;
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.25);
+  animation: micPulse 1.2s infinite ease-in-out;
+}
+
+.mic-wave-pulse {
+  width: 10px;
+  height: 10px;
+  background: #fff;
+  border-radius: 50%;
+  display: inline-block;
+  animation: ping 1s infinite;
+}
+
+@keyframes micPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+@keyframes ping {
+  0% { transform: scale(0.8); opacity: 1; }
+  100% { transform: scale(1.6); opacity: 0; }
 }
 
 .capsule-submit-btn {
