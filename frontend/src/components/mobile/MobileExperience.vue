@@ -83,7 +83,7 @@
                   v-model="quickPromptText"
                   type="text"
                   class="capsule-prompt-input"
-                  placeholder="Khách muốn đi đâu? (VD: 3N2Đ Đà Nẵng Hội An)..."
+                  placeholder="VD: 3 ngày Đà Nẵng - Hội An, thích ẩm thực và nghỉ dưỡng..."
                   @keyup.enter="handleGenerateFromPrompt"
                 />
                 <button
@@ -101,10 +101,10 @@
                 <button
                   v-for="pill in popularPills"
                   :key="pill"
-                  class="capsule-pill-btn"
-                  @click="appendPill(pill)"
+                  :class="['capsule-pill-btn', { active: isPillActive(pill) }]"
+                  @click="togglePill(pill)"
                 >
-                  {{ pill }}
+                  <span v-if="isPillActive(pill)" class="pill-check">✓ </span>{{ pill }}
                 </button>
               </div>
             </div>
@@ -405,7 +405,7 @@ const props = defineProps({
 const emit = defineEmits(['toggleDark', 'openAuth', 'logout', 'showToast'])
 
 const currentTab = ref('explore')
-const quickPromptText = ref('3 ngày Đà Nẵng - Hội An, thích ẩm thực và ngắm biển')
+const quickPromptText = ref('')
 const isGenerating = ref(false)
 const generatedPlan = ref(null)
 const currentActiveDayIndex = ref(0)
@@ -473,9 +473,31 @@ onMounted(() => {
   loadSavedTrips()
 })
 
-function appendPill(pill) {
-  if (!quickPromptText.value.includes(pill)) {
-    quickPromptText.value = quickPromptText.value ? `${quickPromptText.value}, ${pill}` : pill
+function isPillActive(pill) {
+  if (!quickPromptText.value) return false
+  const parts = quickPromptText.value.split(',').map(s => s.trim())
+  return parts.includes(pill) || quickPromptText.value.includes(pill)
+}
+
+function togglePill(pill) {
+  const current = quickPromptText.value.trim()
+  if (!current) {
+    quickPromptText.value = pill
+    return
+  }
+  const parts = current.split(',').map(s => s.trim()).filter(Boolean)
+  const idx = parts.indexOf(pill)
+
+  if (idx !== -1) {
+    // Tự tắt: bỏ chọn và xóa khỏi ô nhập
+    parts.splice(idx, 1)
+    quickPromptText.value = parts.join(', ')
+  } else if (current.includes(pill)) {
+    const pattern = new RegExp(`(,\s*)?${pill}|${pill}(\s*,)?`, 'g')
+    quickPromptText.value = current.replace(pattern, '').replace(/^,\s*/, '').replace(/,\s*$/, '').trim()
+  } else {
+    // Bật chọn: thêm vào ô nhập
+    quickPromptText.value = `${current}, ${pill}`
   }
 }
 
@@ -957,9 +979,22 @@ function getWeatherDesc(code) {
   transition: all 0.15s ease;
 }
 
+.capsule-pill-btn.active {
+  background: #059669 !important;
+  color: #ffffff !important;
+  border-color: #059669 !important;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.35);
+}
+
 .capsule-pill-btn:active {
-  background: #059669;
-  color: #ffffff;
+  transform: scale(0.95);
+}
+
+.pill-check {
+  font-weight: bold;
+  font-size: 0.65rem;
+  margin-right: 2px;
 }
 
 /* INTERACTIVE BOTTOM ROW INSIDE HERO */
