@@ -1,5 +1,16 @@
 <template>
-  <div class="app-root" :class="{ 'app-intro-zoom': showIntroSplash && !introSplitting }">
+  <!-- GIAO DIỆN MOBILE TINH GỌN (CHỈ KHI THIẾT BỊ MÀN HÌNH DI ĐỘNG <= 768px) -->
+  <MobileExperience
+    v-if="isMobileDevice"
+    :nguoiDung="nguoiDung"
+    :isDark="isDark"
+    @toggleDark="toggleDark"
+    @openAuth="hienAuthModal = true"
+    @logout="dangXuat"
+  />
+
+  <!-- GIAO DIỆN DESKTOP / PC ĐẦY ĐỦ NGUYÊN BẢN -->
+  <div v-else class="app-root" :class="{ 'app-intro-zoom': showIntroSplash && !introSplitting }">
     <div class="app-container">
       
       <!-- TOP HEADER CỦA APP (ĐÃ TÁCH COMPONENT) -->
@@ -3528,6 +3539,7 @@
 <script setup>
 import FavoritePlaces from './components/FavoritePlaces.vue';
 import UserProfile from './components/UserProfile.vue';
+import MobileExperience from './components/mobile/MobileExperience.vue';
 import { reactive, ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import api from './services/api'
 import AppHeader from './components/layout/AppHeader.vue'
@@ -3551,6 +3563,11 @@ L.Icon.Default.mergeOptions({
 // Navigation Tab State
 const activeTab = ref('explore')
 const isPlannerTransitioning = ref(false)
+const isMobileDevice = ref(false)
+
+function checkMobileDevice() {
+  isMobileDevice.value = window.innerWidth <= 768
+}
 
 function cuonLenDauTrang() {
   window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
@@ -6882,6 +6899,9 @@ onMounted(() => {
     });
   }
 
+  checkMobileDevice()
+  window.addEventListener('resize', checkMobileDevice)
+
   const handleGlobalEsc = (e) => {
     if (e.key === 'Escape' && showHotelDetailModal.value) {
       dongModalXemPhong()
@@ -6890,6 +6910,7 @@ onMounted(() => {
   window.addEventListener('keydown', handleGlobalEsc)
   onUnmounted(() => {
     window.removeEventListener('keydown', handleGlobalEsc)
+    window.removeEventListener('resize', checkMobileDevice)
     try { document.body.style.overflow = '' } catch (err) {}
   })
 })

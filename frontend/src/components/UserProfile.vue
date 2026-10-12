@@ -119,7 +119,8 @@
     </div>
   </div>
   </Teleport>
-  </template>
+  </div>
+</template>
 
 <script setup>
 defineProps({
