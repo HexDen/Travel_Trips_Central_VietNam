@@ -15,6 +15,43 @@ const PORT = process.env.PORT || 3000
 
 app.use(cors())
 app.use(express.json({ limit: '10mb' }))
+
+// ==================== BẢO MẬT & RATE LIMITING ====================
+const rateLimit = require('express-rate-limit')
+
+// 1. Giới hạn chung cho toàn bộ API (15 phút tối đa 400 requests/IP)
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 400,
+  message: { error: 'Bạn đã gửi quá nhiều yêu cầu. Vui lòng thử lại sau vài phút.' },
+  standardHeaders: true,
+  legacyHeaders: false
+})
+app.use('/api', generalLimiter)
+
+// 2. Bảo vệ endpoint AI (tránh cạn kiệt Quota API Key Gemini) (1 phút tối đa 20 requests/IP)
+const aiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  message: { error: 'Hệ thống AI đang xử lý nhiều tác vụ. Vui lòng đợi 1 phút trước khi gửi yêu cầu tiếp.' },
+  standardHeaders: true,
+  legacyHeaders: false
+})
+app.use('/api/ai/plan', aiLimiter)
+app.use('/api/ai/replan', aiLimiter)
+app.use('/api/ai/parse-prompt', aiLimiter)
+
+// 3. Bảo vệ endpoint Xác thực (chống Brute-force mật khẩu) (15 phút tối đa 25 lần thử/IP)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 25,
+  message: { error: 'Quá nhiều lần thử đăng nhập thất bại. Vui lòng thử lại sau 15 phút.' },
+  standardHeaders: true,
+  legacyHeaders: false
+})
+app.use('/api/auth/login', authLimiter)
+app.use('/api/auth/register', authLimiter)
+
 app.use((req, res, next) => {
   const startedAt = Date.now()
   res.on('finish', () => {
@@ -100,6 +137,10 @@ async function startServer() {
   try {
     await mongoose.connect(MONGODB_URI)
     console.log('MongoDB connected')
+
+    // Tự động kiểm tra và khởi tạo tài khoản Quản trị viên an toàn
+    const { ensureAdminExists } = require('./routes/auth')
+    await ensureAdminExists()
     
     // Cài đặt Cron Job tự động chạy pipeline mỗi tuần một lần (vào 2h sáng Chủ Nhật)
     cron.schedule('0 2 * * 0', () => {

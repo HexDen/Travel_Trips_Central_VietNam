@@ -1,4 +1,6 @@
 import { createApp } from 'vue'
+import './assets/styles/variables.css'
+import './assets/styles/global.css'
 import App from './App.vue'
 import AppIcon from './components/common/AppIcon.vue'
 import { registerSW } from 'virtual:pwa-register'
