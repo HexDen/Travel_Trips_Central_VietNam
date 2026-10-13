@@ -364,36 +364,294 @@
 
       <!-- TAB 4: TÀI KHOẢN (PROFILE) -->
       <section v-if="currentTab === 'profile'" class="tab-view profile-view">
-        <div v-if="nguoiDung" class="user-card-mobile">
-          <div class="user-avatar-circle">
-            <img v-if="nguoiDung.avatar" :src="nguoiDung.avatar" alt="Avatar" />
-            <span v-else>{{ nguoiDung.name ? nguoiDung.name.charAt(0).toUpperCase() : 'U' }}</span>
+        
+        <!-- TRƯỜNG HỢP 1: NGƯỜI DÙNG ĐÃ ĐĂNG NHẬP -->
+        <div v-if="nguoiDung" class="m-profile-wrapper">
+          
+          <!-- Profile Header Card với Cover Photo & Avatar -->
+          <div class="m-profile-hero-card">
+            <div class="m-profile-cover" style="background-image: url('/images/slides/danang-cauvang.jpg');">
+              <div class="m-profile-cover-overlay"></div>
+            </div>
+
+            <div class="m-profile-user-cluster">
+              <!-- Avatar Circle với nút camera edit nhanh -->
+              <div class="m-avatar-wrap" @click="openEditProfileSheet">
+                <img v-if="nguoiDung.avatar" :src="nguoiDung.avatar" alt="Avatar" class="m-avatar-img" />
+                <div v-else class="m-avatar-fallback">{{ nguoiDung.name ? nguoiDung.name.charAt(0).toUpperCase() : 'U' }}</div>
+                <button type="button" class="m-avatar-edit-badge" title="Đổi ảnh đại diện">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                </button>
+              </div>
+
+              <!-- Tên, Email & Cấp bậc Level -->
+              <div class="m-user-text">
+                <div class="m-name-row">
+                  <h2 class="m-user-title">{{ nguoiDung.name || 'Lữ khách' }}</h2>
+                  <span v-if="nguoiDung.role === 'admin'" class="m-admin-tag">ADMIN</span>
+                </div>
+                <p class="m-user-email">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  {{ nguoiDung.email }}
+                </p>
+                <div class="m-badge-row">
+                  <span class="m-level-pill" :style="{ backgroundColor: computedUserLevel.color }">
+                    ✦ {{ computedUserLevel.title }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bio Giới thiệu bản thân -->
+            <div class="m-bio-box" @click="openEditProfileSheet">
+              <p v-if="nguoiDung.bio" class="m-bio-content">“{{ nguoiDung.bio }}”</p>
+              <p v-else class="m-bio-placeholder">
+                ✏️ Chạm vào đây để thêm câu giới thiệu sở thích du lịch...
+              </p>
+            </div>
+
+            <!-- Nút chỉnh sửa hồ sơ -->
+            <div class="m-profile-actions">
+              <button type="button" class="btn-m-edit" @click="openEditProfileSheet">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Chỉnh sửa hồ sơ
+              </button>
+            </div>
           </div>
-          <h2 class="user-display-name">{{ nguoiDung.name || 'Lữ khách' }}</h2>
-          <p class="user-email-text">{{ nguoiDung.email }}</p>
-          <button class="btn-logout-mobile" @click="$emit('logout')">
-            Đăng xuất
-          </button>
+
+          <!-- BENTO STATS CARDS: 4 CHỈ SỐ HÀNH TRÌNH -->
+          <div class="m-stats-bento">
+            <div class="m-stat-cell stat-emerald">
+              <div class="stat-top">
+                <span class="stat-icon">🎒</span>
+                <span class="stat-number">{{ (savedTrips && savedTrips.length) || myTripsCount || 0 }}</span>
+              </div>
+              <span class="stat-label">Chuyến đi đã lên</span>
+            </div>
+
+            <div class="m-stat-cell stat-amber">
+              <div class="stat-top">
+                <span class="stat-icon">✅</span>
+                <span class="stat-number">{{ nguoiDung.completed_trips || 0 }}</span>
+              </div>
+              <span class="stat-label">Đã hoàn thành</span>
+            </div>
+
+            <div class="m-stat-cell stat-rose">
+              <div class="stat-top">
+                <span class="stat-icon">❤️</span>
+                <span class="stat-number">{{ favoritesCount || 0 }}</span>
+              </div>
+              <span class="stat-label">Điểm yêu thích</span>
+            </div>
+
+            <div class="m-stat-cell stat-violet">
+              <div class="stat-top">
+                <span class="stat-icon">🪙</span>
+                <span class="stat-number">{{ nguoiDung.points || 0 }}</span>
+              </div>
+              <span class="stat-label">Điểm tích lũy</span>
+            </div>
+          </div>
+
+          <!-- NHÓM CÀI ĐẶT & TIỆN ÍCH -->
+          <div class="m-settings-group">
+            <h3 class="m-group-header">TIỆN ÍCH & TRẢI NGHIỆM</h3>
+            
+            <div class="m-settings-list">
+              <!-- Dark Mode Switch -->
+              <div class="m-setting-item" @click="$emit('toggleDark')">
+                <div class="m-item-left">
+                  <span class="m-item-icon">{{ isDark ? '🌙' : '☀️' }}</span>
+                  <div class="m-item-text">
+                    <span class="m-item-title">Chế độ giao diện</span>
+                    <span class="m-item-sub">{{ isDark ? 'Chế độ tối (Dark Mode)' : 'Chế độ sáng (Light Mode)' }}</span>
+                  </div>
+                </div>
+                <div class="m-switch-toggle" :class="{ on: isDark }">
+                  <span class="m-switch-knob"></span>
+                </div>
+              </div>
+
+              <!-- Lịch trình đã lưu -->
+              <div class="m-setting-item" @click="currentTab = 'mytrips'">
+                <div class="m-item-left">
+                  <span class="m-item-icon">🗺️</span>
+                  <div class="m-item-text">
+                    <span class="m-item-title">Chuyến đi của tôi</span>
+                    <span class="m-item-sub">{{ savedTrips.length }} lịch trình sẵn sàng</span>
+                  </div>
+                </div>
+                <span class="m-chevron">›</span>
+              </div>
+
+              <!-- Offline Data / Cache -->
+              <div class="m-setting-item" @click="clearTripCache">
+                <div class="m-item-left">
+                  <span class="m-item-icon">⚡</span>
+                  <div class="m-item-text">
+                    <span class="m-item-title">Bộ nhớ tạm & Lưu ngoại tuyến</span>
+                    <span class="m-item-sub">Đã tối ưu hóa bộ nhớ thiết bị</span>
+                  </div>
+                </div>
+                <span class="m-item-pill">Đang bật</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- NHÓM THÔNG TIN ỨNG DỤNG -->
+          <div class="m-settings-group">
+            <h3 class="m-group-header">THÔNG TIN ỨNG DỤNG</h3>
+            
+            <div class="m-settings-list">
+              <div class="m-setting-item" @click="showSupportNotice">
+                <div class="m-item-left">
+                  <span class="m-item-icon">💬</span>
+                  <div class="m-item-text">
+                    <span class="m-item-title">Trợ giúp & Góp ý</span>
+                    <span class="m-item-sub">Phản hồi trải nghiệm người dùng</span>
+                  </div>
+                </div>
+                <span class="m-chevron">›</span>
+              </div>
+
+              <div class="m-setting-item">
+                <div class="m-item-left">
+                  <span class="m-item-icon">🌿</span>
+                  <div class="m-item-text">
+                    <span class="m-item-title">Phiên bản Travel Trips</span>
+                    <span class="m-item-sub">v2.5 Mobile Edition • Miền Trung</span>
+                  </div>
+                </div>
+                <span class="m-item-pill green">Mới nhất</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- NÚT ĐĂNG XUẤT -->
+          <div class="m-logout-wrap">
+            <button type="button" class="btn-m-logout" @click="$emit('logout')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              Đăng xuất khỏi tài khoản
+            </button>
+          </div>
+
         </div>
 
-        <div v-else class="guest-card-mobile">
-          <div class="guest-icon">🏕️</div>
-          <h2>Chào bạn!</h2>
-          <p>Đăng nhập để đồng bộ các chuyến đi và địa điểm yêu thích của bạn.</p>
-          <button class="btn-primary-mobile" @click="$emit('openAuth')">
-            Đăng nhập / Đăng ký
-          </button>
+        <!-- TRƯỜNG HỢP 2: KHÁCH CHƯA ĐĂNG NHẬP (GUEST MODE) -->
+        <div v-else class="m-guest-wrapper">
+          <div class="m-guest-card">
+            <div class="m-guest-badge">
+              <img src="/logo.png" alt="Travel Trips" class="m-guest-logo" />
+            </div>
+            <h2 class="m-guest-title">Chào mừng bạn đến với Travel Trips</h2>
+            <p class="m-guest-sub">
+              Đăng nhập tài khoản để đồng bộ các chuyến đi, lưu điểm đến yêu thích và nhận điểm thưởng độc quyền.
+            </p>
+
+            <button type="button" class="btn-guest-login" @click="$emit('openAuth')">
+              Đăng nhập / Đăng ký ngay →
+            </button>
+
+            <!-- Lợi ích khi có tài khoản -->
+            <div class="m-guest-benefits">
+              <div class="benefit-row">
+                <span class="b-icon">✨</span>
+                <span>Lên lịch AI không giới hạn theo sở thích</span>
+              </div>
+              <div class="benefit-row">
+                <span class="b-icon">📍</span>
+                <span>Lưu & đồng bộ dữ liệu trên cả điện thoại và máy tính</span>
+              </div>
+              <div class="benefit-row">
+                <span class="b-icon">🪙</span>
+                <span>Tích điểm thưởng sau mỗi chuyến đi hoàn thành</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Theme Switch for Guest -->
+          <div class="m-settings-list" style="margin-top: 14px;">
+            <div class="m-setting-item" @click="$emit('toggleDark')">
+              <div class="m-item-left">
+                <span class="m-item-icon">{{ isDark ? '🌙' : '☀️' }}</span>
+                <div class="m-item-text">
+                  <span class="m-item-title">Chế độ giao diện</span>
+                  <span class="m-item-sub">{{ isDark ? 'Chế độ tối' : 'Chế độ sáng' }}</span>
+                </div>
+              </div>
+              <div class="m-switch-toggle" :class="{ on: isDark }">
+                <span class="m-switch-knob"></span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <!-- ABOUT APP -->
-        <div class="about-app-card">
-          <img src="/logo.png" alt="Travel Trips Logo" class="about-logo-small" />
-          <h3>Travel Trips</h3>
-          <p class="about-version">Phiên bản Mobile • Miền Trung</p>
-          <p class="about-desc">
-            Ứng dụng du lịch tinh gọn dành riêng cho điện thoại, tích hợp AI tự động lên lịch trình nhanh chóng.
-          </p>
-        </div>
+        <!-- MODAL CHỈNH SỬA HỒ SƠ (BOTTOM SHEET DÀNH RIÊNG CHO MOBILE) -->
+        <Teleport to="body">
+          <div v-if="isEditingProfile" class="m-bottom-sheet-overlay" @click.self="isEditingProfile = false">
+            <div class="m-bottom-sheet-content">
+              <div class="sheet-handle-bar"></div>
+              
+              <div class="sheet-header">
+                <h3>Chỉnh sửa hồ sơ cá nhân</h3>
+                <button type="button" class="sheet-close-btn" @click="isEditingProfile = false">✕</button>
+              </div>
+
+              <div class="sheet-body">
+                <!-- Avatar Upload Row -->
+                <div class="sheet-avatar-row">
+                  <div class="sheet-avatar-preview">
+                    <img v-if="profileEditForm.avatar" :src="profileEditForm.avatar" alt="Avatar" />
+                    <div v-else class="preview-initial">{{ profileEditForm.name ? profileEditForm.name.charAt(0).toUpperCase() : 'U' }}</div>
+                  </div>
+                  <label class="sheet-avatar-upload-btn">
+                    <span>Chọn ảnh mới</span>
+                    <input type="file" accept="image/*" class="sr-only" @change="handleAvatarUpload" />
+                  </label>
+                </div>
+
+                <!-- Input Name -->
+                <div class="sheet-field">
+                  <label class="sheet-label">Tên hiển thị</label>
+                  <input
+                    v-model="profileEditForm.name"
+                    type="text"
+                    class="sheet-input"
+                    placeholder="Nhập tên của bạn..."
+                  />
+                </div>
+
+                <!-- Input Bio -->
+                <div class="sheet-field">
+                  <label class="sheet-label">Giới thiệu bản thân (Bio)</label>
+                  <textarea
+                    v-model="profileEditForm.bio"
+                    class="sheet-textarea"
+                    rows="3"
+                    placeholder="Sở thích du lịch, địa điểm yêu thích của bạn..."
+                  ></textarea>
+                </div>
+              </div>
+
+              <div class="sheet-footer">
+                <button type="button" class="btn-sheet-cancel" @click="isEditingProfile = false">
+                  Hủy
+                </button>
+                <button
+                  type="button"
+                  class="btn-sheet-save"
+                  :disabled="isSavingProfile || !profileEditForm.name.trim()"
+                  @click="saveProfile"
+                >
+                  <span v-if="!isSavingProfile">Lưu thay đổi</span>
+                  <span v-else>Đang lưu...</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </Teleport>
+
       </section>
 
     </main>
@@ -441,10 +699,13 @@ import api from '../../services/api'
 
 const props = defineProps({
   nguoiDung: { type: Object, default: null },
-  isDark: { type: Boolean, default: false }
+  isDark: { type: Boolean, default: false },
+  myTripsCount: { type: Number, default: 0 },
+  favoritesCount: { type: Number, default: 0 },
+  userLevelInfo: { type: Object, default: null }
 })
 
-const emit = defineEmits(['toggleDark', 'openAuth', 'logout', 'showToast'])
+const emit = defineEmits(['toggleDark', 'openAuth', 'logout', 'showToast', 'userUpdated'])
 
 // SLIDESHOW HÌNH ẢNH THẬT 100% DANH THẮNG MIỀN TRUNG
 const heroSlides = [
@@ -529,6 +790,81 @@ const currentActiveDayIndex = ref(0)
 const isPlanSaved = ref(false)
 const weather = ref(null)
 const savedTrips = ref([])
+
+// PROFILE LEVEL & EDIT STATE
+const computedUserLevel = computed(() => {
+  if (props.userLevelInfo) return props.userLevelInfo
+  const trips = props.nguoiDung?.completed_trips || 0
+  if (trips >= 10) return { title: 'Thám Hiểm Gia', icon: 'crown', color: '#8b5cf6' }
+  if (trips >= 5) return { title: 'Lữ Khách Sành Sỏi', icon: 'rocket', color: '#f59e0b' }
+  if (trips >= 2) return { title: 'Phượt Thủ Tích Cực', icon: 'luggage', color: '#3b82f6' }
+  return { title: 'Tân Thủ Khám Phá', icon: 'sprout', color: '#10b981' }
+})
+
+const isEditingProfile = ref(false)
+const isSavingProfile = ref(false)
+const profileEditForm = reactive({
+  name: '',
+  bio: '',
+  avatar: ''
+})
+
+function openEditProfileSheet() {
+  profileEditForm.name = props.nguoiDung?.name || ''
+  profileEditForm.bio = props.nguoiDung?.bio || ''
+  profileEditForm.avatar = props.nguoiDung?.avatar || ''
+  isEditingProfile.value = true
+}
+
+function handleAvatarUpload(e) {
+  const file = e.target.files && e.target.files[0]
+  if (!file) return
+  if (file.size > 3 * 1024 * 1024) {
+    alert('Vui lòng chọn ảnh có dung lượng dưới 3MB!')
+    return
+  }
+  const reader = new FileReader()
+  reader.onload = (event) => {
+    profileEditForm.avatar = event.target.result
+  }
+  reader.readAsDataURL(file)
+}
+
+async function saveProfile() {
+  if (!profileEditForm.name.trim()) {
+    alert('Vui lòng nhập tên hiển thị!')
+    return
+  }
+  isSavingProfile.value = true
+  try {
+    const res = await api.put('/auth/update-profile', {
+      name: profileEditForm.name.trim(),
+      bio: profileEditForm.bio.trim(),
+      avatar: profileEditForm.avatar
+    })
+    emit('userUpdated', res.data)
+    localStorage.setItem('user', JSON.stringify(res.data))
+    isEditingProfile.value = false
+    alert('Cập nhật hồ sơ thành công!')
+  } catch (err) {
+    console.error('Lỗi cập nhật hồ sơ:', err)
+    alert(err.response?.data?.error || 'Không thể cập nhật hồ sơ. Vui lòng thử lại!')
+  } finally {
+    isSavingProfile.value = false
+  }
+}
+
+function clearTripCache() {
+  if (confirm('Làm mới bộ nhớ đệm và dữ liệu ngoại tuyến của ứng dụng?')) {
+    localStorage.removeItem('my_saved_trips')
+    savedTrips.value = []
+    alert('Đã dọn dẹp bộ nhớ đệm thành công!')
+  }
+}
+
+function showSupportNotice() {
+  alert('Đội ngũ Travel Trips Miền Trung luôn sẵn sàng hỗ trợ bạn qua email: hotro@traveltrips.vn hoặc Hotline 1900 6868!')
+}
 
 const popularPills = ['Di sản & văn hóa', 'Thiên nhiên', 'Ẩm thực', 'Biển đảo', '2 ngày', '3 ngày']
 const cityList = ['Đà Nẵng', 'Hội An', 'Huế', 'Quy Nhơn', 'Phú Yên', 'Nha Trang', 'Quảng Bình']
@@ -1864,83 +2200,686 @@ function getWeatherDesc(code) {
   cursor: pointer;
 }
 
-/* PROFILE TAB */
-.user-card-mobile, .guest-card-mobile {
-  margin: 14px;
-  padding: 20px;
+/* PROFILE TAB STYLES - CHUẨN THIẾT KẾ MOBILE NATIVE */
+.m-profile-wrapper, .m-guest-wrapper {
+  padding: 12px 14px 24px;
+}
+
+/* HERO CARD & COVER */
+.m-profile-hero-card {
+  position: relative;
   background: #ffffff;
-  border-radius: 16px;
-  text-align: center;
-  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  margin-bottom: 14px;
 }
 
-.user-avatar-circle {
-  width: 56px;
-  height: 56px;
+:root[data-theme="dark"] .m-profile-hero-card {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.m-profile-cover {
+  height: 90px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.m-profile-cover-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(15, 23, 42, 0.65) 100%);
+}
+
+.m-profile-user-cluster {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  padding: 0 16px;
+  margin-top: -36px;
+  position: relative;
+  z-index: 2;
+}
+
+.m-avatar-wrap {
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
+  border: 3.5px solid #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   background: #059669;
-  color: #fff;
-  font-size: 1.3rem;
-  font-weight: 700;
-  display: grid;
-  place-content: center;
-  margin: 0 auto 10px;
+  position: relative;
+  cursor: pointer;
+  flex-shrink: 0;
 }
 
-.user-avatar-circle img {
+:root[data-theme="dark"] .m-avatar-wrap {
+  border-color: #1e293b;
+}
+
+.m-avatar-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   border-radius: 50%;
 }
 
-.user-display-name {
+.m-avatar-fallback {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 1.6rem;
+  font-weight: 800;
+  display: grid;
+  place-content: center;
+}
+
+.m-avatar-edit-badge {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #059669;
+  color: #ffffff;
+  border: 2px solid #ffffff;
+  display: grid;
+  place-content: center;
+  cursor: pointer;
+}
+
+.m-user-text {
+  flex: 1;
+  padding-bottom: 4px;
+}
+
+.m-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.m-user-title {
   font-size: 1.15rem;
-  font-weight: 700;
+  font-weight: 800;
+  color: var(--text-main, #0f172a);
+  line-height: 1.2;
 }
 
-.user-email-text {
-  font-size: 0.75rem;
-  color: #64748b;
-  margin-bottom: 12px;
+:root[data-theme="dark"] .m-user-title {
+  color: #f8fafc;
 }
 
-.btn-logout-mobile {
-  padding: 6px 16px;
-  border: 1px solid #ef4444;
-  color: #ef4444;
-  background: transparent;
+.m-admin-tag {
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.55rem;
+  font-weight: 800;
+  padding: 1px 6px;
   border-radius: 8px;
+  letter-spacing: 0.05em;
+}
+
+.m-user-email {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.m-badge-row {
+  margin-top: 6px;
+}
+
+.m-level-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #ffffff;
+  padding: 2px 10px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+}
+
+.m-bio-box {
+  padding: 12px 16px;
+  background: #f8fafc;
+  border-radius: 12px;
+  margin: 12px 16px;
+  cursor: pointer;
+  border: 1px dashed #cbd5e1;
+}
+
+:root[data-theme="dark"] .m-bio-box {
+  background: rgba(15, 23, 42, 0.6);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.m-bio-content {
   font-size: 0.75rem;
-  font-weight: 600;
+  color: #334155;
+  font-style: italic;
+  line-height: 1.45;
 }
 
-.about-app-card {
-  margin: 14px;
-  padding: 16px;
-  background: #ffffff;
-  border-radius: 14px;
+:root[data-theme="dark"] .m-bio-content {
+  color: #cbd5e1;
+}
+
+.m-bio-placeholder {
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.m-profile-actions {
+  padding: 0 16px 14px;
+  display: flex;
+  gap: 8px;
+}
+
+.btn-m-edit {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 12px;
   border: 1px solid #e2e8f0;
-  text-align: center;
+  background: #ffffff;
+  color: #334155;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
-.about-logo-small {
+:root[data-theme="dark"] .btn-m-edit {
+  background: #0f172a;
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #e2e8f0;
+}
+
+/* BENTO STATS CARDS */
+.m-stats-bento {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.m-stat-cell {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 12px 14px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+:root[data-theme="dark"] .m-stat-cell {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.stat-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.stat-icon {
+  font-size: 1.15rem;
+}
+
+.stat-number {
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.stat-emerald .stat-number { color: #059669; }
+.stat-amber .stat-number { color: #f59e0b; }
+.stat-rose .stat-number { color: #f43f5e; }
+.stat-violet .stat-number { color: #8b5cf6; }
+
+.stat-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+/* SETTINGS GROUPS */
+.m-settings-group {
+  margin-bottom: 16px;
+}
+
+.m-group-header {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #94a3b8;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+  padding-left: 4px;
+}
+
+.m-settings-list {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+}
+
+:root[data-theme="dark"] .m-settings-list {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.m-setting-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid #f1f5f9;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+:root[data-theme="dark"] .m-setting-item {
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+.m-setting-item:last-child {
+  border-bottom: none;
+}
+
+.m-item-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.m-item-icon {
+  font-size: 1.05rem;
+}
+
+.m-item-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.m-item-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-main, #0f172a);
+}
+
+:root[data-theme="dark"] .m-item-title {
+  color: #f1f5f9;
+}
+
+.m-item-sub {
+  font-size: 0.65rem;
+  color: #64748b;
+  margin-top: 1px;
+}
+
+.m-chevron {
+  font-size: 1.2rem;
+  color: #94a3b8;
+  font-weight: 300;
+}
+
+.m-item-pill {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.m-item-pill.green {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+/* TOGGLE SWITCH */
+.m-switch-toggle {
+  width: 42px;
+  height: 24px;
+  background: #cbd5e1;
+  border-radius: 12px;
+  position: relative;
+  transition: background 0.25s ease;
+  cursor: pointer;
+}
+
+.m-switch-toggle.on {
+  background: #059669;
+}
+
+.m-switch-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.m-switch-toggle.on .m-switch-knob {
+  transform: translateX(18px);
+}
+
+/* LOGOUT BUTTON */
+.m-logout-wrap {
+  margin-top: 20px;
+}
+
+.btn-m-logout {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* GUEST MODE CARD */
+.m-guest-card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 24px 18px;
+  text-align: center;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+}
+
+:root[data-theme="dark"] .m-guest-card {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.m-guest-badge {
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  background: #f1f5f9;
+  margin: 0 auto 12px;
+  display: grid;
+  place-content: center;
+}
+
+.m-guest-logo {
   width: 44px;
   height: 44px;
   border-radius: 10px;
-  margin-bottom: 6px;
+  object-fit: cover;
 }
 
-.about-version {
-  font-size: 0.65rem;
-  color: #f59e0b;
-  font-weight: 600;
+.m-guest-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-main, #0f172a);
 }
 
-.about-desc {
-  font-size: 0.72rem;
+:root[data-theme="dark"] .m-guest-title {
+  color: #fff;
+}
+
+.m-guest-sub {
+  font-size: 0.75rem;
   color: #64748b;
-  margin-top: 6px;
+  margin: 6px 0 18px;
+  line-height: 1.45;
+}
+
+.btn-guest-login {
+  width: 100%;
+  padding: 12px;
+  background: #059669;
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+}
+
+.m-guest-benefits {
+  margin-top: 20px;
+  text-align: left;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+:root[data-theme="dark"] .m-guest-benefits {
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+.benefit-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.72rem;
+  color: #475569;
+}
+
+:root[data-theme="dark"] .benefit-row {
+  color: #cbd5e1;
+}
+
+.b-icon {
+  font-size: 0.95rem;
+}
+
+/* EDIT PROFILE BOTTOM SHEET MODAL */
+.m-bottom-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: fadeIn 0.2s ease;
+}
+
+.m-bottom-sheet-content {
+  background: #ffffff;
+  width: 100%;
+  max-width: 480px;
+  border-radius: 24px 24px 0 0;
+  padding: 12px 18px 24px;
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.2);
+}
+
+:root[data-theme="dark"] .m-bottom-sheet-content {
+  background: #0f172a;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.sheet-handle-bar {
+  width: 36px;
+  height: 4px;
+  background: #cbd5e1;
+  border-radius: 2px;
+  margin: 0 auto 12px;
+}
+
+.sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.sheet-header h3 {
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.sheet-close-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.1rem;
+  color: #94a3b8;
+  cursor: pointer;
+}
+
+.sheet-avatar-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.sheet-avatar-preview {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: #059669;
+  color: #fff;
+  overflow: hidden;
+  display: grid;
+  place-content: center;
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+
+.sheet-avatar-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sheet-avatar-upload-btn {
+  padding: 6px 14px;
+  border-radius: 10px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #059669;
+  cursor: pointer;
+}
+
+:root[data-theme="dark"] .sheet-avatar-upload-btn {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.sheet-field {
+  margin-bottom: 12px;
+}
+
+.sheet-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #475569;
+  margin-bottom: 4px;
+}
+
+:root[data-theme="dark"] .sheet-label {
+  color: #94a3b8;
+}
+
+.sheet-input, .sheet-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 0.82rem;
+  outline: none;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+:root[data-theme="dark"] .sheet-input, :root[data-theme="dark"] .sheet-textarea {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+}
+
+.sheet-input:focus, .sheet-textarea:focus {
+  border-color: #059669;
+}
+
+.sheet-footer {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.btn-sheet-cancel {
+  flex: 1;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid #cbd5e1;
+  background: transparent;
+  color: #64748b;
+  font-weight: 700;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.btn-sheet-save {
+  flex: 2;
+  padding: 10px;
+  border-radius: 12px;
+  border: none;
+  background: #059669;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.8rem;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+}
+
+.btn-sheet-save:disabled {
+  opacity: 0.6;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 /* BOTTOM TAB NAVIGATION */

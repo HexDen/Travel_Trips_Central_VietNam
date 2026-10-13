@@ -4,9 +4,13 @@
     v-if="isMobileDevice"
     :nguoiDung="nguoiDung"
     :isDark="isDark"
+    :myTripsCount="myTripsList.length || 0"
+    :favoritesCount="favoritesList.length || 0"
+    :userLevelInfo="userLevelInfo"
     @toggleDark="toggleDark"
     @openAuth="hienAuthModal = true"
     @logout="dangXuat"
+    @userUpdated="(u) => { nguoiDung = u }"
   />
 
   <!-- GIAO DIỆN DESKTOP / PC ĐẦY ĐỦ NGUYÊN BẢN -->
