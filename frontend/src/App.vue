@@ -521,7 +521,18 @@ import ItineraryTimeline from './components/planner/ItineraryTimeline.vue';
 import FavoritePlaces from './components/FavoritePlaces.vue';
 import UserProfile from './components/UserProfile.vue';
 
-
+import AiStarryLoadingOverlay from './components/common/AiStarryLoadingOverlay.vue';
+import FloatingChatbot from './components/chatbot/FloatingChatbot.vue';
+import TripDetailModal from './components/trips/TripDetailModal.vue';
+import HotelDetailModal from './components/hotel/HotelDetailModal.vue';
+import AuthModal from './components/modals/AuthModal.vue';
+import ReplanModal from './components/modals/ReplanModal.vue';
+import BillSplitterModal from './components/modals/BillSplitterModal.vue';
+import TravelPassModal from './components/modals/TravelPassModal.vue';
+import ChangePlaceModal from './components/modals/ChangePlaceModal.vue';
+import RainModal from './components/modals/RainModal.vue';
+import InfographicModal from './components/modals/InfographicModal.vue';
+import SaveConfirmModal from './components/modals/SaveConfirmModal.vue';
 import { reactive, ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import api from './services/api'
 import AppHeader from './components/layout/AppHeader.vue'

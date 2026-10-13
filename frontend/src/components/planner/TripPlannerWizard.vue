@@ -29,13 +29,29 @@
               </div>
             </div>
 
-            <!-- Tiến trình Wizard -->
+            <!-- Tiến trình Wizard (Có thể bấm để quay lại các bước trước) -->
             <div class="wizard-progress">
-              <div :class="['step-indicator', { active: currentPlannerStep >= 1 }]">1. Điểm đến</div>
+              <button
+                type="button"
+                :class="['step-indicator', { active: currentPlannerStep >= 1, clickable: currentPlannerStep > 1 }]"
+                @click="goToStep(1)"
+                title="Quay lại Bước 1: Điểm đến"
+              >
+                1. Điểm đến
+              </button>
               <div class="step-divider"></div>
-              <div :class="['step-indicator', { active: currentPlannerStep >= 2 }]">2. Tài chính & Địa điểm</div>
+              <button
+                type="button"
+                :class="['step-indicator', { active: currentPlannerStep >= 2, clickable: currentPlannerStep > 2 }]"
+                @click="goToStep(2)"
+                title="Quay lại Bước 2: Tài chính & Địa điểm"
+              >
+                2. Tài chính & Địa điểm
+              </button>
               <div class="step-divider"></div>
-              <div :class="['step-indicator', { active: currentPlannerStep >= 3 }]">3. Di chuyển & Lưu trú</div>
+              <div :class="['step-indicator', { active: currentPlannerStep >= 3 }]">
+                3. Di chuyển & Lưu trú
+              </div>
             </div>
 
             <!-- BƯỚC 1: ĐIỂM ĐẾN & THỜI GIAN -->
@@ -1314,8 +1330,9 @@
             <!-- WIZARD FOOTER NAVIGATION -->
             <div class="wizard-footer">
               <button 
+                type="button"
                 v-if="currentPlannerStep > 1" 
-                @click="currentPlannerStep--" 
+                @click="quayLaiWizard" 
                 class="app-secondary-btn"
                 :disabled="dangTao"
               >
@@ -1508,6 +1525,21 @@ const customPlaceTextModel = computed({
   set: (v) => emit('update:customPlaceText', v)
 })
 
+// ==================== ĐIỀU HƯỚNG QUAY LẠI TRONG WIZARD ====================
+function quayLaiWizard() {
+  if (props.currentPlannerStep > 1) {
+    emit('update:currentPlannerStep', props.currentPlannerStep - 1)
+    window.scrollTo({ top: 120, behavior: 'smooth' })
+  }
+}
+
+function goToStep(step) {
+  if (step < props.currentPlannerStep) {
+    emit('update:currentPlannerStep', step)
+    window.scrollTo({ top: 120, behavior: 'smooth' })
+  }
+}
+
 // ==================== SLIDER 2 OPTIONS ĐIỂM KHỞI HÀNH (THỦ CÔNG HOẶC VỊ TRÍ HIỆN TẠI) ====================
 const originMethod = ref(props.showManualWardPicker ? 'manual' : (props.formDuLieu?.diemKhoiHanh ? 'manual' : 'manual'))
 
@@ -1620,6 +1652,28 @@ onUnmounted(() => {
 
 
 <style scoped>
+/* ==================== TIẾN TRÌNH WIZARD CLICKABLE ==================== */
+button.step-indicator {
+  background: transparent;
+  border: none;
+  font-family: inherit;
+}
+
+button.step-indicator.active {
+  color: var(--primary, #0284c7);
+  background: var(--primary-light, rgba(2, 132, 199, 0.15));
+}
+
+button.step-indicator.clickable {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+button.step-indicator.clickable:hover {
+  filter: brightness(1.2);
+  transform: translateY(-1px);
+}
+
 /* ==================== SLIDER 2 OPTIONS ĐIỂM BẮT ĐẦU (RADIO GROUP GLASSMORPHIC SLIDER) ==================== */
 .origin-mode-wrapper {
   margin: 6px 0 14px 0;
