@@ -28,9 +28,6 @@
       >
         <AppIcon name="x" :size="13" />
       </button>
-      <span v-else class="hsb-kbd" title="Phím tắt: Ctrl + K">
-        <kbd>{{ isMac ? '⌘' : 'Ctrl' }}</kbd><kbd>K</kbd>
-      </span>
     </div>
 
     <!-- DROPDOWN KẾT QUẢ: CHỈ HIỆN KHI NGƯỜI DÙNG THỰC SỰ GÕ TỪ KHÓA TÌM KIẾM -->
@@ -202,9 +199,6 @@ const inputRef = ref(null)
 const searchBoxRef = ref(null)
 const dropdownRef = ref(null)
 
-const isMac = computed(() => {
-  return typeof navigator !== 'undefined' && /Mac|iPod|iPhone|iPad/.test(navigator.platform)
-})
 
 // CHỈ HIỂN THỊ DROPDOWN KHI ĐÃ CÓ TỪ KHÓA TÌM KIẾM
 const isDropdownVisible = computed(() => {
@@ -859,30 +853,6 @@ onUnmounted(() => {
   color: #ef4444;
 }
 
-.hsb-kbd {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  flex-shrink: 0;
-  pointer-events: none;
-}
-
-.hsb-kbd kbd {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 4px;
-  padding: 1px 4px;
-  font-size: 10px;
-  font-family: inherit;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.65);
-}
-
-:root[data-theme="light"] .hsb-kbd kbd {
-  background: rgba(15, 23, 42, 0.06);
-  border-color: rgba(15, 23, 42, 0.12);
-  color: #64748b;
-}
 
 /* ==================== DROPDOWN KẾT QUẢ THẢ XUỐNG ==================== */
 .hsb-dropdown {
@@ -1472,9 +1442,6 @@ onUnmounted(() => {
 @media (max-width: 900px) {
   .hsb-input-wrapper {
     width: 170px;
-  }
-  .hsb-kbd {
-    display: none;
   }
 }
 
