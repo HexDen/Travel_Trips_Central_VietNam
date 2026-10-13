@@ -472,7 +472,7 @@
                             </div>
                             <div class="odjc-meta-item">
                               <span class="omi-label">Phương tiện di chuyển:</span>
-                              <strong>{{ formDuLieu.nhaXeDaChon ? (formDuLieu.nhaXeDaChon.name + ' - ' + formDuLieu.nhaXeDaChon.type) : (formDuLieu.tauDaChon ? (formDuLieu.tauDaChon.name + ' - ' + formDuLieu.tauDaChon.type) : (lichTrinh.transit_summary?.selected_bus?.name || (formDuLieu.phuongTien === 'máy bay' ? 'Chuyến bay nội địa' : (formDuLieu.phuongTien === 'tàu hỏa' ? 'Tàu Thống Nhất SE1' : (formDuLieu.phuongTien === 'xe máy' ? 'Xe máy tự túc' : 'Xe khách giường nằm VIP'))))) }}</strong>
+                              <strong>{{ formDuLieu.nhaXeDaChon ? (formDuLieu.nhaXeDaChon.name + ' - ' + formDuLieu.nhaXeDaChon.type) : (formDuLieu.tauDaChon ? (formDuLieu.tauDaChon.name + ' - ' + formDuLieu.tauDaChon.type) : (formDuLieu.chuyenBayDaChon ? (formDuLieu.chuyenBayDaChon.name + ' - ' + formDuLieu.chuyenBayDaChon.type) : (lichTrinh.transit_summary?.selected_bus?.name || (formDuLieu.phuongTien === 'máy bay' ? 'Chuyến bay nội địa' : (formDuLieu.phuongTien === 'tàu hỏa' ? 'Tàu Thống Nhất SE1' : (formDuLieu.phuongTien === 'tự túc' || formDuLieu.tuTucPhuongTien ? 'Tự túc phương tiện (0đ vé)' : 'Xe khách giường nằm VIP')))))) }}</strong>
                             </div>
                             <div class="odjc-meta-item">
                               <span class="omi-label">Cự ly quãng đường:</span>
@@ -871,7 +871,7 @@
                             </div>
                             <div class="orjc-meta-item">
                               <span class="omi-label">Phương tiện về:</span>
-                              <strong>{{ formDuLieu.nhaXeDaChon ? (formDuLieu.nhaXeDaChon.name + ' - ' + formDuLieu.nhaXeDaChon.type) : (formDuLieu.tauDaChon ? (formDuLieu.tauDaChon.name + ' - ' + formDuLieu.tauDaChon.type) : (lichTrinh.transit_summary?.selected_bus?.name || (formDuLieu.phuongTien === 'máy bay' ? 'Chuyến bay nội địa khứ hồi' : (formDuLieu.phuongTien === 'tàu hỏa' ? 'Tàu Thống Nhất khứ hồi' : 'Xe khách giường nằm khứ hồi')))) }}</strong>
+                              <strong>{{ formDuLieu.nhaXeDaChon ? (formDuLieu.nhaXeDaChon.name + ' - ' + formDuLieu.nhaXeDaChon.type) : (formDuLieu.tauDaChon ? (formDuLieu.tauDaChon.name + ' - ' + formDuLieu.tauDaChon.type) : (formDuLieu.chuyenBayDaChon ? (formDuLieu.chuyenBayDaChon.name + ' - ' + formDuLieu.chuyenBayDaChon.type) : (lichTrinh.transit_summary?.selected_bus?.name || (formDuLieu.phuongTien === 'máy bay' ? 'Chuyến bay nội địa khứ hồi' : (formDuLieu.phuongTien === 'tàu hỏa' ? 'Tàu Thống Nhất khứ hồi' : (formDuLieu.phuongTien === 'tự túc' || formDuLieu.tuTucPhuongTien ? 'Tự túc phương tiện khứ hồi (0đ vé)' : 'Xe khách giường nằm khứ hồi')))))) }}</strong>
                             </div>
                             <div class="orjc-meta-item">
                               <span class="omi-label">Cự ly di chuyển về:</span>

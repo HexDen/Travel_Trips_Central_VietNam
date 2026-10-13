@@ -164,6 +164,8 @@
             :chonGioXuatPhatBus="chonGioXuatPhatBus"
             :chonTauHoa="chonTauHoa"
             :chonGioXuatPhatTau="chonGioXuatPhatTau"
+            :chonChuyenBay="chonChuyenBay"
+            :chonGioXuatPhatChuyenBay="chonGioXuatPhatChuyenBay"
             :toggleTuTucPhuongTien="toggleTuTucPhuongTien"
             :chuyenSangChonKhachSan="chuyenSangChonKhachSan"
             :toggleTuTucKhachSan="toggleTuTucKhachSan"
@@ -574,10 +576,22 @@ function cuonLenDauTrang() {
 }
 
 function handleTabChange(newTab) {
+  // Đảm bảo khi chuyển tab mọi tác vụ trong lên lịch trình phải hoàn toàn reset (Yêu cầu 4)
+  if (newTab === activeTab.value) {
+    if (newTab === 'planner') {
+      resetAllPlannerState()
+      cuonLenDauTrang()
+    }
+    return
+  }
+
   if (newTab === 'planner') {
+    resetAllPlannerState()
     startPlannerTransition()
   } else {
-    // Dùng chuyenTab() để kiểm tra lưu lịch trình trước khi rời planner (Phần 2)
+    if (activeTab.value === 'planner') {
+      resetAllPlannerState()
+    }
     chuyenTab(newTab)
   }
 }
@@ -638,8 +652,8 @@ function handleOpenModalFromSearch(modalName) {
 const ALL_DESTINATIONS = 'Tất cả miền Trung'
 
 const formDuLieu = reactive({
-  diemKhoiHanh: 'Hà Nội',
-  diemDen: ALL_DESTINATIONS,
+  diemKhoiHanh: '',
+  diemDen: 'Đà Nẵng',
   soNgay: 0,
   soDem: 0,
   nganSach: 3500000,
@@ -647,11 +661,12 @@ const formDuLieu = reactive({
   soThich: [],
   ngayBatDau: '2026-10-06',
   ngayKetThuc: '',
-  phuongTien: 'xe khách',
+  phuongTien: '',
   yeuCauKhachSan: '',
   nhaXeDaChon: null,
   gioXuatPhatChon: '',
   tauDaChon: null,
+  chuyenBayDaChon: null,
   khachSanDaChon: null,
   phongDaChon: null,
   freePlacesOnly: false,
@@ -1932,7 +1947,7 @@ function apDungDiaChiThuCong() {
   }
 }
 
-const transitTab = ref('bus') // 'bus' hoặc 'train'
+const transitTab = ref('') // 'bus' | 'train' | 'flight' | 'self' | ''
 
 function chonNhaXe(bus) {
   if (formDuLieu.nhaXeDaChon?.id === bus.id) {
@@ -1941,6 +1956,9 @@ function chonNhaXe(bus) {
   } else {
     formDuLieu.nhaXeDaChon = bus
     formDuLieu.phuongTien = 'xe khách'
+    formDuLieu.tauDaChon = null
+    formDuLieu.chuyenBayDaChon = null
+    formDuLieu.tuTucPhuongTien = false
     const times = bus.depart_times ? bus.depart_times.split(',').map(s => s.trim()) : []
     if (times.length && !formDuLieu.gioXuatPhatChon) {
       formDuLieu.gioXuatPhatChon = times[0]
@@ -1955,11 +1973,40 @@ function chonTauHoa(train) {
   } else {
     formDuLieu.tauDaChon = train
     formDuLieu.phuongTien = 'tàu hỏa'
+    formDuLieu.nhaXeDaChon = null
+    formDuLieu.chuyenBayDaChon = null
+    formDuLieu.tuTucPhuongTien = false
     const times = train.depart_times ? train.depart_times.split(',').map(s => s.trim()) : []
     if (times.length && !formDuLieu.gioXuatPhatChon) {
       formDuLieu.gioXuatPhatChon = times[0]
     }
   }
+}
+
+function chonChuyenBay(flight) {
+  if (formDuLieu.chuyenBayDaChon?.id === flight.id) {
+    formDuLieu.chuyenBayDaChon = null
+    formDuLieu.gioXuatPhatChon = ''
+  } else {
+    formDuLieu.chuyenBayDaChon = flight
+    formDuLieu.phuongTien = 'máy bay'
+    formDuLieu.nhaXeDaChon = null
+    formDuLieu.tauDaChon = null
+    formDuLieu.tuTucPhuongTien = false
+    const times = flight.depart_times ? flight.depart_times.split(',').map(s => s.trim()) : []
+    if (times.length && !formDuLieu.gioXuatPhatChon) {
+      formDuLieu.gioXuatPhatChon = times[0]
+    }
+  }
+}
+
+function chonGioXuatPhatChuyenBay(flight, timeStr) {
+  formDuLieu.chuyenBayDaChon = flight
+  formDuLieu.phuongTien = 'máy bay'
+  formDuLieu.nhaXeDaChon = null
+  formDuLieu.tauDaChon = null
+  formDuLieu.tuTucPhuongTien = false
+  formDuLieu.gioXuatPhatChon = timeStr
 }
 
 function chonPhuongTienTuSoSanh(v) {
@@ -1971,8 +2018,11 @@ function chonPhuongTienTuSoSanh(v) {
     transitTab.value = 'train'
   } else if (v.type === 'flight') {
     formDuLieu.phuongTien = 'máy bay'
-  } else if (v.type === 'motorbike') {
-    formDuLieu.phuongTien = 'xe máy'
+    transitTab.value = 'flight'
+  } else if (v.type === 'motorbike' || v.type === 'tu_tuc') {
+    formDuLieu.phuongTien = 'tự túc'
+    formDuLieu.tuTucPhuongTien = true
+    transitTab.value = 'self'
   }
 }
 
@@ -1980,7 +2030,13 @@ function chonPhuongTienTuSoSanh(v) {
 const step3ActiveSubtab = ref('transit') // 'transit' | 'hotel'
 
 const daXongPhuongTien = computed(() => {
-  return Boolean(formDuLieu.nhaXeDaChon || formDuLieu.tauDaChon || formDuLieu.tuTucPhuongTien)
+  return Boolean(
+    formDuLieu.nhaXeDaChon ||
+    formDuLieu.tauDaChon ||
+    formDuLieu.chuyenBayDaChon ||
+    formDuLieu.tuTucPhuongTien ||
+    formDuLieu.phuongTien === 'tự túc'
+  )
 })
 
 const daXongKhachSan = computed(() => {
@@ -2003,32 +2059,17 @@ function cuonXuongTaoLichTrinh() {
 function toggleTuTucPhuongTien() {
   formDuLieu.tuTucPhuongTien = !formDuLieu.tuTucPhuongTien
   if (formDuLieu.tuTucPhuongTien) {
+    formDuLieu.phuongTien = 'tự túc'
     formDuLieu.nhaXeDaChon = null
     formDuLieu.tauDaChon = null
-    personalityToast.value = {
-      icon: '🏍️',
-      title: 'Đã chọn Tự túc phương tiện!',
-      desc: 'Hệ thống chuyển sang Bước 2: Chọn Khách sạn & Lưu trú.'
-    }
-    setTimeout(() => { personalityToast.value = null }, 3500)
-    step3ActiveSubtab.value = 'hotel'
+    formDuLieu.chuyenBayDaChon = null
+  } else {
+    formDuLieu.phuongTien = ''
   }
 }
 
 function chuyenSangChonKhachSan() {
-  if (!formDuLieu.nhaXeDaChon && !formDuLieu.tauDaChon && !formDuLieu.tuTucPhuongTien) {
-    formDuLieu.tuTucPhuongTien = true
-    personalityToast.value = {
-      icon: 'ℹ️',
-      title: 'Tự động chọn tự túc phương tiện',
-      desc: 'Bạn chưa chọn vé xe, hệ thống đã chuyển sang chế độ tự túc.'
-    }
-    setTimeout(() => { personalityToast.value = null }, 3500)
-  }
   step3ActiveSubtab.value = 'hotel'
-  nextTick(() => {
-    window.scrollTo({ top: 300, behavior: 'smooth' })
-  })
 }
 
 function toggleTuTucKhachSan() {
@@ -2118,6 +2159,10 @@ function xemTatCaKhachSan() {
 
 function thuGonKhachSan() {
   hotelDisplayLimit.value = 4
+  nextTick(() => {
+    const el = document.querySelector('.hotel-catalog-box')
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  })
 }
 
 // Reset limit khi đổi điểm đến hoặc đổi bộ lọc sao
@@ -3949,6 +3994,9 @@ function chuyenTab(tabName) {
     hienModalNhacLuu.value = true
     return
   }
+  if (activeTab.value === 'planner' && tabName !== 'planner') {
+    resetAllPlannerState()
+  }
   activeTab.value = tabName
 }
 
@@ -4003,9 +4051,62 @@ function xemChiTietChuyenDi(trip) {
   hienModalChiTietTrip.value = true
 }
 
-watch(activeTab, (newTab) => {
+function resetAllPlannerState() {
+  currentPlannerStep.value = 1
+  lichTrinh.value = null
+  daLuuLichTrinhHienTai.value = false
+  selectedPlaces.value = []
+  searchPlacePickerQuery.value = ''
+  taoPlanError.value = ''
+  
+  // Reset formDuLieu về trạng thái ban đầu
+  formDuLieu.diemKhoiHanh = ''
+  formDuLieu.diemDen = 'Đà Nẵng'
+  formDuLieu.soNgay = 0
+  formDuLieu.soDem = 0
+  formDuLieu.nganSach = 3500000
+  formDuLieu.soNguoi = 0
+  formDuLieu.soThich = []
+  formDuLieu.ngayBatDau = todayIso.value || '2026-10-06'
+  formDuLieu.ngayKetThuc = ''
+  formDuLieu.phuongTien = ''
+  formDuLieu.tuTucPhuongTien = false
+  formDuLieu.yeuCauKhachSan = ''
+  formDuLieu.nhaXeDaChon = null
+  formDuLieu.gioXuatPhatChon = ''
+  formDuLieu.tauDaChon = null
+  formDuLieu.chuyenBayDaChon = null
+  formDuLieu.khachSanDaChon = null
+  formDuLieu.phongDaChon = null
+  formDuLieu.freePlacesOnly = false
+  formDuLieu.tuTucPhuongTien = false
+  formDuLieu.tuTucKhachSan = false
+
+  transitTab.value = ''
+  step3ActiveSubtab.value = 'transit'
+  hotelSortBy.value = 'default'
+  hotelStarFilter.value = 'all'
+  hotelDisplayLimit.value = 4
+  customPlaceText.value = ''
+
+  selectedManualProvinceCode.value = ''
+  selectedManualDistrictCode.value = ''
+  selectedManualWardCode.value = ''
+  manualStreetAddress.value = ''
+
+  try {
+    localStorage.removeItem('currentTrip')
+  } catch (e) {}
+}
+
+watch(activeTab, (newTab, oldTab) => {
+  // Khi thoát khỏi trang lên lịch: reset mọi thứ từ đầu (Yêu cầu 4)
+  if (oldTab === 'planner' && newTab !== 'planner') {
+    resetAllPlannerState()
+  }
+
   if (newTab === 'planner') {
-    // Luôn cuộn lên đầu trang ngay lập tức để người dùng thấy ảnh Miền Trung (Yêu cầu 5)
+    // Luôn cuộn lên đầu trang ngay lập tức để người dùng thấy ảnh Miền Trung
     cuonLenDauTrang()
     nextTick(() => {
       cuonLenDauTrang()
@@ -11749,32 +11850,38 @@ button { cursor: pointer; }
 
 /* ==================== PLANNER HERO BANNER ==================== */
 .planner-hero-banner {
-  width: calc(100% - 40px);
-  max-width: 900px;
+  width: 100%;
+  max-width: 860px;
+  height: 320px;
+  max-height: 350px;
   margin: 0 auto 20px auto;
-  border-radius: 20px;
+  border-radius: 18px;
   overflow: hidden;
-  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   position: relative;
   flex-shrink: 0;
+  background: #0f172a;
   animation: fadeInBanner 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
 }
 
 .planner-hero-banner:hover {
-  transform: translateY(-4px) scale(1.01);
-  box-shadow: 0 30px 60px -10px rgba(0, 0, 0, 0.5);
+  transform: translateY(-3px) scale(1.008);
+  box-shadow: 0 24px 50px -10px rgba(0, 0, 0, 0.55);
 }
 
 .planner-hero-banner-img {
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 25%;
   display: block;
   transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .planner-hero-banner:hover .planner-hero-banner-img {
-  transform: scale(1.03);
+  transform: scale(1.025);
 }
 
 /* Gradient vignette overlay phía dưới */
@@ -11825,8 +11932,10 @@ button { cursor: pointer; }
 
 @media (max-width: 768px) {
   .planner-hero-banner {
-    max-height: 220px;
-    border-radius: 12px;
+    height: 190px;
+    max-height: 190px;
+    border-radius: 14px;
+    margin-bottom: 16px;
   }
   .planner-hero-badge {
     bottom: 14px;
@@ -16164,42 +16273,25 @@ button { cursor: pointer; }
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 12px;
-  padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 10px 16px;
+  background: rgba(241, 245, 249, 0.8);
+  border: 1px solid #cbd5e1;
   border-radius: 18px;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   margin-bottom: 20px;
 }
 
-:root[data-theme="light"] .hotel-sort-toolbar {
-  background: rgba(248, 250, 252, 0.85);
-  border-color: rgba(226, 232, 240, 0.8);
-}
-
 .hst-group {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: #e2e8f0;
   padding: 4px;
   border-radius: 25px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  border: 1px solid #cbd5e1;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
   flex-wrap: wrap;
-}
-
-:root[data-theme="light"] .hst-group {
-  background: rgba(241, 245, 249, 0.9);
-  border-color: rgba(203, 213, 225, 0.85);
-  box-shadow:
-    0 4px 16px rgba(15, 23, 42, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .hst-label {
@@ -16208,39 +16300,30 @@ button { cursor: pointer; }
   gap: 4px;
   font-size: 12px;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.75);
+  color: #475569;
   padding: 0 8px 0 10px;
-}
-
-:root[data-theme="light"] .hst-label {
-  color: #64748b;
 }
 
 .hst-btn, .hst-star-btn {
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.85);
-  padding: 5px 12px;
+  color: #334155;
+  padding: 6px 13px;
   border-radius: 25px;
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
   user-select: none;
-  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-}
-
-:root[data-theme="light"] .hst-btn, :root[data-theme="light"] .hst-star-btn {
-  color: #475569;
+  pointer-events: auto !important;
+  position: relative;
+  z-index: 5;
+  transition: all 0.2s ease;
 }
 
 .hst-btn:hover, .hst-star-btn:hover {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.1);
-}
-:root[data-theme="light"] .hst-btn:hover, :root[data-theme="light"] .hst-star-btn:hover {
-  color: #0f172a;
-  background: rgba(15, 23, 42, 0.05);
+  color: #0284c7;
+  background: rgba(255, 255, 255, 0.6);
 }
 
 .hst-btn.active, .hst-star-btn.active {
@@ -16249,16 +16332,38 @@ button { cursor: pointer; }
   font-weight: 700;
   border: none;
   box-shadow:
-    0 3px 12px rgba(0, 0, 0, 0.18),
-    0 1px 4px rgba(0, 0, 0, 0.12);
-  animation: pulse-slider 0.45s ease-out;
+    0 2px 8px rgba(0, 0, 0, 0.12),
+    0 1px 3px rgba(0, 0, 0, 0.08);
 }
-:root[data-theme="light"] .hst-btn.active, :root[data-theme="light"] .hst-star-btn.active {
-  background: #ffffff !important;
-  color: #0284c7 !important;
-  box-shadow:
-    0 3px 12px rgba(15, 23, 42, 0.12),
-    0 1px 4px rgba(15, 23, 42, 0.08);
+
+[data-theme="dark"] .hotel-sort-toolbar {
+  background: rgba(30, 41, 59, 0.7);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+[data-theme="dark"] .hst-group {
+  background: rgba(15, 23, 42, 0.6);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .hst-label {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+[data-theme="dark"] .hst-btn, [data-theme="dark"] .hst-star-btn {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+[data-theme="dark"] .hst-btn:hover, [data-theme="dark"] .hst-star-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+[data-theme="dark"] .hst-btn.active, [data-theme="dark"] .hst-star-btn.active {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 10px rgba(2, 132, 199, 0.4);
 }
 
 /* PHÂN TRANG VÀ THU GỌN / XEM THÊM KHÁCH SẠN */

@@ -62,7 +62,7 @@
                   <div class="field-label-main">
                     <label><AppIcon name="pin" :size="15" /> Điểm bắt đầu (Khởi hành)</label>
                   </div>
-                  <span class="route-origin-tag" v-if="formDuLieu.diemKhoiHanh">Xuất phát: <b>{{ formDuLieu.diemKhoiHanh }}</b></span>
+                  <span class="route-origin-tag">Xuất phát: <b>{{ formDuLieu.diemKhoiHanh || '?' }}</b></span>
                 </div>
 
                 <!-- SLIDER CHUYỂN ĐỔI 2 OPTIONS (THỦ CÔNG HOẶC VỊ TRÍ HIỆN TẠI) -->
@@ -218,37 +218,65 @@
                   <label class="field-label-text">Điểm đến du lịch</label>
                   <span class="route-origin-indicator">
                     <span class="roi-dot"></span>
-                    Từ: <strong>{{ formDuLieu.diemKhoiHanh || 'Hà Nội' }}</strong>
+                    Từ: <strong>{{ formDuLieu.diemKhoiHanh || '?' }}</strong>
                   </span>
                 </div>
 
-                <div class="radio-group city-radio-group" ref="citySelectorRef">
-                  <div class="slider" :style="sliderStyle"></div>
-                  <div
-                    v-for="(c, idx) in visibleCities"
-                    :key="c.name"
-                    :class="['radio-option', 'city-radio-option', { active: formDuLieu.diemDen === c.name }]"
-                    :ref="el => setCityOptionRef(el, c.name)"
+                <div class="city-selector-outer">
+                  <button
+                    type="button"
+                    class="city-scroll-arrow left"
+                    @click="scrollCityGroup(-220)"
+                    title="Cuộn sang trái"
+                    aria-label="Cuộn sang trái"
                   >
-                    <input
-                      type="radio"
-                      name="destinationCityRadio"
-                      :id="'city-opt-' + idx"
-                      :value="c.name"
-                      :checked="formDuLieu.diemDen === c.name"
-                      @change="handleSelectCity(c.name)"
-                    />
-                    <label
-                      :for="'city-opt-' + idx"
-                      class="radio-label city-radio-label"
-                      @click="handleSelectCity(c.name)"
+                    <AppIcon name="chevronleft" :size="16" />
+                  </button>
+                  <div
+                    class="radio-group city-radio-group"
+                    ref="citySelectorRef"
+                    @wheel.passive="handleCityWheel"
+                    @mousedown="onCityMouseDown"
+                    @mousemove="onCityMouseMove"
+                    @mouseup="onCityMouseUp"
+                    @mouseleave="onCityMouseLeave"
+                  >
+                    <div class="slider" :style="sliderStyle"></div>
+                    <div
+                      v-for="(c, idx) in visibleCities"
+                      :key="c.name"
+                      :class="['radio-option', 'city-radio-option', { active: formDuLieu.diemDen === c.name }]"
+                      :ref="el => setCityOptionRef(el, c.name)"
                     >
-                      <span class="city-name-text">{{ c.name }}</span>
-                      <span class="city-km-pill">
-                        <span class="city-km-dot"></span>{{ getCityDistanceKm(c.name) }}km
-                      </span>
-                    </label>
+                      <input
+                        type="radio"
+                        name="destinationCityRadio"
+                        :id="'city-opt-' + idx"
+                        :value="c.name"
+                        :checked="formDuLieu.diemDen === c.name"
+                        @change="handleSelectCity(c.name)"
+                      />
+                      <label
+                        :for="'city-opt-' + idx"
+                        class="radio-label city-radio-label"
+                        @click="handleSelectCity(c.name)"
+                      >
+                        <span class="city-name-text">{{ c.name }}</span>
+                        <span class="city-km-pill">
+                          <span class="city-km-dot"></span>{{ getCityDistanceKm(c.name) }} km
+                        </span>
+                      </label>
+                    </div>
                   </div>
+                  <button
+                    type="button"
+                    class="city-scroll-arrow right"
+                    @click="scrollCityGroup(220)"
+                    title="Cuộn sang phải"
+                    aria-label="Cuộn sang phải"
+                  >
+                    <AppIcon name="chevronright" :size="16" />
+                  </button>
                 </div>
               </div>
 
@@ -331,73 +359,28 @@
 
             <!-- BƯỚC 2: TÀI CHÍNH & DI CHUYỂN -->
             <div v-show="currentPlannerStep === 2" class="app-form-grid wizard-step-content">
-              <!-- KHUNG NGÂN SÁCH THỐNG NHẤT (TỪ THANH CHỌN ĐẾN THÔNG TIN CHI PHÍ TIẾT KIỆM TỐI ƯU - TRẢI NGHIỆM XA HOA) -->
-              <div class="unified-budget-card full-width">
+              <!-- KHUNG NHẬP NGÂN SÁCH THỦ CÔNG (ĐÃ XÓA MỨC GIÁ & THANH KÉO THEO YÊU CẦU 2) -->
+              <div class="unified-budget-card manual-budget-card full-width">
                 <div class="field-label-between">
                   <label class="budget-section-label">
                     <AppIcon name="wallet" :size="17" /> Ngân sách dự kiến (VND)
                   </label>
-                  <strong class="budget-highlight">{{ dinhDangTien(formDuLieu.nganSach) }}đ</strong>
+                  <span class="budget-calc-sub" v-if="formDuLieu.nganSach > 0">
+                    Định mức: <b>~{{ dinhDangTien(Math.round(formDuLieu.nganSach / Math.max(1, (formDuLieu.soNguoi || 1) * (formDuLieu.soNgay || 1)))) }}đ</b> / người / ngày
+                  </span>
                 </div>
-                <input
-                  type="range"
-                  v-model.number="formDuLieu.nganSach"
-                  min="1000000"
-                  max="30000000"
-                  step="500000"
-                  class="budget-slider"
-                />
 
-                <!-- Phím tắt chọn nhanh ngân sách (Đã loại bỏ các mức không khả thi 100k - 500k) -->
-                <div class="quick-budget-chips">
-                  <button
-                    type="button"
-                    class="q-budget-chip"
-                    :class="{ active: formDuLieu.nganSach === 1000000 }"
-                    @click="formDuLieu.nganSach = 1000000"
-                  >
-                    1 Tr <AppIcon name="luggage" :size="13" />
-                  </button>
-                  <button
-                    type="button"
-                    class="q-budget-chip"
-                    :class="{ active: formDuLieu.nganSach === 2000000 }"
-                    @click="formDuLieu.nganSach = 2000000"
-                  >
-                    2 Tr <AppIcon name="leaf" :size="13" />
-                  </button>
-                  <button
-                    type="button"
-                    class="q-budget-chip"
-                    :class="{ active: formDuLieu.nganSach === 3500000 }"
-                    @click="formDuLieu.nganSach = 3500000"
-                  >
-                    3.5 Tr <AppIcon name="sparkles" :size="13" />
-                  </button>
-                  <button
-                    type="button"
-                    class="q-budget-chip"
-                    :class="{ active: formDuLieu.nganSach === 7000000 }"
-                    @click="formDuLieu.nganSach = 7000000"
-                  >
-                    7 Tr <AppIcon name="sun" :size="13" />
-                  </button>
-                  <button
-                    type="button"
-                    class="q-budget-chip"
-                    :class="{ active: formDuLieu.nganSach === 15000000 }"
-                    @click="formDuLieu.nganSach = 15000000"
-                  >
-                    15 Tr <AppIcon name="gem" :size="13" />
-                  </button>
-                  <button
-                    type="button"
-                    class="q-budget-chip"
-                    :class="{ active: formDuLieu.nganSach === 30000000 }"
-                    @click="formDuLieu.nganSach = 30000000"
-                  >
-                    30 Tr <AppIcon name="crown" :size="13" />
-                  </button>
+                <div class="manual-budget-input-wrapper">
+                  <span class="mbi-icon"><AppIcon name="creditcard" :size="20" /></span>
+                  <input
+                    type="text"
+                    inputmode="numeric"
+                    :value="formattedBudgetDisplay"
+                    @input="handleManualBudgetInput"
+                    placeholder="Nhập số tiền ngân sách (ví dụ: 5.000.000)..."
+                    class="manual-budget-input"
+                  />
+                  <span class="mbi-currency">VNĐ</span>
                 </div>
 
                 <!-- CẢNH BÁO CHUYẾN ĐI BẤT KHẢ THI HOẶC CHỌN ĐIỂM FREE -->
@@ -452,46 +435,13 @@
                   </div>
                   <button type="button" class="fmb-turnoff" @click="formDuLieu.freePlacesOnly = false"><AppIcon name="x" :size="14" /> Tắt</button>
                 </div>
-
-                <!-- THẺ NHẬN DIỆN PHÂN TẦNG NGÂN SÁCH THÔNG MINH (TIER INDICATOR) -->
-                <div class="tier-indicator-banner" :style="{ borderColor: currentBudgetTier.color }">
-                  <div class="tib-left">
-                    <span class="tib-icon"><AppIcon :name="currentBudgetTier.icon" :size="18" /></span>
-                    <div>
-                      <div class="tib-badge-row">
-                        <span class="tib-badge" :style="{ backgroundColor: currentBudgetTier.color }">{{ currentBudgetTier.badge }}</span>
-                        <strong class="tib-title">{{ currentBudgetTier.name }}</strong>
-                      </div>
-                      <p class="tib-rate">
-                        Định mức: <b>~{{ dinhDangTien(currentBudgetTier.perPersonPerDay) }}đ</b> / người / ngày
-                      </p>
-                    </div>
-                  </div>
-                  <div class="tib-tags">
-                    <span class="tib-tag" title="Tiêu chuẩn chỗ nghỉ"><AppIcon name="hotel" :size="13" /> {{ currentBudgetTier.hotelDesc }}</span>
-                    <span class="tib-tag" title="Tiêu chuẩn ẩm thực"><AppIcon name="utensils" :size="13" /> {{ currentBudgetTier.foodDesc }}</span>
-                    <span class="tib-tag" title="Tiêu chuẩn di chuyển"><AppIcon name="bus" :size="13" /> {{ currentBudgetTier.transportDesc }}</span>
-                  </div>
-                </div>
-
-                <!-- Lời khuyên tính cách AI theo ngân sách -->
-                <div :class="['personality-budget-card', thongDiepNganSach.type]">
-                  <div class="pbc-header">
-                    <span class="pbc-icon"><AppIcon :name="thongDiepNganSach.icon" :size="16" /></span>
-                    <span class="pbc-tag">{{ thongDiepNganSach.tag }}</span>
-                  </div>
-                  <div class="pbc-text">
-                    <strong>{{ thongDiepNganSach.title }}</strong>
-                    <p>{{ thongDiepNganSach.desc }}</p>
-                  </div>
-                </div>
               </div>
 
-              <!-- BỘ CHỌN ĐỊA ĐIỂM & ĐẶC SẢN NỔI TIẾNG THEO THÀNH PHỐ (ĐƯA VÀO BƯỚC 2 THEO YÊU CẦU 2 - FULL WIDTH) -->
+              <!-- GỢI Ý ĐỊA PHƯƠNG TỐI GIẢN DIỆN TÍCH (YÊU CẦU 3: CHỈ GIỮ THANH TRƯỢT VIÊN THUỐC VÀ 1 THANH NHẬP ĐỊA ĐIỂM CÓ AUTOCOMPLETE DROPDOWN KHI GÕ) -->
               <div class="places-picker-box full-width" style="margin-top: 16px;">
                 <div class="picker-top">
                   <div>
-                    <small class="picker-kicker">GỢI Ý ĐỊA PHƯƠNG — BẤM ĐỂ CHỌN ĐIỂM YÊU THÍCH</small>
+                    <small class="picker-kicker">GỢI Ý ĐỊA PHƯƠNG — CHỌN ĐIỂM YÊU THÍCH</small>
                     <h4>Bạn muốn ghé địa danh & quán ngon nào tại {{ formDuLieu.diemDen }}?</h4>
                   </div>
                   <span v-if="selectedPlaces.length" class="badge-selected-count">
@@ -499,62 +449,99 @@
                   </span>
                 </div>
 
-                <!-- THANH TÌM KIẾM ĐỊA ĐIỂM & MÓN ĂN NHANH (TỐI GIẢN GIAO DIỆN) -->
-                <div class="place-picker-search-bar">
-                  <span class="pps-icon"><AppIcon name="search" size="16" /></span>
-                  <input
-                    v-model="placeSearchQueryModel"
-                    type="text"
-                    :placeholder="'Tìm kiếm địa điểm, di tích, món ăn, cafe tại ' + (formDuLieu.diemDen === ALL_DESTINATIONS ? 'Miền Trung' : formDuLieu.diemDen) + '...'"
-                    class="pps-input"
-                  />
-                  <button
-                    v-if="searchPlacePickerQuery"
-                    type="button"
-                    class="pps-clear-btn"
-                    @click="placeSearchQueryModel = ''"
-                    title="Xóa tìm kiếm"
-                  ><AppIcon name="x" size="14" /></button>
-                </div>
 
-                <!-- CÁC TAB PHÂN LOẠI DANH MỤC GỌN GÀNG (LOẠI BỎ KHÁCH SẠN VÌ ĐÃ CÓ BƯỚC 3 CHUYÊN BIỆT) -->
-                <div class="place-picker-tabs">
-                  <button
-                    type="button"
-                    :class="['ppt-btn', { active: placePickerActiveTab === 'all' }]"
-                    @click="placePickerActiveTab = 'all'"
-                  >
-                    Tất cả ({{ totalFilteredPlacesCount }})
-                  </button>
-                  <button
-                    type="button"
-                    :class="['ppt-btn', { active: placePickerActiveTab === 'attraction' }]"
-                    @click="placePickerActiveTab = 'attraction'"
-                  >
-                    <AppIcon name="landmark" size="15" /> Thắng cảnh ({{ filteredAttractions.length }})
-                  </button>
-                  <button
-                    type="button"
-                    :class="['ppt-btn', { active: placePickerActiveTab === 'restaurant' }]"
-                    @click="placePickerActiveTab = 'restaurant'"
-                  >
-                    <AppIcon name="utensils" size="15" /> Đặc sản ({{ filteredRestaurants.length }})
-                  </button>
-                  <button
-                    type="button"
-                    :class="['ppt-btn', { active: placePickerActiveTab === 'cafe' }]"
-                    @click="placePickerActiveTab = 'cafe'"
-                  >
-                    <AppIcon name="coffee" size="15" /> Cafe ({{ filteredCafes.length }})
-                  </button>
-                  <button
-                    v-if="selectedPlaces.length"
-                    type="button"
-                    :class="['ppt-btn ppt-selected-tab', { active: placePickerActiveTab === 'selected' }]"
-                    @click="placePickerActiveTab = 'selected'"
-                  >
-                    <AppIcon name="star" size="15" filled color="#f59e0b" /> Đã chọn ({{ selectedPlaces.length }})
-                  </button>
+
+                <!-- THANH NHẬP ĐỊA ĐIỂM MUỐN ĐẾN VỚI GỢI Ý DROPDOWN HIỆN BÊN DƯỚI KHI GÕ (TỐI GIẢN DIỆN TÍCH) -->
+                <div class="place-autocomplete-container" ref="autocompleteContainerRef">
+                  <div class="place-picker-search-bar compact-autocomplete-bar">
+                    <span class="pps-icon"><AppIcon name="search" size="16" /></span>
+                    <input
+                      type="text"
+                      v-model="placeSearchQuery"
+                      @focus="onPlaceInputFocus"
+                      @input="onPlaceInputChange"
+                      @keydown.enter.prevent="onEnterSelectFirstOrCustom"
+                      placeholder="Nhập địa điểm muốn đến (vd: Đồi Cừu, Đồn Mang Cá, Cầu Rồng...)"
+                      class="pps-input"
+                      autocomplete="off"
+                    />
+                    <button
+                      v-if="placeSearchQuery"
+                      type="button"
+                      class="pps-clear-btn"
+                      @click="clearPlaceSearch"
+                      title="Xóa tìm kiếm"
+                    >
+                      <AppIcon name="x" size="14" />
+                    </button>
+                    <button
+                      type="button"
+                      class="pps-add-action-btn"
+                      @click="onEnterSelectFirstOrCustom"
+                      :disabled="!placeSearchQuery.trim()"
+                    >
+                      <AppIcon name="plus" size="14" /> Thêm
+                    </button>
+                  </div>
+
+                  <!-- DROPDOWN GỢI Ý ĐỊA ĐIỂM HIỆN RA BÊN DƯỚI KHI GÕ (VD: GÕ "đ" -> HIỆN ĐỒI CỪU, ĐỒN MANG CÁ...) -->
+                  <transition name="dropdown-fade">
+                    <div
+                      v-if="showSuggestions && placeSearchQuery.trim()"
+                      class="place-suggestions-dropdown"
+                    >
+                      <div class="psd-header">
+                        <small>GỢI Ý ĐỊA ĐIỂM PHÙ HỢP ({{ filteredSuggestions.length }} kết quả):</small>
+                      </div>
+
+                      <div class="psd-list" v-if="filteredSuggestions.length > 0">
+                        <div
+                          v-for="item in filteredSuggestions"
+                          :key="item.name"
+                          class="psd-item"
+                          :class="{ selected: isPlaceSelected(item.name) }"
+                          @mousedown.prevent="handleSelectSuggestion(item)"
+                        >
+                          <span class="psd-item-icon">
+                            <AppIcon :name="getPlaceCategoryIcon(item.type)" :size="16" />
+                          </span>
+                          <div class="psd-item-info">
+                            <div class="psd-item-name-row">
+                              <strong class="psd-item-name">{{ item.name }}</strong>
+                              <span class="psd-item-city" v-if="item.city">{{ item.city }}</span>
+                            </div>
+                            <span class="psd-item-sub">
+                              {{ getPlaceCategoryLabel(item.type) }}
+                              <template v-if="item.rating"> • ⭐ {{ item.rating }}</template>
+                              <template v-if="item.address"> • {{ item.address }}</template>
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            class="psd-item-btn"
+                            :class="{ active: isPlaceSelected(item.name) }"
+                            @click.stop="togglePlaceSelection(item.name)"
+                          >
+                            <AppIcon :name="isPlaceSelected(item.name) ? 'check' : 'plus'" :size="13" />
+                            <span>{{ isPlaceSelected(item.name) ? 'Đã chọn' : 'Chọn' }}</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      <!-- KHI KHÔNG CÓ KẾT QUẢ HOẶC MUỐN TỰ NHẬP ĐỊA ĐIỂM MỚI -->
+                      <div
+                        class="psd-custom-add"
+                        @mousedown.prevent="handleAddCustomFromQuery"
+                      >
+                        <span class="psd-custom-icon"><AppIcon name="plus" :size="15" /></span>
+                        <div class="psd-custom-text">
+                          <span>Thêm địa điểm tự nhập:</span>
+                          <strong>"{{ placeSearchQuery.trim() }}"</strong>
+                        </div>
+                        <span class="psd-custom-badge">Tự nhập ↵</span>
+                      </div>
+                    </div>
+                  </transition>
                 </div>
 
                 <!-- KHAY ĐỊA ĐIỂM ĐÃ CHỌN (TIỆN LỢI & DỄ QUẢN LÝ) -->
@@ -571,115 +558,9 @@
                   </div>
                 </div>
 
-                <!-- Thông báo AI Crawler -->
+                <!-- Thông báo AI Crawler (nếu có) -->
                 <div v-if="thongBaoCrawl" class="crawl-alert-banner">
                   <span>{{ thongBaoCrawl }}</span>
-                </div>
-
-                <!-- Nhóm Thắng cảnh -->
-                <div
-                  v-if="filteredAttractions.length && (placePickerActiveTab === 'all' || placePickerActiveTab === 'attraction')"
-                  class="picker-row"
-                >
-                  <div class="picker-row-header">
-                    <span class="row-label"><AppIcon name="camera" size="16" /> Thắng cảnh & Di tích ({{ filteredAttractions.length }}):</span>
-                    <button
-                      v-if="!searchPlacePickerQuery && filteredAttractions.length > 8 && placePickerActiveTab === 'all'"
-                      type="button"
-                      class="picker-expand-toggle-btn"
-                      @click="togglePickerExpand('attraction')"
-                    >
-                      {{ isPickerExpanded.attraction ? '▲ Thu gọn' : `▼ Xem thêm (+${filteredAttractions.length - 8} địa điểm)` }}
-                    </button>
-                  </div>
-                  <div class="chips-wrap">
-                    <button
-                      v-for="p in getVisiblePlaces(filteredAttractions, 'attraction')"
-                      :key="p.name"
-                      type="button"
-                      :class="['app-chip', { active: isPlaceSelected(p.name) }]"
-                      @click="togglePlaceSelection(p.name)"
-                    >
-                      <span class="chip-status"><AppIcon :name="isPlaceSelected(p.name) ? 'check' : 'plus'" size="12" /></span>
-                      <span>{{ p.name }}</span>
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Nhóm Món ngon -->
-                <div
-                  v-if="filteredRestaurants.length && (placePickerActiveTab === 'all' || placePickerActiveTab === 'restaurant')"
-                  class="picker-row"
-                >
-                  <div class="picker-row-header">
-                    <span class="row-label"><AppIcon name="utensils" size="16" /> Quán đặc sản & Ẩm thực ({{ filteredRestaurants.length }}):</span>
-                    <button
-                      v-if="!searchPlacePickerQuery && filteredRestaurants.length > 8 && placePickerActiveTab === 'all'"
-                      type="button"
-                      class="picker-expand-toggle-btn"
-                      @click="togglePickerExpand('restaurant')"
-                    >
-                      {{ isPickerExpanded.restaurant ? '▲ Thu gọn' : `▼ Xem thêm (+${filteredRestaurants.length - 8} quán)` }}
-                    </button>
-                  </div>
-                  <div class="chips-wrap">
-                    <button
-                      v-for="p in getVisiblePlaces(filteredRestaurants, 'restaurant')"
-                      :key="p.name"
-                      type="button"
-                      :class="['app-chip', { active: isPlaceSelected(p.name) }]"
-                      @click="togglePlaceSelection(p.name)"
-                    >
-                      <span class="chip-status"><AppIcon :name="isPlaceSelected(p.name) ? 'check' : 'plus'" size="12" /></span>
-                      <span>{{ p.name }}</span>
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Nhóm Cafe -->
-                <div
-                  v-if="filteredCafes.length && (placePickerActiveTab === 'all' || placePickerActiveTab === 'cafe')"
-                  class="picker-row"
-                >
-                  <div class="picker-row-header">
-                    <span class="row-label"><AppIcon name="coffee" size="16" /> Quán Cafe & Check-in ({{ filteredCafes.length }}):</span>
-                    <button
-                      v-if="!searchPlacePickerQuery && filteredCafes.length > 8 && placePickerActiveTab === 'all'"
-                      type="button"
-                      class="picker-expand-toggle-btn"
-                      @click="togglePickerExpand('cafe')"
-                    >
-                      {{ isPickerExpanded.cafe ? '▲ Thu gọn' : `▼ Xem thêm (+${filteredCafes.length - 8} quán cafe)` }}
-                    </button>
-                  </div>
-                  <div class="chips-wrap">
-                    <button
-                      v-for="p in getVisiblePlaces(filteredCafes, 'cafe')"
-                      :key="p.name"
-                      type="button"
-                      :class="['app-chip', { active: isPlaceSelected(p.name) }]"
-                      @click="togglePlaceSelection(p.name)"
-                    >
-                      <span class="chip-status"><AppIcon :name="isPlaceSelected(p.name) ? 'check' : 'plus'" size="12" /></span>
-                      <span>{{ p.name }}</span>
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Khi không tìm thấy kết quả tìm kiếm -->
-                <div v-if="searchPlacePickerQuery && totalFilteredPlacesCount === 0" class="empty-search-places">
-                  <AppIcon name="search" size="28" />
-                  <p>Không tìm thấy địa điểm nào khớp với từ khóa "<b>{{ searchPlacePickerQuery }}</b>".</p>
-                  <button type="button" class="app-secondary-btn" @click="placeSearchQueryModel = ''">Xóa tìm kiếm</button>
-                </div>
-                
-                <!-- Tự nhập điểm đến -->
-                <div class="custom-place-input-row" style="margin-top: 16px;">
-                  <span class="row-label">Thêm địa điểm / quán khác (Tự nhập):</span>
-                  <div style="display:flex; gap:8px;">
-                    <input type="text" v-model="customPlaceTextModel" placeholder="Nhập tên địa điểm bạn muốn đi..." class="enhanced-input" style="flex:1; padding:10px 14px;" @keyup.enter="addCustomPlace" />
-                    <button class="app-primary-btn" @click="addCustomPlace" type="button" style="padding: 10px 20px; font-size:13px; white-space:nowrap; display:inline-flex; align-items:center; gap:4px;"><AppIcon name="plus" size="14" /> Thêm</button>
-                  </div>
                 </div>
               </div>
             </div>
@@ -691,7 +572,7 @@
                 <button
                   type="button"
                   :class="['step3-subtab-btn', { active: step3ActiveSubtab === 'transit' }]"
-                  @click="step3ActiveSubtab = 'transit'"
+                  @click="switchStep3Subtab('transit')"
                 >
                   <span class="ssb-icon-wrap"><AppIcon name="bus" :size="18" /></span>
                   <div class="ssb-text">
@@ -708,7 +589,7 @@
                 <button
                   type="button"
                   :class="['step3-subtab-btn', { active: step3ActiveSubtab === 'hotel' }]"
-                  @click="step3ActiveSubtab = 'hotel'"
+                  @click="switchStep3Subtab('hotel')"
                 >
                   <span class="ssb-icon-wrap"><AppIcon name="hotel" :size="18" /></span>
                   <div class="ssb-text">
@@ -723,84 +604,115 @@
                 </button>
               </div>
 
-              <!-- PHẦN 1: PHƯƠNG TIỆN & VÉ XE (GIAO DIỆN HÌNH 2 + ĐẦY ĐỦ OPTION GIỜ & ĐIỂM ĐÓN THẢ) -->
+              <!-- PHẦN 1: PHƯƠNG TIỆN & VÉ XE -->
               <div v-show="step3ActiveSubtab === 'transit'" class="transit-subtab-pane">
-                <!-- THÔNG BÁO BẮT BUỘC: BƯỚC 1 CHỌN PHƯƠNG TIỆN (YÊU CẦU 4) -->
-                <div class="step3-mandatory-notice transit-notice">
-                  <div class="smn-icon"><AppIcon name="bus" :size="20" /></div>
-                  <div class="smn-text">
-                    <strong>LƯU Ý BẮT BUỘC: BƯỚC 1 - LỰA CHỌN PHƯƠNG TIỆN HOẶC VÉ XE</strong>
-                    <p>Vui lòng chọn vé xe/tàu xuất phát bên dưới, hoặc tích chọn <b>"Tự túc phương tiện đến"</b> nếu bạn đi xe máy hoặc tự túc vé. Sau khi chọn, hệ thống sẽ tự động chuyển sang bước chọn Khách sạn.</p>
-                  </div>
-                </div>
                 <div class="bus-optimization-section full-width" style="margin-top: 0;">
                   <div class="bos-header">
                     <div>
-                      <span class="bos-kicker"><AppIcon name="bus" :size="16" /> TỐI ƯU CHI PHÍ GIÁ XE & DI CHUYỂN</span>
-                      <h3>Gợi ý nhà xe giá rẻ tuyến {{ formDuLieu.diemKhoiHanh }} ➔ {{ formDuLieu.diemDen }}</h3>
+                      <span class="bos-kicker"><AppIcon name="bus" :size="16" /> TỐI ƯU CHI PHÍ & LỰA CHỌN PHƯƠNG TIỆN</span>
+                      <h3>Phương tiện di chuyển tuyến {{ formDuLieu.diemKhoiHanh || 'Điểm đi' }} ➔ {{ formDuLieu.diemDen }}</h3>
                     </div>
                     <div class="bos-badges-group">
                       <span class="bos-dist-badge">Cự ly: ~{{ transitRouteInfo.estimatedDistanceKm || transitRouteInfo.distanceKm || 350 }} km</span>
-                      <span class="bos-crawler-badge" title="Tự động cập nhật giá vé từ các nhà xe và đường sắt">
-                        <AppIcon name="bot" :size="14" /> Cào dữ liệu vé xe & vé tàu: Sẵn sàng
+                      <span class="bos-crawler-badge" title="Tự động cập nhật giá vé từ các nhà xe, đường sắt và hàng không">
+                        <AppIcon name="bot" :size="14" /> Cập nhật dữ liệu giá vé: Sẵn sàng
                       </span>
                     </div>
                   </div>
 
-                  <!-- So sánh chi phí các phương tiện -->
-                  <div class="transit-vehicles-grid" v-reveal>
-                    <div
-                      v-for="v in transitRouteInfo.vehicleComparison"
-                      :key="v.type"
-                      :class="['tv-card', {
-                        active: (v.type === 'bus' && formDuLieu.phuongTien === 'xe khách') ||
-                                (v.type === 'flight' && formDuLieu.phuongTien === 'máy bay') ||
-                                (v.type === 'train' && formDuLieu.phuongTien === 'tàu hỏa') ||
-                                (v.type === 'motorbike' && formDuLieu.phuongTien === 'xe máy'),
-                        'highlight-cheapest': v.is_cheapest
-                      }]"
-                      @click="chonPhuongTienTuSoSanh(v)"
-                      role="button"
-                      tabindex="0"
-                    >
-                      <div class="tv-top">
-                        <span class="tv-icon"><AppIcon :name="v.icon" :size="20" /></span>
-                        <span v-if="v.is_cheapest" class="tv-badge cheapest"><AppIcon name="sparkles" :size="12" /> Rẻ nhất</span>
-                        <span v-else-if="v.is_fastest" class="tv-badge fastest"><AppIcon name="sparkles" :size="12" /> Nhanh nhất</span>
-                      </div>
-                      <div class="tv-title">{{ v.name }}</div>
-                      <div class="tv-price-row">
-                        <strong>{{ dinhDangTien(v.estimated_cost_per_person) }}đ</strong>
-                        <small>/người</small>
-                      </div>
-                      <div class="tv-total" v-if="formDuLieu.soNguoi > 1">
-                        Tổng {{ formDuLieu.soNguoi }} người: <b>{{ dinhDangTien(v.estimated_cost_per_person * formDuLieu.soNguoi) }}đ</b>
-                      </div>
-                      <div class="tv-duration"><AppIcon name="clock" :size="13" /> {{ v.duration }}</div>
-                      <p class="tv-advantage">{{ v.advantage }}</p>
+                  <!-- BỘ CHỌN PHƯƠNG TIỆN UIVERSE RADIO TILES (4 LỰA CHỌN CÓ LỌC TỈNH THÀNH) -->
+                  <div class="transport-uiverse-selector-wrapper">
+                    <div class="radio-inputs">
+                      <label v-for="t in availableTransports" :key="t.id" :title="t.subtitle">
+                        <input
+                          class="radio-input"
+                          type="radio"
+                          name="transport_engine_choice"
+                          :value="t.id"
+                          :checked="selectedTransportId === t.id"
+                          @change="onSelectTransportMode(t.id)"
+                        />
+                        <span class="radio-tile">
+                          <span class="radio-icon">
+                            <!-- Icon Tự túc: Xe máy / Motorbike -->
+                            <svg v-if="t.id === 'tu_tuc'" class="r-icon-svg" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M19.44 13c-.22 0-.45.02-.67.06l-1.92-3.84c-.45-.91-1.37-1.48-2.38-1.48h-2.14l-.84-2.1c-.24-.61-.83-1.01-1.49-1.01H7.5c-.83 0-1.5.67-1.5 1.5S6.67 7.63 7.5 7.63h1.83l.6 1.5H5.8c-.89 0-1.67.58-1.92 1.44l-1.8 6.07C2.03 16.8 2 17 2 17.22 2 19.31 3.69 21 5.78 21c1.92 0 3.51-1.43 3.75-3.32l2.67-.67 1.55 3.1c.42.84 1.28 1.38 2.22 1.39h.03c1.9 0 3.5-1.48 3.68-3.38.18-1.92-1.2-3.62-3.12-3.82l-.4-.04.42-.84h2.86c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5z M5.78 19c-.99 0-1.78-.8-1.78-1.78 0-.25.05-.48.15-.69l1.45-4.88c.11-.38.46-.65.85-.65h3.08l-1.24 3.1c-.48.06-.94.22-1.35.45l-.47-1.17c-.16-.4-.6-.61-1.01-.46-.4.16-.61.6-.46 1.01l.73 1.83c-.58.82-.95 1.8-1 2.84zm11.38-.41c-.13 1.05-1.03 1.88-2.1 1.88-.02 0-.04 0-.06 0-.58 0-1.11-.25-1.48-.68l-1.38-2.76 2.58-.65c.98-.24 1.77-.94 2.14-1.87.24.49.36 1.04.36 1.6 0 .86-.06 1.68-.06 2.48z"/>
+                            </svg>
+                            <!-- Icon Xe khách: Bus / Limousine -->
+                            <svg v-else-if="t.id === 'xe_khach'" class="r-icon-svg" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M4 16c0 .88.39 1.67 1 2.22V20c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h8v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm3.5 1c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-6H6V6h12v5z"/>
+                            </svg>
+                            <!-- Icon Tàu hỏa: Train / Đường sắt -->
+                            <svg v-else-if="t.id === 'tau_hoa'" class="r-icon-svg" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M12 2c-4 0-8 .5-8 4v9.5C4 17.43 5.57 19 7.5 19L6 20.5v.5h12v-.5L16.5 19c1.93 0 3.5-1.57 3.5-3.5V6c0-3.5-4-4-8-4zM7.5 17c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm4.5-7H6V6h6v4zm4.5 7c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-7h-4.5V6H18v4z"/>
+                            </svg>
+                            <!-- Icon Máy bay: Plane / Hàng không -->
+                            <svg v-else-if="t.id === 'may_bay'" class="r-icon-svg" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
+                            </svg>
+                          </span>
+                          <span class="radio-label">{{ t.name }}</span>
+                        </span>
+                      </label>
                     </div>
                   </div>
 
-                  <!-- Nút chuyển tab Xem Vé Xe Khách vs Vé Tàu Hỏa -->
-                  <div class="transit-tabs-header">
-                    <button
-                      type="button"
-                      :class="['transit-subtab-btn', { active: transitTab === 'bus' }]"
-                      @click="transitTab = 'bus'; formDuLieu.phuongTien = 'xe khách'"
-                    >
-                      <AppIcon name="bus" :size="15" /> Vé Xe Khách Giá Rẻ ({{ transitRouteInfo.operators?.length || 0 }})
-                    </button>
-                    <button
-                      type="button"
-                      :class="['transit-subtab-btn', { active: transitTab === 'train' }]"
-                      @click="transitTab = 'train'; formDuLieu.phuongTien = 'tàu hỏa'"
-                    >
-                      <AppIcon name="train" :size="15" /> Vé Tàu Hỏa Thống Nhất ({{ transitRouteInfo.trains?.length || 3 }})
-                    </button>
+                  <!-- GỢI Ý KHI CHƯA CHỌN PHƯƠNG TIỆN NÀO (KHÔNG AUTO CHỌN) -->
+                  <div v-if="!selectedTransportId" class="no-transport-hint-card">
+                    <div class="nthc-icon">
+                      <AppIcon name="navigation" :size="26" />
+                    </div>
+                    <div class="nthc-info">
+                      <h4>Vui lòng chọn 1 phương tiện di chuyển phía trên</h4>
+                      <p>Bấm chọn <strong>Tự túc, Xe khách, Tàu hỏa</strong> hoặc <strong>Máy bay</strong> để hiển thị thông tin bảng giá vé & cung đường.</p>
+                    </div>
                   </div>
 
-                  <!-- TAB 1: Danh sách gợi ý nhà xe giá rẻ (Hình 2) -->
-                  <div v-show="transitTab === 'bus'" class="bus-operators-box">
+                  <!-- TAB 0: Tự túc phương tiện (Xe máy / Ô tô riêng) -->
+                  <div v-show="selectedTransportId === 'tu_tuc'" class="tu-tuc-panel-box">
+                    <div class="tu-tuc-card">
+                      <div class="ttc-header">
+                        <div class="ttc-icon-badge">
+                          <svg class="r-icon-svg" viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
+                            <path d="M19.44 13c-.22 0-.45.02-.67.06l-1.92-3.84c-.45-.91-1.37-1.48-2.38-1.48h-2.14l-.84-2.1c-.24-.61-.83-1.01-1.49-1.01H7.5c-.83 0-1.5.67-1.5 1.5S6.67 7.63 7.5 7.63h1.83l.6 1.5H5.8c-.89 0-1.67.58-1.92 1.44l-1.8 6.07C2.03 16.8 2 17 2 17.22 2 19.31 3.69 21 5.78 21c1.92 0 3.51-1.43 3.75-3.32l2.67-.67 1.55 3.1c.42.84 1.28 1.38 2.22 1.39h.03c1.9 0 3.5-1.48 3.68-3.38.18-1.92-1.2-3.62-3.12-3.82l-.4-.04.42-.84h2.86c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5z M5.78 19c-.99 0-1.78-.8-1.78-1.78 0-.25.05-.48.15-.69l1.45-4.88c.11-.38.46-.65.85-.65h3.08l-1.24 3.1c-.48.06-.94.22-1.35.45l-.47-1.17c-.16-.4-.6-.61-1.01-.46-.4.16-.61.6-.46 1.01l.73 1.83c-.58.82-.95 1.8-1 2.84zm11.38-.41c-.13 1.05-1.03 1.88-2.1 1.88-.02 0-.04 0-.06 0-.58 0-1.11-.25-1.48-.68l-1.38-2.76 2.58-.65c.98-.24 1.77-.94 2.14-1.87.24.49.36 1.04.36 1.6 0 .86-.06 1.68-.06 2.48z"/>
+                          </svg>
+                        </div>
+                        <div>
+                          <h4>Tự túc phương tiện di chuyển (Xe máy / Ô tô cá nhân / Tự mua vé)</h4>
+                          <p class="ttc-sub">Chủ động 100% thời gian, tự do check-in các cung đường biển & thắng cảnh ven đường</p>
+                        </div>
+                      </div>
+
+                      <div class="ttc-metrics-grid">
+                        <div class="ttc-metric">
+                          <span class="ttc-metric-lbl"><AppIcon name="ticket" :size="14" /> Chi phí vé liên tỉnh:</span>
+                          <strong class="ttc-metric-val free">0đ (Tiết kiệm 100%)</strong>
+                        </div>
+                        <div class="ttc-metric">
+                          <span class="ttc-metric-lbl"><AppIcon name="navigation" :size="14" /> Cự ly quãng đường:</span>
+                          <strong class="ttc-metric-val">~{{ transitRouteInfo.estimatedDistanceKm || transitRouteInfo.distanceKm || 350 }} km</strong>
+                        </div>
+                        <div class="ttc-metric">
+                          <span class="ttc-metric-lbl"><AppIcon name="clock" :size="14" /> Thời gian ước tính:</span>
+                          <strong class="ttc-metric-val">~{{ Math.max(2, Math.round((transitRouteInfo.estimatedDistanceKm || 350) / 45)) }} giờ chạy xe</strong>
+                        </div>
+                      </div>
+
+                      <div class="ttc-notes">
+                        <div class="ttc-note-item">
+                          <AppIcon name="sparkles" :size="15" color="#10b981" />
+                          <span>Hệ thống <b>không tính vé xe vào ngân sách</b>, dành trọn vẹn chi phí cho trải nghiệm ẩm thực và khách sạn!</span>
+                        </div>
+                        <div class="ttc-note-item">
+                          <AppIcon name="info" :size="15" color="#38bdf8" />
+                          <span>Khuyên dùng kiểm tra lốp, phanh xe và mang theo giấy tờ hợp lệ trước khi khởi hành qua các cung đèo dốc miền Trung.</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- TAB 1: Danh sách gợi ý nhà xe giá rẻ -->
+                  <div v-show="selectedTransportId === 'xe_khach'" class="bus-operators-box">
                     <div class="bob-title-row">
                       <h4>Top nhà xe giá rẻ & uy tín khuyên dùng</h4>
                       <small>Bấm vào khung giờ xuất bến mong muốn hoặc bấm "Chọn xe này" để đưa vào lịch trình</small>
@@ -894,7 +806,7 @@
                   </div>
 
                   <!-- TAB 2: Danh sách vé tàu hỏa Thống Nhất -->
-                  <div v-show="transitTab === 'train'" class="train-operators-box">
+                  <div v-show="selectedTransportId === 'tau_hoa'" class="train-operators-box">
                     <div class="bob-title-row">
                       <h4>Lịch trình & Giá vé Tàu Hỏa (Tổng công ty Đường sắt Việt Nam)</h4>
                       <small>Trải nghiệm ngắm cảnh biển Lăng Cô, đèo Hải Vân và các cung đường di sản</small>
@@ -984,87 +896,101 @@
                     </div>
                   </div>
 
-                  <!-- GỢI Ý TỐI ƯU HÀNH TRÌNH HOÀN HẢO NẾU CHƯA CÓ VÉ PHÙ HỢP (YÊU CẦU 2) -->
-                  <div class="transit-smart-fallback-card">
-                    <div class="tsf-header">
-                      <span class="tsf-icon"><AppIcon name="sparkles" :size="18" /></span>
-                      <div>
-                        <strong>Gợi ý tối ưu hành trình thông minh: Tuyến {{ formDuLieu.diemKhoiHanh }} ➔ {{ formDuLieu.diemDen }}</strong>
-                        <small>Nếu các nhà xe trên chưa khớp với khung giờ của bạn, AI đề xuất 3 giải pháp di chuyển tối ưu:</small>
-                      </div>
+                  <!-- TAB 3: Danh sách chuyến bay nội địa -->
+                  <div v-show="selectedTransportId === 'may_bay'" class="flight-operators-box">
+                    <div class="bob-title-row">
+                      <h4>Chuyến bay nội địa thẳng tới {{ formDuLieu.diemDen }}</h4>
+                      <small>Tiết kiệm tối đa thời gian di chuyển, chỉ mất 1h15 - 1h30 bay để bắt đầu kỳ nghỉ</small>
                     </div>
-                    <div class="tsf-options-grid">
-                      <div class="tsf-option-card">
-                        <div class="toc-badge"><AppIcon name="plane" :size="13" /> Máy bay nội địa</div>
-                        <h4>Tiết kiệm tối đa thời gian</h4>
-                        <p>Bay thẳng đến Sân bay Quốc tế Đà Nẵng / Cam Ranh / Phú Bài chỉ mất 1h15 - 1h30 bay. Bảo toàn 100% thể lực cho ngày đầu tiên!</p>
-                      </div>
-                      <div class="tsf-option-card">
-                        <div class="toc-badge"><AppIcon name="train" :size="13" /> Tàu hỏa Thống Nhất</div>
-                        <h4>Ngắm trọn cung đường di sản</h4>
-                        <p>Lựa chọn tàu giường nằm SE1/SE3 khởi hành tối, đến nơi vào sáng hôm sau. Ngắm cảnh đèo Hải Vân và biển Lăng Cô ngoạn mục.</p>
-                      </div>
-                      <div class="tsf-option-card">
-                        <div class="toc-badge"><AppIcon name="bike" :size="13" /> Tự túc xe máy / ô tô</div>
-                        <h4>Chủ động 100% thời gian</h4>
-                        <p>Tự do dừng chân check-in các cung đường ven biển, tiết kiệm toàn bộ chi phí vé xe liên tỉnh cho đoàn.</p>
-                      </div>
-                    </div>
-                  </div>
 
-                  <!-- TÙY CHỌN TỰ TÚC PHƯƠNG TIỆN ĐẾN -->
-                  <div class="self-transit-card" :class="{ 'is-active': formDuLieu.tuTucPhuongTien }" style="margin-top: 16px;">
-                    <label class="stc-label">
-                      <input
-                        type="checkbox"
-                        :checked="formDuLieu.tuTucPhuongTien"
-                        @change="toggleTuTucPhuongTien"
-                        class="stc-checkbox"
-                      />
-                      <span class="stc-custom-indicator">
-                        <AppIcon name="check" size="14" v-if="formDuLieu.tuTucPhuongTien" />
-                      </span>
-                      <div class="stc-content">
-                        <div class="stc-title-row">
-                          <strong><AppIcon name="bike" size="16" /> Tự túc phương tiện đến điểm hẹn</strong>
-                          <span class="stc-badge" v-if="formDuLieu.tuTucPhuongTien">Không tính vé xe khứ hồi (0đ)</span>
+                    <div class="bus-operators-grid">
+                      <div
+                        v-for="flight in flightOperators"
+                        :key="flight.id"
+                        :class="['bus-item-card flight-card', { selected: formDuLieu.chuyenBayDaChon && formDuLieu.chuyenBayDaChon.id === flight.id }]"
+                      >
+                        <div class="bic-header">
+                          <div>
+                            <div class="bic-name-row">
+                              <span class="bic-name">{{ flight.name }}</span>
+                              <span class="bic-tag flight-tag" v-if="flight.badge">{{ flight.badge }}</span>
+                            </div>
+                            <span class="bic-type">{{ flight.type }}</span>
+                          </div>
+                          <div class="bic-rating">
+                            <AppIcon name="star" :size="13" filled color="#f59e0b" /> {{ flight.rating }} <small>({{ flight.airline_code }})</small>
+                          </div>
                         </div>
-                        <p class="stc-desc">
-                          Tích chọn nếu bạn đi xe máy cá nhân hoặc đã tự đặt vé xe/máy bay từ trước. Hệ thống sẽ KHÔNG trừ tiền vé xe khách liên tỉnh vào ngân sách, dành trọn vẹn chi phí cho ăn uống và khách sạn!
-                        </p>
-                      </div>
-                    </label>
-                  </div>
 
-                  <!-- THANH TIẾP TỤC SANG BƯỚC KHÁCH SẠN (YÊU CẦU 4) -->
-                  <div class="transit-bottom-next-bar">
-                    <div class="tbn-status">
-                      <span v-if="formDuLieu.tuTucPhuongTien" class="tbn-badge self">✓ Đã chọn: Tự túc phương tiện (0đ vé)</span>
-                      <span v-else-if="formDuLieu.nhaXeDaChon" class="tbn-badge bus">✓ Đã chọn xe: {{ formDuLieu.nhaXeDaChon.name }} ({{ formDuLieu.gioXuatPhatChon || 'chuyến đi' }})</span>
-                      <span v-else-if="formDuLieu.tauDaChon" class="tbn-badge train">✓ Đã chọn tàu: {{ formDuLieu.tauDaChon.name }}</span>
-                      <span v-else class="tbn-badge pending">Chưa chọn phương tiện hoặc vé xe</span>
+                        <div class="bic-specs">
+                          <div class="bic-spec">
+                            <span><AppIcon name="clock" :size="13" /> Thời gian bay:</span>
+                            <b>{{ flight.duration }}</b>
+                          </div>
+                          <div class="bic-spec-times">
+                            <span class="bst-label"><AppIcon name="clock" :size="13" /> Giờ bay tham khảo:</span>
+                            <div class="bst-chips">
+                              <button
+                                type="button"
+                                v-for="timeStr in (flight.depart_times ? flight.depart_times.split(',') : [])"
+                                :key="timeStr"
+                                :class="['bst-chip flight-time-chip', { active: formDuLieu.chuyenBayDaChon && formDuLieu.chuyenBayDaChon.id === flight.id && formDuLieu.gioXuatPhatChon === timeStr.trim() }]"
+                                @click="chonGioXuatPhatChuyenBayLocal(flight, timeStr.trim())"
+                              >
+                                {{ timeStr.trim() }}
+                              </button>
+                            </div>
+                          </div>
+                          <div class="bic-spec bic-spec-points">
+                            <div class="bsp-item">
+                              <span class="bsp-label"><AppIcon name="plane" :size="13" /> Sân bay đi:</span>
+                              <span class="bsp-val">{{ flight.depart_airport }}</span>
+                            </div>
+                            <div class="bsp-item">
+                              <span class="bsp-label"><AppIcon name="flag" :size="13" /> Sân bay đến:</span>
+                              <span class="bsp-val">{{ flight.arrive_airport }}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="bic-footer-clean">
+                          <!-- Giá vé máy bay -->
+                          <div class="bic-price-line">
+                            <div class="bpl-left">
+                              <span class="bpl-label">Giá vé ước tính:</span>
+                              <strong class="bpl-unit flight-price-color">{{ dinhDangTien(flight.price) }}đ</strong>
+                              <small class="bpl-sub">/người</small>
+                            </div>
+                            <div class="bpl-right" v-if="formDuLieu.soNguoi > 1">
+                              <span class="bpl-total-badge flight-total-badge">
+                                Tổng {{ formDuLieu.soNguoi }} vé: <b>{{ dinhDangTien(flight.price * formDuLieu.soNguoi) }}đ</b>
+                              </span>
+                            </div>
+                          </div>
+
+                          <!-- Hai nút hành động -->
+                          <div class="bic-actions-row">
+                            <a :href="flight.booking_url" target="_blank" rel="noopener noreferrer" class="bic-action-call flight-call" title="Đặt vé trực tiếp tại hãng">
+                              <AppIcon name="ticket" :size="14" /> Đặt tại {{ flight.airline_short }} ↗
+                            </a>
+                            <button
+                              type="button"
+                              :class="['bic-action-select flight-select-btn', { active: formDuLieu.chuyenBayDaChon && formDuLieu.chuyenBayDaChon.id === flight.id }]"
+                              @click="chonChuyenBayLocal(flight)"
+                            >
+                              <AppIcon v-if="formDuLieu.chuyenBayDaChon && formDuLieu.chuyenBayDaChon.id === flight.id" name="check" :size="14" />
+                              {{ formDuLieu.chuyenBayDaChon && formDuLieu.chuyenBayDaChon.id === flight.id ? (formDuLieu.gioXuatPhatChon ? 'Đã chọn (' + formDuLieu.gioXuatPhatChon + ')' : 'Đã chọn vé') : 'Chọn chuyến bay này' }}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <button
-                      type="button"
-                      class="tbn-btn-next"
-                      @click="chuyenSangChonKhachSan"
-                    >
-                      {{ daXongPhuongTien ? 'Tiếp tục: Sang chọn Khách Sạn & Phòng nghỉ ➔' : 'Tự túc phương tiện & Sang chọn Khách Sạn ➔' }}
-                    </button>
                   </div>
                 </div>
               </div>
 
               <!-- PHẦN 2: CHỌN KHÁCH SẠN VÀ XEM PHÒNG (GIAO DIỆN HÌNH 3, 4, 5 - YÊU CẦU 3) -->
               <div v-show="step3ActiveSubtab === 'hotel'" class="hotel-subtab-pane">
-                <!-- THÔNG BÁO BẮT BUỘC: BƯỚC 2 CHỌN KHÁCH SẠN HOẶC TỰ TÚC NƠI Ở (YÊU CẦU 4) -->
-                <div class="step3-mandatory-notice hotel-notice">
-                  <div class="smn-icon"><AppIcon name="hotel" :size="20" /></div>
-                  <div class="smn-text">
-                    <strong>BƯỚC 2: CHỌN KHÁCH SẠN LƯU TRÚ HOẶC TỰ TÚC NƠI Ở</strong>
-                    <p>Chọn 1 khách sạn bên dưới để xem phòng và đặt phòng, hoặc tích chọn <b>"Tự túc nơi ở"</b> nếu bạn ở nhà người thân, homestay riêng hoặc cắm trại dã ngoại.</p>
-                  </div>
-                </div>
 
                 <!-- TÙY CHỌN TỰ TÚC NƠI Ở / KHÁCH SẠN (YÊU CẦU 4) -->
                 <div class="self-transit-card self-hotel-card" :class="{ 'is-active': formDuLieu.tuTucKhachSan }" style="margin-bottom: 20px;">
@@ -1159,28 +1085,28 @@
                       <button
                         type="button"
                         :class="['hst-btn', { active: hotelSortBy === 'default' }]"
-                        @click="hotelSortBy = 'default'"
+                        @click="setHotelSort('default')"
                       >
                         Khuyên dùng
                       </button>
                       <button
                         type="button"
                         :class="['hst-btn', { active: hotelSortBy === 'price_asc' }]"
-                        @click="hotelSortBy = 'price_asc'"
+                        @click="setHotelSort('price_asc')"
                       >
                         Giá tăng dần ↑
                       </button>
                       <button
                         type="button"
                         :class="['hst-btn', { active: hotelSortBy === 'price_desc' }]"
-                        @click="hotelSortBy = 'price_desc'"
+                        @click="setHotelSort('price_desc')"
                       >
                         Giá giảm dần ↓
                       </button>
                       <button
                         type="button"
                         :class="['hst-btn', { active: hotelSortBy === 'rating_desc' }]"
-                        @click="hotelSortBy = 'rating_desc'"
+                        @click="setHotelSort('rating_desc')"
                       >
                         Đánh giá cao ★
                       </button>
@@ -1191,28 +1117,28 @@
                       <button
                         type="button"
                         :class="['hst-star-btn', { active: hotelStarFilter === 'all' }]"
-                        @click="hotelStarFilter = 'all'"
+                        @click="setHotelStars('all')"
                       >
                         Tất cả
                       </button>
                       <button
                         type="button"
                         :class="['hst-star-btn', { active: hotelStarFilter === '5' }]"
-                        @click="hotelStarFilter = '5'"
+                        @click="setHotelStars('5')"
                       >
                         5★
                       </button>
                       <button
                         type="button"
                         :class="['hst-star-btn', { active: hotelStarFilter === '4' }]"
-                        @click="hotelStarFilter = '4'"
+                        @click="setHotelStars('4')"
                       >
                         4★
                       </button>
                       <button
                         type="button"
                         :class="['hst-star-btn', { active: hotelStarFilter === '3' }]"
-                        @click="hotelStarFilter = '3'"
+                        @click="setHotelStars('3')"
                       >
                         3★
                       </button>
@@ -1273,51 +1199,141 @@
                       Xem tất cả ({{ filteredSortedHotels.length }})
                     </button>
                     <button
-                      v-if="hotelDisplayLimit >= filteredSortedHotels.length"
+                      v-if="hotelDisplayLimit > 4"
                       type="button"
                       class="hpa-btn hpa-btn-collapse"
                       @click="thuGonKhachSan"
                     >
-                      <AppIcon name="chevron-up" :size="15" /> Thu gọn (chỉ hiện 4 khách sạn)
+                      <AppIcon name="chevron-up" :size="15" /> Thu gọn (Về 4 khách sạn)
                     </button>
                   </div>
                 </div>
               </div>
 
-              <!-- KHỐI XÁC NHẬN SẴN SÀNG LÊN LỊCH TRÌNH (ĐẨY XUỐNG KHI HOÀN THÀNH VÉ XE & KHÁCH SẠN - YÊU CẦU 4) -->
-              <div id="step3-ready-generate" class="step3-ready-box" :class="{ 'is-ready': daXongBuoc3 }">
-                <div class="srb-header">
-                  <div class="srb-icon-wrap">
-                    <AppIcon :name="daXongBuoc3 ? 'check' : 'sparkles'" :size="24" />
+              <!-- KHỐI YÊU CẦU XÁC NHẬN & XUẤT VÉ XE + THẺ KHÁCH SẠN (YÊU CẦU 3 & 5) -->
+              <div v-if="daXongPhuongTien && daXongKhachSan" id="step3-confirmation-section" class="step3-confirmation-section">
+                <!-- 1. KHI CHƯA BẤM XÁC NHẬN: XEM LẠI VÉ XE VÀ KHÁCH SẠN ĐÃ CHỌN + NÚT XÁC NHẬN -->
+                <div v-if="!daXacNhanDichVu" class="service-confirm-prompt-card">
+                  <div class="scpc-content">
+                    <div class="scpc-icon">
+                      <AppIcon name="sparkles" :size="28" color="#3b82f6" />
+                    </div>
+                    <div class="scpc-text">
+                      <h4>Xem lại & Xác nhận Dịch vụ Chuyến đi</h4>
+                      <p>Bạn đã chọn xong Phương tiện và Khách sạn! Vui lòng kiểm tra lại thông tin vé xe và nơi lưu trú đã chọn trước khi xác nhận:</p>
+                      <div class="scpc-quick-tags">
+                        <div class="scpc-review-tag transit">
+                          <span class="scpc-tag-type">
+                            <AppIcon :name="formDuLieu.tuTucPhuongTien ? 'bike' : (formDuLieu.nhaXeDaChon ? 'bus' : (formDuLieu.tauDaChon ? 'train' : 'plane'))" :size="14" />
+                            Vé di chuyển:
+                          </span>
+                          <strong class="scpc-tag-val">{{ formDuLieu.tuTucPhuongTien ? 'Tự túc phương tiện (0đ)' : (formDuLieu.nhaXeDaChon ? formDuLieu.nhaXeDaChon.name + (formDuLieu.gioXuatPhatChon ? ' (' + formDuLieu.gioXuatPhatChon + ')' : '') : (formDuLieu.tauDaChon ? formDuLieu.tauDaChon.name : formDuLieu.chuyenBayDaChon?.name)) }}</strong>
+                        </div>
+                        <div class="scpc-review-tag hotel">
+                          <span class="scpc-tag-type">
+                            <AppIcon name="hotel" :size="14" />
+                            Lưu trú:
+                          </span>
+                          <strong class="scpc-tag-val">{{ formDuLieu.tuTucKhachSan ? 'Tự túc nơi ở (0đ)' : formDuLieu.khachSanDaChon.name + (formDuLieu.phongDaChon ? ' (' + formDuLieu.phongDaChon.name + ')' : '') }}</strong>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div class="srb-title-text">
-                    <h4>{{ daXongBuoc3 ? '🎉 Đã hoàn tất lựa chọn Di chuyển & Lưu trú!' : 'Tiến trình chuẩn bị chuyến đi' }}</h4>
-                    <p>{{ daXongBuoc3 ? 'Mọi thông tin phương tiện và nơi ở đã sẵn sàng. Hãy bấm nút Tạo Lịch Trình bên dưới để AI lên kế hoạch chi tiết!' : 'Vui lòng hoàn thành chọn Vé xe / Phương tiện và Khách sạn / Tự túc nơi ở.' }}</p>
-                  </div>
+                  <button type="button" class="scpc-btn-confirm" @click="xacNhanVaXuatDichVu">
+                    <AppIcon name="check" :size="18" /> Xác nhận Vé xe & Thẻ khách sạn ➔
+                  </button>
                 </div>
 
-                <div class="srb-checklist-grid">
-                  <div class="srb-item" :class="{ done: daXongPhuongTien }">
-                    <span class="srb-item-indicator"><AppIcon :name="daXongPhuongTien ? 'check' : 'bus'" :size="15" /></span>
-                    <div class="srb-item-info">
-                      <small>1. Di chuyển:</small>
-                      <strong>
-                        {{ formDuLieu.tuTucPhuongTien ? 'Tự túc phương tiện (0đ)' : (formDuLieu.nhaXeDaChon ? (formDuLieu.nhaXeDaChon.name + (formDuLieu.gioXuatPhatChon ? ' - ' + formDuLieu.gioXuatPhatChon : '')) : (formDuLieu.tauDaChon ? formDuLieu.tauDaChon.name : 'Chưa chọn phương tiện')) }}
-                      </strong>
+                <!-- 2. KHI ĐÃ BẤM XÁC NHẬN: THÔNG BÁO VÀ THẺ XEM POPUP VÉ CHUYẾN ĐI -->
+                <div v-else class="service-confirmed-wrapper">
+                  <!-- THÔNG BÁO XÁC NHẬN THÀNH CÔNG TRÊN TRANG -->
+                    <div class="sc-success-alert">
+                      <div class="scsa-icon">
+                        <AppIcon name="check" :size="24" />
+                      </div>
+                      <div class="scsa-text">
+                        <strong>🎉 ĐÃ XÁC NHẬN THÀNH CÔNG VÉ XE & THẺ KHÁCH SẠN!</strong>
+                        <p>Hệ thống đã xuất thẻ xác nhận chuyến đi <b>SKYLUXE</b> trên màn hình. Bạn có thể mở lại thẻ xác nhận bất kỳ lúc nào hoặc bắt đầu tạo lịch trình AI.</p>
+                      </div>
+                      <button type="button" class="scsa-btn-view-ticket" @click="moModalXacNhanVe">
+                        <AppIcon name="sparkles" :size="16" /> Xem Thẻ Xác Nhận ➔
+                      </button>
                     </div>
-                    <button v-if="!daXongPhuongTien" type="button" class="srb-btn-goto" @click="step3ActiveSubtab = 'transit'">Chọn ngay</button>
-                  </div>
 
-                  <div class="srb-item" :class="{ done: daXongKhachSan }">
-                    <span class="srb-item-indicator"><AppIcon :name="daXongKhachSan ? 'check' : 'hotel'" :size="15" /></span>
-                    <div class="srb-item-info">
-                      <small>2. Lưu trú:</small>
-                      <strong>
-                        {{ formDuLieu.tuTucKhachSan ? 'Tự túc nơi ở (0đ)' : (formDuLieu.khachSanDaChon ? (formDuLieu.khachSanDaChon.name + (formDuLieu.phongDaChon ? ' (' + formDuLieu.phongDaChon.name + ')' : '')) : 'Chưa chọn khách sạn') }}
-                      </strong>
+                    <!-- THẺ PREVIEW NHANH CHUYẾN ĐI ĐÃ XÁC NHẬN -->
+                    <div class="page-ticket-preview-card" @click="moModalXacNhanVe" title="Bấm để mở thẻ xác nhận toàn màn hình">
+                      <div class="ptpc-badge-row">
+                        <div class="ptpc-title-tag">
+                          <AppIcon name="sparkles" :size="14" />
+                          <span>SKYLUXE TRAVEL • THẺ XÁC NHẬN CHUYẾN ĐI ĐÃ XUẤT</span>
+                        </div>
+                        <span class="ptpc-click-hint">Bấm để xem popup phóng to ↗</span>
+                      </div>
+
+                      <div class="ptpc-details-grid">
+                        <div class="ptpc-col">
+                          <span class="ptpc-lbl">LỘ TRÌNH DI CHUYỂN:</span>
+                          <strong class="ptpc-val highlight">
+                            {{ formDuLieu.diemKhoiHanh || 'Điểm đi' }} ({{ getCityCode(formDuLieu.diemKhoiHanh) }}) ➔ {{ formDuLieu.diemDen }} ({{ getCityCode(formDuLieu.diemDen) }})
+                          </strong>
+                          <small class="ptpc-sub">
+                            {{ formDuLieu.tuTucPhuongTien ? 'Tự túc xe riêng' : (formDuLieu.nhaXeDaChon ? 'Xe ' + formDuLieu.nhaXeDaChon.name : (formDuLieu.tauDaChon ? 'Tàu ' + formDuLieu.tauDaChon.name : 'Chuyến bay ' + (formDuLieu.chuyenBayDaChon?.name || 'VN310'))) }}
+                          </small>
+                        </div>
+
+                        <div class="ptpc-col">
+                          <span class="ptpc-lbl">LƯU TRÚ NGHỈ DƯỠNG:</span>
+                          <strong class="ptpc-val">
+                            {{ formDuLieu.tuTucKhachSan ? 'Tự túc nơi ở' : (formDuLieu.khachSanDaChon?.name || 'Khách sạn đã chọn') }}
+                          </strong>
+                          <small class="ptpc-sub">
+                            {{ formDuLieu.tuTucKhachSan ? 'Chỗ nghỉ cá nhân' : (formDuLieu.phongDaChon?.name || 'Phòng tiêu chuẩn') }} ({{ formDuLieu.soDem }} đêm)
+                          </small>
+                        </div>
+
+                        <div class="ptpc-col total-col">
+                          <span class="ptpc-lbl">TỔNG THANH TOÁN:</span>
+                          <strong class="ptpc-price">{{ dinhDangTien(tongThanhToanTatCa) }} VNĐ</strong>
+                          <small class="ptpc-status-tag">✓ ĐÃ XÁC NHẬN</small>
+                        </div>
+                      </div>
                     </div>
-                    <button v-if="!daXongKhachSan" type="button" class="srb-btn-goto" @click="step3ActiveSubtab = 'hotel'">Chọn ngay</button>
+
+                    <!-- ĐẨY SANG BUTTON LÊN LỊCH TRÌNH -->
+                    <div id="step3-submit-plan-anchor" class="sc-cta-forward-row">
+                      <button
+                        type="button"
+                        class="sc-btn-generate"
+                        @click="taoLichTrinh"
+                        :disabled="dangTao || (!tripFeasibility.feasible && !formDuLieu.freePlacesOnly)"
+                      >
+                        <span v-if="dangTao" class="btn-spinner"></span>
+                        <span v-else style="display:inline-flex; align-items:center; gap:8px;">
+                          <AppIcon name="sparkles" :size="18" /> Bắt đầu Lên Lịch Trình Ngay (AI) ➔
+                        </span>
+                      </button>
+                      <button type="button" class="sc-btn-edit" @click="daXacNhanDichVu = false" :disabled="dangTao">
+                        <AppIcon name="pencil" :size="14" /> Thay đổi phương tiện hoặc khách sạn
+                      </button>
+                    </div>
                   </div>
+              </div>
+
+              <!-- KHI CHƯA CHỌN ĐỦ CẢ 2: HƯỚNG DẪN HOÀN TẤT CHỌN ĐỂ XÁC NHẬN -->
+              <div v-else class="step3-pending-guide-box">
+                <div class="spgb-icon"><AppIcon name="info" :size="20" /></div>
+                <div class="spgb-content">
+                  <p style="margin: 0;">
+                    <strong>Chưa đủ điều kiện xác nhận vé:</strong> Vui lòng chọn 
+                    <span :class="['spgb-badge', { done: daXongPhuongTien }]">
+                      {{ daXongPhuongTien ? '✓ Đã chọn Phương tiện' : '1. Phương tiện di chuyển' }}
+                    </span>
+                    và 
+                    <span :class="['spgb-badge', { done: daXongKhachSan }]">
+                      {{ daXongKhachSan ? '✓ Đã chọn Lưu trú' : '2. Khách sạn / Nơi ở' }}
+                    </span>
+                    ở các mục phía trên. Sau đó hệ thống sẽ xuất thẻ vé để bạn xác nhận trước khi bắt đầu tạo lịch trình!
+                  </p>
                 </div>
               </div>
             </div>
@@ -1329,15 +1345,79 @@
 
             <!-- WIZARD FOOTER NAVIGATION -->
             <div class="wizard-footer">
-              <button 
-                type="button"
-                v-if="currentPlannerStep > 1" 
-                @click="quayLaiWizard" 
-                class="app-secondary-btn"
-                :disabled="dangTao"
+              <!-- NÚT QUAY LẠI HIỆU ỨNG VŨ TRỤ (COSMIC SPACE BACK BUTTON) -->
+              <div
+                v-if="currentPlannerStep > 1"
+                class="btn-container space-back-container"
               >
-                ← Quay lại
-              </button>
+                <!-- SVG B1: Sao Băng / Comet Return -->
+                <div class="svg svg-b1">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" height="40px" width="40px">
+                    <path fill="#f59e0b" d="m18 36a8 8 0 1 0 0-16 8 8 0 0 0 0 16z"/>
+                    <path fill="#38bdf8" opacity="0.85" d="M18 20 L56 8 C42 17, 30 22, 18 24 Z"/>
+                    <path fill="#818cf8" opacity="0.8" d="M18 26 L60 18 C44 26, 32 30, 18 34 Z"/>
+                    <circle cx="18" cy="28" r="4.5" fill="#fef08a"/>
+                  </svg>
+                </div>
+
+                <!-- SVG B2: Vệ Tinh / Satellite -->
+                <div class="svg svg-b2">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" height="40px" width="40px">
+                    <rect x="25" y="24" width="14" height="16" rx="2" fill="#e2e8f0" stroke="#1e293b" stroke-width="1.5"/>
+                    <circle cx="32" cy="32" r="3" fill="#0284c7"/>
+                    <rect x="6" y="26" width="16" height="12" rx="1" fill="#0284c7" stroke="#1e293b" stroke-width="1.5"/>
+                    <line x1="14" y1="26" x2="14" y2="38" stroke="#ffffff" stroke-width="1"/>
+                    <line x1="22" y1="32" x2="25" y2="32" stroke="#64748b" stroke-width="2"/>
+                    <rect x="42" y="26" width="16" height="12" rx="1" fill="#0284c7" stroke="#1e293b" stroke-width="1.5"/>
+                    <line x1="50" y1="26" x2="50" y2="38" stroke="#ffffff" stroke-width="1"/>
+                    <line x1="39" y1="32" x2="42" y2="32" stroke="#64748b" stroke-width="2"/>
+                    <path d="M32 24 L32 15" stroke="#94a3b8" stroke-width="2"/>
+                    <path d="M26 15 Q32 10 38 15" fill="none" stroke="#f59e0b" stroke-width="2"/>
+                    <circle cx="32" cy="11" r="2" fill="#ef4444"/>
+                  </svg>
+                </div>
+
+                <!-- SVG B3: Cổng Không Gian / Wormhole Portal -->
+                <div class="svg svg-b3">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" height="40px" width="40px">
+                    <ellipse cx="32" cy="32" rx="26" ry="12" fill="none" stroke="#8b5cf6" stroke-width="3" transform="rotate(-25 32 32)"/>
+                    <ellipse cx="32" cy="32" rx="18" ry="8" fill="none" stroke="#06b6d4" stroke-width="2.5" transform="rotate(-25 32 32)"/>
+                    <ellipse cx="32" cy="32" rx="10" ry="4" fill="none" stroke="#ec4899" stroke-width="2" transform="rotate(-25 32 32)"/>
+                    <circle cx="32" cy="32" r="3.5" fill="#ffffff"/>
+                  </svg>
+                </div>
+
+                <!-- SVG B4: Mũ Phi Hành Gia / Astronaut Helmet -->
+                <div class="svg svg-b4">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" height="40px" width="40px">
+                    <path fill="#f8fafc" stroke="#1e293b" stroke-width="2" d="M14 34 C14 20 22 12 32 12 C42 12 50 20 50 34 C50 46 44 50 32 50 C20 50 14 46 14 34 Z"/>
+                    <path fill="#0284c7" stroke="#1e293b" stroke-width="1.5" d="M20 28 C20 22 25 18 32 18 C39 18 44 22 44 28 C44 36 39 40 32 40 C25 40 20 36 20 28 Z"/>
+                    <path fill="#38bdf8" opacity="0.65" d="M24 24 C26 21 30 20 34 20 C31 22 28 26 26 32 C24 30 24 26 24 24 Z"/>
+                    <rect x="10" y="28" width="5" height="12" rx="2" fill="#94a3b8"/>
+                    <rect x="49" y="28" width="5" height="12" rx="2" fill="#94a3b8"/>
+                  </svg>
+                </div>
+
+                <!-- SVG B5: Ngôi Sao Định Hướng / Navigation Star -->
+                <div class="svg svg-b5">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" height="40px" width="40px">
+                    <path fill="#fbbf24" stroke="#d97706" stroke-width="1" d="M32 4 L36 24 L56 24 L40 36 L46 56 L32 44 L18 56 L24 36 L8 24 L28 24 Z"/>
+                    <circle cx="32" cy="32" r="4.5" fill="#ffffff"/>
+                    <circle cx="16" cy="12" r="2" fill="#38bdf8"/>
+                    <circle cx="50" cy="48" r="2.5" fill="#f472b6"/>
+                  </svg>
+                </div>
+
+                <button 
+                  type="button"
+                  @click="quayLaiWizard" 
+                  class="btn space-back-btn"
+                  :disabled="dangTao"
+                >
+                  <span class="space-back-arrow">←</span>
+                  <span>Quay lại</span>
+                </button>
+              </div>
               
               <!-- NÚT TIẾP THEO HIỆU ỨNG VŨ TRỤ (COSMIC SPACE NEXT BUTTON) -->
               <div
@@ -1511,7 +1591,6 @@
                   class="btn space-btn"
                   @click="tiepTheoWizard"
                   :disabled="dangTao"
-                  title="Tiếp tục sang bước tiếp theo"
                 >
                   <span>Tiếp theo</span>
                   <span class="space-btn-arrow">→</span>
@@ -1525,23 +1604,342 @@
                   Ngân sách {{ dinhDangTien(formDuLieu.nganSach) }}đ không đủ cho {{ formDuLieu.soNgay }} ngày {{ formDuLieu.soNguoi }} người. Vui lòng quay lại Bước 2 để tăng ngân sách hoặc chọn "Chỉ gợi ý các địa điểm 100% MIỄN PHÍ VÉ".
                 </div>
               </div>
-
-              <button
-                v-if="currentPlannerStep === 3"
-                class="app-primary-btn submit-plan-btn"
-                @click="taoLichTrinh"
-                :disabled="dangTao || (!tripFeasibility.feasible && !formDuLieu.freePlacesOnly)"
-              >
-                <span v-if="dangTao" class="btn-spinner"></span>
-                <span v-else-if="!tripFeasibility.feasible && !formDuLieu.freePlacesOnly" style="display:inline-flex; align-items:center; gap:6px;">
-                  <AppIcon name="alertcircle" size="16" /> Yêu Cầu Không Khả Thi
-                </span>
-                <span v-else style="display:inline-flex; align-items:center; gap:8px;">
-                  <AppIcon name="sparkles" size="18" /> Tạo Lịch Trình AI Ngay
-                </span>
-              </button>
             </div>
           </div>
+
+    <!-- ==================== POPUP MODAL VÉ XÁC NHẬN CHUYẾN ĐI (SKYLUXE BOARDING PASS) ==================== -->
+    <Teleport to="body">
+      <transition name="ticket-modal-zoom">
+        <div
+          v-if="showTicketConfirmationModal"
+          class="ticket-fullscreen-modal-overlay"
+          @click.self="dongModalXacNhanVe"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div class="ticket-modal-inner-box">
+            <!-- NÚT ĐÓNG POPUP GÓC PHẢI -->
+            <button
+              type="button"
+              class="ticket-modal-close-icon"
+              @click="dongModalXacNhanVe"
+              aria-label="Đóng popup vé"
+              title="Đóng (Esc)"
+            >
+              ✕
+            </button>
+
+            <!-- THANH ĐIỀU KHIỂN & HƯỚNG DẪN LẬT VÉ 3D -->
+            <div class="modal-ticket-top-controls">
+              <button
+                type="button"
+                class="ticket-flip-badge-btn"
+                @click="toggleModalTicketFlip"
+                :title="isModalTicketFlipped ? 'Quay lại xem mặt trước' : 'Lật xoay 180° xem mặt sau'"
+              >
+                <span class="flip-icon">🔄</span>
+                <span class="flip-text">{{ isModalTicketFlipped ? 'Mặt Trước (Boarding Pass)' : 'Mặt Sau (Quy Định & VIP Pass)' }}</span>
+                <span class="flip-hint-badge">3D FLIP 180°</span>
+              </button>
+              <span class="ticket-flip-subhint">
+                💡 Nhấp vào vé hoặc nút trên để lật xoay 3D hai mặt
+              </span>
+            </div>
+
+            <!-- KHÔNG GIAN 3D TẤM VÉ (LẬT 180 ĐỘ) -->
+            <div
+              class="skyluxe-ticket-3d-stage"
+              :class="{ 'is-flipped': isModalTicketFlipped }"
+              @click="toggleModalTicketFlip"
+              title="Nhấn vào vé để lật 3D"
+            >
+              <div class="skyluxe-ticket-3d-inner">
+                <!-- ==================== MẶT TRƯỚC (FACE FRONT) - GIỮ NGUYÊN 100% ==================== -->
+                <div class="skyluxe-ticket-face st-face-front">
+                  <!-- 4 VẾT KHOÉT BÁN NGUYỆT (NOTCHES) Y HỆT HÌNH -->
+                  <div class="skyluxe-notch notch-left"></div>
+                  <div class="skyluxe-notch notch-right"></div>
+                  <div class="skyluxe-notch notch-top"></div>
+                  <div class="skyluxe-notch notch-bottom"></div>
+
+                  <!-- HEADER MÀU ĐEN TRÊN CÙNG -->
+                  <div class="st-black-header">
+                    <span class="st-header-title">XÁC NHẬN CHUYẾN ĐI CỦA BẠN</span>
+                    <div class="st-header-brand">
+                      <svg class="st-brand-logo" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#f59e0b" stroke-width="2.2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                      </svg>
+                      <div class="st-brand-text">
+                        <strong>SKYLUXE</strong>
+                        <span>TRAVEL</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- THÂN VÉ (CHIA 2 PHẦN: THÂN VÉ CHÍNH & CUỐNG VÉ) -->
+                  <div class="st-card-content">
+                    <!-- PHẦN CHÍNH (BÊN TRÁI) -->
+                    <div class="st-main-part">
+                      <!-- MỤC 1: THÔNG TIN CHUYẾN BAY / DI CHUYỂN -->
+                      <div class="st-flight-section">
+                        <span class="st-section-tag">THÔNG TIN CHUYẾN BAY</span>
+                        <div class="st-flight-route-row">
+                          <h3 class="st-route-title">
+                            {{ formDuLieu.diemKhoiHanh || 'Hà Nội' }} ({{ getCityCode(formDuLieu.diemKhoiHanh) }}) ➔ {{ formDuLieu.diemDen || 'Tokyo' }} ({{ getCityCode(formDuLieu.diemDen) }})
+                          </h3>
+                          <!-- QR Code góc phải -->
+                          <div class="st-qr-code-box">
+                            <svg viewBox="0 0 36 36" class="st-qr-code" width="46" height="46">
+                              <rect width="36" height="36" fill="white" />
+                              <path d="M3 3h9v9H3zM5 5h5v5H5zM6.5 6.5h2v2h-2z M24 3h9v9h-9zM26 5h5v5h-5zM27.5 6.5h2v2h-2z M3 24h9v9H3zM5 26h5v5H5zM6.5 27.5h2v2h-2z M15 3h3v5h-3z M15 11h3v4h-3z M24 15h3v4h-3z M30 15h3v7h-3z M15 18h3v7h-3z M24 24h5v3h-5z M31 27h2v3h-2z M19 29h3v2h-3z" fill="#09090b" />
+                            </svg>
+                          </div>
+                        </div>
+
+                        <!-- Metadata chuyến bay -->
+                        <div class="st-flight-meta-row">
+                          <span class="stfm-code">
+                            <template v-if="formDuLieu.tuTucPhuongTien">Tự túc xe riêng</template>
+                            <template v-else-if="formDuLieu.chuyenBayDaChon">{{ formDuLieu.chuyenBayDaChon.name || 'VN310' }}</template>
+                            <template v-else-if="formDuLieu.tauDaChon">Tàu {{ formDuLieu.tauDaChon.name }}</template>
+                            <template v-else-if="formDuLieu.nhaXeDaChon">Xe {{ formDuLieu.nhaXeDaChon.name }}</template>
+                            <template v-else>VN310</template>
+                          </span>
+                          <span class="stfm-sep">|</span>
+                          <span class="stfm-datetime">
+                            {{ ngayKhoiHanhFormatted }} {{ formDuLieu.gioXuatPhatChon || '23:40' }}
+                          </span>
+                          <span class="stfm-sep">|</span>
+                          <span class="stfm-seat">
+                            Seat <strong>{{ formDuLieu.tuTucPhuongTien ? 'VIP' : '12A' }}</strong>
+                          </span>
+                        </div>
+                        <div class="st-flight-class">
+                          {{ formDuLieu.tuTucPhuongTien ? 'Phương tiện cá nhân' : (formDuLieu.chuyenBayDaChon ? 'Hạng Thương gia' : 'Hạng Tiêu chuẩn') }}
+                        </div>
+                      </div>
+
+                      <!-- MỤC 2: THÔNG TIN KHÁCH SẠN -->
+                      <div class="st-hotel-section">
+                        <span class="st-section-tag">THÔNG TIN KHÁCH SẠN</span>
+                        <h4 class="st-hotel-name">
+                          {{ formDuLieu.tuTucKhachSan ? 'Tự túc nơi ở / Homestay riêng' : (formDuLieu.khachSanDaChon?.name || 'Park Hyatt Tokyo') }}
+                        </h4>
+
+                        <div class="st-hotel-content-grid">
+                          <!-- 2 Ảnh thumbnail bên cạnh nhau -->
+                          <div class="st-hotel-thumbs">
+                            <img
+                              :src="formDuLieu.khachSanDaChon?.image || '/images/slides/danang-cauvang.jpg'"
+                              class="st-thumb-img"
+                              alt="Khách sạn view"
+                            />
+                            <img
+                              :src="formDuLieu.phongDaChon?.image || formDuLieu.khachSanDaChon?.photos?.[1] || '/images/slides/mientrung-nonnuoc.jpg'"
+                              class="st-thumb-img"
+                              alt="Phòng nghỉ view"
+                            />
+                          </div>
+
+                          <!-- Cột thông tin phòng -->
+                          <div class="st-hotel-room-info">
+                            <strong class="st-room-name">
+                              {{ formDuLieu.tuTucKhachSan ? 'Chỗ nghỉ riêng' : (formDuLieu.phongDaChon?.name || 'Phòng Park Suite King') }}
+                            </strong>
+                            <div class="st-room-dates">
+                              <div>Check-in: <span>{{ ngayKhoiHanhFormatted }}</span></div>
+                              <div>Check-out: <span>{{ ngayKetThucFormatted }}</span></div>
+                            </div>
+                            <div class="st-booking-code">
+                              Mã đặt phòng: <span>PKY{{ Math.abs(((formDuLieu.khachSanDaChon?.name || 'VN').split('').reduce((a,c)=>a+c.charCodeAt(0),987654)) % 900000 + 100000) }}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- DÒNG ĐÁY: TỔNG THANH TOÁN -->
+                      <div class="st-total-row">
+                        <span class="st-total-label">TỔNG THANH TOÁN:</span>
+                        <strong class="st-total-value">{{ dinhDangTien(tongThanhToanTatCa) }} VNĐ</strong>
+                      </div>
+                    </div>
+
+                    <!-- CUỐNG VÉ (BÊN PHẢI) -->
+                    <div class="st-stub-part">
+                      <div class="st-stub-passenger">
+                        <span class="st-stub-label">Tới điểm sắm</span>
+                        <strong class="st-stub-name">{{ customerDisplayName }}</strong>
+                      </div>
+
+                      <div class="st-stub-grid">
+                        <div class="st-sg-item">
+                          <span class="st-sg-lbl">Passenger</span>
+                          <strong class="st-sg-val">VN310</strong>
+                        </div>
+                        <div class="st-sg-item">
+                          <span class="st-sg-lbl">Seat</span>
+                          <strong class="st-sg-val">12A</strong>
+                        </div>
+                      </div>
+
+                      <!-- MÃ VẠCH BARCODE -->
+                      <div class="st-barcode-box">
+                        <div class="st-barcode-stripes"></div>
+                      </div>
+
+                      <!-- CHỮ KÝ ĐIỆN TỬ E-SIGNATURE -->
+                      <div class="st-signature-box">
+                        <div class="st-signature-art">Signature</div>
+                        <span class="st-signature-sub">E-Signature</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- ==================== MẶT SAU (FACE BACK) - ĐỒNG BỘ 100% KÍCH THƯỚC & PHONG CÁCH VIP ==================== -->
+                <div class="skyluxe-ticket-face st-face-back">
+                  <!-- 4 VẾT KHOÉT BÁN NGUYỆT ĐỒNG BỘ VỚI MẶT TRƯỚC -->
+                  <div class="skyluxe-notch notch-left"></div>
+                  <div class="skyluxe-notch notch-right"></div>
+                  <div class="skyluxe-notch notch-top"></div>
+                  <div class="skyluxe-notch notch-bottom"></div>
+
+                  <!-- HEADER MÀU ĐEN MẶT SAU -->
+                  <div class="st-black-header">
+                    <span class="st-header-title">QUY ĐỊNH HÀNH TRÌNH & ĐẶC QUYỀN VIP</span>
+                    <div class="st-header-brand">
+                      <svg class="st-brand-logo" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#f59e0b" stroke-width="2.2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                      </svg>
+                      <div class="st-brand-text">
+                        <strong>SKYLUXE</strong>
+                        <span>PRIVILEGE</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- THÂN VÉ MẶT SAU (CHIA 2 PHẦN CÂN ĐỐI) -->
+                  <div class="st-card-content st-back-card-content">
+                    <!-- PHẦN CHÍNH MẶT SAU (BÊN TRÁI): 4 TIỆN ÍCH QUY ĐỊNH & HOTLINE -->
+                    <div class="st-main-part st-back-main-part">
+                      <div class="st-back-grid">
+                        <div class="st-back-rule-card">
+                          <div class="st-rule-icon-circle">🧳</div>
+                          <div class="st-rule-content">
+                            <h5>QUY ĐỊNH HÀNH LÝ</h5>
+                            <p>Xách tay 12kg (1 kiện + 1 phụ kiện). Hành lý ký gửi 23kg tiêu chuẩn 5 sao.</p>
+                          </div>
+                        </div>
+
+                        <div class="st-back-rule-card">
+                          <div class="st-rule-icon-circle">🛎️</div>
+                          <div class="st-rule-content">
+                            <h5>CHECK-IN KHÁCH SẠN</h5>
+                            <p>Nhận phòng từ 14:00 • Trả phòng trước 12:00. Hỗ trợ early check-in miễn phí.</p>
+                          </div>
+                        </div>
+
+                        <div class="st-back-rule-card">
+                          <div class="st-rule-icon-circle">🛡️</div>
+                          <div class="st-rule-content">
+                            <h5>BẢO HIỂM DU LỊCH</h5>
+                            <p>Skyluxe Care Plus bảo trợ trọn gói hạn mức đến 500.000.000 VNĐ/khách.</p>
+                          </div>
+                        </div>
+
+                        <div class="st-back-rule-card">
+                          <div class="st-rule-icon-circle">👑</div>
+                          <div class="st-rule-content">
+                            <h5>ĐẶC QUYỀN VIP LOUNGE</h5>
+                            <p>Miễn phí vào phòng chờ thương gia sân bay, làn ưu tiên Fast-Track & xe đưa đón.</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- DÒNG HỖ TRỢ VÀ BẢO TRỢ -->
+                      <div class="st-back-footer-row">
+                        <div class="st-back-footer-item">
+                          <span class="st-bf-label">HOTLINE HỖ TRỢ 24/7:</span>
+                          <strong class="st-bf-value">1900 8888 68 • +84 24 3828 8888</strong>
+                        </div>
+                        <div class="st-back-footer-item">
+                          <span class="st-bf-label">HỖ TRỢ KHẨN CẤP:</span>
+                          <strong class="st-bf-value">concierge@skyluxetravel.vn</strong>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- CUỐNG VÉ MẶT SAU (BÊN PHẢI): CON DẤU PASSPORT STAMP VERIFIED & QR VIP -->
+                    <div class="st-stub-part st-back-stub-part">
+                      <div class="st-stub-passenger">
+                        <span class="st-stub-label">Security Clearance</span>
+                        <strong class="st-stub-name">VIP ACCESS PASS</strong>
+                      </div>
+
+                      <!-- CON DẤU PASSPORT HẢI QUAN NGHỆ THUẬT -->
+                      <div class="st-passport-stamp-wrapper">
+                        <div class="st-passport-stamp">
+                          <div class="stamp-outer-ring">
+                            <div class="stamp-inner-ring">
+                              <span class="stamp-star-top">★ SKYLUXE BORDER ★</span>
+                              <span class="stamp-verified-text">APPROVED</span>
+                              <span class="stamp-date-text">{{ ngayKhoiHanhFormatted }}</span>
+                              <span class="stamp-bottom-text">ENTRY VERIFIED</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- QR VIP GATE CHECK-IN -->
+                      <div class="st-back-qr-container">
+                        <svg viewBox="0 0 36 36" class="st-qr-code" width="46" height="46">
+                          <rect width="36" height="36" fill="white" />
+                          <path d="M3 3h9v9H3zM5 5h5v5H5zM6.5 6.5h2v2h-2z M24 3h9v9h-9zM26 5h5v5h-5zM27.5 6.5h2v2h-2z M3 24h9v9H3zM5 26h5v5H5zM6.5 27.5h2v2h-2z M15 3h3v5h-3z M15 11h3v4h-3z M24 15h3v4h-3z M30 15h3v7h-3z M15 18h3v7h-3z M24 24h5v3h-5z M31 27h2v3h-2z M19 29h3v2h-3z" fill="#09090b" />
+                        </svg>
+                        <span class="st-back-qr-lbl">VIP GATE SCANNER</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- HIỆU ỨNG PHÁO HOA & NÚT BẮT ĐẦU LÊN LỊCH TRÌNH NGAY -->
+            <div class="modal-cta-sparkle-container">
+              <!-- Pháo sáng lấp lánh bên trái -->
+              <div class="sparkler-burst left-burst" aria-hidden="true">
+                <span class="sparkle-spark s1">✨</span>
+                <span class="sparkle-spark s2">🎇</span>
+                <span class="sparkle-spark s3">💥</span>
+              </div>
+
+              <!-- NÚT VIÊN THUỐC PHÁT SÁNG NEON -->
+              <button
+                type="button"
+                class="neon-glow-plan-btn"
+                @click="batDauLichTrinhTuModal"
+                :disabled="dangTao"
+              >
+                <span v-if="dangTao" class="btn-spinner"></span>
+                <span v-else>BẮT ĐẦU LÊN LỊCH TRÌNH NGAY</span>
+              </button>
+
+              <!-- Pháo sáng lấp lánh bên phải -->
+              <div class="sparkler-burst right-burst" aria-hidden="true">
+                <span class="sparkle-spark s1">✨</span>
+                <span class="sparkle-spark s2">🎇</span>
+                <span class="sparkle-spark s3">💥</span>
+              </div>
+            </div>
+
+            <!-- PHÁO GIẤY CONFETTI BAY QUANH MODAL -->
+            <div class="confetti-sky" aria-hidden="true">
+              <span v-for="i in 28" :key="i" :class="'confetti-item cf-' + i"></span>
+            </div>
+          </div>
+        </div>
+      </transition>
+    </Teleport>
   </div>
 </template>
 
@@ -1597,7 +1995,7 @@ const props = defineProps({
   currentBudgetTier: { type: Object, default: null },
   thongDiepNganSach: { type: String, default: '' },
   transitRouteInfo: { type: Object, default: () => ({}) },
-  transitTab: { type: String, default: 'bus' },
+  transitTab: { type: String, default: '' },
   step3ActiveSubtab: { type: String, default: 'transit' },
   daXongPhuongTien: { type: Boolean, default: false },
   daXongKhachSan: { type: Boolean, default: false },
@@ -1607,6 +2005,8 @@ const props = defineProps({
   chonGioXuatPhatBus: { type: Function, default: () => {} },
   chonTauHoa: { type: Function, default: () => {} },
   chonGioXuatPhatTau: { type: Function, default: () => {} },
+  chonChuyenBay: { type: Function, default: null },
+  chonGioXuatPhatChuyenBay: { type: Function, default: null },
   toggleTuTucPhuongTien: { type: Function, default: () => {} },
   chuyenSangChonKhachSan: { type: Function, default: () => {} },
   toggleTuTucKhachSan: { type: Function, default: () => {} },
@@ -1769,7 +2169,37 @@ function updateSlider() {
   }
 }
 
+let isDraggingCity = false
+let startDragX = 0
+let startScrollLeft = 0
+let hasDraggedCity = false
+
+function onCityMouseDown(e) {
+  isDraggingCity = true
+  hasDraggedCity = false
+  startDragX = e.pageX
+  startScrollLeft = citySelectorRef.value ? citySelectorRef.value.scrollLeft : 0
+}
+
+function onCityMouseMove(e) {
+  if (!isDraggingCity || !citySelectorRef.value) return
+  const diff = e.pageX - startDragX
+  if (Math.abs(diff) > 4) {
+    hasDraggedCity = true
+    citySelectorRef.value.scrollLeft = startScrollLeft - diff
+  }
+}
+
+function onCityMouseUp() {
+  isDraggingCity = false
+}
+
+function onCityMouseLeave() {
+  isDraggingCity = false
+}
+
 function handleSelectCity(cityName) {
+  if (hasDraggedCity) return
   if (typeof props.chonNhanhDiemDen === 'function') {
     props.chonNhanhDiemDen(cityName)
   }
@@ -1796,8 +2226,24 @@ watch(
 )
 
 function getCityDistanceKm(cityName) {
-  const origin = props.formDuLieu?.diemKhoiHanh || 'Hà Nội'
-  return getEstimatedDistance(origin, cityName)
+  if (!props.formDuLieu?.diemKhoiHanh) return '?'
+  return getEstimatedDistance(props.formDuLieu.diemKhoiHanh, cityName)
+}
+
+function switchStep3Subtab(tab) {
+  emit('update:step3ActiveSubtab', tab)
+}
+
+function scrollCityGroup(offset) {
+  if (citySelectorRef.value) {
+    citySelectorRef.value.scrollBy({ left: offset, behavior: 'smooth' })
+  }
+}
+
+function handleCityWheel(e) {
+  if (citySelectorRef.value && Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+    citySelectorRef.value.scrollLeft += e.deltaY
+  }
 }
 
 watch(
@@ -1808,22 +2254,1015 @@ watch(
   { deep: true }
 )
 
+// ==================== MANUAL BUDGET INPUT LOGIC ====================
+const formattedBudgetDisplay = computed(() => {
+  const val = Number(props.formDuLieu?.nganSach)
+  if (!val || isNaN(val) || val <= 0) return ''
+  return new Intl.NumberFormat('vi-VN').format(val)
+})
+
+function handleManualBudgetInput(e) {
+  const raw = e.target.value.replace(/\D/g, '')
+  const num = raw ? parseInt(raw, 10) : 0
+  props.formDuLieu.nganSach = num
+  if (e.target) {
+    e.target.value = num > 0 ? new Intl.NumberFormat('vi-VN').format(num) : ''
+  }
+}
+
+// ==================== PLACE AUTOCOMPLETE & SUGGESTIONS LOGIC ====================
+const placeSearchQuery = ref('')
+const showSuggestions = ref(false)
+const autocompleteContainerRef = ref(null)
+
+function removeVietnameseTones(str) {
+  if (!str) return ''
+  return str
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .toLowerCase()
+    .trim()
+}
+
+const filteredSuggestions = computed(() => {
+  const q = placeSearchQuery.value.trim()
+  if (!q) return []
+  
+  const qLower = q.toLowerCase()
+  const qNorm = removeVietnameseTones(q)
+  
+  const list = props.places || []
+  
+  const results = []
+  for (const p of list) {
+    if (!p?.name) continue
+    const pLower = p.name.toLowerCase()
+    const pNorm = removeVietnameseTones(p.name)
+    
+    // Priority 1: Prefix match
+    if (pLower.startsWith(qLower) || pNorm.startsWith(qNorm)) {
+      results.push({ item: p, score: 3 })
+    }
+    // Priority 2: Word start match
+    else if (pLower.includes(' ' + qLower) || pNorm.includes(' ' + qNorm)) {
+      results.push({ item: p, score: 2 })
+    }
+    // Priority 3: Substring
+    else if (pLower.includes(qLower) || pNorm.includes(qNorm)) {
+      results.push({ item: p, score: 1 })
+    }
+    
+    if (results.length >= 60) break
+  }
+  
+  results.sort((a, b) => b.score - a.score)
+  return results.slice(0, 15).map(r => r.item)
+})
+
+function isPlaceSelected(name) {
+  if (typeof props.isPlaceSelected === 'function' && props.isPlaceSelected !== (() => false)) {
+    return props.isPlaceSelected(name)
+  }
+  return (props.selectedPlaces || []).includes(name)
+}
+
+function togglePlaceSelection(name) {
+  if (typeof props.togglePlaceSelection === 'function' && props.togglePlaceSelection !== (() => {})) {
+    props.togglePlaceSelection(name)
+  } else {
+    const idx = (props.selectedPlaces || []).indexOf(name)
+    if (idx > -1) {
+      props.selectedPlaces.splice(idx, 1)
+    } else {
+      props.selectedPlaces.push(name)
+    }
+  }
+}
+
+function handleSelectSuggestion(item) {
+  if (item?.name) {
+    togglePlaceSelection(item.name)
+  }
+}
+
+function handleAddCustomFromQuery() {
+  const q = placeSearchQuery.value.trim()
+  if (q) {
+    if (typeof props.addCustomPlace === 'function') {
+      emit('update:customPlaceText', q)
+      props.addCustomPlace(q)
+    } else if (props.selectedPlaces && !props.selectedPlaces.includes(q)) {
+      props.selectedPlaces.push(q)
+    }
+    placeSearchQuery.value = ''
+    showSuggestions.value = false
+  }
+}
+
+function onEnterSelectFirstOrCustom() {
+  if (filteredSuggestions.value.length > 0) {
+    const first = filteredSuggestions.value[0]
+    togglePlaceSelection(first.name)
+    placeSearchQuery.value = ''
+    showSuggestions.value = false
+  } else {
+    handleAddCustomFromQuery()
+  }
+}
+
+function onPlaceInputFocus() {
+  showSuggestions.value = true
+}
+
+function onPlaceInputChange() {
+  showSuggestions.value = true
+}
+
+function clearPlaceSearch() {
+  placeSearchQuery.value = ''
+  showSuggestions.value = false
+}
+
+function getPlaceCategoryIcon(type) {
+  switch (type) {
+    case 'attraction': return 'landmark'
+    case 'restaurant': return 'utensils'
+    case 'cafe': return 'coffee'
+    case 'hotel': return 'hotel'
+    default: return 'pin'
+  }
+}
+
+function getPlaceCategoryLabel(type) {
+  switch (type) {
+    case 'attraction': return 'Thắng cảnh'
+    case 'restaurant': return 'Đặc sản'
+    case 'cafe': return 'Cafe'
+    case 'hotel': return 'Khách sạn'
+    default: return 'Địa điểm'
+  }
+}
+
+function handleClickOutsideAutocomplete(e) {
+  if (autocompleteContainerRef.value && !autocompleteContainerRef.value.contains(e.target)) {
+    showSuggestions.value = false
+  }
+}
+
+// ==================== BỘ CHỌN PHƯƠNG TIỆN UIVERSE RADIO TILES & LỌC ĐỊA LÝ ====================
+const PROVINCES_WITH_TRAIN = [
+  'Hà Nội', 'Hà Nam', 'Nam Định', 'Ninh Bình', 'Thanh Hóa', 'Nghệ An',
+  'Hà Tĩnh', 'Quảng Bình', 'Quảng Trị', 'Thừa Thiên Huế', 'Huế',
+  'Đà Nẵng', 'Quảng Nam', 'Quảng Ngãi', 'Bình Định', 'Phú Yên',
+  'Khánh Hòa', 'Ninh Thuận', 'Bình Thuận', 'Đồng Nai', 'Bình Dương', 'TP. Hồ Chí Minh'
+]
+
+const PROVINCE_AIRPORT_MAP = {
+  'Hà Nội': 'Sân bay Quốc tế Nội Bài (HAN)',
+  'TP. Hồ Chí Minh': 'Sân bay Quốc tế Tân Sơn Nhất (SGN)',
+  'Hải Phòng': 'Sân bay Cát Bi (HPH)',
+  'Cần Thơ': 'Sân bay Cần Thơ (VCA)',
+  'Đà Nẵng': 'Sân bay Quốc tế Đà Nẵng (DAD)',
+  'Thanh Hóa': 'Sân bay Thọ Xuân (THD)',
+  'Nghệ An': 'Sân bay Quốc tế Vinh (VII)',
+  'Quảng Bình': 'Sân bay Đồng Hới (VDH)',
+  'Thừa Thiên Huế': 'Sân bay Quốc tế Phú Bài (HUI)',
+  'Huế': 'Sân bay Quốc tế Phú Bài (HUI)',
+  'Quảng Nam': 'Sân bay Chu Lai (VCL)',
+  'Bình Định': 'Sân bay Phù Cát (UIH)',
+  'Phú Yên': 'Sân bay Tuy Hòa (TBB)',
+  'Khánh Hòa': 'Sân bay Quốc tế Cam Ranh (CXR)',
+  'Gia Lai': 'Sân bay Pleiku (PXU)',
+  'Đắk Lắk': 'Sân bay Buôn Ma Thuột (BMV)',
+  'Lâm Đồng': 'Sân bay Quốc tế Liên Khương (DLI)'
+}
+
+const SVG_ICONS = {
+  tu_tuc: `<svg stroke="currentColor" xml:space="preserve" viewBox="0 0 467.168 467.168" xmlns="http://www.w3.org/2000/svg" fill="none"><g><path fill="currentColor" d="M76.849,210.531C34.406,210.531,0,244.937,0,287.388c0,42.438,34.406,76.847,76.849,76.847 c30.989,0,57.635-18.387,69.789-44.819l18.258,14.078c0,0,134.168,0.958,141.538-3.206c0,0-16.65-45.469,4.484-64.688 c2.225-2.024,5.021-4.332,8.096-6.777c-3.543,8.829-5.534,18.45-5.534,28.558c0,42.446,34.403,76.846,76.846,76.846 c42.443,0,76.843-34.415,76.843-76.846c0-42.451-34.408-76.849-76.843-76.849c-0.697,0-1.362,0.088-2.056,0.102 c5.551-3.603,9.093-5.865,9.093-5.865l-5.763-5.127c0,0,16.651-3.837,12.816-12.167c-3.848-8.33-44.19-58.28-44.19-58.28 s7.146-15.373-7.634-26.261l-7.098,15.371c0,0-18.093-12.489-25.295-10.084c-7.205,2.398-18.005,3.603-21.379,8.884l-3.358,3.124 c0,0-0.95,5.528,4.561,13.693c0,0,55.482,17.05,58.119,29.537c0,0,3.848,7.933-12.728,9.844l-3.354,4.328l-8.896,0.479 l-16.082-36.748c0,0-15.381,4.082-23.299,10.323l1.201,6.24c0,0-64.599-43.943-125.362,21.137c0,0-44.909,12.966-76.37-26.897 c0,0-0.479-12.968-76.367-10.565l5.286,5.524c0,0-5.286,0.479-7.444,3.841c-2.158,3.358,1.2,6.961,18.494,6.961 c0,0,39.153,44.668,69.17,42.032l42.743,20.656l18.975,32.42c0,0,0.034,2.785,0.23,7.045c-4.404,0.938-9.341,1.979-14.579,3.09 C139.605,232.602,110.832,210.531,76.849,210.531z M390.325,234.081c29.395,0,53.299,23.912,53.299,53.299 c0,29.39-23.912,53.294-53.299,53.294c-29.394,0-53.294-23.912-53.294-53.294C337.031,257.993,360.932,234.081,390.325,234.081z M76.849,340.683c-29.387,0-53.299-23.913-53.299-53.295c0-29.395,23.912-53.299,53.299-53.299 c22.592,0,41.896,14.154,49.636,34.039c-28.26,6.011-56.31,11.99-56.31,11.99l3.619,19.933l55.339-2.444 C124.365,322.116,102.745,340.683,76.849,340.683z M169.152,295.835c1.571,5.334,3.619,9.574,6.312,11.394l-24.696,0.966 c1.058-3.783,1.857-7.666,2.338-11.662L169.152,295.835z"/></g></svg>`,
+  xe_khach: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 16c0 .88.39 1.67 1 2.22V20c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h8v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm3.5 1c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-6H6V6h12v5z"/></svg>`,
+  tau_hoa: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c-4 0-8 .5-8 4v9.5C4 17.43 5.57 19 7.5 19L6 20.5v.5h12v-.5L16.5 19c1.93 0 3.5-1.57 3.5-3.5V6c0-3.5-4-4-8-4zM7.5 17c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm4.5-7H6V6h6v4zm4.5 7c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-7h-4.5V6H18v4z"/></svg>`,
+  may_bay: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>`
+}
+
+const hasTrainSupport = computed(() => {
+  const dest = props.formDuLieu?.diemDen
+  const orig = props.formDuLieu?.diemKhoiHanh
+  if (!dest) return false
+  if (dest === 'Tất cả miền Trung') return true
+  const hasDestTrain = PROVINCES_WITH_TRAIN.includes(dest)
+  if (!hasDestTrain) return false
+  if (orig && !PROVINCES_WITH_TRAIN.includes(orig)) return false
+  return true
+})
+
+const hasAirportSupport = computed(() => {
+  const dest = props.formDuLieu?.diemDen
+  const orig = props.formDuLieu?.diemKhoiHanh
+  if (!dest) return false
+  if (dest === 'Tất cả miền Trung') return true
+  const hasDestAirport = Boolean(PROVINCE_AIRPORT_MAP[dest])
+  if (!hasDestAirport) return false
+  const dist = props.transitRouteInfo?.estimatedDistanceKm || props.transitRouteInfo?.distanceKm || 350
+  if (dist < 200) return false // Chặng ngắn < 200km không có chuyến bay thương mại!
+  if (orig) {
+    const hasOrigAirport = Boolean(PROVINCE_AIRPORT_MAP[orig]) || ['Hà Nội', 'TP. Hồ Chí Minh', 'Đà Nẵng', 'Hải Phòng', 'Cần Thơ'].includes(orig)
+    if (!hasOrigAirport) return false
+  }
+  return true
+})
+
+const availableTransports = computed(() => {
+  const list = [
+    {
+      id: 'tu_tuc',
+      name: 'Tự túc',
+      type: 'tu_tuc',
+      subtitle: 'Xe máy / Ô tô riêng (0đ vé liên tỉnh)',
+      svgIcon: SVG_ICONS.tu_tuc
+    },
+    {
+      id: 'xe_khach',
+      name: 'Xe khách',
+      type: 'xe_khach',
+      subtitle: 'Giường nằm & Limousine',
+      svgIcon: SVG_ICONS.xe_khach
+    }
+  ]
+
+  if (hasTrainSupport.value) {
+    list.push({
+      id: 'tau_hoa',
+      name: 'Tàu hỏa',
+      type: 'tau_hoa',
+      subtitle: 'Đường sắt Thống Nhất',
+      svgIcon: SVG_ICONS.tau_hoa
+    })
+  }
+
+  if (hasAirportSupport.value) {
+    list.push({
+      id: 'may_bay',
+      name: 'Máy bay',
+      type: 'may_bay',
+      subtitle: 'Chuyến bay nội địa thẳng',
+      svgIcon: SVG_ICONS.may_bay
+    })
+  }
+
+  return list
+})
+
+const daXacNhanDichVu = ref(false)
+const isTicketFlipped = ref(false)
+
+function toggleTicketFlip() {
+  isTicketFlipped.value = !isTicketFlipped.value
+}
+
+function setTicketFace(face) {
+  isTicketFlipped.value = face === 'hotel'
+}
+
+const selectedTransportId = computed(() => {
+  if (props.formDuLieu?.tuTucPhuongTien || props.formDuLieu?.phuongTien === 'tự túc') {
+    return 'tu_tuc'
+  }
+  if (props.formDuLieu?.phuongTien === 'tàu hỏa' || props.transitTab === 'train') {
+    return hasTrainSupport.value ? 'tau_hoa' : null
+  }
+  if (props.formDuLieu?.phuongTien === 'máy bay' || props.transitTab === 'flight') {
+    return hasAirportSupport.value ? 'may_bay' : null
+  }
+  if (props.formDuLieu?.phuongTien === 'xe khách' || props.transitTab === 'bus') {
+    return 'xe_khach'
+  }
+  return null // KHÔNG AUTO CHỌN PHƯƠNG TIỆN NGAY TỪ ĐẦU!
+})
+
+function onSelectTransportMode(id) {
+  daXacNhanDichVu.value = false
+  if (id === 'tu_tuc') {
+    props.formDuLieu.phuongTien = 'tự túc'
+    props.formDuLieu.tuTucPhuongTien = true
+    props.formDuLieu.nhaXeDaChon = null
+    props.formDuLieu.tauDaChon = null
+    props.formDuLieu.chuyenBayDaChon = null
+    emit('update:transitTab', 'self')
+  } else if (id === 'xe_khach') {
+    props.formDuLieu.phuongTien = 'xe khách'
+    props.formDuLieu.tuTucPhuongTien = false
+    emit('update:transitTab', 'bus')
+  } else if (id === 'tau_hoa') {
+    props.formDuLieu.phuongTien = 'tàu hỏa'
+    props.formDuLieu.tuTucPhuongTien = false
+    emit('update:transitTab', 'train')
+  } else if (id === 'may_bay') {
+    props.formDuLieu.phuongTien = 'máy bay'
+    props.formDuLieu.tuTucPhuongTien = false
+    emit('update:transitTab', 'flight')
+  }
+}
+
+watch(availableTransports, (newTransports) => {
+  const current = selectedTransportId.value
+  if (current) {
+    const isAvailable = newTransports.some(t => t.id === current)
+    if (!isAvailable) {
+      props.formDuLieu.phuongTien = ''
+      props.formDuLieu.tuTucPhuongTien = false
+      props.formDuLieu.nhaXeDaChon = null
+      props.formDuLieu.tauDaChon = null
+      props.formDuLieu.chuyenBayDaChon = null
+      daXacNhanDichVu.value = false
+    }
+  }
+})
+
+function setHotelSort(sort) {
+  emit('update:hotelSortBy', sort)
+}
+
+function setHotelStars(stars) {
+  emit('update:hotelStarFilter', stars)
+}
+
+const showTicketConfirmationModal = ref(false)
+const isModalTicketFlipped = ref(false)
+
+function toggleModalTicketFlip() {
+  isModalTicketFlipped.value = !isModalTicketFlipped.value
+}
+
+function moModalXacNhanVe() {
+  isModalTicketFlipped.value = false
+  showTicketConfirmationModal.value = true
+}
+
+function dongModalXacNhanVe() {
+  showTicketConfirmationModal.value = false
+  isModalTicketFlipped.value = false
+}
+
+function batDauLichTrinhTuModal() {
+  showTicketConfirmationModal.value = false
+  props.taoLichTrinh()
+}
+
+function getCityCode(cityName) {
+  if (!cityName) return 'DAD'
+  const n = cityName.toLowerCase()
+  if (n.includes('hà nội') || n.includes('ha noi')) return 'HAN'
+  if (n.includes('hồ chí minh') || n.includes('sài gòn') || n.includes('tphcm')) return 'SGN'
+  if (n.includes('đà nẵng') || n.includes('da nang')) return 'DAD'
+  if (n.includes('huế') || n.includes('hue')) return 'HUI'
+  if (n.includes('quy nhơn') || n.includes('quy nhon')) return 'UIH'
+  if (n.includes('nha trang') || n.includes('cam ranh')) return 'CXR'
+  if (n.includes('phú yên') || n.includes('tuy hòa')) return 'TBB'
+  if (n.includes('quảng bình') || n.includes('đồng hới')) return 'VDH'
+  if (n.includes('quảng nam') || n.includes('chu lai')) return 'VCL'
+  if (n.includes('buôn ma thuột') || n.includes('đắk lắk')) return 'BMV'
+  if (n.includes('pleiku') || n.includes('gia lai')) return 'PXU'
+  if (n.includes('đà lạt') || n.includes('lâm đồng')) return 'DLI'
+  return cityName.slice(0, 3).toUpperCase()
+}
+
+const customerDisplayName = computed(() => {
+  if (props.formDuLieu?.hoTen) return props.formDuLieu.hoTen
+  if (props.formDuLieu?.tenNguoiDung) return props.formDuLieu.tenNguoiDung
+  try {
+    const raw = localStorage.getItem('user') || localStorage.getItem('nguoiDung')
+    if (raw) {
+      const u = JSON.parse(raw)
+      if (u.name || u.hoTen || u.username) return (u.name || u.hoTen || u.username).toUpperCase()
+    }
+  } catch (e) {}
+  return 'NGUYỄN MINH KHANG'
+})
+
+const ngayKhoiHanhFormatted = computed(() => {
+  if (props.formDuLieu?.ngayKhoiHanh) {
+    const parts = props.formDuLieu.ngayKhoiHanh.split('-')
+    if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`
+  }
+  const today = new Date()
+  return `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`
+})
+
+const ngayKetThucFormatted = computed(() => {
+  const days = props.formDuLieu?.soDem || 2
+  let d = props.formDuLieu?.ngayKhoiHanh ? new Date(props.formDuLieu.ngayKhoiHanh) : new Date()
+  d.setDate(d.getDate() + days)
+  return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`
+})
+
+const tongThanhToanTatCa = computed(() => {
+  const ve = props.formDuLieu?.tuTucPhuongTien ? 0 : (props.formDuLieu?.nhaXeDaChon?.price || props.formDuLieu?.tauDaChon?.price || props.formDuLieu?.chuyenBayDaChon?.price || 0)
+  const ks = props.formDuLieu?.tuTucKhachSan ? 0 : props.tongChiPhiKhachSanChon
+  return ve + ks
+})
+
+function xacNhanVaXuatDichVu() {
+  daXacNhanDichVu.value = true
+  showTicketConfirmationModal.value = true
+  nextTick(() => {
+    const el = document.getElementById('step3-submit-plan-anchor')
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+  })
+}
+
+// Tự động reset trạng thái xác nhận khi người dùng thay đổi lựa chọn hoặc chuyển bước
+watch([
+  () => props.currentPlannerStep,
+  () => props.formDuLieu?.phuongTien,
+  () => props.formDuLieu?.nhaXeDaChon,
+  () => props.formDuLieu?.tauDaChon,
+  () => props.formDuLieu?.chuyenBayDaChon,
+  () => props.formDuLieu?.tuTucPhuongTien,
+  () => props.formDuLieu?.khachSanDaChon,
+  () => props.formDuLieu?.tuTucKhachSan
+], ([newStep]) => {
+  if (newStep === 1 || !props.daXongPhuongTien || !props.daXongKhachSan) {
+    daXacNhanDichVu.value = false
+    showTicketConfirmationModal.value = false
+  }
+})
+
+const flightOperators = computed(() => {
+  const orig = props.formDuLieu?.diemKhoiHanh || 'Hà Nội'
+  const dest = props.formDuLieu?.diemDen || 'Đà Nẵng'
+  const dist = props.transitRouteInfo?.estimatedDistanceKm || props.transitRouteInfo?.distanceKm || 650
+  const numPeople = props.formDuLieu?.soNguoi || 1
+
+  const departAirport = PROVINCE_AIRPORT_MAP[orig] || `Sân bay khu vực ${orig}`
+  const arriveAirport = PROVINCE_AIRPORT_MAP[dest] || `Sân bay khu vực ${dest}`
+  const durationText = dist > 900 ? '1 giờ 45 phút' : '1 giờ 15 phút'
+
+  const basePriceVj = Math.max(680000, Math.round(dist * 1150))
+  const basePriceVn = Math.max(1150000, Math.round(dist * 1750))
+  const basePriceQh = Math.max(890000, Math.round(dist * 1380))
+
+  return [
+    {
+      id: 'flight-vj',
+      airline_code: 'Vietjet Air',
+      airline_short: 'vietjetair.com',
+      name: 'Vietjet Air (Chuyến bay tiết kiệm)',
+      type: 'Hạng Eco / Vé máy bay điện tử',
+      badge: '⚡ Tiết kiệm nhất',
+      rating: 4.6,
+      duration: durationText,
+      depart_times: '06:15, 10:45, 15:30, 20:10',
+      depart_airport: departAirport,
+      arrive_airport: arriveAirport,
+      price: basePriceVj,
+      totalForGroup: basePriceVj * numPeople,
+      booking_url: 'https://vietjetair.com'
+    },
+    {
+      id: 'flight-vna',
+      airline_code: 'Vietnam Airlines',
+      airline_short: 'vietnamairlines.com',
+      name: 'Vietnam Airlines (Hãng Hàng Không Quốc Gia 4⭐)',
+      type: 'Hạng Phổ Thông (Đã gồm 23kg hành lý + suất ăn nhẹ)',
+      badge: '⭐ Đúng giờ & 4 sao',
+      rating: 4.9,
+      duration: durationText,
+      depart_times: '07:30, 11:15, 14:00, 18:25',
+      depart_airport: departAirport,
+      arrive_airport: arriveAirport,
+      price: basePriceVn,
+      totalForGroup: basePriceVn * numPeople,
+      booking_url: 'https://vietnamairlines.com'
+    },
+    {
+      id: 'flight-qh',
+      airline_code: 'Bamboo Airways',
+      airline_short: 'bambooairways.com',
+      name: 'Bamboo Airways (Trải nghiệm bay thân thiện)',
+      type: 'Bamboo Economy / Hơn cả một chuyến bay',
+      badge: '🌿 Thân thiện & Tiện nghi',
+      rating: 4.7,
+      duration: durationText,
+      depart_times: '09:00, 13:40, 17:50',
+      depart_airport: departAirport,
+      arrive_airport: arriveAirport,
+      price: basePriceQh,
+      totalForGroup: basePriceQh * numPeople,
+      booking_url: 'https://bambooairways.com'
+    }
+  ]
+})
+
+function chonChuyenBayLocal(flight) {
+  if (typeof props.chonChuyenBay === 'function') {
+    props.chonChuyenBay(flight)
+  } else {
+    if (props.formDuLieu.chuyenBayDaChon?.id === flight.id) {
+      props.formDuLieu.chuyenBayDaChon = null
+      props.formDuLieu.gioXuatPhatChon = ''
+    } else {
+      props.formDuLieu.chuyenBayDaChon = flight
+      props.formDuLieu.phuongTien = 'máy bay'
+      props.formDuLieu.nhaXeDaChon = null
+      props.formDuLieu.tauDaChon = null
+      props.formDuLieu.tuTucPhuongTien = false
+      const times = flight.depart_times ? flight.depart_times.split(',').map(s => s.trim()) : []
+      if (times.length && !props.formDuLieu.gioXuatPhatChon) {
+        props.formDuLieu.gioXuatPhatChon = times[0]
+      }
+    }
+  }
+}
+
+function chonGioXuatPhatChuyenBayLocal(flight, timeStr) {
+  if (typeof props.chonGioXuatPhatChuyenBay === 'function') {
+    props.chonGioXuatPhatChuyenBay(flight, timeStr)
+  } else {
+    props.formDuLieu.chuyenBayDaChon = flight
+    props.formDuLieu.phuongTien = 'máy bay'
+    props.formDuLieu.nhaXeDaChon = null
+    props.formDuLieu.tauDaChon = null
+    props.formDuLieu.tuTucPhuongTien = false
+    props.formDuLieu.gioXuatPhatChon = timeStr
+  }
+}
+
 onMounted(() => {
   nextTick(() => {
     updateSlider()
   })
   window.addEventListener('resize', updateSlider)
+  document.addEventListener('click', handleClickOutsideAutocomplete)
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', updateSlider)
+  document.removeEventListener('click', handleClickOutsideAutocomplete)
 })
 </script>
 
 
 
 <style scoped>
+/* ==================== CĂN CHỈNH BỐ CỤC WIZARD & ẢNH COLLAGE VỪA VẶN ==================== */
+.trip-planner-wizard {
+  width: 100%;
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.planner-hero-banner {
+  width: 100%;
+  max-width: 980px;
+  height: 320px;
+  max-height: 350px;
+  margin: 0 auto 20px auto;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  position: relative;
+  flex-shrink: 0;
+  background: #0f172a;
+}
+
+.planner-hero-banner-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 25%;
+  display: block;
+}
+
+.planner-form-container {
+  width: 100%;
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+/* ==================== MANUAL BUDGET INPUT ==================== */
+.manual-budget-card {
+  padding: 18px 22px;
+  background: var(--card-bg, #ffffff);
+  border-radius: var(--radius-md, 12px);
+  border: 1px solid var(--border-color, #e2e8f0);
+}
+
+:root[data-theme="dark"] .manual-budget-card {
+  background: #162036;
+  border-color: rgba(51, 65, 85, 0.7);
+}
+
+.budget-calc-sub {
+  font-size: 13px;
+  color: var(--text-sub, #475569);
+  font-weight: 500;
+}
+
+.budget-calc-sub b {
+  color: var(--accent, #ea580c);
+  font-weight: 700;
+}
+
+.manual-budget-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+  background: var(--input-bg, #f8fafc);
+  border: 1.5px solid var(--border-color, #cbd5e1);
+  border-radius: 12px;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+:root[data-theme="dark"] .manual-budget-input-wrapper {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+.manual-budget-input-wrapper:focus-within {
+  border-color: var(--primary, #0284c7);
+  box-shadow: 0 0 0 3.5px rgba(2, 132, 199, 0.15), 0 4px 12px rgba(2, 132, 199, 0.1);
+  background: #ffffff;
+}
+
+:root[data-theme="dark"] .manual-budget-input-wrapper:focus-within {
+  background: #0f172a;
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 3.5px rgba(56, 189, 248, 0.2);
+}
+
+.mbi-icon {
+  padding-left: 16px;
+  color: var(--primary, #0284c7);
+  display: flex;
+  align-items: center;
+}
+
+:root[data-theme="dark"] .mbi-icon {
+  color: #38bdf8;
+}
+
+.manual-budget-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 13px 14px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-main, #0f172a);
+  outline: none;
+  font-family: inherit;
+  letter-spacing: -0.01em;
+}
+
+:root[data-theme="dark"] .manual-budget-input {
+  color: #f8fafc;
+}
+
+.manual-budget-input::placeholder {
+  color: #94a3b8;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.mbi-currency {
+  padding-right: 18px;
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--accent, #ea580c);
+  letter-spacing: 0.05em;
+  user-select: none;
+}
+
+/* ==================== COMPACT PLACE AUTOCOMPLETE & SUGGESTIONS DROPDOWN ==================== */
+.place-autocomplete-container {
+  position: relative;
+  width: 100%;
+  margin-top: 14px;
+}
+
+.compact-autocomplete-bar {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border: 1.5px solid var(--border-color, #cbd5e1);
+  border-radius: 12px;
+  padding: 4px 6px 4px 14px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+:root[data-theme="dark"] .compact-autocomplete-bar {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+.compact-autocomplete-bar:focus-within {
+  border-color: var(--primary, #0284c7);
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+}
+
+:root[data-theme="dark"] .compact-autocomplete-bar:focus-within {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+}
+
+.compact-autocomplete-bar .pps-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 9px 10px;
+  font-size: 14px;
+  color: var(--text-main, #0f172a);
+  outline: none;
+}
+
+:root[data-theme="dark"] .compact-autocomplete-bar .pps-input {
+  color: #f8fafc;
+}
+
+.compact-autocomplete-bar .pps-input::placeholder {
+  color: #94a3b8;
+  font-size: 13.5px;
+}
+
+.pps-add-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--primary, #0284c7);
+  color: #ffffff;
+  border: none;
+  padding: 9px 18px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.pps-add-action-btn:hover:not(:disabled) {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.pps-add-action-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Dropdown Container */
+.place-suggestions-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border: 1px solid var(--border-color, #cbd5e1);
+  border-radius: 14px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.2);
+  z-index: 100;
+  max-height: 380px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+:root[data-theme="dark"] .place-suggestions-dropdown {
+  background: #162036;
+  border-color: #334155;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+}
+
+.psd-header {
+  padding: 10px 14px 6px;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-muted, #64748b);
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--border-color, #f1f5f9);
+}
+
+:root[data-theme="dark"] .psd-header {
+  border-bottom-color: rgba(51, 65, 85, 0.5);
+}
+
+.psd-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.psd-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  transition: background 0.15s ease;
+}
+
+:root[data-theme="dark"] .psd-item {
+  border-bottom-color: rgba(255, 255, 255, 0.04);
+}
+
+.psd-item:hover {
+  background: rgba(2, 132, 199, 0.08);
+}
+
+.psd-item.selected {
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.psd-item-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(2, 132, 199, 0.12);
+  color: var(--primary, #0284c7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+:root[data-theme="dark"] .psd-item-icon {
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.15);
+}
+
+.psd-item.selected .psd-item-icon {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.psd-item-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.psd-item-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.psd-item-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-main, #0f172a);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+:root[data-theme="dark"] .psd-item-name {
+  color: #f8fafc;
+}
+
+.psd-item-city {
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--text-sub, #475569);
+  padding: 1px 7px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+:root[data-theme="dark"] .psd-item-city {
+  background: rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+}
+
+.psd-item-sub {
+  font-size: 11.5px;
+  color: var(--text-muted, #64748b);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.psd-item-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 11px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid var(--border-color, #cbd5e1);
+  background: transparent;
+  color: var(--text-main, #0f172a);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+:root[data-theme="dark"] .psd-item-btn {
+  border-color: #334155;
+  color: #cbd5e1;
+}
+
+.psd-item-btn:hover {
+  background: var(--primary, #0284c7);
+  color: #ffffff;
+  border-color: var(--primary, #0284c7);
+}
+
+.psd-item-btn.active {
+  background: #10b981;
+  color: #ffffff;
+  border-color: #10b981;
+}
+
+.psd-custom-add {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: rgba(2, 132, 199, 0.05);
+  cursor: pointer;
+  border-top: 1px dashed var(--border-color, #cbd5e1);
+  transition: background 0.15s ease;
+}
+
+:root[data-theme="dark"] .psd-custom-add {
+  background: rgba(56, 189, 248, 0.08);
+  border-top-color: #334155;
+}
+
+.psd-custom-add:hover {
+  background: rgba(2, 132, 199, 0.12);
+}
+
+.psd-custom-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--primary, #0284c7);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.psd-custom-text {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text-main, #0f172a);
+}
+
+:root[data-theme="dark"] .psd-custom-text {
+  color: #f8fafc;
+}
+
+.psd-custom-text strong {
+  color: var(--primary, #0284c7);
+}
+
+:root[data-theme="dark"] .psd-custom-text strong {
+  color: #38bdf8;
+}
+
+.psd-custom-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted, #64748b);
+  background: rgba(0, 0, 0, 0.06);
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+:root[data-theme="dark"] .psd-custom-badge {
+  background: rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+}
+
+.dropdown-fade-enter-active,
+.dropdown-fade-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.dropdown-fade-enter-from,
+.dropdown-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
 /* ==================== TIẾN TRÌNH WIZARD CLICKABLE ==================== */
+
 button.step-indicator {
   background: transparent;
   border: none;
@@ -2077,10 +3516,61 @@ button.step-indicator.clickable:hover {
 }
 
 /* ==================== BỘ CHỌN TỈNH THÀNH VIÊN THUỐC TRƯỢT (RADIO GROUP SLIDER) ==================== */
+.city-selector-outer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.city-scroll-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.city-scroll-arrow:hover {
+  background: rgba(56, 189, 248, 0.25);
+  border-color: rgba(56, 189, 248, 0.6);
+  color: #38bdf8;
+  transform: scale(1.08);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
+}
+
+.city-scroll-arrow:active {
+  transform: scale(0.95);
+}
+
+:root[data-theme="light"] .city-scroll-arrow {
+  background: rgba(241, 245, 249, 0.95);
+  border-color: rgba(203, 213, 225, 0.9);
+  color: #1e293b;
+}
+
+:root[data-theme="light"] .city-scroll-arrow:hover {
+  background: rgba(2, 132, 199, 0.15);
+  border-color: #0284c7;
+  color: #0284c7;
+}
+
 .city-radio-group {
   display: flex;
   align-items: center;
   gap: 0;
+  flex: 1;
+  min-width: 0;
   background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -2099,6 +3589,11 @@ button.step-indicator.clickable:hover {
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
   animation: slide-in 0.6s ease-out;
+  cursor: grab;
+}
+
+.city-radio-group:active {
+  cursor: grabbing;
 }
 
 :root[data-theme="light"] .city-radio-group {
@@ -2111,6 +3606,8 @@ button.step-indicator.clickable:hover {
 
 .city-radio-group::-webkit-scrollbar {
   display: none;
+  width: 0;
+  height: 0;
 }
 
 @keyframes slide-in {
@@ -2151,7 +3648,6 @@ button.step-indicator.clickable:hover {
   z-index: 2;
   flex: 1;
   min-width: fit-content;
-  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2355,85 +3851,139 @@ button.step-indicator.clickable:hover {
   border-color: rgba(2, 132, 199, 0.3);
 }
 
-/* ==================== NÚT TIẾP THEO HIỆU ỨNG VŨ TRỤ (COSMIC SPACE BUTTON) ==================== */
-.space-next-container {
-  width: fit-content !important;
-  height: fit-content !important;
+/* ==================== HIỆU ỨNG VŨ TRỤ CHO NÚT TIẾP THEO & QUAY LẠI ==================== */
+.wizard-footer {
+  overflow: visible !important;
+}
+
+.space-next-container,
+.space-back-container {
+  flex: 1 !important;
+  width: 100% !important;
+  height: 48px !important;
   position: relative !important;
-  display: inline-flex !important;
+  display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  border-radius: 16px !important;
-  transition: all 0.4s ease !important;
-  margin: 10px 0 !important;
-  flex: initial !important;
+  border-radius: 12px !important;
+  transition: all 0.3s ease !important;
+  margin: 0 !important;
+  overflow: visible !important;
 }
 
-/* Ở bước 1 khi chỉ có 1 nút: căn giữa trang trọng */
-.space-next-container.is-step-1 {
-  margin: 14px auto !important;
-}
-
-.space-next-container .svg {
+/* Các thiên thể SVG bay quanh nút */
+.space-next-container .svg,
+.space-back-container .svg {
   position: absolute;
   top: 50%;
   left: 50%;
-  z-index: 1;
-  transform: translate(-50%, -50%) scale(0.25);
+  z-index: 15;
+  transform: translate(-50%, -50%) scale(0.2);
   opacity: 0;
   transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
   pointer-events: none;
-  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5));
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.45));
 }
 
+/* Hiệu ứng hào quang phát sáng khi hover */
 .space-next-container:hover {
-  box-shadow: 0 0 54px rgba(66, 125, 194, 0.8), 0 0 22px rgba(56, 189, 248, 0.5);
+  box-shadow: 0 0 45px rgba(66, 125, 194, 0.8), 0 0 20px rgba(56, 189, 248, 0.5) !important;
 }
 
-.space-next-container:hover > .svg {
+.space-back-container:hover {
+  box-shadow: 0 0 45px rgba(124, 58, 237, 0.75), 0 0 20px rgba(168, 85, 247, 0.45) !important;
+}
+
+.space-next-container:hover > .svg,
+.space-back-container:hover > .svg {
   opacity: 1;
 }
 
+/* Quỹ đạo bay cho 5 thiên thể nút Tiếp theo (Saturn, UFO, Rocket, Earth, Moon) */
+/* Căn chuẩn tâm đối xứng hoàn hảo bao quanh cụm chữ 'Tiếp theo →' */
 .space-next-container:hover > .svg-1 {
-  transform: translate(130%, 50%) scale(1);
+  /* Saturn (Sao Thổ) - góc dưới bên phải mũi tên '→' */
+  transform: translate(calc(-50% + 55px), calc(-50% + 40px)) rotate(-15deg) scale(0.92);
 }
 
 .space-next-container:hover > .svg-2 {
-  transform: translate(-120%, -150%) rotate(30deg) scale(1);
+  /* UFO (Đĩa bay) - góc trên bên trái chữ 'Tiếp' */
+  transform: translate(calc(-50% - 60px), calc(-50% - 40px)) rotate(18deg) scale(0.95);
 }
 
 .space-next-container:hover > .svg-3 {
-  transform: translate(60%, -150%) rotate(-45deg) scale(1);
+  /* Rocket (Tàu con thoi) - góc trên bên phải mũi tên '→' */
+  transform: translate(calc(-50% + 55px), calc(-50% - 40px)) rotate(-25deg) scale(0.95);
 }
 
 .space-next-container:hover > .svg-4 {
-  transform: translate(-280%, 0%) rotate(30deg) scale(1);
+  /* Earth (Trái đất) - góc dưới bên trái chữ 'Tiếp' */
+  transform: translate(calc(-50% - 65px), calc(-50% + 40px)) rotate(15deg) scale(0.9);
 }
 
 .space-next-container:hover > .svg-5 {
-  transform: translate(-80%, 60%) rotate(-45deg) scale(1);
+  /* Moon (Mặt trăng) - chính giữa phía dưới chữ 'Tiếp theo' */
+  transform: translate(calc(-50% - 6px), calc(-50% + 42px)) rotate(-10deg) scale(1);
 }
 
-.space-btn {
+/* Quỹ đạo bay cho 5 thiên thể nút Quay lại (Comet, Satellite, Wormhole, Astronaut, Compass Star) */
+/* Căn chuẩn tâm đối xứng hoàn hảo bao quanh cụm chữ '← Quay lại' */
+.space-back-container:hover > .svg-b1 {
+  /* Comet (Sao băng) - góc trên bên trái mũi tên '←' */
+  transform: translate(calc(-50% - 55px), calc(-50% - 40px)) rotate(-25deg) scale(0.95);
+}
+
+.space-back-container:hover > .svg-b2 {
+  /* Satellite (Vệ tinh) - góc trên bên phải chữ 'lại' */
+  transform: translate(calc(-50% + 60px), calc(-50% - 40px)) rotate(18deg) scale(0.95);
+}
+
+.space-back-container:hover > .svg-b3 {
+  /* Wormhole (Cổng không gian) - góc dưới bên trái mũi tên '←' */
+  transform: translate(calc(-50% - 55px), calc(-50% + 40px)) rotate(45deg) scale(0.92);
+}
+
+.space-back-container:hover > .svg-b4 {
+  /* Astronaut (Mũ phi hành gia) - góc dưới bên phải chữ 'lại' */
+  transform: translate(calc(-50% + 65px), calc(-50% + 40px)) rotate(-12deg) scale(0.9);
+}
+
+.space-back-container:hover > .svg-b5 {
+  /* Compass Star (Ngôi sao định hướng) - chính giữa phía dưới chữ 'Quay lại' */
+  transform: translate(calc(-50% + 6px), calc(-50% + 42px)) rotate(10deg) scale(1);
+}
+
+/* Chuẩn kích thước ban đầu (height: 48px, flex: 1, 100% container) */
+.space-btn,
+.space-back-btn {
+  width: 100% !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  max-height: 48px !important;
+  flex: 1 !important;
   position: relative !important;
   z-index: 10 !important;
-  background-color: rgb(66, 125, 194) !important;
-  color: #ffffff !important;
-  padding: 0.6rem 2.2rem !important;
-  font-size: 1.15rem !important;
-  font-weight: bold !important;
-  border-radius: 0.75rem !important;
-  border: 2px solid rgba(255, 255, 255, 0.25) !important;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
-  cursor: pointer !important;
+  border-radius: 12px !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   gap: 10px !important;
-  min-width: 190px !important;
-  height: 48px !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
   box-sizing: border-box !important;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  padding: 0 24px !important;
+  line-height: normal !important;
+  letter-spacing: 0.3px;
+}
+
+/* === NÚT TIẾP THEO (COSMIC BLUE) === */
+.space-btn {
+  background-color: rgb(66, 125, 194) !important;
+  color: #ffffff !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 0 4px 14px rgba(66, 125, 194, 0.35) !important;
 }
 
 :root[data-theme="dark"] .space-btn {
@@ -2444,42 +3994,1927 @@ button.step-indicator.clickable:hover {
 .space-next-container:hover .space-btn {
   outline: rgb(66, 125, 194) solid 2px !important;
   outline-offset: 3px !important;
-  background-color: #212121 !important;
+  background-color: #1e1e24 !important;
+  color: #ffffff !important;
   border-color: #60a5fa !important;
   box-shadow: 0 0 24px rgba(66, 125, 194, 0.6) !important;
-  transform: translateY(-1px);
+  transform: translateY(-1px) !important;
 }
 
-.space-btn:active {
-  transform: scale(1.05) !important;
+/* === NÚT QUAY LẠI (COSMIC VIOLET RETURN) === */
+.space-back-btn {
+  background: var(--input-bg, #f1f5f9) !important;
+  color: var(--text-main, #334155) !important;
+  border: 1.5px solid var(--border-color, #cbd5e1) !important;
 }
 
-.space-btn-arrow {
+:root[data-theme="dark"] .space-back-btn {
+  background: #1e293b !important;
+  color: #f1f5f9 !important;
+  border-color: #334155 !important;
+}
+
+.space-back-container:hover .space-back-btn {
+  outline: rgb(139, 92, 246) solid 2px !important;
+  outline-offset: 3px !important;
+  background-color: #1e1e24 !important;
+  color: #ffffff !important;
+  border-color: #a78bfa !important;
+  box-shadow: 0 0 24px rgba(139, 92, 246, 0.5) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Hiệu ứng bấm nút */
+.space-btn:active,
+.space-back-btn:active {
+  transform: scale(0.98) !important;
+}
+
+/* Hiệu ứng mũi tên chuyển động */
+.space-btn-arrow,
+.space-back-arrow {
   display: inline-block;
-  font-size: 1.2rem;
-  transition: transform 0.2s ease;
+  font-size: 1.1rem;
+  transition: transform 0.25s ease;
 }
 
 .space-next-container:hover .space-btn-arrow {
-  transform: translateX(5px);
+  transform: translateX(4px);
 }
 
-/* Tinh chỉnh nút quay lại ở bước 2 cho cân đối với nút Space */
-.wizard-footer .app-secondary-btn {
-  max-width: 200px !important;
+.space-back-container:hover .space-back-arrow {
+  transform: translateX(-4px);
+}
+
+/* Trạng thái disabled khi đang tạo lịch trình */
+.space-btn:disabled,
+.space-back-btn:disabled {
+  opacity: 0.55 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.space-next-container:has(button:disabled):hover,
+.space-back-container:has(button:disabled):hover {
+  box-shadow: none !important;
+}
+
+.space-next-container:has(button:disabled):hover > .svg,
+.space-back-container:has(button:disabled):hover > .svg {
+  opacity: 0 !important;
 }
 
 @media (max-width: 600px) {
-  .space-next-container:hover > .svg-4 {
-    transform: translate(-220%, 0%) rotate(30deg) scale(0.85);
+  .wizard-footer {
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+  .space-next-container,
+  .space-back-container {
+    width: 100% !important;
   }
   .space-next-container:hover > .svg-1 {
-    transform: translate(110%, 45%) scale(0.85);
+    transform: translate(calc(-50% + 48px), calc(-50% + 36px)) rotate(-15deg) scale(0.8);
   }
-  .space-btn {
-    min-width: 160px !important;
-    padding: 0.5rem 1.6rem !important;
-    font-size: 1rem !important;
+  .space-next-container:hover > .svg-2 {
+    transform: translate(calc(-50% - 52px), calc(-50% - 36px)) rotate(18deg) scale(0.85);
+  }
+  .space-next-container:hover > .svg-3 {
+    transform: translate(calc(-50% + 48px), calc(-50% - 36px)) rotate(-25deg) scale(0.85);
+  }
+  .space-next-container:hover > .svg-4 {
+    transform: translate(calc(-50% - 56px), calc(-50% + 36px)) rotate(15deg) scale(0.78);
+  }
+  .space-next-container:hover > .svg-5 {
+    transform: translate(calc(-50% - 5px), calc(-50% + 38px)) rotate(-10deg) scale(0.88);
+  }
+  .space-back-container:hover > .svg-b1 {
+    transform: translate(calc(-50% - 48px), calc(-50% - 36px)) rotate(-25deg) scale(0.85);
+  }
+  .space-back-container:hover > .svg-b2 {
+    transform: translate(calc(-50% + 52px), calc(-50% - 36px)) rotate(18deg) scale(0.85);
+  }
+  .space-back-container:hover > .svg-b3 {
+    transform: translate(calc(-50% - 48px), calc(-50% + 36px)) rotate(45deg) scale(0.8);
+  }
+  .space-back-container:hover > .svg-b4 {
+    transform: translate(calc(-50% + 56px), calc(-50% + 36px)) rotate(-12deg) scale(0.78);
+  }
+  .space-back-container:hover > .svg-b5 {
+    transform: translate(calc(-50% + 5px), calc(-50% + 38px)) rotate(10deg) scale(0.88);
+  }
+}
+/* ==================== BỘ CHỌN PHƯƠNG TIỆN UIVERSE.IO RADIO TILE ==================== */
+.transport-uiverse-selector-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin: 18px 0 24px 0;
+}
+
+/* From Uiverse.io by Yaya12085 - Modified for Dark Mode */
+.radio-inputs {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-width: 100%;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  flex-wrap: wrap;
+}
+
+.radio-inputs > * {
+  margin: 6px;
+}
+
+/* ==================== BỘ CHỌN PHƯƠNG TIỆN UIVERSE RADIO TILES ==================== */
+.radio-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 90px;
+  min-height: 86px;
+  border-radius: 0.75rem;
+  border: 2px solid #e2e8f0;
+  background-color: #ffffff;
+  color: #64748b;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  position: relative;
+  padding: 10px 6px;
+}
+
+.radio-tile:before {
+  content: "";
+  position: absolute;
+  display: block;
+  width: 0.75rem;
+  height: 0.75rem;
+  border: 2px solid #cbd5e1;
+  background-color: #ffffff;
+  border-radius: 50%;
+  top: 0.35rem;
+  left: 0.35rem;
+  opacity: 0;
+  transform: scale(0);
+  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.radio-tile:hover {
+  border-color: #3b82f6;
+  color: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(59, 130, 246, 0.12);
+}
+
+.radio-tile:hover:before {
+  transform: scale(0.85);
+  opacity: 0.6;
+  border-color: #3b82f6;
+}
+
+.radio-input:checked + .radio-tile {
+  border-color: #2563eb;
+  background-color: #eff6ff;
+  color: #2563eb;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.2);
+}
+
+.radio-input:checked + .radio-tile:before {
+  transform: scale(1);
+  opacity: 1;
+  background-color: #2563eb;
+  border-color: #2563eb;
+}
+
+.radio-input:focus + .radio-tile {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+}
+
+.radio-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-bottom: 4px;
+}
+
+.radio-icon .r-icon-svg {
+  width: 28px;
+  height: 28px;
+  fill: currentColor;
+  transition: fill 0.2s ease, transform 0.2s ease;
+}
+
+.radio-tile:hover .r-icon-svg {
+  transform: scale(1.08);
+}
+
+.radio-label {
+  color: inherit;
+  transition: color 0.2s ease;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.radio-input {
+  clip: rect(0 0 0 0);
+  -webkit-clip-path: inset(100%);
+  clip-path: inset(100%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+/* DARK MODE CHUẨN UIVERSE THEO YÊU CẦU */
+:root[data-theme="dark"] .radio-tile {
+  background-color: #1e2129;
+  border-color: #4a5265;
+  color: #94a3b8;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+}
+
+:root[data-theme="dark"] .radio-tile:before {
+  border-color: #4a5265;
+  background-color: #1e2129;
+}
+
+:root[data-theme="dark"] .radio-tile:hover {
+  border-color: #4d8bff;
+  color: #4d8bff;
+  box-shadow: 0 6px 16px rgba(77, 139, 255, 0.2);
+}
+
+:root[data-theme="dark"] .radio-tile:hover:before {
+  border-color: #4d8bff;
+}
+
+:root[data-theme="dark"] .radio-input:checked + .radio-tile {
+  background-color: #171d2b;
+  border-color: #4d8bff;
+  color: #4d8bff;
+  box-shadow: 0 6px 16px rgba(77, 139, 255, 0.35);
+}
+
+:root[data-theme="dark"] .radio-input:checked + .radio-tile:before {
+  background-color: #4d8bff;
+  border-color: #4d8bff;
+}
+
+:root[data-theme="dark"] .radio-input:focus + .radio-tile {
+  border-color: #4d8bff;
+  box-shadow: 0 0 0 3px rgba(77, 139, 255, 0.3);
+}
+
+/* ==================== PANEL CHI TIẾT TỰ TÚC PHƯƠNG TIỆN ==================== */
+.tu-tuc-panel-box {
+  margin-top: 10px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--border-color, #e2e8f0);
+}
+
+.tu-tuc-card {
+  background: var(--bg-soft, #1e293b);
+  border: 1.5px solid rgba(16, 185, 129, 0.4);
+  border-radius: 16px;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+:root[data-theme="light"] .tu-tuc-card {
+  background: #f8fafc;
+  border-color: #10b981;
+}
+
+.ttc-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.ttc-icon-badge {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ttc-icon-badge svg {
+  width: 28px;
+  height: 28px;
+  fill: #10b981;
+}
+
+.ttc-header h4 {
+  font-size: 16px;
+  font-weight: 800;
+  margin: 0 0 3px 0;
+  color: var(--text-color, #fff);
+}
+
+.ttc-sub {
+  font-size: 13px;
+  color: var(--text-muted, #94a3b8);
+  margin: 0;
+}
+
+.ttc-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 680px) {
+  .ttc-metrics-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ttc-metric {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+:root[data-theme="light"] .ttc-metric {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+
+.ttc-metric-lbl {
+  font-size: 12px;
+  color: var(--text-muted, #94a3b8);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ttc-metric-val {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-color, #fff);
+}
+
+.ttc-metric-val.free {
+  color: #10b981;
+}
+
+.ttc-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 12px 14px;
+  border-radius: 10px;
+  border-left: 3px solid #10b981;
+}
+
+:root[data-theme="light"] .ttc-notes {
+  background: #f1f5f9;
+}
+
+.ttc-note-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--text-color, #cbd5e1);
+  line-height: 1.4;
+}
+
+.ttc-action-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.ttc-btn-continue {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 11px 20px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.ttc-btn-continue:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.45);
+}
+
+/* ==================== MÁY BAY / FLIGHT OPERATORS ==================== */
+.flight-operators-box {
+  margin-top: 10px;
+  border-top: 1px dashed var(--border-color, #e2e8f0);
+  padding-top: 16px;
+}
+
+.flight-card {
+  border-color: rgba(56, 189, 248, 0.35);
+}
+
+.flight-card:hover {
+  border-color: #38bdf8;
+  box-shadow: 0 4px 16px rgba(56, 189, 248, 0.15);
+}
+
+.flight-card.selected {
+  border-color: #0ea5e9;
+  background: rgba(14, 165, 233, 0.12);
+  box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.3);
+}
+
+.flight-tag {
+  background: rgba(56, 189, 248, 0.15);
+  color: #0284c7;
+}
+
+:root[data-theme="dark"] .flight-tag {
+  color: #38bdf8;
+}
+
+.flight-time-chip {
+  border-color: rgba(56, 189, 248, 0.3);
+  color: #0284c7;
+}
+
+:root[data-theme="dark"] .flight-time-chip {
+  color: #38bdf8;
+}
+
+.flight-time-chip.active {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #0284c7;
+}
+
+.flight-price-color {
+  color: #0284c7 !important;
+}
+
+:root[data-theme="dark"] .flight-price-color {
+  color: #38bdf8 !important;
+}
+
+.flight-total-badge {
+  background: rgba(56, 189, 248, 0.15);
+  color: #0284c7;
+}
+
+:root[data-theme="dark"] .flight-total-badge {
+  color: #38bdf8;
+}
+
+.flight-call {
+  border-color: rgba(56, 189, 248, 0.3);
+  color: #0284c7;
+}
+
+:root[data-theme="dark"] .flight-call {
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+.flight-select-btn {
+  background: #0284c7;
+  color: #ffffff;
+}
+
+.flight-select-btn:hover {
+  background: #0369a1;
+}
+
+.flight-select-btn.active {
+  background: #10b981;
+}
+
+.tbn-badge.flight {
+  background: rgba(56, 189, 248, 0.15);
+  color: #0284c7;
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+:root[data-theme="dark"] .tbn-badge.flight {
+  color: #38bdf8;
+}
+
+/* ==================== HƯỚNG DẪN KHI CHƯA CHỌN PHƯƠNG TIỆN ==================== */
+.no-transport-hint-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  margin: 12px 0 20px 0;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1.5px dashed #cbd5e1;
+  border-radius: 12px;
+  color: #475569;
+}
+
+.no-transport-hint-card .nthc-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+.no-transport-hint-card .nthc-info h4 {
+  margin: 0 0 4px 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.no-transport-hint-card .nthc-info p {
+  margin: 0;
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+:root[data-theme="dark"] .no-transport-hint-card {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border-color: #334155;
+  color: #94a3b8;
+}
+
+:root[data-theme="dark"] .no-transport-hint-card .nthc-icon {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+}
+
+:root[data-theme="dark"] .no-transport-hint-card .nthc-info h4 {
+  color: #f1f5f9;
+}
+
+:root[data-theme="dark"] .no-transport-hint-card .nthc-info p {
+  color: #94a3b8;
+}
+
+/* ==================== KHỐI XÁC NHẬN & XUẤT VÉ XE + THẺ KHÁCH SẠN ==================== */
+.step3-confirmation-section {
+  margin: 28px 0 16px 0;
+  animation: fadeIn 0.4s ease-out;
+}
+
+/* KHI CHƯA XÁC NHẬN: CARD KÊU GỌI XÁC NHẬN */
+.service-confirm-prompt-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #eff6ff 0%, #e0f2fe 100%);
+  border: 2px solid #bfdbfe;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.08);
+}
+
+.scpc-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.scpc-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
+  flex-shrink: 0;
+}
+
+.scpc-text h4 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1e3a8a;
+}
+
+.scpc-text p {
+  margin: 0 0 10px 0;
+  font-size: 13.5px;
+  color: #3b82f6;
+  line-height: 1.4;
+}
+
+.scpc-quick-tags {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.scpc-review-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid #bfdbfe;
+  font-size: 13px;
+}
+.scpc-tag-type {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #64748b;
+  font-weight: 600;
+}
+.scpc-tag-val {
+  color: #1e3a8a;
+  font-weight: 700;
+}
+
+.scpc-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #ffffff;
+  color: #1e40af;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid #dbeafe;
+}
+
+.step3-pending-guide-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  margin: 20px 0;
+  background: rgba(2, 132, 199, 0.06);
+  border: 1px dashed rgba(2, 132, 199, 0.3);
+  border-radius: 12px;
+  color: var(--text-muted, #64748b);
+  font-size: 13.5px;
+}
+.spgb-icon {
+  color: #0284c7;
+  flex-shrink: 0;
+}
+.spgb-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+  margin: 0 3px;
+}
+.spgb-badge.done {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.scpc-btn-confirm {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  font-size: 14.5px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+  transition: all 0.25s ease;
+}
+
+.scpc-btn-confirm:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+}
+
+:root[data-theme="dark"] .service-confirm-prompt-card {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border-color: #3b82f6;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+:root[data-theme="dark"] .scpc-icon {
+  background: #0f172a;
+}
+
+:root[data-theme="dark"] .scpc-text h4 {
+  color: #93c5fd;
+}
+
+:root[data-theme="dark"] .scpc-text p {
+  color: #cbd5e1;
+}
+
+:root[data-theme="dark"] .scpc-tag {
+  background: #1e293b;
+  color: #60a5fa;
+  border-color: #334155;
+}
+
+:root[data-theme="dark"] .scpc-review-tag {
+  background: #1e293b;
+  border-color: #334155;
+}
+:root[data-theme="dark"] .scpc-tag-type {
+  color: #94a3b8;
+}
+:root[data-theme="dark"] .scpc-tag-val {
+  color: #93c5fd;
+}
+
+:root[data-theme="dark"] .step3-pending-guide-box {
+  background: rgba(2, 132, 199, 0.12);
+  border-color: rgba(56, 189, 248, 0.3);
+  color: #94a3b8;
+}
+:root[data-theme="dark"] .spgb-badge {
+  background: #1e293b;
+  color: #94a3b8;
+}
+:root[data-theme="dark"] .spgb-badge.done {
+  background: #064e3b;
+  color: #6ee7b7;
+}
+
+/* KHI ĐÃ XÁC NHẬN: THÔNG BÁO THÀNH CÔNG VÀ 2 TẤM THẺ */
+.service-confirmed-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.sc-success-alert {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border: 1.5px solid #6ee7b7;
+  border-radius: 14px;
+  color: #065f46;
+}
+
+.sc-success-alert .scsa-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #10b981;
+  color: #ffffff;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.sc-success-alert .scsa-text strong {
+  display: block;
+  font-size: 15px;
+  margin-bottom: 2px;
+  color: #047857;
+}
+
+.sc-success-alert .scsa-text p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+:root[data-theme="dark"] .sc-success-alert {
+  background: linear-gradient(135deg, #064e3b 0%, #022c22 100%);
+  border-color: #059669;
+  color: #a7f3d0;
+}
+
+:root[data-theme="dark"] .sc-success-alert .scsa-text strong {
+  color: #34d399;
+}
+
+/* ==================== THẺ PREVIEW CHUYẾN ĐI TRÊN TRANG ==================== */
+.sc-success-alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 22px;
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border: 1.5px solid #6ee7b7;
+  border-radius: 14px;
+  color: #065f46;
+  flex-wrap: wrap;
+}
+
+.scsa-btn-view-ticket {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 9999px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.scsa-btn-view-ticket:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(5, 150, 105, 0.4);
+}
+
+.page-ticket-preview-card {
+  background: #ffffff;
+  border: 2px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 20px 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  transition: all 0.25s ease;
+}
+
+.page-ticket-preview-card:hover {
+  border-color: #3b82f6;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.12);
+}
+
+.ptpc-badge-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed #cbd5e1;
+}
+
+.ptpc-title-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #2563eb;
+  letter-spacing: 0.5px;
+}
+
+.ptpc-click-hint {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.ptpc-details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.ptpc-col {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ptpc-lbl {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.ptpc-val {
+  font-size: 14.5px;
+  color: #1e293b;
+  font-weight: 700;
+}
+
+.ptpc-val.highlight {
+  color: #2563eb;
+}
+
+.ptpc-sub {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.ptpc-price {
+  font-size: 17px;
+  font-weight: 900;
+  color: #059669;
+}
+
+.ptpc-status-tag {
+  font-size: 11px;
+  font-weight: 800;
+  color: #10b981;
+}
+
+/* ==================== FULL-SCREEN SKYLUXE TICKET MODAL ==================== */
+.ticket-fullscreen-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: rgba(10, 15, 29, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  overflow-y: auto;
+}
+
+.ticket-modal-inner-box {
+  position: relative;
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: auto;
+}
+
+.ticket-modal-close-icon {
+  position: absolute;
+  top: -42px;
+  right: 0;
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 30;
+}
+
+.ticket-modal-close-icon:hover {
+  background: rgba(255, 255, 255, 0.35);
+  transform: rotate(90deg);
+}
+
+/* ==================== ĐIỀU KHIỂN & KHÔNG GIAN 3D FLIP ==================== */
+.modal-ticket-top-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 14px;
+  z-index: 30;
+}
+
+.ticket-flip-badge-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  padding: 8px 20px;
+  border-radius: 999px;
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.ticket-flip-badge-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: #f59e0b;
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 8px 25px rgba(245, 158, 11, 0.35);
+}
+
+.ticket-flip-badge-btn .flip-icon {
+  font-size: 15px;
+  display: inline-block;
+  transition: transform 0.6s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+.ticket-flip-badge-btn:hover .flip-icon {
+  transform: rotate(180deg);
+}
+
+.flip-hint-badge {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #000000;
+  font-size: 10px;
+  font-weight: 900;
+  padding: 2px 8px;
+  border-radius: 999px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.ticket-flip-subhint {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  letter-spacing: 0.2px;
+}
+
+/* KHUNG 3D STAGE & INNER */
+.skyluxe-ticket-3d-stage {
+  perspective: 1600px;
+  width: 100%;
+  max-width: 800px;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.3s ease;
+}
+
+.skyluxe-ticket-3d-stage:hover {
+  transform: translateY(-3px);
+}
+
+.skyluxe-ticket-3d-inner {
+  position: relative;
+  width: 100%;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+  transition: transform 0.85s cubic-bezier(0.34, 1.35, 0.64, 1);
+}
+
+/* KHI LẬT 180 ĐỘ */
+.skyluxe-ticket-3d-stage.is-flipped .skyluxe-ticket-3d-inner {
+  transform: rotateY(180deg);
+}
+
+/* 2 MẶT CỦA TẤM VÉ */
+.skyluxe-ticket-face {
+  width: 100%;
+  background: #ffffff;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 25px 65px -10px rgba(0, 0, 0, 0.65), 0 0 1px rgba(255, 255, 255, 0.2);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.st-face-front {
+  position: relative;
+  transform: rotateY(0deg);
+  z-index: 2;
+}
+
+.st-face-back {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotateY(180deg);
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+}
+
+/* MẶT SAU THÂN VÉ */
+.st-back-card-content {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  background: #ffffff;
+}
+
+.st-back-main-part {
+  flex: 1;
+  padding: 16px 22px 14px 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.st-back-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.st-back-rule-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 9px 12px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  transition: all 0.2s ease;
+}
+
+.st-back-rule-card:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+}
+
+.st-rule-icon-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #fef3c7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+  border: 1px solid #fde68a;
+}
+
+.st-rule-content h5 {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 2px 0;
+  letter-spacing: 0.3px;
+}
+
+.st-rule-content p {
+  font-size: 11px;
+  color: #475569;
+  margin: 0;
+  line-height: 1.35;
+}
+
+.st-back-footer-row {
+  border-top: 1px solid #f1f5f9;
+  padding-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 11px;
+}
+
+.st-back-footer-item {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.st-bf-label {
+  color: #64748b;
+  font-weight: 700;
+}
+
+.st-bf-value {
+  color: #0f172a;
+  font-weight: 800;
+}
+
+/* CUỐNG VÉ MẶT SAU */
+.st-back-stub-part {
+  width: 28%;
+  min-width: 210px;
+  border-left: 2px dashed #cbd5e1;
+  padding: 16px 16px 14px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  background: #ffffff;
+  text-align: center;
+}
+
+/* CON DẤU PASSPORT STAMP HẢI QUAN NGHỆ THUẬT */
+.st-passport-stamp-wrapper {
+  margin: 8px 0 6px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.st-passport-stamp {
+  display: inline-block;
+  transform: rotate(-7deg);
+  transition: transform 0.3s ease;
+}
+
+.st-passport-stamp:hover {
+  transform: rotate(-2deg) scale(1.05);
+}
+
+.stamp-outer-ring {
+  width: 114px;
+  height: 114px;
+  border: 2.5px solid #dc2626;
+  border-radius: 50%;
+  padding: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 0 0 1px rgba(220, 38, 38, 0.2);
+}
+
+.stamp-inner-ring {
+  width: 100%;
+  height: 100%;
+  border: 1.5px dashed #dc2626;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 4px;
+}
+
+.stamp-star-top {
+  font-size: 8px;
+  font-weight: 800;
+  color: #dc2626;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.stamp-verified-text {
+  font-size: 13.5px;
+  font-weight: 900;
+  color: #dc2626;
+  letter-spacing: 2px;
+  margin: 1px 0;
+  border-top: 1.5px solid #dc2626;
+  border-bottom: 1.5px solid #dc2626;
+  padding: 1px 6px;
+  text-transform: uppercase;
+}
+
+.stamp-date-text {
+  font-size: 10px;
+  font-weight: 800;
+  color: #b91c1c;
+  letter-spacing: 1px;
+  margin-top: 2px;
+  font-family: monospace;
+}
+
+.stamp-bottom-text {
+  font-size: 7.5px;
+  font-weight: 800;
+  color: #dc2626;
+  letter-spacing: 0.8px;
+  margin-top: 1px;
+}
+
+.st-back-qr-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  border: 1px solid #e2e8f0;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.st-back-qr-lbl {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #475569;
+  letter-spacing: 0.5px;
+}
+
+/* 4 VẾT KHOÉT BÁN NGUYỆT (NOTCHES) Y HỆT HÌNH */
+.skyluxe-notch {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  background: #0a0f1d;
+  border-radius: 50%;
+  z-index: 25;
+  pointer-events: none;
+}
+
+.notch-left {
+  left: -16px;
+  top: 55%;
+  transform: translateY(-50%);
+  box-shadow: inset -2px 0 4px rgba(0, 0, 0, 0.3);
+}
+
+.notch-right {
+  right: -16px;
+  top: 55%;
+  transform: translateY(-50%);
+  box-shadow: inset 2px 0 4px rgba(0, 0, 0, 0.3);
+}
+
+.notch-top {
+  top: 36px;
+  right: 28%;
+  transform: translate(50%, -50%);
+  box-shadow: inset 0 -2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.notch-bottom {
+  bottom: -16px;
+  right: 28%;
+  transform: translateX(50%);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* HEADER ĐEN TRÊN CÙNG */
+.st-black-header {
+  background: #18181b;
+  padding: 14px 26px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+}
+
+.st-header-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.st-header-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.st-brand-logo {
+  stroke: #f59e0b;
+}
+
+.st-brand-text strong {
+  font-size: 12.5px;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: 1px;
+  display: block;
+  line-height: 1.1;
+}
+
+.st-brand-text span {
+  font-size: 9.5px;
+  font-weight: 600;
+  color: #a1a1aa;
+  letter-spacing: 1.5px;
+  display: block;
+}
+
+/* NỘI DUNG VÉ */
+.st-card-content {
+  display: flex;
+  background: #ffffff;
+}
+
+/* CỘT CHÍNH (BÊN TRÁI) */
+.st-main-part {
+  flex: 1;
+  padding: 18px 24px 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.st-section-tag {
+  font-size: 11px;
+  font-weight: 800;
+  color: #71717a;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.st-flight-route-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.st-route-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #09090b;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.st-qr-code-box {
+  border: 1px solid #e4e4e7;
+  border-radius: 6px;
+  padding: 2px;
+  background: #ffffff;
+  flex-shrink: 0;
+}
+
+.st-flight-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #3f3f46;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.stfm-code {
+  color: #09090b;
+  font-weight: 800;
+}
+
+.stfm-sep {
+  color: #d4d4d8;
+}
+
+.stfm-datetime {
+  color: #52525b;
+}
+
+.stfm-seat {
+  color: #09090b;
+}
+
+.st-flight-class {
+  font-size: 12px;
+  color: #71717a;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+/* KHỐI KHÁCH SẠN */
+.st-hotel-name {
+  font-size: 16.5px;
+  font-weight: 800;
+  color: #09090b;
+  margin: 0 0 8px 0;
+}
+
+.st-hotel-content-grid {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.st-hotel-thumbs {
+  display: flex;
+  gap: 8px;
+}
+
+.st-thumb-img {
+  width: 90px;
+  height: 58px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #e4e4e7;
+}
+
+.st-hotel-room-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12.5px;
+  color: #3f3f46;
+}
+
+.st-room-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #09090b;
+}
+
+.st-room-dates {
+  font-size: 12px;
+  color: #71717a;
+}
+
+.st-room-dates span {
+  font-weight: 600;
+  color: #18181b;
+}
+
+.st-booking-code {
+  font-size: 11.5px;
+  color: #71717a;
+}
+
+.st-booking-code span {
+  font-weight: 700;
+  color: #09090b;
+  font-family: monospace;
+}
+
+/* DÒNG TỔNG THANH TOÁN */
+.st-total-row {
+  border-top: 1px solid #f4f4f5;
+  padding-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.st-total-label {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #09090b;
+  letter-spacing: 0.5px;
+}
+
+.st-total-value {
+  font-size: 16.5px;
+  font-weight: 900;
+  color: #09090b;
+}
+
+/* CUỐNG VÉ (BÊN PHẢI) */
+.st-stub-part {
+  width: 28%;
+  min-width: 210px;
+  border-left: 2px dashed #cbd5e1;
+  padding: 18px 18px 16px 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: #ffffff;
+}
+
+.st-stub-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #71717a;
+  display: block;
+}
+
+.st-stub-name {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #09090b;
+  display: block;
+  margin-top: 2px;
+}
+
+.st-stub-grid {
+  display: flex;
+  gap: 14px;
+  margin: 8px 0;
+}
+
+.st-sg-lbl {
+  font-size: 10px;
+  color: #71717a;
+  display: block;
+}
+
+.st-sg-val {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #09090b;
+}
+
+/* BARCODE */
+.st-barcode-box {
+  margin: 6px 0;
+  text-align: center;
+}
+
+.st-barcode-stripes {
+  width: 140px;
+  height: 42px;
+  margin: 0 auto;
+  background: repeating-linear-gradient(
+    90deg,
+    #18181b 0,
+    #18181b 2px,
+    transparent 2px,
+    transparent 4px,
+    #18181b 4px,
+    #18181b 6px,
+    transparent 6px,
+    transparent 8px,
+    #18181b 8px,
+    #18181b 11px,
+    transparent 11px,
+    transparent 13px,
+    #18181b 13px,
+    #18181b 14px,
+    transparent 14px,
+    transparent 17px
+  );
+}
+
+/* CHỮ KÝ */
+.st-signature-box {
+  text-align: center;
+  border-top: 1px solid #f4f4f5;
+  padding-top: 6px;
+}
+
+.st-signature-art {
+  font-family: 'Brush Script MT', 'Dancing Script', 'Caveat', cursive;
+  font-size: 26px;
+  color: #3f3f46;
+  transform: rotate(-4deg);
+  line-height: 1;
+}
+
+.st-signature-sub {
+  font-size: 10px;
+  color: #71717a;
+  font-weight: 700;
+  letter-spacing: 1px;
+  display: block;
+  margin-top: 2px;
+}
+
+/* ==================== HIỆU ỨNG PHÁO HOA & NÚT NEON ==================== */
+.modal-cta-sparkle-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin-top: 28px;
+  position: relative;
+  z-index: 10;
+}
+
+.sparkler-burst {
+  display: flex;
+  gap: 4px;
+  font-size: 24px;
+  animation: sparkleTwinkle 1.5s ease-in-out infinite alternate;
+}
+
+.neon-glow-plan-btn {
+  background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 50%, #8b5cf6 100%);
+  border: none;
+  border-radius: 9999px;
+  padding: 16px 48px;
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 0 35px rgba(59, 130, 246, 0.75), 0 0 70px rgba(139, 92, 246, 0.45), inset 0 2px 4px rgba(255, 255, 255, 0.4);
+  transition: all 0.25s ease;
+  white-space: nowrap;
+}
+
+.neon-glow-plan-btn:hover {
+  transform: scale(1.03);
+  box-shadow: 0 0 45px rgba(59, 130, 246, 0.9), 0 0 90px rgba(139, 92, 246, 0.6), inset 0 2px 4px rgba(255, 255, 255, 0.6);
+}
+
+.neon-glow-plan-btn:active {
+  transform: scale(0.98);
+}
+
+/* PHÁO GIẤY CONFETTI */
+.confetti-sky {
+  position: absolute;
+  inset: -60px;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.confetti-item {
+  position: absolute;
+  width: 9px;
+  height: 14px;
+  opacity: 0.85;
+  border-radius: 2px;
+  animation: confettiFall 3.5s ease-in-out infinite;
+}
+
+.cf-1 { left: 10%; background: #3b82f6; animation-delay: 0.1s; transform: rotate(15deg); }
+.cf-2 { left: 20%; background: #ec4899; animation-delay: 0.4s; transform: rotate(-25deg); }
+.cf-3 { left: 30%; background: #eab308; animation-delay: 0.2s; transform: rotate(45deg); }
+.cf-4 { left: 40%; background: #8b5cf6; animation-delay: 0.8s; transform: rotate(10deg); }
+.cf-5 { left: 50%; background: #10b981; animation-delay: 0.5s; transform: rotate(-35deg); }
+.cf-6 { left: 60%; background: #f97316; animation-delay: 0.3s; transform: rotate(20deg); }
+.cf-7 { left: 70%; background: #06b6d4; animation-delay: 0.7s; transform: rotate(-15deg); }
+.cf-8 { left: 80%; background: #f43f5e; animation-delay: 0.9s; transform: rotate(50deg); }
+.cf-9 { left: 90%; background: #a855f7; animation-delay: 0.6s; transform: rotate(-40deg); }
+.cf-10 { left: 15%; background: #eab308; animation-delay: 1.2s; transform: rotate(30deg); }
+.cf-11 { left: 25%; background: #3b82f6; animation-delay: 1.5s; transform: rotate(-20deg); }
+.cf-12 { left: 35%; background: #10b981; animation-delay: 1.1s; transform: rotate(15deg); }
+.cf-13 { left: 45%; background: #ec4899; animation-delay: 1.8s; transform: rotate(-45deg); }
+.cf-14 { left: 55%; background: #8b5cf6; animation-delay: 1.3s; transform: rotate(35deg); }
+.cf-15 { left: 65%; background: #f97316; animation-delay: 1.6s; transform: rotate(-10deg); }
+.cf-16 { left: 75%; background: #06b6d4; animation-delay: 1.4s; transform: rotate(25deg); }
+.cf-17 { left: 85%; background: #eab308; animation-delay: 1.7s; transform: rotate(-30deg); }
+.cf-18 { left: 95%; background: #f43f5e; animation-delay: 1.9s; transform: rotate(40deg); }
+.cf-19 { left: 8%; background: #8b5cf6; animation-delay: 2.1s; transform: rotate(-15deg); }
+.cf-20 { left: 28%; background: #3b82f6; animation-delay: 2.3s; transform: rotate(20deg); }
+.cf-21 { left: 48%; background: #eab308; animation-delay: 2.0s; transform: rotate(-25deg); }
+.cf-22 { left: 68%; background: #10b981; animation-delay: 2.4s; transform: rotate(15deg); }
+.cf-23 { left: 88%; background: #ec4899; animation-delay: 2.2s; transform: rotate(-35deg); }
+.cf-24 { left: 18%; background: #f97316; animation-delay: 2.6s; transform: rotate(45deg); }
+.cf-25 { left: 38%; background: #06b6d4; animation-delay: 2.8s; transform: rotate(-20deg); }
+.cf-26 { left: 58%; background: #f43f5e; animation-delay: 2.5s; transform: rotate(30deg); }
+.cf-27 { left: 78%; background: #a855f7; animation-delay: 2.9s; transform: rotate(-40deg); }
+.cf-28 { left: 92%; background: #eab308; animation-delay: 2.7s; transform: rotate(10deg); }
+
+@keyframes confettiFall {
+  0% {
+    top: -20px;
+    opacity: 0;
+    transform: translateY(0) rotate(0deg);
+  }
+  20% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 0.9;
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
+    transform: translateY(60px) rotate(360deg);
+  }
+}
+
+@keyframes sparkleTwinkle {
+  0% {
+    transform: scale(0.9) rotate(-3deg);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1.15) rotate(3deg);
+    opacity: 1;
+  }
+}
+
+/* ANIMATION ZOOM MODAL */
+.ticket-modal-zoom-enter-active {
+  transition: all 0.35s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+.ticket-modal-zoom-leave-active {
+  transition: all 0.25s ease;
+}
+
+.ticket-modal-zoom-enter-from {
+  opacity: 0;
+  transform: scale(0.85) translateY(20px);
+}
+
+.ticket-modal-zoom-leave-to {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+@media (max-width: 768px) {
+  .st-card-content {
+    flex-direction: column;
+  }
+  .st-stub-part {
+    width: 100%;
+    border-left: none;
+    border-top: 2px dashed #cbd5e1;
+  }
+  .notch-top, .notch-bottom {
+    display: none;
+  }
+  .neon-glow-plan-btn {
+    font-size: 15px;
+    padding: 14px 28px;
+  }
+}
+
+/* KHỐI ĐẨY SANG BUTTON LÊN LỊCH TRÌNH */
+.sc-cta-forward-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 16px 0;
+  flex-wrap: wrap;
+}
+
+.sc-btn-generate {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 32px;
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(5, 150, 105, 0.35);
+  transition: all 0.25s ease;
+  animation: pulseButton 2s infinite;
+}
+
+.sc-btn-generate:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(5, 150, 105, 0.45);
+  background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+}
+
+.sc-btn-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 20px;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sc-btn-edit:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+:root[data-theme="dark"] .sc-btn-edit {
+  background: #1e293b;
+  color: #cbd5e1;
+  border-color: #334155;
+}
+
+:root[data-theme="dark"] .sc-btn-edit:hover {
+  background: #334155;
+  color: #ffffff;
+}
+
+@keyframes pulseButton {
+  0% {
+    box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(5, 150, 105, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(5, 150, 105, 0);
   }
 }
 </style>
