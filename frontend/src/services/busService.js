@@ -422,13 +422,14 @@ export function getEstimatedDistance(origin = 'Hà Nội', destination = 'Đà N
   let markerOrg = KM_MARKERS[org];
   let markerDest = KM_MARKERS[dest];
 
-  // Map "Nghệ An" to "Vinh (Nghệ An)", etc. by searching keys
+  // Map full address like "120 Nguyễn Văn Linh, Quận Hải Châu, Đà Nẵng" by finding matching city
+  const sortedKeys = Object.keys(KM_MARKERS).sort((a, b) => b.length - a.length);
   if (markerOrg === undefined) {
-    const key = Object.keys(KM_MARKERS).find(k => org.includes(k) || k.includes(org));
+    const key = sortedKeys.find(k => org.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(org.toLowerCase()));
     if (key) markerOrg = KM_MARKERS[key];
   }
   if (markerDest === undefined) {
-    const key = Object.keys(KM_MARKERS).find(k => dest.includes(k) || k.includes(dest));
+    const key = sortedKeys.find(k => dest.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(dest.toLowerCase()));
     if (key) markerDest = KM_MARKERS[key];
   }
 

@@ -22,56 +22,61 @@
         </div>
       </button>
 
-      <!-- THANH ĐIỀU HƯỚNG CHÍNH (NAVIGATION WITH ARIA ROLES & LUCIDE ICONS) -->
+      <!-- THANH ĐIỀU HƯỚNG CHÍNH (GLASS RADIO GROUP VỚI HIỆU ỨNG GLIDER ĐÀN HỒI) -->
       <nav class="desktop-nav" aria-label="Điều hướng chính" role="tablist">
-        <button
-          type="button"
-          role="tab"
-          :aria-selected="activeTab === 'explore'"
-          :tabindex="activeTab === 'explore' ? 0 : -1"
-          :class="['nav-item', { active: activeTab === 'explore' }]"
-          @click="$emit('update:activeTab', 'explore')"
-        >
-          <AppIcon name="compass" :size="19" class="nav-icon" />
-          <span class="nav-label">Khám phá</span>
-        </button>
+        <div class="glass-radio-group" :class="{ 'has-admin': nguoiDung && nguoiDung.role === 'admin' }">
+          <input
+            type="radio"
+            name="nav-tab"
+            id="glass-explore"
+            :checked="activeTab === 'explore'"
+            @change="$emit('update:activeTab', 'explore')"
+          />
+          <label for="glass-explore" title="Khám phá các điểm đến Miền Trung">
+            <AppIcon name="compass" :size="18" class="nav-icon" />
+            <span>Khám phá</span>
+          </label>
 
-        <button
-          type="button"
-          role="tab"
-          :aria-selected="activeTab === 'planner'"
-          :tabindex="activeTab === 'planner' ? 0 : -1"
-          :class="['nav-item', { active: activeTab === 'planner' }]"
-          @click="$emit('update:activeTab', 'planner')"
-        >
-          <AppIcon name="calendar" :size="19" class="nav-icon" />
-          <span class="nav-label">Lên lịch</span>
-        </button>
+          <input
+            type="radio"
+            name="nav-tab"
+            id="glass-planner"
+            :checked="activeTab === 'planner'"
+            @change="$emit('update:activeTab', 'planner')"
+          />
+          <label for="glass-planner" title="Lập kế hoạch du lịch thông minh cùng AI">
+            <AppIcon name="calendar" :size="18" class="nav-icon" />
+            <span>Lên lịch</span>
+          </label>
 
-        <button
-          type="button"
-          role="tab"
-          :aria-selected="activeTab === 'mytrips'"
-          :tabindex="activeTab === 'mytrips' ? 0 : -1"
-          :class="['nav-item', { active: activeTab === 'mytrips' }]"
-          @click="$emit('update:activeTab', 'mytrips')"
-        >
-          <AppIcon name="luggage" :size="19" class="nav-icon" />
-          <span class="nav-label">Chuyến đi</span>
-        </button>
+          <input
+            type="radio"
+            name="nav-tab"
+            id="glass-mytrips"
+            :checked="activeTab === 'mytrips'"
+            @change="$emit('update:activeTab', 'mytrips')"
+          />
+          <label for="glass-mytrips" title="Danh sách các chuyến đi đã lưu">
+            <AppIcon name="luggage" :size="18" class="nav-icon" />
+            <span>Chuyến đi</span>
+          </label>
 
-        <button
-          v-if="nguoiDung && nguoiDung.role === 'admin'"
-          type="button"
-          role="tab"
-          :aria-selected="activeTab === 'admin'"
-          :tabindex="activeTab === 'admin' ? 0 : -1"
-          :class="['nav-item', { active: activeTab === 'admin' }]"
-          @click="$emit('update:activeTab', 'admin')"
-        >
-          <AppIcon name="dashboard" :size="19" class="nav-icon" />
-          <span class="nav-label">Admin</span>
-        </button>
+          <template v-if="nguoiDung && nguoiDung.role === 'admin'">
+            <input
+              type="radio"
+              name="nav-tab"
+              id="glass-admin"
+              :checked="activeTab === 'admin'"
+              @change="$emit('update:activeTab', 'admin')"
+            />
+            <label for="glass-admin" title="Quản trị hệ thống">
+              <AppIcon name="dashboard" :size="18" class="nav-icon" />
+              <span>Admin</span>
+            </label>
+          </template>
+
+          <div class="glass-glider"></div>
+        </div>
       </nav>
 
       <!-- KHU VỰC HÀNH ĐỘNG (THEME TOGGLE & USER PROFILE / LOGIN) -->
@@ -129,17 +134,17 @@ defineEmits(['update:activeTab', 'openAuth', 'toggleDark'])
 </script>
 
 <style scoped>
-/* ==================== APP HEADER (GLASSMORPHISM & ACCESSIBILITY TOKENS) ==================== */
+/* ==================== APP HEADER (COSMIC GLASSMORPHISM SYSTEM) ==================== */
 .app-header {
   position: sticky;
   top: 0;
   z-index: 50;
   width: 100%;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03);
+  background: var(--glass-surface);
+  backdrop-filter: blur(var(--glass-blur, 16px));
+  -webkit-backdrop-filter: blur(var(--glass-blur, 16px));
+  border-bottom: var(--glass-border);
+  box-shadow: var(--glass-glow-shadow);
   transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -161,21 +166,21 @@ defineEmits(['update:activeTab', 'openAuth', 'toggleDark'])
   gap: 12px;
   background: transparent;
   border: 0;
-  padding: 4px 8px 4px 4px;
-  border-radius: 14px;
+  padding: 4px 10px 4px 6px;
+  border-radius: 16px;
   cursor: pointer;
   text-align: left;
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease;
+  transition: transform 0.25s var(--ease-smooth, ease), background-color 0.25s ease;
   user-select: none;
 }
 
 .header-brand:hover {
-  background: rgba(14, 165, 233, 0.06);
+  background: rgba(56, 189, 248, 0.08);
 }
 
 .header-brand:hover .app-logo-image {
-  transform: rotate(-4deg) scale(1.06);
-  box-shadow: 0 6px 16px rgba(14, 165, 233, 0.25);
+  transform: rotate(-5deg) scale(1.08);
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.45);
 }
 
 .app-logo-image {
@@ -183,8 +188,9 @@ defineEmits(['update:activeTab', 'openAuth', 'toggleDark'])
   height: 42px;
   border-radius: 50%;
   object-fit: contain;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  transition: transform 0.35s var(--ease-elastic, cubic-bezier(0.34, 1.56, 0.64, 1)), box-shadow 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .brand-text {
@@ -193,11 +199,12 @@ defineEmits(['update:activeTab', 'openAuth', 'toggleDark'])
 }
 
 .brand-title {
-  font-size: 1.15rem;
+  font-size: 1.18rem;
   font-weight: 800;
   letter-spacing: -0.02em;
-  color: var(--primary, #0d7c76);
+  color: var(--primary, #0284c7);
   line-height: 1.15;
+  transition: color 0.3s ease;
 }
 
 .brand-tagline {
@@ -208,60 +215,142 @@ defineEmits(['update:activeTab', 'openAuth', 'toggleDark'])
   line-height: 1.3;
 }
 
-/* DESKTOP NAVIGATION (TOUCH TARGETS & ACTIVE PILL INDICATOR) */
+/* ==================== GLASS RADIO GROUP TAB BAR (UIVERSE GLASS GLIDER) ==================== */
 .desktop-nav {
   display: flex;
   align-items: center;
-  gap: 8px; /* Tối thiểu 8px khoảng cách theo UI/UX Pro Max */
-  background: rgba(241, 245, 249, 0.7);
-  padding: 4px;
-  border-radius: 50px;
-  border: 1px solid rgba(226, 232, 240, 0.9);
+  justify-content: center;
 }
 
-.nav-item {
-  display: inline-flex;
+.glass-radio-group {
+  --bg: rgba(15, 23, 42, 0.08);
+  --text: #475569;
+  --glider-width: calc(100% / 3);
+
+  display: flex;
+  position: relative;
+  background: var(--bg);
+  border-radius: 999px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow:
+    inset 1px 1px 4px rgba(255, 255, 255, 0.4),
+    inset -1px -1px 6px rgba(0, 0, 0, 0.08),
+    0 4px 14px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  width: fit-content;
+  user-select: none;
+  padding: 3px;
+}
+
+.glass-radio-group.has-admin {
+  --glider-width: calc(100% / 4);
+}
+
+.glass-radio-group input {
+  display: none;
+}
+
+.glass-radio-group label {
+  flex: 1;
+  display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  background: transparent;
-  border: 0;
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: var(--text-sub, #64748b);
+  gap: 7px;
+  min-width: 96px;
+  font-size: 14px;
+  padding: 0.65rem 1.4rem;
   cursor: pointer;
-  padding: 8px 18px;
-  min-height: 40px; /* Đảm bảo target size chuẩn thao tác */
-  border-radius: 50px;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: var(--text);
   position: relative;
+  z-index: 2;
+  transition: color 0.3s ease-in-out, transform 0.2s ease;
   white-space: nowrap;
 }
 
-.nav-icon {
-  width: 17px;
-  height: 17px;
-  flex-shrink: 0;
-  transition: transform 0.25s ease;
+.glass-radio-group label:hover {
+  color: var(--text-main, #0f172a);
 }
 
-.nav-item:hover {
-  color: var(--primary, #0d7c76);
-  background: rgba(255, 255, 255, 0.6);
+.glass-radio-group label:hover .nav-icon {
+  transform: translateY(-1px) scale(1.08);
 }
 
-.nav-item:hover .nav-icon {
-  transform: translateY(-1px);
-}
-
-.nav-item.active {
+.glass-radio-group input:checked + label {
   color: #ffffff;
-  background: var(--primary, #0d7c76);
-  box-shadow: 0 4px 12px rgba(13, 124, 118, 0.3);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
 }
 
-.nav-item.active .nav-icon {
-  transform: scale(1.05);
+.glass-radio-group input:checked + label .nav-icon {
+  transform: scale(1.1);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.nav-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-glider {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc(var(--glider-width) - 2px);
+  border-radius: 999px;
+  z-index: 1;
+  opacity: 1;
+  transition:
+    transform 0.5s cubic-bezier(0.37, 1.95, 0.66, 0.56),
+    background 0.4s ease-in-out,
+    box-shadow 0.4s ease-in-out,
+    opacity 0.3s ease;
+}
+
+/* Ẩn glider nếu không có tab nào được chọn */
+.glass-radio-group:not(:has(input:checked)) .glass-glider {
+  opacity: 0;
+}
+
+/* Tab 1: Khám phá (Silver) */
+#glass-explore:checked ~ .glass-glider {
+  transform: translateX(0%);
+  background: linear-gradient(135deg, rgba(160, 174, 192, 0.75), #cbd5e1);
+  box-shadow:
+    0 0 18px rgba(160, 174, 192, 0.55),
+    0 0 10px rgba(255, 255, 255, 0.4) inset;
+}
+
+/* Tab 2: Lên lịch (Gold) */
+#glass-planner:checked ~ .glass-glider {
+  transform: translateX(100%);
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.8), #f59e0b);
+  box-shadow:
+    0 0 18px rgba(245, 158, 11, 0.55),
+    0 0 10px rgba(254, 240, 138, 0.4) inset;
+}
+
+/* Tab 3: Chuyến đi (Platinum) */
+#glass-mytrips:checked ~ .glass-glider {
+  transform: translateX(200%);
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.8), #0284c7);
+  box-shadow:
+    0 0 18px rgba(56, 189, 248, 0.55),
+    0 0 10px rgba(224, 242, 254, 0.4) inset;
+}
+
+/* Tab 4: Admin (Ruby / Rose) */
+#glass-admin:checked ~ .glass-glider {
+  transform: translateX(300%);
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.8), #e11d48);
+  box-shadow:
+    0 0 18px rgba(244, 63, 94, 0.55),
+    0 0 10px rgba(254, 205, 211, 0.4) inset;
 }
 
 /* ACTIONS BAR */
@@ -271,83 +360,92 @@ defineEmits(['update:activeTab', 'openAuth', 'toggleDark'])
   gap: 10px;
 }
 
-/* THEME TOGGLE (MIN TARGET 44px x 44px) */
+/* THEME TOGGLE (GLASS PILL TARGET CHUẨN A11Y) */
 .theme-toggle-btn {
   width: 42px;
   height: 42px;
   min-width: 42px;
   min-height: 42px;
-  border: 1px solid var(--border-color, #e2e8f0);
-  background: rgba(255, 255, 255, 0.7);
+  border: var(--glass-border);
+  background: var(--glass-surface);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   color: var(--text-main, #1e293b);
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: var(--glass-inner-shadow), 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.25s var(--ease-smooth, ease);
 }
 
 .theme-icon {
   width: 20px;
   height: 20px;
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.4s var(--ease-elastic, cubic-bezier(0.34, 1.56, 0.64, 1));
 }
 
 .theme-toggle-btn:hover {
-  background: #ffffff;
-  border-color: var(--primary, #0d7c76);
-  color: var(--primary, #0d7c76);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  background: var(--glass-surface-elevated);
+  border-color: rgba(56, 189, 248, 0.5);
+  color: var(--primary, #0284c7);
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.3), var(--glass-inner-shadow);
+  transform: translateY(-1px);
 }
 
 .theme-toggle-btn:hover .theme-icon {
-  transform: rotate(20deg) scale(1.1);
+  transform: rotate(25deg) scale(1.12);
 }
 
-/* USER CHIP */
+/* USER CHIP (COSMIC GLASS USER BADGE) */
 .user-chip-btn {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid var(--border-color, #e2e8f0);
-  padding: 4px 14px 4px 6px;
+  gap: 10px;
+  background: var(--glass-surface);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: var(--glass-border);
+  box-shadow: var(--glass-inner-shadow), 0 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 4px 16px 4px 5px;
   min-height: 42px;
-  border-radius: 50px;
+  border-radius: 999px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  max-width: 190px;
+  transition: all 0.25s var(--ease-smooth, ease);
+  max-width: 200px;
 }
 
 .user-chip-btn:hover {
-  border-color: var(--primary, #0d7c76);
-  background: #ffffff;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+  border-color: rgba(56, 189, 248, 0.6);
+  background: var(--glass-surface-elevated);
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.25), var(--glass-inner-shadow);
+  transform: translateY(-1px);
 }
 
 .user-chip-btn.active {
-  border-color: var(--primary, #0d7c76);
-  box-shadow: 0 0 0 2px rgba(13, 124, 118, 0.2);
+  border-color: var(--primary, #0284c7);
+  box-shadow: 0 0 16px rgba(2, 132, 199, 0.35);
 }
 
 .user-avatar {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary, #0d7c76), #0ea5e9);
+  background: var(--metal-platinum);
   color: #ffffff;
   font-weight: 800;
-  font-size: 0.85rem;
+  font-size: 0.88rem;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 2px 6px rgba(13, 124, 118, 0.25);
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
 }
 
 .user-name {
-  font-size: 0.85rem;
+  font-size: 0.88rem;
   font-weight: 700;
   color: var(--text-main, #1e293b);
   overflow: hidden;
@@ -355,33 +453,56 @@ defineEmits(['update:activeTab', 'openAuth', 'toggleDark'])
   white-space: nowrap;
 }
 
-/* LOGIN BUTTON (CTA WITH GLOW) */
+/* LOGIN BUTTON (GLASS SHIMMER CTA WITH METALLIC GLOW) */
 .login-header-btn {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  background: var(--primary, #0d7c76);
+  gap: 8px;
+  background: var(--metal-platinum);
   color: #ffffff;
-  border: 0;
-  padding: 8px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  padding: 8px 20px;
   min-height: 42px;
-  border-radius: 50px;
-  font-size: 0.86rem;
-  font-weight: 700;
+  border-radius: 999px;
+  font-size: 0.88rem;
+  font-weight: 800;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(13, 124, 118, 0.25);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    0 4px 18px rgba(2, 132, 199, 0.35),
+    inset 1px 1px 3px rgba(255, 255, 255, 0.45);
+  transition: all 0.25s var(--ease-smooth, ease);
+}
+
+.login-header-btn::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(60deg, transparent 35%, rgba(255, 255, 255, 0.28) 50%, transparent 65%);
+  transform: rotate(25deg) translateY(-100%);
+  transition: transform 0.65s ease;
+  pointer-events: none;
+}
+
+.login-header-btn:hover::after {
+  transform: rotate(25deg) translateY(100%);
 }
 
 .btn-icon {
-  width: 16px;
-  height: 16px;
+  width: 17px;
+  height: 17px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
 }
 
 .login-header-btn:hover {
-  background: var(--primary-dark, #0a635e);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(13, 124, 118, 0.35);
+  transform: translateY(-2px);
+  box-shadow:
+    0 6px 22px rgba(2, 132, 199, 0.5),
+    0 0 16px rgba(56, 189, 248, 0.4);
 }
 
 .login-header-btn:active {
@@ -401,46 +522,70 @@ button:focus-visible {
   box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.35);
 }
 
-:root[data-theme="dark"] .desktop-nav {
-  background: rgba(30, 41, 59, 0.7);
-  border-color: rgba(255, 255, 255, 0.08);
+:root[data-theme="dark"] .glass-radio-group {
+  --bg: rgba(255, 255, 255, 0.06);
+  --text: #cbd5e1;
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow:
+    inset 1px 1px 4px rgba(255, 255, 255, 0.2),
+    inset -1px -1px 6px rgba(0, 0, 0, 0.4),
+    0 4px 16px rgba(0, 0, 0, 0.35);
 }
 
-:root[data-theme="dark"] .nav-item {
-  color: #94a3b8;
-}
-
-:root[data-theme="dark"] .nav-item:hover {
-  color: #f1f5f9;
-  background: rgba(255, 255, 255, 0.08);
-}
-
-:root[data-theme="dark"] .nav-item.active {
+:root[data-theme="dark"] .glass-radio-group label:hover {
   color: #ffffff;
-  background: var(--primary, #0d7c76);
-  box-shadow: 0 4px 16px rgba(13, 124, 118, 0.45);
+}
+
+:root[data-theme="dark"] #glass-explore:checked ~ .glass-glider {
+  background: linear-gradient(135deg, #c0c0c055, #e0e0e0);
+  box-shadow:
+    0 0 18px rgba(192, 192, 192, 0.5),
+    0 0 10px rgba(255, 255, 255, 0.4) inset;
+}
+
+:root[data-theme="dark"] #glass-planner:checked ~ .glass-glider {
+  background: linear-gradient(135deg, #ffd70055, #ffcc00);
+  box-shadow:
+    0 0 18px rgba(255, 215, 0, 0.5),
+    0 0 10px rgba(255, 235, 150, 0.4) inset;
+}
+
+:root[data-theme="dark"] #glass-mytrips:checked ~ .glass-glider {
+  background: linear-gradient(135deg, #d0e7ff55, #a0d8ff);
+  box-shadow:
+    0 0 18px rgba(160, 216, 255, 0.5),
+    0 0 10px rgba(200, 240, 255, 0.4) inset;
+}
+
+:root[data-theme="dark"] #glass-admin:checked ~ .glass-glider {
+  background: linear-gradient(135deg, #fb718555, #f43f5e);
+  box-shadow:
+    0 0 18px rgba(244, 63, 94, 0.5),
+    0 0 10px rgba(255, 200, 210, 0.4) inset;
 }
 
 :root[data-theme="dark"] .theme-toggle-btn {
-  background: rgba(30, 41, 59, 0.8);
+  background: var(--glass-surface);
   border-color: rgba(255, 255, 255, 0.12);
   color: #f1f5f9;
 }
 
 :root[data-theme="dark"] .theme-toggle-btn:hover {
-  background: rgba(51, 65, 85, 0.9);
-  border-color: var(--primary, #0d7c76);
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(56, 189, 248, 0.6);
   color: #38bdf8;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.35);
 }
 
 :root[data-theme="dark"] .user-chip-btn {
-  background: rgba(30, 41, 59, 0.8);
+  background: var(--glass-surface);
   border-color: rgba(255, 255, 255, 0.12);
 }
 
 :root[data-theme="dark"] .user-chip-btn:hover {
-  background: rgba(51, 65, 85, 0.9);
-  border-color: var(--primary, #0d7c76);
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(56, 189, 248, 0.6);
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.25);
 }
 
 :root[data-theme="dark"] .user-name {
@@ -448,7 +593,10 @@ button:focus-visible {
 }
 
 :root[data-theme="dark"] .brand-title {
-  color: #2dd4bf;
+  background: linear-gradient(135deg, #ffffff 40%, #93c5fd);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 20px rgba(147, 197, 253, 0.35);
 }
 
 :root[data-theme="dark"] .brand-tagline {
@@ -469,16 +617,23 @@ button:focus-visible {
   .desktop-nav {
     order: 3;
     width: 100%;
-    justify-content: space-around;
-    border-radius: 16px;
-    padding: 4px;
-    margin-top: 4px;
+    margin-top: 6px;
   }
 
-  .nav-item {
-    flex: 1;
-    padding: 8px 10px;
-    font-size: 0.82rem;
+  .glass-radio-group {
+    width: 100%;
+  }
+
+  .glass-radio-group label {
+    min-width: 0;
+    padding: 0.55rem 0.5rem;
+    font-size: 13px;
+    gap: 5px;
+  }
+
+  .nav-icon {
+    width: 16px;
+    height: 16px;
   }
 }
 

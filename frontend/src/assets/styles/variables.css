@@ -1,0 +1,127 @@
+/* ==================== UI PRO MAX DESIGN SYSTEM TOKENS ==================== */
+/* Palette: Aurora Ocean & Heritage Coral (Chuẩn nhận diện du lịch Duyên hải & Di sản Miền Trung) */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap');
+
+:root {
+  /* Brand Colors Light Mode */
+  --primary: #0284c7; /* Sky / Ocean Blue 600 - Tươi mới, chuyên nghiệp, tin cậy */
+  --primary-color: #0284c7;
+  --primary-dark: #0369a1; /* Ocean Blue 700 */
+  --primary-light: #e0f2fe; /* Sky 100 */
+  --primary-surface: #f0f9ff; /* Sky 50 */
+  --secondary: #0d9488; /* Teal 600 - Điểm xuyết ngọc bích ven biển */
+  --accent: #ea580c; /* Coral Orange 600 - Tương phản nổi bật, ánh đèn lồng Hội An */
+  --accent-hover: #c2410c; /* Coral Orange 700 */
+  --accent-light: #ffedd5; /* Orange 100 */
+
+  /* Backgrounds & Bề mặt phẳng đạt chuẩn tương phản cao (Không dùng kính mờ loang lổ) */
+  --bg-app: #f8fafc; /* Slate 50 - Nền sáng dịu mắt, sạch sẽ */
+  --card-bg: #ffffff; /* Thẻ trắng đặc 100% - Chữ sắc nét, dễ đọc nhất */
+  --card-bg-elevated: #ffffff;
+  --card-bg-subtle: #f1f5f9;
+
+  /* Typography & Đạt chuẩn tương phản WCAG 2.2 AA / AAA (Tối thiểu 4.5:1) */
+  --text-main: #0f172a; /* Slate 900 - Tương phản 13:1 so với nền trắng */
+  --text-sub: #475569; /* Slate 600 - Tương phản 5.5:1, vượt chuẩn WCAG AA */
+  --text-muted: #64748b; /* Slate 500 */
+
+  /* Đường viền tinh tế, chuẩn xác (Thay thế viền vàng đục cũ) */
+  --border-color: #e2e8f0; /* Slate 200 - Viền xám trung tính tinh tế */
+  --border-hover: #cbd5e1; /* Slate 300 */
+  --border-strong: #94a3b8;
+
+  /* Bo góc hài hòa */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  /* Đổ bóng tự nhiên nhiều tầng (Layered Shadows) */
+  --shadow-sm: 0 1px 3px 0 rgba(15, 23, 42, 0.06), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 4px 16px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -2px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 12px 28px -4px rgba(15, 23, 42, 0.12), 0 4px 10px -2px rgba(15, 23, 42, 0.06);
+  --shadow-primary: 0 4px 14px rgba(2, 132, 199, 0.25);
+  --shadow-accent: 0 4px 14px rgba(234, 88, 12, 0.25);
+
+  /* Form Inputs & Weather */
+  --input-bg: #f8fafc;
+  --input-bg-focus: #ffffff;
+  --weather-bg: #f0f9ff;
+  --weather-border: #bae6fd;
+
+  /* ==================== COSMIC GLASS & METALLIC SYSTEM (LIGHT MODE) ==================== */
+  --glass-surface: rgba(255, 255, 255, 0.82);
+  --glass-surface-elevated: rgba(255, 255, 255, 0.95);
+  --glass-border: 1px solid rgba(226, 232, 240, 0.85);
+  --glass-border-light: 1px solid rgba(255, 255, 255, 0.6);
+  --glass-blur: 16px;
+  --glass-inner-shadow: inset 1px 1px 3px rgba(255, 255, 255, 0.6), inset -1px -1px 4px rgba(0, 0, 0, 0.05);
+  --glass-glow-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+
+  /* Metallic Gradients & Shimmer */
+  --metal-silver: linear-gradient(135deg, rgba(160, 174, 192, 0.75), #cbd5e1);
+  --metal-gold: linear-gradient(135deg, rgba(251, 191, 36, 0.8), #f59e0b);
+  --metal-platinum: linear-gradient(135deg, rgba(56, 189, 248, 0.8), #0284c7);
+  --metal-ruby: linear-gradient(135deg, rgba(244, 63, 94, 0.8), #e11d48);
+
+  /* Easing curves */
+  --ease-elastic: cubic-bezier(0.37, 1.95, 0.66, 0.56);
+  --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+:root[data-theme="dark"] {
+  /* Brand Colors Dark Mode - Sáng rõ, nổi bật trên nền tối */
+  --primary: #38bdf8; /* Sky 400 - Độ sáng cao, không chìm trên nền đen */
+  --primary-color: #38bdf8;
+  --primary-dark: #0284c7;
+  --primary-light: rgba(56, 189, 248, 0.16);
+  --primary-surface: rgba(56, 189, 248, 0.08);
+  --secondary: #2dd4bf; /* Mint Teal 400 */
+  --accent: #f97316; /* Warm Coral 500 */
+  --accent-hover: #ea580c;
+  --accent-light: rgba(249, 115, 22, 0.16);
+
+  /* Bề mặt tối chuyên nghiệp (Deep Ocean Navy) */
+  --bg-app: #0b1329; /* Xanh than vũ trụ sâu thẳm, không bị chói mắt */
+  --card-bg: #162036; /* Slate 800 - Thẻ màu đặc độ tương phản cao */
+  --card-bg-elevated: #1e293b;
+  --card-bg-subtle: #0f172a;
+
+  /* Typography Dark Mode */
+  --text-main: #f8fafc; /* Slate 50 - Tương phản cực cao */
+  --text-sub: #cbd5e1; /* Slate 300 - Dễ đọc */
+  --text-muted: #94a3b8; /* Slate 400 */
+
+  /* Borders Dark Mode */
+  --border-color: rgba(51, 65, 85, 0.7); /* Slate 700 */
+  --border-hover: rgba(100, 116, 139, 0.85);
+  --border-strong: rgba(148, 163, 184, 0.5);
+
+  /* Shadows Dark Mode */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 16px 36px rgba(0, 0, 0, 0.55);
+  --shadow-primary: 0 4px 16px rgba(56, 189, 248, 0.3);
+  --shadow-accent: 0 4px 16px rgba(249, 115, 22, 0.3);
+
+  /* Form Inputs Dark Mode */
+  --input-bg: rgba(15, 23, 42, 0.75);
+  --input-bg-focus: #0f172a;
+  --weather-bg: rgba(15, 23, 42, 0.8);
+  --weather-border: rgba(56, 189, 248, 0.25);
+
+  /* ==================== COSMIC GLASS & METALLIC SYSTEM (DARK MODE) ==================== */
+  --glass-surface: rgba(15, 23, 42, 0.85);
+  --glass-surface-elevated: rgba(30, 41, 59, 0.85);
+  --glass-border: 1px solid rgba(255, 255, 255, 0.12);
+  --glass-border-light: 1px solid rgba(255, 255, 255, 0.2);
+  --glass-blur: 16px;
+  --glass-inner-shadow: inset 1px 1px 4px rgba(255, 255, 255, 0.15), inset -1px -1px 6px rgba(0, 0, 0, 0.4);
+  --glass-glow-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+
+  /* Metallic Gradients Dark Mode */
+  --metal-silver: linear-gradient(135deg, #c0c0c055, #e0e0e0);
+  --metal-gold: linear-gradient(135deg, #ffd70055, #ffcc00);
+  --metal-platinum: linear-gradient(135deg, #d0e7ff55, #a0d8ff);
+  --metal-ruby: linear-gradient(135deg, #fb718555, #f43f5e);
+}
