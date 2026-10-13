@@ -40,24 +40,6 @@
 
             <!-- BƯỚC 1: ĐIỂM ĐẾN & THỜI GIAN -->
             <div v-show="currentPlannerStep === 1" class="app-form-grid wizard-step-content">
-              <!-- AI Message bubble — 10 câu luân phiên ngẫu nhiên -->
-              <div class="ai-hint-bubble full-width" v-if="showAiHintBubble">
-                <div class="ai-hint-robot"><img src="/shrek.jpg" style="width: 44px; height: 44px; object-fit: cover; border-radius: 50%; display: block;" alt="AI Robot" /></div>
-                <div class="ai-hint-body">
-                  <div class="ai-hint-content">
-                    <p v-html="aiCurrentHint"></p>
-                  </div>
-                  <div class="ai-hint-chips">
-                    <span class="ai-chip" @click="chonNhanhDiemDen('Đà Nẵng')"><AppIcon name="pin" :size="12" /> Đà Nẵng</span>
-                    <span class="ai-chip" @click="chonNhanhDiemDen('Huế')"><AppIcon name="crown" :size="12" /> Huế</span>
-                    <span class="ai-chip" @click="chonNhanhDiemDen('Nghệ An')"><AppIcon name="leaf" :size="12" /> Nghệ An</span>
-                    <span class="ai-chip" @click="chonNhanhDiemDen('Lâm Đồng')"><AppIcon name="leaf" :size="12" /> Đà Lạt</span>
-                    <span class="ai-chip" @click="chonNhanhDiemDen('Khánh Hòa')"><AppIcon name="compass" :size="12" /> Nha Trang</span>
-                    <span class="ai-chip ai-chip-refresh" @click="refreshAiHint()"><AppIcon name="shuffle" :size="12" /> Câu khác</span>
-                  </div>
-                </div>
-                <button class="ai-hint-close" @click="showAiHintBubble = false" title="Dong goi y"><AppIcon name="x" :size="14" /></button>
-              </div>
               <!-- CHỌN ĐIỂM BẮT ĐẦU (KHỞI HÀNH) - 2 OPTIONS SLIDER -->
               <div class="app-field full-width">
                 <div class="field-label-between">
