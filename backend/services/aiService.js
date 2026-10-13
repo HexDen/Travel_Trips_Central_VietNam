@@ -127,18 +127,23 @@ function clusterPlaces(places, numClusters) {
 }
 
 async function taoLichTrinh(duLieu) {
-  const nganSach = Number(duLieu.budget) || 0;
-  const nguoi = Number(duLieu.people) || 1;
-  const ngay = Number(duLieu.days) || 1;
-  const budgetPerPersonPerDay = nganSach / (nguoi * ngay);
+  const nguoi = Number(duLieu.people) || Number(duLieu.soNguoi) || 1;
+  const ngay = Number(duLieu.days) || Number(duLieu.soNgay) || 1;
+  let nganSach = Number(duLieu.budget) || Number(duLieu.nganSach) || Number(duLieu.total_budget) || 0;
   
+  // Tự động gán ngân sách tiêu chuẩn nếu người dùng chưa nhập hoặc nhập bằng prompt tự do
+  if (!nganSach || nganSach <= 0) {
+    nganSach = 1500000 * nguoi * ngay;
+  }
+
+  const budgetPerPersonPerDay = nganSach / (nguoi * ngay);
   if (budgetPerPersonPerDay < 500000) {
     const requiredBudget = 500000 * nguoi * ngay;
     throw new Error(`Ngân sách quá thấp! Để duy trì các chi phí cơ bản (khách sạn, ăn uống, di chuyển) trong ${ngay} ngày cho ${nguoi} người, bạn cần tối thiểu ${requiredBudget.toLocaleString('vi-VN')}đ (tương đương 500.000đ/người/ngày). Vui lòng tăng ngân sách lên nhé!`);
   }
 
   const geminiKey = getGeminiKey()
-  let diemDen = duLieu.destination || 'Đà Nẵng'
+  let diemDen = duLieu.destination || duLieu.diemDen || 'Đà Nẵng'
   if (DESTINATION_ALIASES[diemDen]) {
     diemDen = DESTINATION_ALIASES[diemDen]
   }

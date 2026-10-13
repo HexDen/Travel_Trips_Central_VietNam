@@ -134,6 +134,15 @@
                   <span v-if="isPillActive(pill)" class="pill-check">✓ </span>{{ pill }}
                 </button>
               </div>
+
+              <!-- Nút mẹo tối ưu lịch trình AI chuyên nghiệp & súc tích -->
+              <div class="capsule-guide-row">
+                <button type="button" class="btn-prompt-guide" @click="openGuidanceSheet(false)">
+                  <span class="guide-bulb">💡</span>
+                  <span class="guide-text">Mẹo tối ưu lịch trình AI</span>
+                  <span class="guide-arrow">›</span>
+                </button>
+              </div>
             </div>
 
             <!-- Sleek interactive bar at bottom of hero -->
@@ -245,83 +254,7 @@
 
       </section>
 
-      <!-- TAB 2: LẬP KẾ HOẠCH THEO FORM GỌN (PLANNER) -->
-      <section v-if="currentTab === 'planner'" class="tab-view planner-view">
-        <div class="planner-form-card">
-          <div class="p-form-header">
-            <span class="p-form-kicker">AI PLANNER</span>
-            <h2 class="p-form-title">Tùy chọn chuyến đi</h2>
-            <p class="p-form-sub">Nhập thông tin cơ bản, hệ thống sẽ tự động phối hợp lộ trình.</p>
-          </div>
-
-          <!-- Điểm đến -->
-          <div class="p-form-field">
-            <label class="p-field-label">Điểm đến</label>
-            <div class="p-chips-row">
-              <button
-                v-for="d in cityList"
-                :key="d"
-                :class="['p-choice-chip', { active: plannerForm.destination === d }]"
-                @click="plannerForm.destination = d"
-              >
-                {{ d }}
-              </button>
-            </div>
-          </div>
-
-          <!-- Số ngày -->
-          <div class="p-form-field">
-            <label class="p-field-label">Số ngày đi</label>
-            <div class="p-duration-grid">
-              <button
-                v-for="d in [1, 2, 3, 4, 5]"
-                :key="d"
-                :class="['p-choice-chip', { active: plannerForm.days === d }]"
-                @click="plannerForm.days = d"
-              >
-                {{ d }} Ngày {{ d > 1 ? `${d - 1} Đêm` : '' }}
-              </button>
-            </div>
-          </div>
-
-          <!-- Số người -->
-          <div class="p-form-field">
-            <label class="p-field-label">Số người tham gia</label>
-            <div class="p-counter-row">
-              <button class="p-counter-btn" @click="plannerForm.people = Math.max(1, plannerForm.people - 1)">−</button>
-              <span class="p-counter-val">{{ plannerForm.people }} người</span>
-              <button class="p-counter-btn" @click="plannerForm.people = Math.min(10, plannerForm.people + 1)">+</button>
-            </div>
-          </div>
-
-          <!-- Ngân sách -->
-          <div class="p-form-field">
-            <label class="p-field-label">Mức ngân sách / người</label>
-            <div class="p-duration-grid">
-              <button
-                v-for="b in budgetTiers"
-                :key="b.key"
-                :class="['p-choice-chip', { active: plannerForm.budgetTier === b.key }]"
-                @click="plannerForm.budgetTier = b.key"
-              >
-                {{ b.label }}
-                <small>{{ b.sub }}</small>
-              </button>
-            </div>
-          </div>
-
-          <button
-            class="btn-primary-mobile"
-            :disabled="isGenerating"
-            @click="handleGenerateFromForm"
-          >
-            <span v-if="!isGenerating">✨ Tạo lịch trình với AI</span>
-            <span v-else>Đang tính toán...</span>
-          </button>
-        </div>
-      </section>
-
-      <!-- TAB 3: CHUYẾN ĐI ĐÃ LƯU (MY TRIPS) -->
+      <!-- TAB 2: CHUYẾN ĐI ĐÃ LƯU (MY TRIPS) -->
       <section v-if="currentTab === 'mytrips'" class="tab-view trips-view">
         <div class="trips-header-block">
           <h2 class="trips-main-title">Chuyến đi đã lưu</h2>
@@ -586,51 +519,85 @@
             </div>
           </div>
         </div>
+      </section>
 
-        <!-- MODAL CHỈNH SỬA HỒ SƠ (BOTTOM SHEET DÀNH RIÊNG CHO MOBILE) -->
-        <Teleport to="body">
+      <!-- MODAL CHỈNH SỬA HỒ SƠ (BOTTOM SHEET DÀNH RIÊNG CHO MOBILE) -->
+      <Teleport to="body">
           <div v-if="isEditingProfile" class="m-bottom-sheet-overlay" @click.self="isEditingProfile = false">
             <div class="m-bottom-sheet-content">
               <div class="sheet-handle-bar"></div>
               
               <div class="sheet-header">
-                <h3>Chỉnh sửa hồ sơ cá nhân</h3>
-                <button type="button" class="sheet-close-btn" @click="isEditingProfile = false">✕</button>
+                <div class="sheet-title-group">
+                  <h3 class="sheet-title">Chỉnh sửa hồ sơ cá nhân</h3>
+                  <p class="sheet-subtitle">Cập nhật thông tin nhận diện của bạn</p>
+                </div>
+                <button type="button" class="sheet-close-btn" @click="isEditingProfile = false" aria-label="Đóng">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
               </div>
 
               <div class="sheet-body">
-                <!-- Avatar Upload Row -->
+                <!-- Avatar Upload Section -->
                 <div class="sheet-avatar-row">
-                  <div class="sheet-avatar-preview">
+                  <div class="sheet-avatar-preview" @click="triggerAvatarUpload" title="Chạm để đổi ảnh đại diện">
                     <img v-if="profileEditForm.avatar" :src="profileEditForm.avatar" alt="Avatar" />
                     <div v-else class="preview-initial">{{ profileEditForm.name ? profileEditForm.name.charAt(0).toUpperCase() : 'U' }}</div>
+                    <div class="sheet-avatar-overlay-badge">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                    </div>
                   </div>
-                  <label class="sheet-avatar-upload-btn">
-                    <span>Chọn ảnh mới</span>
-                    <input type="file" accept="image/*" class="sr-only" @change="handleAvatarUpload" />
-                  </label>
+
+                  <div class="sheet-avatar-info">
+                    <button type="button" class="sheet-avatar-upload-btn" @click="triggerAvatarUpload">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                      <span>Chọn ảnh từ máy</span>
+                    </button>
+                    <!-- Input file ẩn hoàn toàn 100% -->
+                    <input
+                      ref="avatarFileInput"
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/gif"
+                      class="sheet-file-hidden"
+                      @change="handleAvatarUpload"
+                    />
+                    <span class="sheet-avatar-hint">Định dạng JPG, PNG, WebP • Tối đa 3MB</span>
+                  </div>
                 </div>
 
                 <!-- Input Name -->
                 <div class="sheet-field">
-                  <label class="sheet-label">Tên hiển thị</label>
-                  <input
-                    v-model="profileEditForm.name"
-                    type="text"
-                    class="sheet-input"
-                    placeholder="Nhập tên của bạn..."
-                  />
+                  <div class="sheet-field-header">
+                    <label class="sheet-label">Tên hiển thị</label>
+                    <span class="sheet-required">*</span>
+                  </div>
+                  <div class="sheet-input-wrapper">
+                    <svg class="sheet-input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <input
+                      v-model="profileEditForm.name"
+                      type="text"
+                      maxlength="50"
+                      class="sheet-input with-icon"
+                      placeholder="Nhập tên của bạn..."
+                    />
+                  </div>
                 </div>
 
                 <!-- Input Bio -->
                 <div class="sheet-field">
-                  <label class="sheet-label">Giới thiệu bản thân (Bio)</label>
-                  <textarea
-                    v-model="profileEditForm.bio"
-                    class="sheet-textarea"
-                    rows="3"
-                    placeholder="Sở thích du lịch, địa điểm yêu thích của bạn..."
-                  ></textarea>
+                  <div class="sheet-field-header">
+                    <label class="sheet-label">Giới thiệu bản thân (Bio)</label>
+                    <span class="sheet-char-count">{{ profileEditForm.bio ? profileEditForm.bio.length : 0 }}/160</span>
+                  </div>
+                  <div class="sheet-input-wrapper">
+                    <textarea
+                      v-model="profileEditForm.bio"
+                      class="sheet-textarea"
+                      rows="3"
+                      maxlength="160"
+                      placeholder="Sở thích du lịch, địa điểm yêu thích của bạn..."
+                    ></textarea>
+                  </div>
                 </div>
               </div>
 
@@ -644,6 +611,7 @@
                   :disabled="isSavingProfile || !profileEditForm.name.trim()"
                   @click="saveProfile"
                 >
+                  <svg v-if="!isSavingProfile" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                   <span v-if="!isSavingProfile">Lưu thay đổi</span>
                   <span v-else>Đang lưu...</span>
                 </button>
@@ -652,7 +620,187 @@
           </div>
         </Teleport>
 
-      </section>
+        <!-- MODAL HƯỚNG DẪN & HOÀN THIỆN THÔNG TIN LỊCH TRÌNH (SMART ITINERARY ASSISTANT) -->
+        <Teleport to="body">
+          <div v-if="showGuidanceSheet" class="m-bottom-sheet-overlay" @click.self="showGuidanceSheet = false">
+            <div class="m-bottom-sheet-content m-guidance-sheet">
+              <div class="sheet-handle-bar"></div>
+
+              <div class="sheet-header">
+                <div class="sheet-title-group">
+                  <div class="guidance-badge">
+                    <span>💡 BÍ QUYẾT TỐI ƯU</span>
+                  </div>
+                  <h3 class="sheet-title">Mẹo tối ưu lịch trình cùng AI</h3>
+                  <p class="sheet-subtitle">
+                    Bổ sung các chi tiết bên dưới giúp AI đề xuất điểm đến, ẩm thực và ngân sách chính xác theo mong muốn của bạn:
+                  </p>
+                </div>
+                <button type="button" class="sheet-close-btn" @click="showGuidanceSheet = false" aria-label="Đóng">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+              </div>
+
+              <!-- Danh sách 4 thông tin cốt lõi -->
+              <div class="guidance-checklist-scroll">
+                
+                <!-- 1. Điểm đến -->
+                <div class="guidance-item" :class="{ 'is-ready': guidanceForm.destination }">
+                  <div class="g-item-header">
+                    <span class="g-item-icon">📍</span>
+                    <div class="g-item-info">
+                      <div class="g-item-title-row">
+                        <span class="g-item-name">1. Điểm đến</span>
+                        <span class="g-status-badge" :class="guidanceForm.destination ? 'ready' : 'missing'">
+                          {{ guidanceForm.destination ? '✓ ' + guidanceForm.destination : '⚠️ Cần chọn điểm đến' }}
+                        </span>
+                      </div>
+                      <span class="g-item-desc">Tỉnh/thành bạn muốn ghé thăm tại Miền Trung</span>
+                    </div>
+                  </div>
+                  <div class="g-item-control">
+                    <div class="g-chips-scroll">
+                      <button
+                        v-for="city in cityList"
+                        :key="city"
+                        type="button"
+                        :class="['g-chip-btn', { active: guidanceForm.destination === city }]"
+                        @click="guidanceForm.destination = city"
+                      >
+                        {{ city }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 2. Số ngày đi -->
+                <div class="guidance-item" :class="{ 'is-ready': guidanceForm.days }">
+                  <div class="g-item-header">
+                    <span class="g-item-icon">⏱️</span>
+                    <div class="g-item-info">
+                      <div class="g-item-title-row">
+                        <span class="g-item-name">2. Số ngày đi</span>
+                        <span class="g-status-badge ready">
+                          {{ guidanceForm.days }} ngày {{ guidanceForm.days > 1 ? `${guidanceForm.days - 1} đêm` : '' }}
+                        </span>
+                      </div>
+                      <span class="g-item-desc">Để AI phân bổ các cụm tham quan hợp lý theo từng ngày</span>
+                    </div>
+                  </div>
+                  <div class="g-item-control">
+                    <div class="g-chips-row">
+                      <button
+                        v-for="d in [1, 2, 3, 4, 5]"
+                        :key="d"
+                        type="button"
+                        :class="['g-chip-btn', { active: guidanceForm.days === d }]"
+                        @click="selectGuidanceDays(d)"
+                      >
+                        {{ d }} Ngày
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 3. Số người tham gia -->
+                <div class="guidance-item" :class="{ 'is-ready': guidanceForm.peopleProvided }">
+                  <div class="g-item-header">
+                    <span class="g-item-icon">👥</span>
+                    <div class="g-item-info">
+                      <div class="g-item-title-row">
+                        <span class="g-item-name">3. Số người tham gia</span>
+                        <span class="g-status-badge" :class="guidanceForm.peopleProvided ? 'ready' : 'notice'">
+                          {{ guidanceForm.peopleProvided ? `✓ ${guidanceForm.people} người` : '⚠️ Chưa có (Mặc định: 1)' }}
+                        </span>
+                      </div>
+                      <span class="g-item-desc">Để tính số phòng khách sạn, vé xe và khẩu phần ăn</span>
+                    </div>
+                  </div>
+                  <div class="g-item-control">
+                    <div class="g-chips-row">
+                      <button
+                        v-for="opt in peopleOptions"
+                        :key="opt.val"
+                        type="button"
+                        :class="['g-chip-btn', { active: guidanceForm.people === opt.val }]"
+                        @click="selectGuidancePeople(opt.val)"
+                      >
+                        {{ opt.label }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 4. Ngân sách dự kiến -->
+                <div class="guidance-item" :class="{ 'is-ready': guidanceForm.budgetProvided }">
+                  <div class="g-item-header">
+                    <span class="g-item-icon">💰</span>
+                    <div class="g-item-info">
+                      <div class="g-item-title-row">
+                        <span class="g-item-name">4. Ngân sách dự kiến</span>
+                        <span class="g-status-badge" :class="guidanceForm.budgetProvided ? 'ready' : 'notice'">
+                          {{ guidanceForm.budgetProvided ? `✓ ~${formatMoney(guidanceForm.budget)}đ` : '⚠️ Chưa có (Chọn mức)' }}
+                        </span>
+                      </div>
+                      <span class="g-item-desc">Để AI gợi ý đúng phân khúc phòng ở và nhà hàng</span>
+                    </div>
+                  </div>
+                  <div class="g-item-control">
+                    <div class="g-budget-cards">
+                      <button
+                        v-for="tier in budgetTierOptions"
+                        :key="tier.key"
+                        type="button"
+                        :class="['g-budget-tier-btn', { active: guidanceForm.budgetTier === tier.key }]"
+                        @click="selectGuidanceBudgetTier(tier.key)"
+                      >
+                        <span class="tier-name">{{ tier.label }}</span>
+                        <span class="tier-cost">~{{ formatMoney(tier.perDay) }}đ/người/ngày</span>
+                        <span class="tier-desc">{{ tier.desc }}</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 5. Mẫu câu lệnh gợi ý chuẩn -->
+                <div class="guidance-examples-card">
+                  <div class="g-ex-header">
+                    <span>✨ Mẫu câu lệnh đầy đủ chuẩn xác nhất:</span>
+                  </div>
+                  <div class="g-ex-list">
+                    <button
+                      v-for="ex in promptExamples"
+                      :key="ex"
+                      type="button"
+                      class="g-ex-btn"
+                      @click="applyExamplePrompt(ex)"
+                    >
+                      “{{ ex }}”
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- Footer Buttons -->
+              <div class="sheet-footer">
+                <button type="button" class="btn-sheet-cancel" @click="showGuidanceSheet = false">
+                  Đóng
+                </button>
+                <button
+                  type="button"
+                  class="btn-sheet-save btn-guidance-generate"
+                  :disabled="isGenerating || !guidanceForm.destination"
+                  @click="submitGuidancePlan"
+                >
+                  <span v-if="!isGenerating">🚀 Lên lịch với thông tin này</span>
+                  <span v-else>Đang tính...</span>
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </Teleport>
 
     </main>
 
@@ -664,14 +812,6 @@
       >
         <AppIcon name="compass" :size="20" />
         <span>Khám phá</span>
-      </button>
-
-      <button
-        :class="['nav-tab-btn', { active: currentTab === 'planner' }]"
-        @click="currentTab = 'planner'"
-      >
-        <AppIcon name="calendar" :size="20" />
-        <span>Lên lịch</span>
       </button>
 
       <button
@@ -809,6 +949,14 @@ const profileEditForm = reactive({
   avatar: ''
 })
 
+const avatarFileInput = ref(null)
+
+function triggerAvatarUpload() {
+  if (avatarFileInput.value) {
+    avatarFileInput.value.click()
+  }
+}
+
 function openEditProfileSheet() {
   profileEditForm.name = props.nguoiDung?.name || ''
   profileEditForm.bio = props.nguoiDung?.bio || ''
@@ -867,7 +1015,7 @@ function showSupportNotice() {
 }
 
 const popularPills = ['Di sản & văn hóa', 'Thiên nhiên', 'Ẩm thực', 'Biển đảo', '2 ngày', '3 ngày']
-const cityList = ['Đà Nẵng', 'Hội An', 'Huế', 'Quy Nhơn', 'Phú Yên', 'Nha Trang', 'Quảng Bình']
+const cityList = ['Đà Nẵng', 'Hội An', 'Huế', 'Quảng Trị', 'Quảng Bình', 'Quy Nhơn', 'Phú Yên', 'Nha Trang', 'Quảng Nam', 'Quảng Ngãi', 'Đà Lạt', 'Gia Lai', 'Đắk Lắk']
 
 const popularDestinations = [
   {
@@ -1019,23 +1167,183 @@ function quickSelectCity(cityName) {
   handleGenerateFromPrompt()
 }
 
+// ==================== HƯỚNG DẪN & HOÀN THIỆN THÔNG TIN LỊCH TRÌNH ====================
+const showGuidanceSheet = ref(false)
+
+const peopleOptions = [
+  { val: 1, label: '1 người (Đơn thân)' },
+  { val: 2, label: '2 người (Cặp đôi/Bạn bè)' },
+  { val: 4, label: 'Nhóm (3 - 4 người)' },
+  { val: 6, label: 'Gia đình đông (5+ người)' }
+]
+
+const budgetTierOptions = [
+  { key: 'budget', label: 'Bình dân / Tiết kiệm', perDay: 1500000, desc: 'Homestay, quán ăn địa phương, chi phí tối ưu' },
+  { key: 'medium', label: 'Tiêu chuẩn / Thoải mái', perDay: 2500000, desc: 'Khách sạn 3-4 sao, đặc sản phong phú, tiện nghi' },
+  { key: 'luxury', label: 'Sang trọng / Nghỉ dưỡng', perDay: 4500000, desc: 'Resort 4-5 sao, dịch vụ cao cấp trọn gói' }
+]
+
+const promptExamples = [
+  '3 ngày ở Quảng Trị, 2 người, ngân sách 5 triệu, thích di tích & ẩm thực',
+  '3 ngày Đà Nẵng - Hội An, 2 người, ngân sách 6 triệu, thích check-in & biển',
+  '2 ngày 1 đêm ở Huế, 1 người, ngân sách 3 triệu, thích khám phá cố đô',
+  '4 ngày Quy Nhơn - Phú Yên, 4 người, ngân sách 15 triệu, thích hải sản & biển'
+]
+
+const guidanceForm = reactive({
+  destination: 'Đà Nẵng',
+  days: 3,
+  people: 1,
+  peopleProvided: false,
+  budget: 4500000,
+  budgetTier: 'budget',
+  budgetProvided: false,
+  interests: []
+})
+
+function openGuidanceSheet(fromIncomplete = false) {
+  if (!fromIncomplete) {
+    guidanceForm.destination = 'Đà Nẵng'
+    guidanceForm.days = 3
+    guidanceForm.people = 2
+    guidanceForm.peopleProvided = false
+    guidanceForm.budgetTier = 'budget'
+    guidanceForm.budgetProvided = false
+    recalcGuidanceBudget()
+  }
+  showGuidanceSheet.value = true
+}
+
+function selectGuidanceDays(d) {
+  guidanceForm.days = d
+  recalcGuidanceBudget()
+}
+
+function selectGuidancePeople(val) {
+  guidanceForm.people = val
+  guidanceForm.peopleProvided = true
+  recalcGuidanceBudget()
+}
+
+function selectGuidanceBudgetTier(key) {
+  guidanceForm.budgetTier = key
+  guidanceForm.budgetProvided = true
+  recalcGuidanceBudget()
+}
+
+function recalcGuidanceBudget() {
+  const tier = budgetTierOptions.find(t => t.key === guidanceForm.budgetTier) || budgetTierOptions[0]
+  guidanceForm.budget = tier.perDay * (guidanceForm.days || 1) * (guidanceForm.people || 1)
+}
+
+function applyExamplePrompt(text) {
+  quickPromptText.value = text
+  showGuidanceSheet.value = false
+  handleDirectGenerateFromPrompt()
+}
+
+async function submitGuidancePlan() {
+  showGuidanceSheet.value = false
+  isGenerating.value = true
+  isPlanSaved.value = false
+  try {
+    const payload = {
+      prompt: quickPromptText.value || `${guidanceForm.days} ngày ở ${guidanceForm.destination}`,
+      destination: guidanceForm.destination || 'Đà Nẵng',
+      days: Number(guidanceForm.days) || 3,
+      people: Number(guidanceForm.people) || 1,
+      budget: guidanceForm.budget,
+      total_budget: guidanceForm.budget,
+      interests: guidanceForm.interests
+    }
+    const res = await api.post('/ai/plan', payload)
+    generatedPlan.value = res.data
+    currentActiveDayIndex.value = 0
+    currentTab.value = 'explore'
+  } catch (err) {
+    console.error('Lỗi tạo lịch:', err)
+    alert(err.response?.data?.error || err.message || 'Không thể tạo lịch trình lúc này!')
+  } finally {
+    isGenerating.value = false
+  }
+}
+
 async function handleGenerateFromPrompt() {
+  if (!quickPromptText.value.trim()) {
+    openGuidanceSheet(false)
+    return
+  }
+
+  const text = quickPromptText.value.toLowerCase()
+  // Kiểm tra xem khách hàng đã nêu ngân sách và số người chưa
+  const hasBudgetMention = /(\d+[\s.]*(triệu|trieu|tr|k|đ|vnđ)|ngân sách|ngan sach|chi phí)/i.test(text)
+  const hasPeopleMention = /(\d+[\s.]*người|nguoi|bạn bè|gia đình|gia dinh|cặp đôi|cap doi|đơn thân)/i.test(text)
+
+  // Nhận diện nhanh điểm đến & số ngày từ câu lệnh
+  let detectedDest = ''
+  for (const city of cityList) {
+    if (text.replace(/\s+/g, '').includes(city.toLowerCase().replace(/\s+/g, ''))) {
+      detectedDest = city
+      break
+    }
+  }
+  const dayMatch = text.match(/(\d+)\s*(ngày|ngay|N)/i)
+  const detectedDays = dayMatch ? parseInt(dayMatch[1], 10) : 3
+
+  // NẾU CHƯA ĐỦ THÔNG TIN (ví dụ: thiếu ngân sách, hoặc thiếu số người, hoặc chưa rõ điểm đến):
+  // Thay vì hệ thống tự ý đoán mò, bật thông báo và hướng dẫn để khách hàng biết cần cung cấp những gì!
+  if (!hasBudgetMention || !hasPeopleMention || !detectedDest) {
+    guidanceForm.destination = detectedDest || 'Đà Nẵng'
+    guidanceForm.days = detectedDays
+    guidanceForm.people = hasPeopleMention ? 2 : 1
+    guidanceForm.peopleProvided = hasPeopleMention
+    guidanceForm.budgetProvided = hasBudgetMention
+    guidanceForm.budgetTier = 'budget'
+    recalcGuidanceBudget()
+    showGuidanceSheet.value = true
+    return
+  }
+
+  // Nếu khách hàng ĐÃ CUNG CẤP ĐẦY ĐỦ (Điểm đến + Ngày + Người + Ngân sách):
+  await handleDirectGenerateFromPrompt()
+}
+
+async function handleDirectGenerateFromPrompt() {
   if (!quickPromptText.value.trim()) return
   isGenerating.value = true
   isPlanSaved.value = false
   try {
-    let payload = {
-      prompt: quickPromptText.value,
-      destination: 'Đà Nẵng'
-    }
+    let destination = 'Đà Nẵng'
+    let days = 3
+    let people = 1
+    let budget = 4500000
+    let interests = []
 
     try {
       const { data: parsed } = await api.post('/ai/parse-prompt', { prompt: quickPromptText.value })
       if (parsed) {
-        payload = { ...payload, ...parsed }
+        destination = parsed.diemDen || parsed.destination || destination
+        days = Number(parsed.soNgay || parsed.days) || days
+        people = Number(parsed.soNguoi || parsed.people) || people
+        budget = Number(parsed.nganSach || parsed.budget) || (1500000 * days * people)
+        if (parsed.soThich) interests.push(parsed.soThich)
       }
     } catch (e) {
       console.warn('parse-prompt fallback:', e.message)
+      const dayMatch = quickPromptText.value.match(/(\d+)\s*(ngày|ngay|N)/i)
+      if (dayMatch) days = parseInt(dayMatch[1], 10)
+      const foundCity = cityList.find(c => quickPromptText.value.toLowerCase().replace(/\s+/g, '').includes(c.toLowerCase().replace(/\s+/g, '')))
+      if (foundCity) destination = foundCity
+    }
+
+    const payload = {
+      prompt: quickPromptText.value,
+      destination,
+      days,
+      people,
+      budget,
+      total_budget: budget,
+      interests
     }
 
     const res = await api.post('/ai/plan', payload)
@@ -1044,7 +1352,8 @@ async function handleGenerateFromPrompt() {
     currentTab.value = 'explore'
   } catch (err) {
     console.error('Lỗi lên lịch trình:', err)
-    alert('Không thể tạo lịch trình lúc này, vui lòng thử lại!')
+    const errorMsg = err.response?.data?.error || err.message || 'Không thể tạo lịch trình lúc này, vui lòng thử lại!'
+    alert(errorMsg)
   } finally {
     isGenerating.value = false
   }
@@ -1059,11 +1368,13 @@ async function handleGenerateFromForm() {
       medium: 2500000 * plannerForm.days * plannerForm.people,
       luxury: 4500000 * plannerForm.days * plannerForm.people
     }
+    const totalBudget = budgetMap[plannerForm.budgetTier] || (2500000 * plannerForm.days * plannerForm.people)
     const payload = {
-      destination: plannerForm.destination,
-      days: plannerForm.days,
-      people: plannerForm.people,
-      total_budget: budgetMap[plannerForm.budgetTier] || 5000000
+      destination: plannerForm.destination || 'Đà Nẵng',
+      days: Number(plannerForm.days) || 3,
+      people: Number(plannerForm.people) || 1,
+      budget: totalBudget,
+      total_budget: totalBudget
     }
     const res = await api.post('/ai/plan', payload)
     generatedPlan.value = res.data
@@ -1071,7 +1382,8 @@ async function handleGenerateFromForm() {
     currentTab.value = 'explore'
   } catch (err) {
     console.error('Lỗi tạo lịch:', err)
-    alert('Có lỗi khi tạo kế hoạch!')
+    const errorMsg = err.response?.data?.error || err.message || 'Có lỗi khi tạo kế hoạch!'
+    alert(errorMsg)
   } finally {
     isGenerating.value = false
   }
@@ -2720,7 +3032,8 @@ function getWeatherDesc(code) {
   border-radius: 24px 24px 0 0;
   padding: 12px 18px 24px;
   animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.25);
+  box-sizing: border-box;
 }
 
 :root[data-theme="dark"] .m-bottom-sheet-content {
@@ -2736,85 +3049,250 @@ function getWeatherDesc(code) {
   margin: 0 auto 12px;
 }
 
+:root[data-theme="dark"] .sheet-handle-bar {
+  background: rgba(255, 255, 255, 0.2);
+}
+
 .sheet-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 16px;
 }
 
-.sheet-header h3 {
-  font-size: 1rem;
+.sheet-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sheet-title {
+  font-size: 1.05rem;
   font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+:root[data-theme="dark"] .sheet-title {
+  color: #f8fafc;
+}
+
+.sheet-subtitle {
+  font-size: 0.68rem;
+  color: #64748b;
+  margin: 0;
+}
+
+:root[data-theme="dark"] .sheet-subtitle {
+  color: #94a3b8;
 }
 
 .sheet-close-btn {
-  background: transparent;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-content: center;
+  background: #f1f5f9;
   border: none;
-  font-size: 1.1rem;
-  color: #94a3b8;
+  color: #64748b;
   cursor: pointer;
+  transition: all 0.15s ease;
 }
 
+:root[data-theme="dark"] .sheet-close-btn {
+  background: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+}
+
+/* AVATAR ROW & PREVIEW */
 .sheet-avatar-row {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
+  padding: 12px 14px;
+  background: rgba(241, 245, 249, 0.7);
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
   margin-bottom: 16px;
 }
 
+:root[data-theme="dark"] .sheet-avatar-row {
+  background: rgba(30, 41, 59, 0.7);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
 .sheet-avatar-preview {
-  width: 54px;
-  height: 54px;
+  width: 64px;
+  height: 64px;
+  min-width: 64px;
+  min-height: 64px;
+  max-width: 64px;
+  max-height: 64px;
+  flex-shrink: 0;
   border-radius: 50%;
   background: #059669;
-  color: #fff;
+  color: #ffffff;
   overflow: hidden;
-  display: grid;
-  place-content: center;
-  font-weight: 700;
-  font-size: 1.2rem;
+  position: relative;
+  border: 2.5px solid #059669;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .sheet-avatar-preview img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+.sheet-avatar-overlay-badge {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 22px;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  backdrop-filter: blur(2px);
+}
+
+.sheet-avatar-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
 }
 
 .sheet-avatar-upload-btn {
-  padding: 6px 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
   border-radius: 10px;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #059669;
-  cursor: pointer;
-}
-
-:root[data-theme="dark"] .sheet-avatar-upload-btn {
-  background: #1e293b;
-  border-color: rgba(255, 255, 255, 0.1);
-}
-
-.sheet-field {
-  margin-bottom: 12px;
-}
-
-.sheet-label {
-  display: block;
-  font-size: 0.72rem;
+  background: #059669;
+  color: #ffffff;
+  font-size: 0.78rem;
   font-weight: 700;
-  color: #475569;
-  margin-bottom: 4px;
+  border: none;
+  cursor: pointer;
+  width: fit-content;
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.3);
+  transition: all 0.2s ease;
 }
 
-:root[data-theme="dark"] .sheet-label {
+.sheet-avatar-upload-btn:hover, .sheet-avatar-upload-btn:active {
+  background: #047857;
+  transform: translateY(-1px);
+}
+
+.sheet-file-hidden {
+  display: none !important;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+  pointer-events: none;
+}
+
+.sheet-avatar-hint {
+  font-size: 0.65rem;
+  color: #64748b;
+  line-height: 1.3;
+}
+
+:root[data-theme="dark"] .sheet-avatar-hint {
   color: #94a3b8;
 }
 
-.sheet-input, .sheet-textarea {
+/* INPUT FIELDS */
+.sheet-field {
+  margin-bottom: 14px;
+}
+
+.sheet-field-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.sheet-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+:root[data-theme="dark"] .sheet-label {
+  color: #e2e8f0;
+}
+
+.sheet-required {
+  color: #ef4444;
+  margin-left: 2px;
+}
+
+.sheet-char-count {
+  font-size: 0.65rem;
+  color: #94a3b8;
+}
+
+.sheet-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.sheet-input-icon {
+  position: absolute;
+  left: 12px;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.sheet-input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 0.85rem;
+  font-weight: 500;
+  outline: none;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.sheet-input.with-icon {
+  padding-left: 36px;
+}
+
+:root[data-theme="dark"] .sheet-input,
+:root[data-theme="dark"] .sheet-textarea {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #f8fafc;
+}
+
+.sheet-input:focus,
+.sheet-textarea:focus {
+  border-color: #059669;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15);
+}
+
+.sheet-textarea {
   width: 100%;
   padding: 10px 12px;
   border-radius: 12px;
@@ -2822,54 +3300,66 @@ function getWeatherDesc(code) {
   background: #ffffff;
   color: #0f172a;
   font-size: 0.82rem;
-  outline: none;
   font-family: inherit;
+  line-height: 1.5;
+  outline: none;
+  resize: none;
+  transition: all 0.2s ease;
   box-sizing: border-box;
 }
 
-:root[data-theme="dark"] .sheet-input, :root[data-theme="dark"] .sheet-textarea {
-  background: #1e293b;
-  border-color: rgba(255, 255, 255, 0.15);
-  color: #ffffff;
-}
-
-.sheet-input:focus, .sheet-textarea:focus {
-  border-color: #059669;
-}
-
+/* FOOTER BUTTONS */
 .sheet-footer {
   display: flex;
   gap: 10px;
-  margin-top: 18px;
+  margin-top: 20px;
 }
 
 .btn-sheet-cancel {
   flex: 1;
-  padding: 10px;
-  border-radius: 12px;
+  padding: 12px;
+  border-radius: 14px;
   border: 1px solid #cbd5e1;
-  background: transparent;
-  color: #64748b;
+  background: #f8fafc;
+  color: #475569;
   font-weight: 700;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+:root[data-theme="dark"] .btn-sheet-cancel {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
 }
 
 .btn-sheet-save {
   flex: 2;
-  padding: 10px;
-  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px;
+  border-radius: 14px;
   border: none;
-  background: #059669;
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
   color: #ffffff;
   font-weight: 700;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.35);
+  transition: all 0.2s ease;
+}
+
+.btn-sheet-save:active {
+  transform: scale(0.98);
 }
 
 .btn-sheet-save:disabled {
-  opacity: 0.6;
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
 @keyframes slideUp {
@@ -2880,6 +3370,425 @@ function getWeatherDesc(code) {
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+/* CAPSULE GUIDE PROMPT TIP */
+.capsule-guide-row {
+  margin-top: 8px;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.btn-prompt-guide {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: #f0fdf4;
+  border: 1.5px solid #86efac;
+  border-radius: 999px;
+  padding: 6px 14px;
+  color: #065f46;
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.12);
+  text-shadow: none;
+  max-width: 100%;
+}
+
+.btn-prompt-guide:hover, .btn-prompt-guide:active {
+  background: #dcfce7;
+  border-color: #4ade80;
+  color: #047857;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.18);
+}
+
+.btn-prompt-guide:hover .guide-arrow,
+.btn-prompt-guide:active .guide-arrow {
+  transform: translateX(2px);
+}
+
+:root[data-theme="dark"] .btn-prompt-guide {
+  background: #064e3b;
+  border-color: #34d399;
+  color: #ffffff;
+  box-shadow: 0 3px 12px rgba(6, 78, 59, 0.4);
+}
+
+:root[data-theme="dark"] .btn-prompt-guide:hover,
+:root[data-theme="dark"] .btn-prompt-guide:active {
+  background: #047857;
+  border-color: #6ee7b7;
+  color: #ffffff;
+}
+
+.guide-bulb {
+  font-size: 0.9rem;
+  line-height: 1;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
+}
+
+.guide-text {
+  letter-spacing: -0.01em;
+  color: #065f46;
+  font-weight: 750;
+}
+
+:root[data-theme="dark"] .guide-text {
+  color: #ffffff !important;
+  font-weight: 800;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.guide-arrow {
+  font-size: 1.05rem;
+  color: #059669;
+  font-weight: 800;
+  line-height: 1;
+  margin-left: 2px;
+  transition: transform 0.2s ease;
+}
+
+:root[data-theme="dark"] .guide-arrow {
+  color: #34d399 !important;
+  font-weight: 900;
+}
+
+/* SMART GUIDANCE BOTTOM SHEET */
+.m-guidance-sheet {
+  max-height: 88vh;
+  max-height: 88dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.guidance-badge {
+  display: inline-flex;
+  width: fit-content;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+:root[data-theme="dark"] .guidance-badge {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+}
+
+.guidance-checklist-scroll {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  max-height: calc(88dvh - 170px);
+  padding-right: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.guidance-item {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color 0.2s ease;
+}
+
+:root[data-theme="dark"] .guidance-item {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.guidance-item.is-ready {
+  border-color: rgba(5, 150, 105, 0.35);
+}
+
+:root[data-theme="dark"] .guidance-item.is-ready {
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+.g-item-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.g-item-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+.g-item-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.g-item-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.g-item-name {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+:root[data-theme="dark"] .g-item-name {
+  color: #f8fafc;
+}
+
+.g-item-desc {
+  font-size: 0.65rem;
+  color: #64748b;
+  line-height: 1.3;
+}
+
+:root[data-theme="dark"] .g-item-desc {
+  color: #94a3b8;
+}
+
+.g-status-badge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.g-status-badge.ready {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+:root[data-theme="dark"] .g-status-badge.ready {
+  background: rgba(5, 150, 105, 0.25);
+  color: #34d399;
+}
+
+.g-status-badge.notice {
+  background: #fffbeb;
+  color: #d97706;
+}
+
+:root[data-theme="dark"] .g-status-badge.notice {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+}
+
+.g-status-badge.missing {
+  background: #fef2f2;
+  color: #ef4444;
+}
+
+:root[data-theme="dark"] .g-status-badge.missing {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+}
+
+.g-item-control {
+  margin-top: 2px;
+}
+
+.g-chips-scroll {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.g-chips-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.g-chips-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.g-chip-btn {
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+:root[data-theme="dark"] .g-chip-btn {
+  background: #0f172a;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
+}
+
+.g-chip-btn.active {
+  background: #059669;
+  border-color: #059669;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25);
+}
+
+.g-budget-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.g-budget-tier-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+}
+
+:root[data-theme="dark"] .g-budget-tier-btn {
+  background: #0f172a;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.g-budget-tier-btn.active {
+  border-color: #059669;
+  background: rgba(5, 150, 105, 0.06);
+}
+
+:root[data-theme="dark"] .g-budget-tier-btn.active {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.12);
+}
+
+.g-budget-tier-btn .tier-name {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+:root[data-theme="dark"] .g-budget-tier-btn .tier-name {
+  color: #f8fafc;
+}
+
+.g-budget-tier-btn.active .tier-name {
+  color: #059669;
+}
+
+:root[data-theme="dark"] .g-budget-tier-btn.active .tier-name {
+  color: #34d399;
+}
+
+.g-budget-tier-btn .tier-cost {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #059669;
+}
+
+:root[data-theme="dark"] .g-budget-tier-btn .tier-cost {
+  color: #34d399;
+}
+
+.g-budget-tier-btn .tier-desc {
+  font-size: 0.62rem;
+  color: #64748b;
+}
+
+:root[data-theme="dark"] .g-budget-tier-btn .tier-desc {
+  color: #94a3b8;
+}
+
+/* EXAMPLES CARD */
+.guidance-examples-card {
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px dashed rgba(245, 158, 11, 0.4);
+  border-radius: 12px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+:root[data-theme="dark"] .guidance-examples-card {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.g-ex-header {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #b45309;
+}
+
+:root[data-theme="dark"] .g-ex-header {
+  color: #fbbf24;
+}
+
+.g-ex-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.g-ex-btn {
+  background: #ffffff;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: 8px;
+  padding: 5px 8px;
+  text-align: left;
+  font-size: 0.65rem;
+  color: #475569;
+  cursor: pointer;
+  line-height: 1.35;
+  transition: all 0.15s ease;
+}
+
+:root[data-theme="dark"] .g-ex-btn {
+  background: #0f172a;
+  color: #cbd5e1;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.g-ex-btn:active {
+  background: #fffbeb;
+  border-color: #f59e0b;
+}
+
+:root[data-theme="dark"] .g-ex-btn:active {
+  background: #1e293b;
+  border-color: #fbbf24;
+}
+
+.btn-guidance-generate {
+  flex: 2;
+  font-weight: 700;
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
 }
 
 /* BOTTOM TAB NAVIGATION */
