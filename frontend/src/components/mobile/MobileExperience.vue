@@ -1,5 +1,5 @@
 <template>
-  <div class="mobile-experience">
+  <div :class="['mobile-experience', { 'is-locked-explore': currentTab === 'explore' && !generatedPlan }]">
     <!-- Top Header -->
     <header :class="['mobile-top-header', { 'header-overlay': currentTab === 'explore' && !generatedPlan }]">
       <div class="mobile-brand">
@@ -45,8 +45,21 @@
       <section v-if="currentTab === 'explore'" class="tab-view explore-view">
         
         <!-- Hero Storytelling Banner with Floating Capsule Prompt (Phủ toàn màn hình chuẩn Framer) -->
-        <div :class="['mobile-hero-card', { 'hero-fullscreen': !generatedPlan, 'hero-compact': !!generatedPlan }]">
-          <div class="m-hero-bg"></div>
+        <div
+          :class="['mobile-hero-card', { 'hero-fullscreen': !generatedPlan, 'hero-compact': !!generatedPlan }]"
+          @touchstart="handleTouchStart"
+          @touchend="handleTouchEnd"
+        >
+          <!-- Dynamic Background Slideshow with smooth crossfade & Ken Burns zoom -->
+          <div class="m-hero-bg-slider">
+            <div
+              v-for="(slide, sIdx) in heroSlides"
+              :key="sIdx"
+              :class="['m-hero-bg-slide', { active: currentSlideIndex === sIdx }]"
+              :style="{ backgroundImage: `url(${slide.url})` }"
+            ></div>
+            <div class="m-hero-gradient-overlay"></div>
+          </div>
           
           <!-- Watermark VIETNAM với nón lá phong cách Framer -->
           <div class="m-hero-watermark">
@@ -125,11 +138,26 @@
 
             <!-- Sleek interactive bar at bottom of hero -->
             <div class="m-hero-interactive-row">
-              <span class="m-interactive-tag">Trải nghiệm tương tác • Lịch trình thông minh AI</span>
+              <div class="m-interactive-left">
+                <!-- Nút chỉ báo chuyển ảnh có thể chạm chuyển -->
+                <div class="hero-slide-dots">
+                  <button
+                    v-for="(_, idx) in heroSlides"
+                    :key="idx"
+                    type="button"
+                    :class="['hero-dot-btn', { active: currentSlideIndex === idx }]"
+                    :title="heroSlides[idx].title"
+                    @click.stop="setSlide(idx)"
+                  ></button>
+                </div>
+                <span class="m-interactive-tag">
+                  {{ heroSlides[currentSlideIndex].title }} • {{ heroSlides[currentSlideIndex].tag }}
+                </span>
+              </div>
               <span v-if="weather" class="m-interactive-weather">
                 {{ weather.location?.name || 'Đà Nẵng' }} {{ Math.round(weather.current?.temperature || 28) }}°C
               </span>
-              <span v-else class="m-interactive-coord">16°03′N 108°12′E</span>
+              <span v-else class="m-interactive-coord">{{ heroSlides[currentSlideIndex].coord }}</span>
             </div>
           </div>
         </div>
@@ -408,7 +436,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import api from '../../services/api'
 
 const props = defineProps({
@@ -417,6 +445,79 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['toggleDark', 'openAuth', 'logout', 'showToast'])
+
+// SLIDESHOW HÌNH ẢNH THẬT 100% DANH THẮNG MIỀN TRUNG
+const heroSlides = [
+  {
+    url: '/images/slides/danang-cauvang.jpg',
+    title: 'Đà Nẵng',
+    tag: 'Cầu Vàng Bà Nà Hills',
+    coord: '16°03′N 108°12′E'
+  },
+  {
+    url: '/images/slides/hoian-phoco.jpg',
+    title: 'Hội An',
+    tag: 'Phố cổ đèn lồng di sản',
+    coord: '15°52′N 108°19′E'
+  },
+  {
+    url: '/images/slides/hue-codohue.jpg',
+    title: 'Cố đô Huế',
+    tag: 'Kinh thành di sản ngàn năm',
+    coord: '16°28′N 107°34′E'
+  },
+  {
+    url: '/images/slides/quynhon-kyco.jpg',
+    title: 'Quy Nhơn',
+    tag: 'Kỳ Co • Eo Gió biển ngọc',
+    coord: '13°46′N 109°14′E'
+  },
+  {
+    url: '/images/slides/mientrung-nonnuoc.jpg',
+    title: 'Miền Trung',
+    tag: 'Non nước kỳ quan bất tận',
+    coord: '16°00′N 108°00′E'
+  }
+]
+
+const currentSlideIndex = ref(0)
+let slideTimer = null
+let touchStartX = 0
+
+function nextSlide() {
+  currentSlideIndex.value = (currentSlideIndex.value + 1) % heroSlides.length
+}
+
+function prevSlide() {
+  currentSlideIndex.value = (currentSlideIndex.value - 1 + heroSlides.length) % heroSlides.length
+}
+
+function setSlide(idx) {
+  currentSlideIndex.value = idx
+  restartSlideTimer()
+}
+
+function restartSlideTimer() {
+  if (slideTimer) clearInterval(slideTimer)
+  slideTimer = setInterval(nextSlide, 4500)
+}
+
+function handleTouchStart(e) {
+  if (e.touches && e.touches[0]) {
+    touchStartX = e.touches[0].clientX
+  }
+}
+
+function handleTouchEnd(e) {
+  if (e.changedTouches && e.changedTouches[0]) {
+    const diff = e.changedTouches[0].clientX - touchStartX
+    if (Math.abs(diff) > 40) {
+      if (diff < 0) nextSlide()
+      else prevSlide()
+      restartSlideTimer()
+    }
+  }
+}
 
 const currentTab = ref('explore')
 const quickPromptText = ref('')
@@ -487,6 +588,11 @@ const currentDayActivities = computed(() => {
 onMounted(() => {
   fetchWeather()
   loadSavedTrips()
+  restartSlideTimer()
+})
+
+onUnmounted(() => {
+  if (slideTimer) clearInterval(slideTimer)
 })
 
 function isPillActive(pill) {
@@ -718,10 +824,38 @@ function getWeatherDesc(code) {
   max-width: 480px;
   margin: 0 auto;
   min-height: 100vh;
+  min-height: 100dvh;
   background: var(--bg-app, #f8fafc);
   color: var(--text-main, #1e293b);
   position: relative;
   padding-bottom: 70px; /* Space for bottom nav */
+}
+
+/* ĐỊNH HÌNH 1 CHỖ KHI Ở MÀN HÌNH KHÁM PHÁ (CHƯA TẠO LỊCH TRÌNH):
+   Khóa chặt vừa khít 1 khung màn hình 100dvh, triệt tiêu hoàn toàn thanh cuộn,
+   chống trượt kéo xuống và không để lộ bất kỳ khoảng trắng nào */
+.mobile-experience.is-locked-explore {
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden !important;
+  padding-bottom: 0 !important;
+  overscroll-behavior: none;
+  touch-action: pan-x; /* Cho phép vuốt ngang đổi ảnh, khóa cuộn dọc */
+}
+
+.mobile-experience.is-locked-explore .mobile-content-body {
+  height: calc(100vh - 56px);
+  height: calc(100dvh - 56px);
+  max-height: calc(100dvh - 56px);
+  overflow: hidden !important;
+  overscroll-behavior: none;
+}
+
+.mobile-experience.is-locked-explore .explore-view {
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden !important;
 }
 
 /* TOP HEADER */
@@ -865,15 +999,18 @@ function getWeatherDesc(code) {
   transition: all 0.35s ease;
 }
 
-/* KHI CHƯA TẠO LỊCH TRÌNH: PHỦ KÍN TOÀN BỘ CHIỀU CAO MÀN HÌNH */
+/* KHI CHƯA TẠO LỊCH TRÌNH: PHỦ KÍN TOÀN BỘ CHIỀU CAO VÀ CỐ ĐỊNH 1 VỊ TRÍ KHÔNG CUỘN */
 .mobile-hero-card.hero-fullscreen {
-  min-height: calc(100vh - 56px);
-  min-height: calc(100dvh - 56px);
+  height: 100%;
+  min-height: 100%;
+  max-height: 100%;
   border-radius: 0;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 68px 14px 18px 14px;
+  padding: 56px 14px 12px 14px;
+  box-sizing: border-box;
+  overflow: hidden;
   box-shadow: none;
 }
 
@@ -885,13 +1022,38 @@ function getWeatherDesc(code) {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 
-.m-hero-bg {
+/* SLIDESHOW HIỆU ỨNG ĐỔI ẢNH ĐỘNG VỚI KEN BURNS */
+.m-hero-bg-slider {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.4) 0%, rgba(15, 23, 42, 0.45) 45%, rgba(15, 23, 42, 0.9) 100%),
-              url('https://images.unsplash.com/photo-1528127269322-539801943592?w=1200&auto=format&fit=crop&q=85') center/cover no-repeat;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.m-hero-bg-slide {
+  position: absolute;
+  inset: 0;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transform: scale(1.08);
+  transition: opacity 1.3s cubic-bezier(0.4, 0, 0.2, 1), transform 5.5s cubic-bezier(0.25, 1, 0.5, 1);
+  filter: saturate(1.15) brightness(0.92);
+  will-change: opacity, transform;
+}
+
+.m-hero-bg-slide.active {
   opacity: 1;
-  filter: saturate(1.15);
+  transform: scale(1);
+}
+
+.m-hero-gradient-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.45) 0%, rgba(15, 23, 42, 0.35) 45%, rgba(15, 23, 42, 0.92) 100%);
+  pointer-events: none;
+  z-index: 2;
 }
 
 .m-hero-watermark {
@@ -1123,13 +1285,54 @@ function getWeatherDesc(code) {
   justify-content: space-between;
   align-items: center;
   font-size: 0.65rem;
-  color: rgba(255, 255, 255, 0.7);
-  padding: 0 4px;
+  color: rgba(255, 255, 255, 0.75);
+  padding: 0 2px;
+}
+
+.m-interactive-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.hero-slide-dots {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.hero-dot-btn {
+  width: 5px;
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.35);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.hero-dot-btn.active {
+  width: 14px;
+  background: #10b981;
+}
+
+.m-interactive-tag {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #fde68a;
+  font-weight: 600;
+  font-size: 0.65rem;
 }
 
 .m-interactive-weather, .m-interactive-coord {
   color: #fbbf24;
   font-weight: 600;
+  flex-shrink: 0;
+  margin-left: 6px;
 }
 
 /* LOADING NOTICE */
