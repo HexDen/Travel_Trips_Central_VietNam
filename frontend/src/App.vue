@@ -25,6 +25,9 @@
         @update:activeTab="handleTabChange"
         @openAuth="hienAuthModal = true"
         @toggleDark="toggleDark"
+        @selectCity="handleSelectCityFromSearch"
+        @planCity="chuyenSangLenLichTrinh"
+        @openModal="handleOpenModalFromSearch"
       />
 
       <!-- FLOATING PERSONALITY TOAST (KHI AI TẠO XONG LỊCH TRÌNH HOẶC THÔNG BÁO QUAN TRỌNG) -->
@@ -574,6 +577,51 @@ function startPlannerTransition() {
   nextTick(() => {
     cuonLenDauTrang()
   })
+}
+
+function handleSelectCityFromSearch(city) {
+  activeTab.value = 'explore'
+  chonDiemDenExplore(city)
+  cuonLenDauTrang()
+}
+
+function handleOpenModalFromSearch(modalName) {
+  switch (modalName) {
+    case 'auth':
+      hienAuthModal.value = true
+      break
+    case 'bill-splitter':
+      hienBillSplitter.value = true
+      break
+    case 'travel-pass':
+      hienTravelPass.value = true
+      break
+    case 'replan':
+      hienModalDoiLichTrinh.value = true
+      break
+    case 'rain':
+      showRainModal.value = true
+      break
+    case 'infographic':
+      hienModalInfographic.value = true
+      break
+    case 'chatbot':
+      window.dispatchEvent(new CustomEvent('open-travel-chatbot'))
+      break
+    case 'toggle-dark':
+      toggleDark()
+      break
+    case 'heritage':
+      activeTab.value = 'explore'
+      nextTick(() => {
+        const el = document.querySelector('.central-heritage-container, .ch-hero-section, .heritage-carousel-wrapper')
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      })
+      break
+    case 'admin':
+      activeTab.value = 'admin'
+      break
+  }
 }
 
 const ALL_DESTINATIONS = 'Tất cả miền Trung'

@@ -79,6 +79,15 @@
         </div>
       </nav>
 
+      <!-- THANH TÌM KIẾM TOÀN NĂNG (MENU SEARCH BAR) -->
+      <GlobalCommandSearch
+        :isDark="isDark"
+        @navigateTab="tab => $emit('update:activeTab', tab)"
+        @selectCity="city => $emit('selectCity', city)"
+        @planCity="city => $emit('planCity', city)"
+        @openModal="modal => $emit('openModal', modal)"
+      />
+
       <!-- KHU VỰC HÀNH ĐỘNG (THEME TOGGLE & USER PROFILE / LOGIN) -->
       <div class="header-actions" role="toolbar" aria-label="Tùy chọn người dùng">
         <!-- Nút Dark Mode với Touch Target >= 44px và Accessible State -->
@@ -124,13 +133,15 @@
 </template>
 
 <script setup>
+import GlobalCommandSearch from '../common/GlobalCommandSearch.vue'
+
 defineProps({
   activeTab: { type: String, required: true },
   nguoiDung: { type: Object, default: null },
   isDark: { type: Boolean, default: false }
 })
 
-defineEmits(['update:activeTab', 'openAuth', 'toggleDark'])
+defineEmits(['update:activeTab', 'openAuth', 'toggleDark', 'selectCity', 'planCity', 'openModal'])
 </script>
 
 <style scoped>

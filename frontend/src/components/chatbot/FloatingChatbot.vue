@@ -75,7 +75,7 @@
 </template>
 
 <script setup>
-import { ref, watch, nextTick } from 'vue'
+import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import api from '../../services/api'
 import { marked } from 'marked'
 
@@ -138,6 +138,18 @@ watch(isOpen, (newVal) => {
   if (newVal) {
     scrollToBottom()
   }
+})
+
+const handleOpenChat = () => {
+  isOpen.value = true
+}
+
+onMounted(() => {
+  window.addEventListener('open-travel-chatbot', handleOpenChat)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('open-travel-chatbot', handleOpenChat)
 })
 </script>
 
