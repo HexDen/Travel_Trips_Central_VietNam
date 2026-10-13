@@ -506,6 +506,7 @@
 </template>
 
 <script setup>
+import MobileExperience from './components/mobile/MobileExperience.vue';
 import ExploreTab from './components/home/ExploreTab.vue';
 import SavedTripsTab from './components/trips/SavedTripsTab.vue';
 import TripPlannerWizard from './components/planner/TripPlannerWizard.vue';
@@ -540,7 +541,7 @@ L.Icon.Default.mergeOptions({
 // Navigation Tab State
 const activeTab = ref('explore')
 const isPlannerTransitioning = ref(false)
-const isMobileDevice = ref(false)
+const isMobileDevice = ref(typeof window !== 'undefined' ? window.innerWidth <= 768 : false)
 
 function checkMobileDevice() {
   isMobileDevice.value = window.innerWidth <= 768
