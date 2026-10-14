@@ -1,66 +1,71 @@
 <template>
-  <div v-if="isOpen && trip" class="live-companion-overlay" :class="{ 'is-mobile-view': isMobile }">
+  <div v-if="isOpen && trip" class="live-companion-overlay" :class="{ 'is-mobile-view': isMobile || isSmallScreen }">
     <!-- BACKDROP BLUR -->
     <div class="lc-backdrop" @click="handleBackdropClick"></div>
 
     <div class="lc-container" role="dialog" aria-modal="true">
       <!-- TOP STATUS BAR -->
       <header class="lc-top-header">
-        <div class="lc-header-left">
-          <div class="lc-live-badge">
-            <span class="live-beacon"></span>
-            <strong>TRỰC TIẾP HÀNH TRÌNH</strong>
+        <!-- ROW 1: BRAND / LIVE / DESTINATION & ACTION BUTTONS -->
+        <div class="lc-header-main-row">
+          <div class="lc-header-left">
+            <span class="lc-live-pill">
+              <span class="live-beacon"></span>
+              <span class="live-txt">TRỰC TIẾP</span>
+            </span>
+            <h2 class="lc-trip-title" :title="`${trip.destination} • Ngày ${currentDay}/${totalDays}`">
+              {{ trip.destination }} • Ngày {{ currentDay }}/{{ totalDays }}
+            </h2>
           </div>
-          <h2 class="lc-trip-title">
-            {{ trip.destination }} • Ngày {{ currentDay }} / {{ totalDays }}
-          </h2>
+
+          <div class="lc-header-actions">
+            <button
+              type="button"
+              :class="['lc-icon-btn sos-btn', { active: activeSubTab === 'sos' }]"
+              title="Cứu trợ khẩn cấp & Tiện ích"
+              @click="activeSubTab = activeSubTab === 'sos' ? 'main' : 'sos'"
+            >
+              <AppIcon name="shield" :size="16" />
+              <span class="btn-lbl">Cứu hộ</span>
+            </button>
+            <button
+              type="button"
+              :class="['lc-icon-btn wallet-btn', { active: activeSubTab === 'expenses' }]"
+              title="Sổ chi tiêu thực tế"
+              @click="activeSubTab = activeSubTab === 'expenses' ? 'main' : 'expenses'"
+            >
+              <AppIcon name="wallet" :size="16" />
+              <span class="btn-lbl">Chi tiêu</span>
+            </button>
+            <button
+              type="button"
+              class="lc-close-btn"
+              title="Thu nhỏ / Đóng chế độ hành trình"
+              @click="$emit('close')"
+            >
+              <AppIcon name="x" :size="18" />
+            </button>
+          </div>
         </div>
 
-        <div class="lc-header-stats">
-          <div class="lc-stat-pill" title="Tiến độ tham quan">
-            <AppIcon name="checkcircle2" :size="15" color="#10b981" />
-            <span>{{ completedCount }}/{{ totalStopsCount }} điểm ({{ progressPercent }}%)</span>
+        <!-- ROW 2: PROGRESS & REAL-TIME STATS CHIPS -->
+        <div class="lc-header-sub-row">
+          <div class="sub-stat-chip">
+            <AppIcon name="checkcircle2" :size="13" color="#10b981" />
+            <span>Tiến độ: <b>{{ completedCount }}/{{ totalStopsCount }}</b> ({{ progressPercent }}%)</span>
           </div>
-          <div class="lc-stat-pill expense-pill" :class="{ 'is-over': actualSpent > (trip.total_budget || 0) }" title="Chi tiêu thực tế / Dự toán">
-            <AppIcon name="wallet" :size="15" :color="actualSpent > (trip.total_budget || 0) ? '#ef4444' : '#f59e0b'" />
-            <span>{{ formatMoney(actualSpent) }}đ</span>
+          <div class="sub-stat-sep">·</div>
+          <div class="sub-stat-chip" :class="{ 'is-over': actualSpent > (trip.total_budget || 0) }">
+            <AppIcon name="wallet" :size="13" :color="actualSpent > (trip.total_budget || 0) ? '#ef4444' : '#f59e0b'" />
+            <span>Chi tiêu: <b>{{ formatMoney(actualSpent) }}đ</b></span>
           </div>
         </div>
 
-        <div class="lc-header-actions">
-          <button
-            type="button"
-            class="lc-action-icon-btn sos-btn"
-            title="Cứu trợ khẩn cấp & Tiện ích"
-            @click="activeSubTab = activeSubTab === 'sos' ? 'main' : 'sos'"
-          >
-            <AppIcon name="shield" :size="18" />
-            <span class="btn-lbl">Cứu hộ</span>
-          </button>
-          <button
-            type="button"
-            class="lc-action-icon-btn wallet-btn"
-            title="Sổ chi tiêu thực tế"
-            @click="activeSubTab = activeSubTab === 'expenses' ? 'main' : 'expenses'"
-          >
-            <AppIcon name="wallet" :size="18" />
-            <span class="btn-lbl">Chi tiêu</span>
-          </button>
-          <button
-            type="button"
-            class="lc-close-btn"
-            title="Thu nhỏ / Đóng chế độ hành trình"
-            @click="$emit('close')"
-          >
-            <AppIcon name="x" :size="20" />
-          </button>
+        <!-- THIN PROGRESS BAR TRACK -->
+        <div class="lc-progress-track">
+          <div class="lc-progress-fill" :style="{ width: progressPercent + '%' }"></div>
         </div>
       </header>
-
-      <!-- OVERALL PROGRESS BAR -->
-      <div class="lc-progress-track">
-        <div class="lc-progress-fill" :style="{ width: progressPercent + '%' }"></div>
-      </div>
 
       <!-- DAY TABS STRIP -->
       <nav class="lc-day-tabs-strip">
@@ -71,15 +76,15 @@
           :class="['lc-day-tab', { active: currentDay === dayNum, completed: isDayCompleted(dayNum) }]"
           @click="selectDay(dayNum)"
         >
-          <span class="day-tab-num">Ngày {{ dayNum }}</span>
-          <span class="day-tab-badge">
+          <span class="day-tab-title">Ngày {{ dayNum }}</span>
+          <span class="day-tab-count">
             {{ getDayCompletedCount(dayNum) }}/{{ getDayStopsCount(dayNum) }}
-            <span v-if="isDayCompleted(dayNum)" class="day-check-icon">✓</span>
+            <span v-if="isDayCompleted(dayNum)" class="day-check-mark">✓</span>
           </span>
         </button>
       </nav>
 
-      <!-- MAIN BODY SPLIT: 2 COLUMNS ON DESKTOP, SWIPE/SCROLL TABS ON MOBILE -->
+      <!-- MAIN BODY SPLIT -->
       <div class="lc-body-content">
         
         <!-- SUB-VIEW 1: CỨU TRỢ KHẨN CẤP & TIỆN ÍCH SOS -->
@@ -99,11 +104,11 @@
                 </a>
                 <a href="tel:113" class="hotline-btn police">
                   <span class="hl-num">113</span>
-                  <span class="hl-desc">🚓 Công an phản ứng nhanh</span>
+                  <span class="hl-desc">🚓 Công an</span>
                 </a>
                 <a href="tel:114" class="hotline-btn fire">
                   <span class="hl-num">114</span>
-                  <span class="hl-desc">🚒 Cứu hỏa & Cứu nạn</span>
+                  <span class="hl-desc">🚒 Cứu hỏa</span>
                 </a>
               </div>
             </div>
@@ -130,7 +135,7 @@
                   rel="noreferrer"
                   class="nearby-btn"
                 >
-                  ⛽ Cây xăng gần tôi ↗
+                  ⛽ Cây xăng ↗
                 </a>
                 <a
                   :href="`https://www.google.com/maps/search/cây+ATM+gần+đây/@${currentStopCoords || ''}`"
@@ -138,7 +143,7 @@
                   rel="noreferrer"
                   class="nearby-btn"
                 >
-                  🏧 Cây ATM / Ngân hàng ↗
+                  🏧 Cây ATM ↗
                 </a>
                 <a
                   :href="`https://www.google.com/maps/search/hiệu+thuốc+gần+đây/@${currentStopCoords || ''}`"
@@ -146,7 +151,7 @@
                   rel="noreferrer"
                   class="nearby-btn"
                 >
-                  💊 Nhà thuốc / Trạm y tế ↗
+                  💊 Nhà thuốc ↗
                 </a>
                 <a
                   :href="`https://www.google.com/maps/search/tiệm+sửa+xe+máy+gần+đây/@${currentStopCoords || ''}`"
@@ -154,7 +159,7 @@
                   rel="noreferrer"
                   class="nearby-btn"
                 >
-                  🔧 Tiệm vá xe / Sửa xe ↗
+                  🔧 Vá / Sửa xe ↗
                 </a>
               </div>
             </div>
@@ -264,20 +269,21 @@
             
             <!-- NOW CARD (TÂM ĐIỂM HIỆN TẠI) -->
             <div v-if="currentStop" class="lc-now-card">
+              <!-- CARD TOP STATUS STRIP -->
               <div class="now-card-top-tag">
                 <span class="now-badge">
                   <span class="beacon-dot"></span>
                   ĐANG Ở ĐÂY • ĐIỂM {{ currentStopIndex + 1 }}/{{ todayStops.length }}
                 </span>
                 <span class="now-time-tag">
-                  <AppIcon name="clock" :size="13" /> {{ currentStop.time || 'Linh hoạt' }}
+                  <AppIcon name="clock" :size="12" /> {{ currentStop.time || '07:30' }}
                 </span>
                 <span v-if="isStopCompleted(currentDay, currentStopIndex)" class="now-done-status">
                   ✓ Đã check-in
                 </span>
               </div>
 
-              <!-- PHOTO & TITLE -->
+              <!-- PHOTO & TITLE HERO MEDIA -->
               <div class="now-hero-media">
                 <img
                   :src="getStopImage(currentStop)"
@@ -290,45 +296,45 @@
                 <div class="now-hero-floating-info">
                   <span class="now-type-pill">{{ getActivityTypeLabel(currentStop.type) }}</span>
                   <h3 class="now-place-name">{{ currentStop.place || currentStop.name }}</h3>
-                  <p class="now-place-address">
-                    📍 {{ currentStop.address || currentStop.location || `${trip.destination}` }}
+                  <p class="now-place-address" :title="currentStop.address || currentStop.location || trip.destination">
+                    📍 {{ currentStop.address || currentStop.location || trip.destination }}
                   </p>
                 </div>
               </div>
 
-              <!-- DETAILS & LOCAL TIPS -->
+              <!-- DETAILS BODY -->
               <div class="now-details-body">
+                <!-- INLINE CHIPS: COST, DURATION -->
                 <div class="now-cost-row">
                   <span class="now-cost-badge">
-                    {{ currentStop.estimated_cost > 0 ? `Chi phí dự kiến: ~${formatMoney(currentStop.estimated_cost)}đ/người` : '✨ Miễn phí tham quan' }}
+                    {{ currentStop.estimated_cost > 0 ? `Chi phí: ~${formatMoney(currentStop.estimated_cost)}đ/người` : '✨ Miễn phí tham quan' }}
                   </span>
                   <span class="now-duration-badge">
-                    ⏳ Thời gian dừng chân: ~45 - 90 phút
+                    ⏳ Dừng chân: ~45 - 90 phút
                   </span>
                 </div>
 
                 <p class="now-desc-text">
-                  {{ currentStop.activity || currentStop.description || 'Thưởng thức không gian và khám phá điểm đến nổi tiếng này.' }}
+                  {{ currentStop.activity || currentStop.description || 'Khám phá và tận hưởng không gian đặc trưng tại đây.' }}
                 </p>
 
-                <!-- MẸO HÀNH TRÌNH TỨC THÌ -->
+                <!-- LOCAL QUICK TIP -->
                 <div class="now-insider-tip">
-                  <div class="tip-icon"><AppIcon name="sparkles" :size="16" color="#0284c7" /></div>
+                  <span class="tip-icon"><AppIcon name="sparkles" :size="14" color="#0284c7" /></span>
                   <div class="tip-text">
-                    <strong>Gợi ý trải nghiệm:</strong>
-                    <span>{{ getQuickTip(currentStop) }}</span>
+                    <strong>Gợi ý:</strong> {{ getQuickTip(currentStop) }}
                   </div>
                 </div>
 
-                <!-- GHI CHÚ / CHECK-IN PHOTO CỦA NGƯỜI DÙNG -->
+                <!-- USER NOTE -->
                 <div v-if="getStopNote(currentDay, currentStopIndex)" class="user-checked-note-box">
                   <div class="ucn-header">
-                    <span>📸 Nhật ký check-in của bạn:</span>
+                    <span>📸 Nhật ký check-in:</span>
                   </div>
                   <p class="ucn-text">“{{ getStopNote(currentDay, currentStopIndex) }}”</p>
                 </div>
 
-                <!-- ACTION BUTTONS: MAPS, CHECK-IN, SKIP -->
+                <!-- IN-CARD ACTIONS (ON DESKTOP SHOWS ALL, ON MOBILE SHOWS SECONDARY ACTIONS) -->
                 <div class="now-action-buttons-bar">
                   <a
                     :href="getGoogleMapsTurnByTurnUrl(currentStop)"
@@ -337,7 +343,7 @@
                     class="btn-now-nav"
                     title="Mở Google Maps chỉ đường turn-by-turn"
                   >
-                    <AppIcon name="navigation" :size="18" />
+                    <AppIcon name="navigation" :size="16" />
                     <span>Chỉ đường Maps ↗</span>
                   </a>
 
@@ -346,14 +352,14 @@
                     :class="['btn-now-checkin', { 'is-already-checked': isStopCompleted(currentDay, currentStopIndex) }]"
                     @click="handleCheckinCurrentStop"
                   >
-                    <AppIcon :name="isStopCompleted(currentDay, currentStopIndex) ? 'checkcircle2' : 'check'" :size="20" />
-                    <span>{{ isStopCompleted(currentDay, currentStopIndex) ? 'Đã check-in ✓' : 'Đã đến nơi / Check-in' }}</span>
+                    <AppIcon :name="isStopCompleted(currentDay, currentStopIndex) ? 'checkcircle2' : 'check'" :size="18" />
+                    <span>{{ isStopCompleted(currentDay, currentStopIndex) ? 'Đã check-in ✓' : 'Đã đến nơi' }}</span>
                   </button>
 
                   <button
                     type="button"
                     class="btn-now-skip"
-                    title="Bỏ qua điểm này để chuyển sang điểm tiếp theo"
+                    title="Bỏ qua điểm này"
                     @click="handleSkipCurrentStop"
                   >
                     <span>Bỏ qua ⏭️</span>
@@ -362,19 +368,19 @@
                   <button
                     type="button"
                     class="btn-now-note"
-                    title="Thêm ghi chú / ảnh kỷ niệm tại điểm này"
+                    title="Ghi chú kỷ niệm"
                     @click="openNoteDialogForCurrentStop"
                   >
-                    <AppIcon name="camera" :size="18" />
+                    <AppIcon name="camera" :size="16" />
                   </button>
                 </div>
               </div>
             </div>
 
-            <!-- ALL DONE FOR TODAY STATE -->
+            <!-- ALL DONE CARD FOR TODAY -->
             <div v-else class="lc-all-done-card">
               <div class="adc-celebration-icon">🎉</div>
-              <h3>Tuyệt vời! Bạn đã hoàn thành toàn bộ lịch trình Ngày {{ currentDay }}!</h3>
+              <h3>Tuyệt vời! Bạn đã hoàn thành toàn bộ Ngày {{ currentDay }}!</h3>
               <p>Hãy nghỉ ngơi thư giãn tại khách sạn hoặc đi dạo phố đêm tự do nhé.</p>
               
               <div class="adc-actions">
@@ -384,7 +390,7 @@
                   class="btn-next-day-tour"
                   @click="selectDay(currentDay + 1)"
                 >
-                  🚀 Bắt đầu Ngày {{ currentDay + 1 }} tiếp theo
+                  🚀 Bắt đầu Ngày {{ currentDay + 1 }}
                 </button>
                 <button
                   v-else
@@ -397,12 +403,12 @@
               </div>
             </div>
 
-            <!-- NEXT STOP PREVIEW (ĐIỂM KẾ TIẾP) -->
+            <!-- NEXT STOP PREVIEW -->
             <div v-if="nextStop" class="lc-next-card">
               <div class="next-card-header">
                 <span class="next-label">⏭️ ĐIỂM TIẾP THEO</span>
                 <span class="next-dist-pill">
-                  <AppIcon name="car" :size="13" /> ~{{ estimateDistance(currentStop, nextStop) }} km (~{{ estimateDriveMinutes(currentStop, nextStop) }} phút di chuyển)
+                  <AppIcon name="car" :size="12" /> ~{{ estimateDistance(currentStop, nextStop) }} km (~{{ estimateDriveMinutes(currentStop, nextStop) }}p)
                 </span>
               </div>
               <div class="next-card-content">
@@ -415,9 +421,9 @@
                 />
                 <div class="next-info-block">
                   <h4 class="next-place-name">{{ nextStop.place || nextStop.name }}</h4>
-                  <p class="next-place-time">Khung giờ dự kiến: <b>{{ nextStop.time || 'Kế tiếp' }}</b></p>
+                  <p class="next-place-time">Giờ dự kiến: <b>{{ nextStop.time || 'Kế tiếp' }}</b></p>
                   <p class="next-place-tip">
-                    💡 Mẹo chuẩn bị: {{ getPreparationHint(nextStop) }}
+                    💡 Mẹo: {{ getPreparationHint(nextStop) }}
                   </p>
                 </div>
               </div>
@@ -430,7 +436,7 @@
             <div class="sidebar-section-card">
               <div class="ssc-header">
                 <h4>
-                  <AppIcon name="calendar" :size="16" /> Lộ trình Ngày {{ currentDay }}
+                  <AppIcon name="calendar" :size="15" /> Lộ trình Ngày {{ currentDay }}
                 </h4>
                 <span class="ssc-count">{{ todayCompletedCount }}/{{ todayStops.length }} xong</span>
               </div>
@@ -467,7 +473,7 @@
 
                     <div class="tli-bottom-row">
                       <span class="tli-cost">
-                        {{ act.estimated_cost > 0 ? `~${formatMoney(act.estimated_cost)}đ` : '0đ' }}
+                        {{ act.estimated_cost > 0 ? `~${formatMoney(act.estimated_cost)}đ` : 'Miễn phí' }}
                       </span>
                       <a
                         :href="getGoogleMapsTurnByTurnUrl(act)"
@@ -484,13 +490,13 @@
               </div>
             </div>
 
-            <!-- QUICK TRAVEL TIPS & WEATHER SUMMARY -->
+            <!-- TRAVEL TIPS -->
             <div class="sidebar-section-card tips-card">
-              <h4>🌤️ Tiện Ích Hành Trình Hôm Nay</h4>
+              <h4>🌤️ Tiện Ích Hành Trình</h4>
               <ul class="travel-hints-list">
-                <li>👟 Nên mang giày thể thao thoải mái để di chuyển thuận tiện giữa các điểm.</li>
-                <li>📱 Giữ điện thoại đầy pin để tiện mở Google Maps và chụp ảnh lưu niệm.</li>
-                <li>💵 Chuẩn bị sẵn một ít tiền mặt lẻ (10k, 20k) để trả vé gửi xe máy.</li>
+                <li>👟 Mang giày thể thao êm ái để thoải mái di chuyển.</li>
+                <li>📱 Giữ điện thoại đầy pin để tra Google Maps & chụp ảnh.</li>
+                <li>💵 Chuẩn bị sẵn tiền mặt lẻ để thanh toán gửi xe.</li>
               </ul>
               
               <div class="end-trip-early-row">
@@ -506,30 +512,32 @@
 
       </div>
 
-      <!-- BOTTOM MOBILE STICKY NAV BAR (CHỈ HIỆN KHI Ở MÀN HÌNH NHỎ) -->
-      <footer class="lc-mobile-bottom-bar" v-if="isMobile && activeSubTab === 'main' && currentStop">
+      <!-- BOTTOM MOBILE STICKY NAV BAR -->
+      <footer class="lc-mobile-bottom-bar" v-if="(isMobile || isSmallScreen) && activeSubTab === 'main' && currentStop">
         <a
           :href="getGoogleMapsTurnByTurnUrl(currentStop)"
           target="_blank"
           rel="noreferrer"
           class="mob-bottom-btn btn-gmaps"
         >
-          <AppIcon name="navigation" :size="18" /> Maps
+          <AppIcon name="navigation" :size="16" />
+          <span>Chỉ đường</span>
         </a>
         <button
           type="button"
           :class="['mob-bottom-btn btn-checkin', { 'is-done': isStopCompleted(currentDay, currentStopIndex) }]"
           @click="handleCheckinCurrentStop"
         >
-          <AppIcon :name="isStopCompleted(currentDay, currentStopIndex) ? 'checkcircle2' : 'check'" :size="20" />
-          {{ isStopCompleted(currentDay, currentStopIndex) ? 'Đã Check-in' : 'Đến nơi / Check-in' }}
+          <AppIcon :name="isStopCompleted(currentDay, currentStopIndex) ? 'checkcircle2' : 'check'" :size="18" />
+          <span class="btn-checkin-text">{{ isStopCompleted(currentDay, currentStopIndex) ? 'Đã Check-in ✓' : 'Đã đến nơi' }}</span>
         </button>
         <button
           type="button"
           class="mob-bottom-btn btn-more"
           @click="activeSubTab = 'expenses'"
         >
-          <AppIcon name="wallet" :size="18" /> Chi tiêu
+          <AppIcon name="wallet" :size="16" />
+          <span>Chi tiêu</span>
         </button>
       </footer>
     </div>
@@ -538,13 +546,13 @@
     <transition name="fade">
       <div v-if="showNoteDialog" class="lc-modal-sub-overlay" @click.self="showNoteDialog = false">
         <div class="lc-modal-sub-card">
-          <h4>📸 Ghi chú & Cảm nghĩ tại điểm check-in</h4>
+          <h4>📸 Ghi chú kỷ niệm tại điểm đến</h4>
           <p class="sub-target-name">{{ currentStop?.place || currentStop?.name }}</p>
           <textarea
             v-model="tempNoteText"
             rows="3"
             class="note-textarea"
-            placeholder="VD: Quán mì quảng ngon tuyệt vời, nước dùng béo bùi, chụp ảnh hoàng hôn cực chill..."
+            placeholder="VD: Quán ăn rất ngon, view chụp ảnh hoàng hôn cực đẹp..."
           ></textarea>
           <div class="modal-sub-actions">
             <button type="button" class="btn-sub-cancel" @click="showNoteDialog = false">Đóng</button>
@@ -554,7 +562,7 @@
       </div>
     </transition>
 
-    <!-- CELEBRATION RECAP MODAL (VINH DANH CHUYẾN ĐI KHI HOÀN THÀNH) -->
+    <!-- CELEBRATION RECAP MODAL -->
     <transition name="fade">
       <div v-if="showRecapModal" class="lc-modal-sub-overlay" @click.self="showRecapModal = false">
         <div class="lc-modal-recap-card">
@@ -602,7 +610,7 @@
       </div>
     </transition>
 
-    <!-- CONFETTI CELEBRATION CANVAS EFFECT -->
+    <!-- CONFETTI CELEBRATION EFFECT -->
     <div v-if="showConfettiAnim" class="confetti-overlay" @click="showConfettiAnim = false">
       <div class="confetti-popup">
         <div class="cp-icon">🎉</div>
@@ -614,7 +622,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import AppIcon from '../common/AppIcon.vue'
 
 const props = defineProps({
@@ -633,6 +641,12 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['close', 'finish'])
+
+// Auto-detect small screen width
+const isSmallScreen = ref(typeof window !== 'undefined' ? window.innerWidth <= 768 : false)
+function updateScreenSize() {
+  isSmallScreen.value = typeof window !== 'undefined' ? window.innerWidth <= 768 : false
+}
 
 // TABS & SUB-VIEWS: 'main' | 'expenses' | 'sos'
 const activeSubTab = ref('main')
@@ -744,7 +758,6 @@ function loadSavedState() {
       stopNotes.value = data.stopNotes || {}
       expensesList.value = data.expensesList || []
     } else {
-      // First time starting: init default values
       currentDay.value = 1
       currentStopIndex.value = 0
       completedStops.value = []
@@ -776,6 +789,7 @@ watch(() => props.isOpen, (newVal) => {
   if (newVal) {
     loadSavedState()
     activeSubTab.value = 'main'
+    updateScreenSize()
   }
 })
 
@@ -783,12 +797,17 @@ onMounted(() => {
   if (props.isOpen) {
     loadSavedState()
   }
+  updateScreenSize()
+  window.addEventListener('resize', updateScreenSize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', updateScreenSize)
 })
 
 // Day selection
 function selectDay(dayNum) {
   currentDay.value = dayNum
-  // Find first uncompleted stop of that day, or stop 0
   const acts = daysList.value[dayNum - 1]?.activities || []
   let firstUnchecked = 0
   for (let i = 0; i < acts.length; i++) {
@@ -843,27 +862,25 @@ function handleCheckinCurrentStop() {
     showConfettiAnim.value = true
     setTimeout(() => {
       showConfettiAnim.value = false
-    }, 2400)
+    }, 2200)
 
     // Advance to next stop if available
     if (currentStopIndex.value < todayStops.value.length - 1) {
       currentStopIndex.value++
     } else {
-      // Day completed!
       if (currentDay.value < totalDays.value) {
         setTimeout(() => {
           if (confirm(`🎉 Bạn đã hoàn thành các điểm của Ngày ${currentDay.value}! Bạn có muốn chuyển sang Ngày ${currentDay.value + 1} không?`)) {
             selectDay(currentDay.value + 1)
           }
-        }, 1200)
+        }, 1000)
       } else {
         setTimeout(() => {
           showRecapModal.value = true
-        }, 1200)
+        }, 1000)
       }
     }
   } else {
-    // If already checked, advance to next
     if (currentStopIndex.value < todayStops.value.length - 1) {
       currentStopIndex.value++
     }
@@ -945,7 +962,6 @@ function getCategoryName(cat) {
   }
 }
 
-// Google Maps Navigation URL (Turn-by-turn direct link)
 function getGoogleMapsTurnByTurnUrl(act) {
   if (!act) return '#'
   if (act.latitude && act.longitude) {
@@ -955,7 +971,6 @@ function getGoogleMapsTurnByTurnUrl(act) {
   return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(query)}&travelmode=driving`
 }
 
-// Local Tourist Center Hotline by destination
 function getLocalTouristHotline(dest = '') {
   const d = dest.toLowerCase()
   if (d.includes('đà nẵng') || d.includes('da nang')) return '0236 3550 111'
@@ -969,7 +984,6 @@ function getLocalTouristHotline(dest = '') {
   return '1900 1234'
 }
 
-// Tips & hints helpers
 function getQuickTip(stop) {
   const type = stop?.type || ''
   const name = (stop?.place || stop?.name || '').toLowerCase()
@@ -977,20 +991,19 @@ function getQuickTip(stop) {
   if (type === 'cafe') return 'Góc ban công hoặc cạnh cửa sổ là vị trí ngắm cảnh và chụp ảnh đẹp nhất quán!'
   if (type === 'lunch') return 'Giờ trưa quán có thể đông, hãy hỏi nhân viên bàn trống và gọi món đặc sản trước.'
   if (type === 'dinner') return 'Tận hưởng ẩm thực kết hợp ngắm không khí đêm lung linh của phố phường.'
-  if (name.includes('biển') || name.includes('bãi')) return 'Nhớ thoa kem chống nắng, mang theo kính râm và cất đồ tư trang cẩn thận trước khi tắm.'
-  if (name.includes('chùa') || name.includes('lăng') || name.includes('đại nội')) return 'Chú ý mặc trang phục lịch sự, qua đầu gối để tôn trọng nơi tôn nghiêm.'
+  if (name.includes('biển') || name.includes('bãi')) return 'Nhớ thoa kem chống nắng, mang kính râm và cất tư trang cẩn thận trước khi tắm.'
+  if (name.includes('chùa') || name.includes('lăng') || name.includes('đại nội')) return 'Chú ý mặc trang phục lịch sự qua đầu gối tại nơi tôn nghiêm.'
   return 'Hãy giữ gìn vệ sinh chung, lưu lại những bức ảnh kỷ niệm tuyệt đẹp nhé!'
 }
 
 function getPreparationHint(stop) {
   const type = stop?.type || ''
   if (['breakfast', 'lunch', 'dinner'].includes(type)) return 'Để bụng đói để thưởng thức hương vị trọn vẹn!'
-  if (type === 'attraction') return 'Chuẩn bị nón, quạt cầm tay và nước suối để dạo bộ thoải mái.'
+  if (type === 'attraction') return 'Chuẩn bị nón, quạt và nước suối để dạo bộ thoải mái.'
   if (type === 'cafe') return 'Sạc sẵn pin điện thoại để thỏa sức chụp ảnh check-in.'
   return 'Kiểm tra đồ đạc cá nhân trước khi di chuyển.'
 }
 
-// Distance estimation
 function estimateDistance(stopA, stopB) {
   if (!stopA || !stopB) return '2.5'
   if (stopA.latitude && stopA.longitude && stopB.latitude && stopB.longitude) {
@@ -1003,7 +1016,7 @@ function estimateDistance(stopA, stopB) {
               Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
               Math.sin(dLon/2) * Math.sin(dLon/2)
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
-    const d = (R * c * 1.3).toFixed(1) // 1.3 road winding factor
+    const d = (R * c * 1.3).toFixed(1)
     return Math.max(0.8, d)
   }
   return '3.2'
@@ -1011,7 +1024,7 @@ function estimateDistance(stopA, stopB) {
 
 function estimateDriveMinutes(stopA, stopB) {
   const dist = parseFloat(estimateDistance(stopA, stopB)) || 3
-  return Math.max(5, Math.round(dist * 3.5)) // ~20-25 km/h urban speed
+  return Math.max(5, Math.round(dist * 3.5))
 }
 
 function getStopImage(stop) {
@@ -1026,13 +1039,13 @@ function onImageError(e) {
 
 function getActivityTypeLabel(type) {
   switch (type) {
-    case 'breakfast': return '🍜 Điểm tâm sáng'
-    case 'cafe': return '☕ Thư giãn & Cà phê'
-    case 'lunch': return '🍲 Bữa trưa đặc sản'
-    case 'dinner': return '🍽️ Ăn tối ẩm thực'
-    case 'checkin': return '🏨 Check-in / Nhận phòng'
-    case 'attraction': return '📸 Danh thắng tham quan'
-    default: return '✨ Hoạt động trải nghiệm'
+    case 'breakfast': return '🍜 Điểm tâm'
+    case 'cafe': return '☕ Cà phê'
+    case 'lunch': return '🍲 Ăn trưa'
+    case 'dinner': return '🍽️ Ăn tối'
+    case 'checkin': return '🏨 Nhận phòng'
+    case 'attraction': return '📸 Tham quan'
+    default: return '✨ Trải nghiệm'
   }
 }
 
@@ -1059,8 +1072,7 @@ function formatTime(timestamp) {
 }
 
 function handleBackdropClick() {
-  // Minimize confirmation
-  props.isMobile ? emit('close') : emit('close')
+  emit('close')
 }
 
 function handleShareRecap() {
@@ -1085,7 +1097,7 @@ function handleFinishTripAndClose() {
 </script>
 
 <style scoped>
-/* RESET & BASE OVERLAY */
+/* ==================== BASE CONTAINER & RESET ==================== */
 .live-companion-overlay {
   position: fixed;
   inset: 0;
@@ -1096,6 +1108,11 @@ function handleFinishTripAndClose() {
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   color: #1e293b;
   overflow: hidden;
+  box-sizing: border-box;
+}
+
+.live-companion-overlay * {
+  box-sizing: border-box;
 }
 
 .lc-backdrop {
@@ -1117,30 +1134,29 @@ function handleFinishTripAndClose() {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  animation: lcScaleIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: lcScaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 [data-theme='dark'] .lc-container {
-  background: #0f172a;
+  background: #0b1329;
   color: #f1f5f9;
   box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
 @keyframes lcScaleIn {
-  from { opacity: 0; transform: scale(0.96) translateY(16px); }
+  from { opacity: 0; transform: scale(0.97) translateY(12px); }
   to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
-/* TOP HEADER */
+/* ==================== HEADER (DESKTOP & MOBILE-READY) ==================== */
 .lc-top-header {
-  padding: 16px 24px;
   background: #ffffff;
   border-bottom: 1px solid #e2e8f0;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  flex-direction: column;
   flex-shrink: 0;
+  position: relative;
+  z-index: 20;
 }
 
 [data-theme='dark'] .lc-top-header {
@@ -1148,119 +1164,108 @@ function handleFinishTripAndClose() {
   border-color: #1e293b;
 }
 
-.lc-live-badge {
-  display: inline-flex;
+.lc-header-main-row {
+  display: flex;
   align-items: center;
-  gap: 6px;
-  background: #fee2e2;
-  color: #ef4444;
-  padding: 3px 10px;
-  border-radius: 50px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.5px;
+  justify-content: space-between;
+  padding: 12px 20px 8px;
+  gap: 12px;
 }
 
-[data-theme='dark'] .lc-live-badge {
-  background: rgba(239, 68, 68, 0.2);
+.lc-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.lc-live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  padding: 2px 8px;
+  border-radius: 50px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .live-beacon {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: #ef4444;
   animation: pulseBeacon 1.4s ease-in-out infinite;
 }
 
 @keyframes pulseBeacon {
-  0% { transform: scale(0.9); opacity: 1; }
-  50% { transform: scale(1.4); opacity: 0.4; }
-  100% { transform: scale(0.9); opacity: 1; }
+  0% { transform: scale(0.85); opacity: 1; }
+  50% { transform: scale(1.35); opacity: 0.4; }
+  100% { transform: scale(0.85); opacity: 1; }
 }
 
 .lc-trip-title {
-  margin: 4px 0 0;
-  font-size: 1.25rem;
+  margin: 0;
+  font-size: clamp(0.95rem, 2.8vw, 1.25rem);
   font-weight: 800;
   color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 [data-theme='dark'] .lc-trip-title {
   color: #f8fafc;
 }
 
-.lc-header-stats {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.lc-stat-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: #f1f5f9;
-  padding: 6px 14px;
-  border-radius: 50px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #334155;
-  border: 1px solid #e2e8f0;
-}
-
-[data-theme='dark'] .lc-stat-pill {
-  background: #1e293b;
-  border-color: #334155;
-  color: #cbd5e1;
-}
-
-.lc-stat-pill.expense-pill.is-over {
-  background: #fee2e2;
-  color: #ef4444;
-  border-color: #fca5a5;
-}
-
 .lc-header-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
-.lc-action-icon-btn {
+.lc-icon-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 7px 14px;
-  border-radius: 12px;
-  font-size: 0.85rem;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-size: 0.8rem;
   font-weight: 700;
   cursor: pointer;
   border: none;
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
-.lc-action-icon-btn.sos-btn {
+.lc-icon-btn.sos-btn {
   background: #fee2e2;
   color: #b91c1c;
 }
 
-.lc-action-icon-btn.sos-btn:hover {
+.lc-icon-btn.sos-btn:hover, .lc-icon-btn.sos-btn.active {
   background: #fca5a5;
 }
 
-.lc-action-icon-btn.wallet-btn {
+.lc-icon-btn.wallet-btn {
   background: #fef3c7;
   color: #b45309;
 }
 
-.lc-action-icon-btn.wallet-btn:hover {
+.lc-icon-btn.wallet-btn:hover, .lc-icon-btn.wallet-btn.active {
   background: #fde68a;
 }
 
 .lc-close-btn {
-  width: 38px;
-  height: 38px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   border: 1px solid #e2e8f0;
   background: #f8fafc;
@@ -1270,6 +1275,7 @@ function handleFinishTripAndClose() {
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 .lc-close-btn:hover {
@@ -1283,12 +1289,55 @@ function handleFinishTripAndClose() {
   color: #94a3b8;
 }
 
+/* SUB STATS ROW */
+.lc-header-sub-row {
+  display: flex;
+  align-items: center;
+  padding: 0 20px 8px;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: #64748b;
+  white-space: nowrap;
+  overflow-x: auto;
+}
+
+[data-theme='dark'] .lc-header-sub-row {
+  color: #94a3b8;
+}
+
+.sub-stat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.sub-stat-chip b {
+  color: #0f172a;
+}
+
+[data-theme='dark'] .sub-stat-chip b {
+  color: #f8fafc;
+}
+
+.sub-stat-chip.is-over {
+  color: #ef4444;
+}
+
+.sub-stat-chip.is-over b {
+  color: #ef4444;
+}
+
+.sub-stat-sep {
+  opacity: 0.4;
+  flex-shrink: 0;
+}
+
 /* PROGRESS BAR */
 .lc-progress-track {
   width: 100%;
-  height: 4px;
+  height: 3px;
   background: #e2e8f0;
-  flex-shrink: 0;
 }
 
 [data-theme='dark'] .lc-progress-track {
@@ -1298,18 +1347,24 @@ function handleFinishTripAndClose() {
 .lc-progress-fill {
   height: 100%;
   background: linear-gradient(90deg, #10b981 0%, #06b6d4 100%);
-  transition: width 0.4s ease;
+  transition: width 0.35s ease;
 }
 
-/* DAY TABS STRIP */
+/* ==================== DAY TABS STRIP ==================== */
 .lc-day-tabs-strip {
   display: flex;
-  gap: 8px;
-  padding: 10px 24px;
+  gap: 6px;
+  padding: 8px 20px;
   background: #f8fafc;
   border-bottom: 1px solid #e2e8f0;
   overflow-x: auto;
   flex-shrink: 0;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.lc-day-tabs-strip::-webkit-scrollbar {
+  display: none;
 }
 
 [data-theme='dark'] .lc-day-tabs-strip {
@@ -1320,17 +1375,18 @@ function handleFinishTripAndClose() {
 .lc-day-tab {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 7px 16px;
+  gap: 6px;
+  padding: 5px 14px;
   border-radius: 50px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 0.8rem;
+  font-weight: 700;
   background: #ffffff;
   border: 1px solid #cbd5e1;
   color: #475569;
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 [data-theme='dark'] .lc-day-tab {
@@ -1343,35 +1399,35 @@ function handleFinishTripAndClose() {
   background: #0284c7;
   color: #ffffff;
   border-color: #0284c7;
-  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+  box-shadow: 0 3px 10px rgba(2, 132, 199, 0.35);
 }
 
 .lc-day-tab.completed {
   border-color: #10b981;
 }
 
-.day-tab-badge {
-  font-size: 0.75rem;
+.day-tab-count {
+  font-size: 0.72rem;
   opacity: 0.9;
   background: rgba(0, 0, 0, 0.08);
-  padding: 2px 6px;
-  border-radius: 12px;
+  padding: 1px 6px;
+  border-radius: 10px;
 }
 
-.lc-day-tab.active .day-tab-badge {
+.lc-day-tab.active .day-tab-count {
   background: rgba(255, 255, 255, 0.25);
 }
 
-.day-check-icon {
+.day-check-mark {
   color: #10b981;
   font-weight: 800;
 }
 
-/* MAIN BODY CONTENT */
+/* ==================== BODY CONTENT & GRID ==================== */
 .lc-body-content {
   flex: 1;
   overflow-y: auto;
-  padding: 20px 24px;
+  padding: 18px 20px;
   background: #f8fafc;
 }
 
@@ -1382,34 +1438,35 @@ function handleFinishTripAndClose() {
 .lc-main-cockpit-grid {
   display: grid;
   grid-template-columns: 1.25fr 0.95fr;
-  gap: 24px;
+  gap: 20px;
   max-width: 1200px;
   margin: 0 auto;
 }
 
-/* NOW CARD */
+/* ==================== NOW CARD ==================== */
 .lc-now-card {
   background: #ffffff;
-  border-radius: 20px;
+  border-radius: 18px;
   border: 1px solid #e2e8f0;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 8px 25px -4px rgba(0, 0, 0, 0.06);
   overflow: hidden;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
 [data-theme='dark'] .lc-now-card {
   background: #111e38;
   border-color: #1e2e4f;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
 }
 
 .now-card-top-tag {
-  padding: 12px 18px;
+  padding: 10px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   background: #f0fdf4;
   border-bottom: 1px solid #dcfce7;
+  gap: 8px;
 }
 
 [data-theme='dark'] .now-card-top-tag {
@@ -1421,27 +1478,30 @@ function handleFinishTripAndClose() {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 800;
   color: #059669;
+  white-space: nowrap;
 }
 
 .beacon-dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: #10b981;
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3);
   animation: pulseBeacon 1.5s infinite;
+  flex-shrink: 0;
 }
 
 .now-time-tag {
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: 0.75rem;
+  font-weight: 700;
   color: #475569;
   display: flex;
   align-items: center;
   gap: 4px;
+  white-space: nowrap;
 }
 
 [data-theme='dark'] .now-time-tag {
@@ -1449,16 +1509,17 @@ function handleFinishTripAndClose() {
 }
 
 .now-done-status {
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-size: 0.75rem;
+  font-weight: 800;
   color: #10b981;
+  white-space: nowrap;
 }
 
-/* NOW HERO MEDIA */
+/* HERO MEDIA */
 .now-hero-media {
   position: relative;
   width: 100%;
-  height: 230px;
+  height: 210px;
   background: #0f172a;
   overflow: hidden;
 }
@@ -1482,57 +1543,65 @@ function handleFinishTripAndClose() {
 
 .now-hero-floating-info {
   position: absolute;
-  bottom: 16px;
-  left: 20px;
-  right: 20px;
+  bottom: 12px;
+  left: 16px;
+  right: 16px;
   color: #ffffff;
 }
 
 .now-type-pill {
   display: inline-block;
-  background: rgba(2, 132, 199, 0.9);
+  background: rgba(2, 132, 199, 0.92);
   color: #ffffff;
-  padding: 3px 10px;
+  padding: 2px 9px;
   border-radius: 50px;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 700;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .now-place-name {
-  margin: 0 0 4px;
-  font-size: 1.5rem;
+  margin: 0 0 3px;
+  font-size: clamp(1.1rem, 3.8vw, 1.45rem);
   font-weight: 800;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  text-shadow: 0 2px 4px rgba(0,0,0,0.6);
   line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .now-place-address {
   margin: 0;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: #e2e8f0;
   text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* NOW DETAILS BODY */
+/* DETAILS BODY */
 .now-details-body {
-  padding: 20px;
+  padding: 16px;
 }
 
 .now-cost-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 14px;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
 .now-cost-badge, .now-duration-badge {
-  font-size: 0.8rem;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 6px;
   background: #f1f5f9;
   color: #475569;
+  white-space: nowrap;
 }
 
 [data-theme='dark'] .now-cost-badge, [data-theme='dark'] .now-duration-badge {
@@ -1541,10 +1610,10 @@ function handleFinishTripAndClose() {
 }
 
 .now-desc-text {
-  font-size: 0.95rem;
-  line-height: 1.6;
+  font-size: 0.88rem;
+  line-height: 1.55;
   color: #334155;
-  margin: 0 0 16px;
+  margin: 0 0 12px;
 }
 
 [data-theme='dark'] .now-desc-text {
@@ -1553,15 +1622,15 @@ function handleFinishTripAndClose() {
 
 .now-insider-tip {
   display: flex;
-  gap: 10px;
-  padding: 12px 16px;
+  gap: 8px;
+  padding: 10px 14px;
   background: #f0f9ff;
-  border-left: 4px solid #0284c7;
+  border-left: 3px solid #0284c7;
   border-radius: 8px;
-  margin-bottom: 16px;
-  font-size: 0.85rem;
+  margin-bottom: 14px;
+  font-size: 0.82rem;
   color: #0369a1;
-  line-height: 1.5;
+  line-height: 1.45;
 }
 
 [data-theme='dark'] .now-insider-tip {
@@ -1570,12 +1639,12 @@ function handleFinishTripAndClose() {
 }
 
 .user-checked-note-box {
-  padding: 12px 16px;
+  padding: 10px 14px;
   background: #fefce8;
-  border-left: 4px solid #eab308;
+  border-left: 3px solid #eab308;
   border-radius: 8px;
-  margin-bottom: 16px;
-  font-size: 0.85rem;
+  margin-bottom: 14px;
+  font-size: 0.82rem;
   color: #854d0e;
 }
 
@@ -1584,11 +1653,11 @@ function handleFinishTripAndClose() {
   color: #fde047;
 }
 
-/* NOW ACTION BUTTONS */
+/* ACTION BUTTONS */
 .now-action-buttons-bar {
   display: flex;
-  gap: 10px;
-  margin-top: 20px;
+  gap: 8px;
+  margin-top: 16px;
 }
 
 .btn-now-nav {
@@ -1596,21 +1665,16 @@ function handleFinishTripAndClose() {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 12px 18px;
+  padding: 10px 16px;
   background: #0284c7;
   color: #ffffff;
-  border-radius: 12px;
+  border-radius: 10px;
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   text-decoration: none;
   flex: 1;
-  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
-  transition: all 0.2s ease;
-}
-
-.btn-now-nav:hover {
-  background: #0369a1;
-  transform: translateY(-2px);
+  box-shadow: 0 3px 10px rgba(2, 132, 199, 0.25);
+  white-space: nowrap;
 }
 
 .btn-now-checkin {
@@ -1618,22 +1682,17 @@ function handleFinishTripAndClose() {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 12px 18px;
+  padding: 10px 16px;
   background: #10b981;
   color: #ffffff;
-  border-radius: 12px;
+  border-radius: 10px;
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   border: none;
   cursor: pointer;
   flex: 1.2;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
-  transition: all 0.2s ease;
-}
-
-.btn-now-checkin:hover {
-  background: #059669;
-  transform: translateY(-2px);
+  box-shadow: 0 3px 10px rgba(16, 185, 129, 0.25);
+  white-space: nowrap;
 }
 
 .btn-now-checkin.is-already-checked {
@@ -1645,14 +1704,15 @@ function handleFinishTripAndClose() {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 12px 14px;
+  padding: 10px 12px;
   background: #f1f5f9;
   color: #475569;
-  border-radius: 12px;
+  border-radius: 10px;
   border: 1px solid #cbd5e1;
   font-weight: 600;
+  font-size: 0.82rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 [data-theme='dark'] .btn-now-skip, [data-theme='dark'] .btn-now-note {
@@ -1661,16 +1721,13 @@ function handleFinishTripAndClose() {
   color: #cbd5e1;
 }
 
-.btn-now-skip:hover, .btn-now-note:hover {
-  background: #e2e8f0;
-}
-
-/* NEXT CARD */
+/* ==================== NEXT CARD ==================== */
 .lc-next-card {
   background: #ffffff;
-  border-radius: 16px;
+  border-radius: 14px;
   border: 1px dashed #94a3b8;
-  padding: 16px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
 }
 
 [data-theme='dark'] .lc-next-card {
@@ -1682,44 +1739,53 @@ function handleFinishTripAndClose() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .next-label {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 800;
   color: #64748b;
   letter-spacing: 0.5px;
 }
 
 .next-dist-pill {
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.7rem;
+  font-weight: 700;
   color: #0284c7;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
+  white-space: nowrap;
 }
 
 .next-card-content {
   display: flex;
-  gap: 14px;
+  gap: 12px;
   align-items: center;
 }
 
 .next-thumb-img {
-  width: 70px;
-  height: 70px;
-  border-radius: 12px;
+  width: 58px;
+  height: 58px;
+  border-radius: 10px;
   object-fit: cover;
   flex-shrink: 0;
 }
 
+.next-info-block {
+  min-width: 0;
+  flex: 1;
+}
+
 .next-place-name {
-  margin: 0 0 4px;
-  font-size: 1rem;
+  margin: 0 0 2px;
+  font-size: 0.92rem;
   font-weight: 700;
   color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 [data-theme='dark'] .next-place-name {
@@ -1727,25 +1793,28 @@ function handleFinishTripAndClose() {
 }
 
 .next-place-time {
-  margin: 0 0 4px;
-  font-size: 0.8rem;
+  margin: 0 0 2px;
+  font-size: 0.75rem;
   color: #64748b;
 }
 
 .next-place-tip {
   margin: 0;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: #0284c7;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* ALL DONE CARD */
+/* ==================== ALL DONE CARD ==================== */
 .lc-all-done-card {
-  padding: 40px 24px;
+  padding: 30px 18px;
   text-align: center;
   background: #ffffff;
-  border-radius: 20px;
+  border-radius: 18px;
   border: 1px solid #e2e8f0;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
 [data-theme='dark'] .lc-all-done-card {
@@ -1754,14 +1823,14 @@ function handleFinishTripAndClose() {
 }
 
 .adc-celebration-icon {
-  font-size: 3rem;
-  margin-bottom: 12px;
+  font-size: 2.5rem;
+  margin-bottom: 8px;
 }
 
 .lc-all-done-card h3 {
-  font-size: 1.35rem;
+  font-size: 1.15rem;
   font-weight: 800;
-  margin: 0 0 8px;
+  margin: 0 0 6px;
   color: #0f172a;
 }
 
@@ -1771,39 +1840,40 @@ function handleFinishTripAndClose() {
 
 .lc-all-done-card p {
   color: #64748b;
-  margin: 0 0 24px;
+  font-size: 0.85rem;
+  margin: 0 0 18px;
 }
 
 .adc-actions {
   display: flex;
   justify-content: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .btn-next-day-tour, .btn-finish-all-trip {
-  padding: 12px 24px;
-  border-radius: 12px;
+  padding: 10px 20px;
+  border-radius: 10px;
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   border: none;
   cursor: pointer;
   background: #0284c7;
   color: #ffffff;
-  box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3);
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
 }
 
 .btn-finish-all-trip {
   background: #10b981;
-  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
-/* SIDEBAR RIGHT */
+/* ==================== SIDEBAR RIGHT / TIMELINE ==================== */
 .sidebar-section-card {
   background: #ffffff;
-  border-radius: 20px;
+  border-radius: 18px;
   border: 1px solid #e2e8f0;
-  padding: 20px;
-  margin-bottom: 20px;
+  padding: 16px;
+  margin-bottom: 16px;
 }
 
 [data-theme='dark'] .sidebar-section-card {
@@ -1815,8 +1885,8 @@ function handleFinishTripAndClose() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
   border-bottom: 1px solid #f1f5f9;
 }
 
@@ -1826,7 +1896,7 @@ function handleFinishTripAndClose() {
 
 .ssc-header h4 {
   margin: 0;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -1834,27 +1904,26 @@ function handleFinishTripAndClose() {
 }
 
 .ssc-count {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 700;
   background: #f1f5f9;
   color: #475569;
-  padding: 2px 8px;
+  padding: 2px 7px;
   border-radius: 50px;
 }
 
-/* TIMELINE STEPS */
 .lc-timeline-steps {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
 }
 
 .lc-timeline-item {
   display: flex;
-  gap: 14px;
+  gap: 12px;
   cursor: pointer;
-  padding: 8px;
-  border-radius: 12px;
+  padding: 7px;
+  border-radius: 10px;
   transition: all 0.2s ease;
 }
 
@@ -1880,18 +1949,17 @@ function handleFinishTripAndClose() {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 28px;
+  width: 24px;
   flex-shrink: 0;
-  position: relative;
 }
 
 .tli-number {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   background: #e2e8f0;
   color: #64748b;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -1899,12 +1967,12 @@ function handleFinishTripAndClose() {
 }
 
 .tli-check {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   background: #10b981;
   color: #ffffff;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 800;
   display: flex;
   align-items: center;
@@ -1912,8 +1980,8 @@ function handleFinishTripAndClose() {
 }
 
 .tli-pulse {
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   background: #0284c7;
   box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.25);
@@ -1925,7 +1993,7 @@ function handleFinishTripAndClose() {
   flex: 1;
   width: 2px;
   background: #e2e8f0;
-  margin: 6px 0;
+  margin: 4px 0;
 }
 
 [data-theme='dark'] .tli-line {
@@ -1938,7 +2006,7 @@ function handleFinishTripAndClose() {
 }
 
 .tli-time-badge {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 700;
   color: #0284c7;
   margin-bottom: 2px;
@@ -1948,12 +2016,12 @@ function handleFinishTripAndClose() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 6px;
   margin-bottom: 2px;
 }
 
 .tli-place-name {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 700;
   color: #0f172a;
   white-space: nowrap;
@@ -1971,11 +2039,11 @@ function handleFinishTripAndClose() {
 }
 
 .tli-type-tag {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   color: #64748b;
   background: #f1f5f9;
-  padding: 2px 6px;
-  border-radius: 6px;
+  padding: 1px 5px;
+  border-radius: 4px;
   flex-shrink: 0;
 }
 
@@ -1985,7 +2053,7 @@ function handleFinishTripAndClose() {
 }
 
 .tli-desc {
-  font-size: 0.8rem;
+  font-size: 0.76rem;
   color: #64748b;
   margin: 0 0 4px;
   display: -webkit-box;
@@ -1998,12 +2066,12 @@ function handleFinishTripAndClose() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
 }
 
 .tli-cost {
   color: #10b981;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .tli-map-link {
@@ -2012,30 +2080,24 @@ function handleFinishTripAndClose() {
   font-weight: 600;
 }
 
-/* TRAVEL HINTS */
 .travel-hints-list {
-  padding-left: 18px;
-  margin: 0 0 16px;
-  font-size: 0.85rem;
+  padding-left: 16px;
+  margin: 0 0 14px;
+  font-size: 0.8rem;
   color: #64748b;
-  line-height: 1.6;
+  line-height: 1.5;
 }
 
 .btn-early-recap {
   width: 100%;
-  padding: 10px;
+  padding: 9px;
   background: #f1f5f9;
   border: 1px solid #cbd5e1;
-  border-radius: 10px;
+  border-radius: 8px;
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: #334155;
   cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-early-recap:hover {
-  background: #e2e8f0;
 }
 
 [data-theme='dark'] .btn-early-recap {
@@ -2044,7 +2106,7 @@ function handleFinishTripAndClose() {
   color: #cbd5e1;
 }
 
-/* SUB-VIEWS (SOS & EXPENSES) */
+/* ==================== SUB-VIEWS (SOS & EXPENSES) ==================== */
 .lc-sub-view {
   max-width: 900px;
   margin: 0 auto;
@@ -2054,12 +2116,12 @@ function handleFinishTripAndClose() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .lc-sub-header h3 {
   margin: 0;
-  font-size: 1.3rem;
+  font-size: clamp(1rem, 3.2vw, 1.25rem);
   font-weight: 800;
   display: flex;
   align-items: center;
@@ -2069,24 +2131,31 @@ function handleFinishTripAndClose() {
 .lc-sub-back {
   background: #f1f5f9;
   border: 1px solid #cbd5e1;
-  padding: 6px 14px;
+  padding: 5px 12px;
   border-radius: 8px;
   font-weight: 700;
+  font-size: 0.82rem;
   cursor: pointer;
+  white-space: nowrap;
 }
 
-/* SOS GRID */
+[data-theme='dark'] .lc-sub-back {
+  background: #1e293b;
+  border-color: #334155;
+  color: #f1f5f9;
+}
+
 .sos-cards-grid {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
 }
 
 .sos-card {
   background: #ffffff;
-  border-radius: 16px;
+  border-radius: 14px;
   border: 1px solid #e2e8f0;
-  padding: 20px;
+  padding: 16px;
 }
 
 [data-theme='dark'] .sos-card {
@@ -2095,15 +2164,15 @@ function handleFinishTripAndClose() {
 }
 
 .sos-card h4 {
-  margin: 0 0 14px;
-  font-size: 1rem;
+  margin: 0 0 12px;
+  font-size: 0.95rem;
   font-weight: 700;
 }
 
 .hotline-buttons {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  gap: 10px;
 }
 
 .hotline-btn {
@@ -2111,15 +2180,11 @@ function handleFinishTripAndClose() {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 16px;
-  border-radius: 12px;
+  padding: 12px 8px;
+  border-radius: 10px;
   text-decoration: none;
   color: #ffffff;
-  transition: transform 0.2s ease;
-}
-
-.hotline-btn:hover {
-  transform: translateY(-2px);
+  text-align: center;
 }
 
 .hotline-btn.ambulance { background: #ef4444; }
@@ -2127,30 +2192,31 @@ function handleFinishTripAndClose() {
 .hotline-btn.fire { background: #f97316; }
 
 .hl-num {
-  font-size: 1.6rem;
+  font-size: 1.4rem;
   font-weight: 800;
 }
 
 .hl-desc {
-  font-size: 0.8rem;
+  font-size: 0.72rem;
   font-weight: 600;
-  margin-top: 4px;
+  margin-top: 3px;
+  white-space: nowrap;
 }
 
 .tourist-guide-text {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: #64748b;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .tourist-tel-box {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .tt-number {
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   font-weight: 800;
   color: #0284c7;
   text-decoration: none;
@@ -2159,26 +2225,22 @@ function handleFinishTripAndClose() {
 .nearby-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
+  gap: 8px;
 }
 
 .nearby-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 12px 14px;
-  border-radius: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
   background: #f1f5f9;
   border: 1px solid #cbd5e1;
   text-decoration: none;
   color: #1e293b;
   font-weight: 600;
-  font-size: 0.85rem;
-  transition: all 0.2s ease;
-}
-
-.nearby-btn:hover {
-  background: #e2e8f0;
+  font-size: 0.8rem;
+  text-align: center;
 }
 
 [data-theme='dark'] .nearby-btn {
@@ -2191,15 +2253,15 @@ function handleFinishTripAndClose() {
 .expense-overview-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-bottom: 20px;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
 .exp-card {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  padding: 16px;
+  border-radius: 12px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
 }
@@ -2210,16 +2272,16 @@ function handleFinishTripAndClose() {
 }
 
 .exp-lbl {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 700;
   color: #64748b;
   text-transform: uppercase;
 }
 
 .exp-val {
-  font-size: 1.4rem;
+  font-size: clamp(1rem, 3.2vw, 1.3rem);
   font-weight: 800;
-  margin: 6px 0 2px;
+  margin: 4px 0 2px;
   color: #0f172a;
 }
 
@@ -2228,50 +2290,50 @@ function handleFinishTripAndClose() {
 }
 
 .exp-card small {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: #94a3b8;
 }
 
-.expense-add-box {
+.expense-add-box, .expenses-history-card {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 20px;
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 16px;
 }
 
-[data-theme='dark'] .expense-add-box {
+[data-theme='dark'] .expense-add-box, [data-theme='dark'] .expenses-history-card {
   background: #111e38;
   border-color: #1e2e4f;
 }
 
-.expense-add-box h4 {
-  margin: 0 0 14px;
-  font-size: 1rem;
+.expense-add-box h4, .expenses-history-card h4 {
+  margin: 0 0 12px;
+  font-size: 0.95rem;
   font-weight: 700;
 }
 
 .exp-form-grid {
   display: grid;
   grid-template-columns: 2fr 1.2fr 1.5fr auto;
-  gap: 12px;
+  gap: 10px;
   align-items: flex-end;
 }
 
 .exp-field label {
   display: block;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
   color: #64748b;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
 
 .exp-input, .exp-select {
   width: 100%;
-  padding: 10px 12px;
-  border-radius: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
   border: 1px solid #cbd5e1;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   background: #f8fafc;
   color: #0f172a;
 }
@@ -2283,39 +2345,22 @@ function handleFinishTripAndClose() {
 }
 
 .btn-add-exp {
-  padding: 10px 20px;
-  border-radius: 10px;
+  padding: 8px 16px;
+  border-radius: 8px;
   background: #f59e0b;
   color: #ffffff;
   font-weight: 700;
+  font-size: 0.85rem;
   border: none;
   cursor: pointer;
   white-space: nowrap;
 }
 
-.expenses-history-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  padding: 20px;
-}
-
-[data-theme='dark'] .expenses-history-card {
-  background: #111e38;
-  border-color: #1e2e4f;
-}
-
-.expenses-history-card h4 {
-  margin: 0 0 14px;
-  font-size: 1rem;
-  font-weight: 700;
-}
-
 .empty-exp-hint {
   text-align: center;
-  padding: 24px;
+  padding: 20px;
   color: #94a3b8;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
 .exp-items-list {
@@ -2324,15 +2369,15 @@ function handleFinishTripAndClose() {
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .exp-item-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 12px;
-  border-radius: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
   background: #f8fafc;
   border: 1px solid #f1f5f9;
 }
@@ -2345,32 +2390,41 @@ function handleFinishTripAndClose() {
 .exp-item-left {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  min-width: 0;
 }
 
 .exp-cat-badge {
-  font-size: 1.25rem;
+  font-size: 1.15rem;
+}
+
+.exp-item-desc {
+  min-width: 0;
 }
 
 .exp-item-desc strong {
   display: block;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .exp-item-desc small {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: #64748b;
 }
 
 .exp-item-right {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
 .exp-item-amount {
   font-weight: 800;
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   color: #0f172a;
 }
 
@@ -2383,30 +2437,27 @@ function handleFinishTripAndClose() {
   border: none;
   color: #94a3b8;
   cursor: pointer;
-  padding: 4px;
+  padding: 2px;
 }
 
-.exp-del-btn:hover {
-  color: #ef4444;
-}
-
-/* SUB MODALS */
+/* ==================== SUB MODALS ==================== */
 .lc-modal-sub-overlay {
   position: fixed;
   inset: 0;
   z-index: 1000000;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.65);
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 16px;
 }
 
 .lc-modal-sub-card {
-  width: 90%;
-  max-width: 440px;
+  width: 100%;
+  max-width: 420px;
   background: #ffffff;
-  border-radius: 20px;
-  padding: 24px;
+  border-radius: 18px;
+  padding: 20px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
 }
 
@@ -2416,21 +2467,21 @@ function handleFinishTripAndClose() {
 }
 
 .sub-target-name {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: #0284c7;
   font-weight: 700;
-  margin: 0 0 12px;
+  margin: 0 0 10px;
 }
 
 .note-textarea {
   width: 100%;
-  padding: 12px;
-  border-radius: 10px;
+  padding: 10px;
+  border-radius: 8px;
   border: 1px solid #cbd5e1;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   resize: vertical;
   background: #f8fafc;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 [data-theme='dark'] .note-textarea {
@@ -2442,13 +2493,14 @@ function handleFinishTripAndClose() {
 .modal-sub-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 8px;
 }
 
 .btn-sub-cancel, .btn-sub-save {
-  padding: 8px 16px;
+  padding: 7px 14px;
   border-radius: 8px;
   font-weight: 700;
+  font-size: 0.82rem;
   cursor: pointer;
 }
 
@@ -2465,11 +2517,11 @@ function handleFinishTripAndClose() {
 
 /* RECAP CELEBRATION MODAL */
 .lc-modal-recap-card {
-  width: 90%;
-  max-width: 520px;
+  width: 100%;
+  max-width: 480px;
   background: #ffffff;
-  border-radius: 24px;
-  padding: 32px 24px;
+  border-radius: 20px;
+  padding: 24px 20px;
   text-align: center;
   box-shadow: 0 25px 60px rgba(0,0,0,0.4);
 }
@@ -2483,38 +2535,38 @@ function handleFinishTripAndClose() {
   display: inline-block;
   background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   color: #ffffff;
-  padding: 5px 14px;
+  padding: 4px 12px;
   border-radius: 50px;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.5px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .lc-modal-recap-card h2 {
-  margin: 0 0 6px;
-  font-size: 1.6rem;
+  margin: 0 0 4px;
+  font-size: 1.4rem;
   font-weight: 800;
 }
 
 .recap-slogan {
   color: #64748b;
-  font-size: 0.95rem;
-  margin: 0 0 20px;
+  font-size: 0.88rem;
+  margin: 0 0 16px;
 }
 
 .recap-stats-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-  margin-bottom: 20px;
+  gap: 10px;
+  margin-bottom: 16px;
 }
 
 .recap-cell {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 14px;
+  border-radius: 12px;
+  padding: 10px;
   display: flex;
   flex-direction: column;
 }
@@ -2525,13 +2577,13 @@ function handleFinishTripAndClose() {
 }
 
 .rc-num {
-  font-size: 1.35rem;
+  font-size: 1.25rem;
   font-weight: 800;
   color: #0284c7;
 }
 
 .rc-lbl {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: #64748b;
   margin-top: 2px;
 }
@@ -2539,10 +2591,10 @@ function handleFinishTripAndClose() {
 .recap-budget-comparison {
   background: #f0fdf4;
   border: 1px solid #bbf7d0;
-  border-radius: 12px;
-  padding: 12px;
-  margin-bottom: 24px;
-  font-size: 0.9rem;
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 18px;
+  font-size: 0.85rem;
 }
 
 [data-theme='dark'] .recap-budget-comparison {
@@ -2553,25 +2605,27 @@ function handleFinishTripAndClose() {
 .recap-actions {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .btn-recap-share {
-  padding: 12px;
+  padding: 10px;
   background: #f1f5f9;
   border: 1px solid #cbd5e1;
-  border-radius: 12px;
+  border-radius: 10px;
   font-weight: 700;
+  font-size: 0.85rem;
   cursor: pointer;
 }
 
 .btn-recap-close {
-  padding: 12px;
+  padding: 10px;
   background: #10b981;
   color: #ffffff;
   border: none;
-  border-radius: 12px;
+  border-radius: 10px;
   font-weight: 700;
+  font-size: 0.85rem;
   cursor: pointer;
 }
 
@@ -2584,16 +2638,17 @@ function handleFinishTripAndClose() {
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 16px;
 }
 
 .confetti-popup {
-  background: rgba(15, 23, 42, 0.9);
+  background: rgba(15, 23, 42, 0.92);
   color: #ffffff;
-  padding: 24px 36px;
-  border-radius: 24px;
+  padding: 20px 30px;
+  border-radius: 20px;
   text-align: center;
   box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-  animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  animation: popIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 @keyframes popIn {
@@ -2602,153 +2657,318 @@ function handleFinishTripAndClose() {
 }
 
 .cp-icon {
-  font-size: 3rem;
-  margin-bottom: 6px;
+  font-size: 2.5rem;
+  margin-bottom: 4px;
 }
 
 .confetti-popup h3 {
   margin: 0 0 4px;
-  font-size: 1.3rem;
+  font-size: 1.15rem;
 }
 
 .confetti-popup p {
   margin: 0;
-  font-size: 0.9rem;
-  opacity: 0.8;
+  font-size: 0.82rem;
+  opacity: 0.85;
 }
 
-/* MOBILE RESPONSIVE OVERRIDES */
-@media (max-width: 768px) {
+/* ========================================================================= */
+/* UNIVERSAL MOBILE RESPONSIVE ENGINE (COVERS 320px, 360px, 375px, 390px, 412px, 430px) */
+/* ========================================================================= */
+@media (max-width: 768px), screen and (max-width: 768px) {
   .lc-container {
-    width: 100vw;
-    height: 100vh;
-    border-radius: 0;
-    max-width: none;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    border-radius: 0 !important;
   }
 
-  .lc-top-header {
-    padding: 12px 16px;
+  .lc-header-main-row {
+    padding: 10px 14px 6px;
+    gap: 8px;
+  }
+
+  .lc-header-left {
+    gap: 8px;
+  }
+
+  .lc-live-pill {
+    padding: 2px 6px;
+    font-size: 0.65rem;
+  }
+
+  .lc-live-pill .live-beacon {
+    width: 6px;
+    height: 6px;
   }
 
   .lc-trip-title {
-    font-size: 1.05rem;
-  }
-
-  .lc-stat-pill span {
-    font-size: 0.75rem;
+    font-size: 0.95rem;
   }
 
   .lc-header-actions .btn-lbl {
-    display: none;
+    display: none; /* Hide text, keep sleek icons on phone */
   }
 
-  .lc-action-icon-btn {
-    padding: 7px 9px;
+  .lc-icon-btn {
+    padding: 6px 8px;
+    border-radius: 8px;
+  }
+
+  .lc-close-btn {
+    width: 30px;
+    height: 30px;
+  }
+
+  .lc-header-sub-row {
+    padding: 0 14px 6px;
+    font-size: 0.72rem;
   }
 
   .lc-day-tabs-strip {
-    padding: 8px 16px;
+    padding: 6px 14px;
+    gap: 5px;
+  }
+
+  .lc-day-tab {
+    padding: 4px 10px;
+    font-size: 0.75rem;
+  }
+
+  .day-tab-count {
+    font-size: 0.68rem;
+    padding: 1px 4px;
   }
 
   .lc-body-content {
-    padding: 14px 16px 80px; /* Padding bottom for sticky mobile bar */
+    padding: 12px 14px 76px; /* 76px space for bottom sticky bar */
   }
 
   .lc-main-cockpit-grid {
     grid-template-columns: 1fr;
-    gap: 16px;
+    gap: 14px;
+  }
+
+  /* NOW CARD ON MOBILE */
+  .lc-now-card {
+    border-radius: 16px;
+    margin-bottom: 14px;
+  }
+
+  .now-card-top-tag {
+    padding: 8px 12px;
+  }
+
+  .now-badge {
+    font-size: 0.72rem;
+  }
+
+  .now-hero-media {
+    height: 160px; /* Compact 160px height instead of 230px */
+  }
+
+  .now-hero-floating-info {
+    bottom: 10px;
+    left: 12px;
+    right: 12px;
+  }
+
+  .now-place-name {
+    font-size: 1.15rem;
+  }
+
+  .now-place-address {
+    font-size: 0.72rem;
+  }
+
+  .now-details-body {
+    padding: 12px;
+  }
+
+  .now-cost-badge, .now-duration-badge {
+    font-size: 0.72rem;
+    padding: 3px 7px;
+  }
+
+  .now-desc-text {
+    font-size: 0.82rem;
+    line-height: 1.5;
+    margin-bottom: 10px;
+  }
+
+  .now-insider-tip {
+    padding: 8px 10px;
+    font-size: 0.76rem;
+    margin-bottom: 12px;
   }
 
   .now-action-buttons-bar {
-    flex-wrap: wrap;
+    display: none; /* In mobile view, the primary navigation & checkin are in bottom sticky bar */
   }
 
-  .btn-now-nav, .btn-now-checkin {
-    flex: 1 1 100%;
+  /* NEXT CARD ON MOBILE */
+  .lc-next-card {
+    padding: 10px 12px;
+    margin-bottom: 14px;
   }
 
-  .btn-now-skip, .btn-now-note {
-    flex: 1;
+  .next-thumb-img {
+    width: 48px;
+    height: 48px;
+  }
+
+  .next-place-name {
+    font-size: 0.85rem;
+  }
+
+  .next-place-time, .next-place-tip {
+    font-size: 0.72rem;
+  }
+
+  /* EXPENSES ON MOBILE */
+  .expense-overview-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
   }
 
   .exp-form-grid {
     grid-template-columns: 1fr;
+    gap: 8px;
   }
 
+  .btn-add-exp {
+    width: 100%;
+    padding: 10px;
+  }
+
+  /* SOS ON MOBILE */
   .hotline-buttons {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 6px;
+  }
+
+  .hotline-btn {
+    padding: 8px 4px;
+  }
+
+  .hl-num {
+    font-size: 1.15rem;
+  }
+
+  .hl-desc {
+    font-size: 0.65rem;
   }
 
   .nearby-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
   }
 
-  .expense-overview-row {
-    grid-template-columns: 1fr;
+  .nearby-btn {
+    padding: 8px 6px;
+    font-size: 0.74rem;
   }
 
-  /* MOBILE STICKY BAR */
+  /* ==================== BOTTOM STICKY BAR (PHONE OPTIMIZED) ==================== */
   .lc-mobile-bottom-bar {
     position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
-    height: 68px;
-    background: #ffffff;
-    border-top: 1px solid #e2e8f0;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(226, 232, 240, 0.9);
     display: flex;
     align-items: center;
-    padding: 0 16px;
-    gap: 10px;
-    box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.08);
+    padding: 8px 12px max(8px, env(safe-area-inset-bottom));
+    gap: 8px;
+    box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.09);
     z-index: 100;
   }
 
   [data-theme='dark'] .lc-mobile-bottom-bar {
-    background: #0f172a;
-    border-color: #1e293b;
-    box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.3);
+    background: rgba(15, 23, 42, 0.96);
+    border-color: rgba(30, 41, 59, 0.9);
+    box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.4);
   }
 
   .mob-bottom-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    height: 46px;
-    border-radius: 12px;
+    gap: 5px;
+    height: 44px;
+    border-radius: 10px;
     font-weight: 700;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     text-decoration: none;
     border: none;
     cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
   }
 
   .mob-bottom-btn.btn-gmaps {
     background: #0284c7;
     color: #ffffff;
     flex: 1;
+    min-width: 0;
   }
 
   .mob-bottom-btn.btn-checkin {
-    background: #10b981;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     color: #ffffff;
-    flex: 1.6;
+    flex: 1.5;
+    min-width: 0;
+    box-shadow: 0 3px 12px rgba(16, 185, 129, 0.35);
+  }
+
+  .btn-checkin-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .mob-bottom-btn.btn-checkin.is-done {
     background: #64748b;
+    box-shadow: none;
   }
 
   .mob-bottom-btn.btn-more {
     background: #f1f5f9;
     color: #334155;
-    flex: 1;
+    flex: 0.9;
+    min-width: 0;
+    border: 1px solid #e2e8f0;
   }
 
   [data-theme='dark'] .mob-bottom-btn.btn-more {
     background: #1e293b;
+    border-color: #334155;
     color: #cbd5e1;
+  }
+}
+
+/* SPECIAL FIX FOR VERY NARROW PHONES (<= 360px: e.g. iPhone SE, Galaxy Fold cover) */
+@media (max-width: 360px) {
+  .lc-trip-title {
+    font-size: 0.85rem;
+  }
+
+  .lc-live-pill {
+    padding: 1px 5px;
+    font-size: 0.6rem;
+  }
+
+  .mob-bottom-btn {
+    font-size: 0.78rem;
+    padding: 0 4px;
+  }
+
+  .hotline-buttons {
+    grid-template-columns: 1fr;
   }
 }
 </style>
