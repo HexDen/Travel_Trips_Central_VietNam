@@ -273,7 +273,8 @@
               <div class="now-card-top-tag">
                 <span class="now-badge">
                   <span class="beacon-dot"></span>
-                  ĐANG Ở ĐÂY • ĐIỂM {{ currentStopIndex + 1 }}/{{ todayStops.length }}
+                  <span class="badge-full-text">ĐANG Ở ĐÂY • ĐIỂM {{ currentStopIndex + 1 }}/{{ todayStops.length }}</span>
+                  <span class="badge-short-text">ĐIỂM {{ currentStopIndex + 1 }}/{{ todayStops.length }}</span>
                 </span>
                 <span class="now-time-tag">
                   <AppIcon name="clock" :size="12" /> {{ currentStop.time || '07:30' }}
@@ -307,10 +308,12 @@
                 <!-- INLINE CHIPS: COST, DURATION -->
                 <div class="now-cost-row">
                   <span class="now-cost-badge">
-                    {{ currentStop.estimated_cost > 0 ? `Chi phí: ~${formatMoney(currentStop.estimated_cost)}đ/người` : '✨ Miễn phí tham quan' }}
+                    <span class="cost-full-text">{{ currentStop.estimated_cost > 0 ? `Chi phí: ~${formatMoney(currentStop.estimated_cost)}đ/người` : '✨ Miễn phí tham quan' }}</span>
+                    <span class="cost-short-text">{{ currentStop.estimated_cost > 0 ? `💰 ~${formatMoney(currentStop.estimated_cost)}đ` : '✨ Miễn phí' }}</span>
                   </span>
                   <span class="now-duration-badge">
-                    ⏳ Dừng chân: ~45 - 90 phút
+                    <span class="dur-full-text">⏳ Dừng chân: ~45 - 90 phút</span>
+                    <span class="dur-short-text">⏳ ~45 - 90p</span>
                   </span>
                 </div>
 
@@ -406,7 +409,10 @@
             <!-- NEXT STOP PREVIEW -->
             <div v-if="nextStop" class="lc-next-card">
               <div class="next-card-header">
-                <span class="next-label">⏭️ ĐIỂM TIẾP THEO</span>
+                <span class="next-label">
+                  <span class="next-lbl-full">⏭️ ĐIỂM TIẾP THEO</span>
+                  <span class="next-lbl-short">⏭️ TIẾP THEO</span>
+                </span>
                 <span class="next-dist-pill">
                   <AppIcon name="car" :size="12" /> ~{{ estimateDistance(currentStop, nextStop) }} km (~{{ estimateDriveMinutes(currentStop, nextStop) }}p)
                 </span>
@@ -1482,6 +1488,20 @@ function handleFinishTripAndClose() {
   font-weight: 800;
   color: #059669;
   white-space: nowrap;
+}
+
+.badge-short-text,
+.cost-short-text,
+.dur-short-text,
+.next-lbl-short {
+  display: none;
+}
+
+.badge-full-text,
+.cost-full-text,
+.dur-full-text,
+.next-lbl-full {
+  display: inline;
 }
 
 .beacon-dot {
@@ -2676,233 +2696,442 @@ function handleFinishTripAndClose() {
 /* UNIVERSAL MOBILE RESPONSIVE ENGINE (COVERS 320px, 360px, 375px, 390px, 412px, 430px) */
 /* ========================================================================= */
 @media (max-width: 768px), screen and (max-width: 768px) {
+  /* ==================== ZERO HORIZONTAL OVERFLOW LOCK ==================== */
+  .live-companion-overlay,
+  .lc-container,
+  .lc-top-header,
+  .lc-day-tabs-strip,
+  .lc-body-content,
+  .lc-main-cockpit-grid,
+  .lc-left-cockpit,
+  .lc-right-sidebar,
+  .lc-now-card,
+  .lc-next-card,
+  .sidebar-section-card {
+    box-sizing: border-box !important;
+    max-width: 100% !important;
+  }
+
   .lc-container {
-    width: 100vw !important;
-    max-width: 100vw !important;
-    height: 100vh !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100% !important;
     height: 100dvh !important;
     border-radius: 0 !important;
+    margin: 0 !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Short/Full Text Toggles */
+  .badge-short-text,
+  .cost-short-text,
+  .dur-short-text,
+  .next-lbl-short {
+    display: inline !important;
+  }
+
+  .badge-full-text,
+  .cost-full-text,
+  .dur-full-text,
+  .next-lbl-full {
+    display: none !important;
   }
 
   .lc-header-main-row {
-    padding: 10px 14px 6px;
-    gap: 8px;
+    padding: 8px 12px 5px;
+    gap: 6px;
   }
 
   .lc-header-left {
-    gap: 8px;
+    gap: 6px;
+    min-width: 0;
   }
 
   .lc-live-pill {
-    padding: 2px 6px;
-    font-size: 0.65rem;
+    padding: 1px 6px;
+    font-size: 0.62rem;
   }
 
   .lc-live-pill .live-beacon {
-    width: 6px;
-    height: 6px;
+    width: 5px;
+    height: 5px;
   }
 
   .lc-trip-title {
-    font-size: 0.95rem;
+    font-size: 0.92rem;
   }
 
   .lc-header-actions .btn-lbl {
-    display: none; /* Hide text, keep sleek icons on phone */
+    display: none;
   }
 
   .lc-icon-btn {
-    padding: 6px 8px;
-    border-radius: 8px;
+    padding: 5px 7px;
+    border-radius: 7px;
   }
 
   .lc-close-btn {
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
   }
 
   .lc-header-sub-row {
-    padding: 0 14px 6px;
-    font-size: 0.72rem;
+    padding: 0 12px 5px;
+    font-size: 0.7rem;
+    gap: 6px;
   }
 
   .lc-day-tabs-strip {
-    padding: 6px 14px;
+    padding: 5px 12px;
     gap: 5px;
   }
 
   .lc-day-tab {
-    padding: 4px 10px;
-    font-size: 0.75rem;
+    padding: 3px 9px;
+    font-size: 0.72rem;
   }
 
   .day-tab-count {
-    font-size: 0.68rem;
+    font-size: 0.65rem;
     padding: 1px 4px;
   }
 
+  /* SCROLLABLE BODY: Strictly vertical scroll, no horizontal swipe */
   .lc-body-content {
-    padding: 12px 14px 76px; /* 76px space for bottom sticky bar */
+    padding: 8px 10px 72px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    touch-action: pan-y !important;
+    overscroll-behavior-x: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
   }
 
   .lc-main-cockpit-grid {
-    grid-template-columns: 1fr;
-    gap: 14px;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    overflow-x: hidden !important;
   }
 
-  /* NOW CARD ON MOBILE */
+  .lc-left-cockpit,
+  .lc-right-sidebar {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  /* ==================== COMPACT NOW CARD (SMALL & BEAUTIFUL) ==================== */
   .lc-now-card {
-    border-radius: 16px;
-    margin-bottom: 14px;
+    border-radius: 12px !important;
+    margin-bottom: 8px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05) !important;
   }
 
   .now-card-top-tag {
-    padding: 8px 12px;
+    padding: 5px 8px !important;
+    font-size: 0.68rem !important;
+    gap: 4px !important;
   }
 
   .now-badge {
-    font-size: 0.72rem;
+    font-size: 0.68rem !important;
+    gap: 4px !important;
   }
 
+  .beacon-dot {
+    width: 6px !important;
+    height: 6px !important;
+  }
+
+  .now-time-tag,
+  .now-done-status {
+    font-size: 0.68rem !important;
+  }
+
+  /* COMPACT CINEMATIC BANNER MEDIA */
   .now-hero-media {
-    height: 160px; /* Compact 160px height instead of 230px */
+    height: 115px !important; /* Compact 115px height - perfectly small & visible */
   }
 
   .now-hero-floating-info {
-    bottom: 10px;
-    left: 12px;
-    right: 12px;
+    bottom: 6px !important;
+    left: 8px !important;
+    right: 8px !important;
+  }
+
+  .now-type-pill {
+    padding: 1px 6px !important;
+    font-size: 0.6rem !important;
+    margin-bottom: 2px !important;
   }
 
   .now-place-name {
-    font-size: 1.15rem;
+    font-size: 0.95rem !important;
+    line-height: 1.25 !important;
+    margin: 0 0 2px !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
   }
 
   .now-place-address {
-    font-size: 0.72rem;
+    font-size: 0.66rem !important;
+    line-height: 1.2 !important;
+    opacity: 0.9 !important;
   }
 
+  /* COMPACT DETAILS BODY */
   .now-details-body {
-    padding: 12px;
+    padding: 7px 9px !important;
   }
 
-  .now-cost-badge, .now-duration-badge {
-    font-size: 0.72rem;
-    padding: 3px 7px;
+  .now-cost-row {
+    gap: 4px !important;
+    margin-bottom: 5px !important;
+  }
+
+  .now-cost-badge,
+  .now-duration-badge {
+    font-size: 0.68rem !important;
+    padding: 2px 6px !important;
+    border-radius: 4px !important;
   }
 
   .now-desc-text {
-    font-size: 0.82rem;
-    line-height: 1.5;
-    margin-bottom: 10px;
+    font-size: 0.74rem !important;
+    line-height: 1.35 !important;
+    margin-bottom: 5px !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
   }
 
   .now-insider-tip {
-    padding: 8px 10px;
-    font-size: 0.76rem;
-    margin-bottom: 12px;
+    padding: 4px 7px !important;
+    font-size: 0.7rem !important;
+    line-height: 1.3 !important;
+    margin-bottom: 0 !important;
+    border-radius: 6px !important;
+    border-left-width: 2.5px !important;
+    gap: 6px !important;
   }
 
   .now-action-buttons-bar {
-    display: none; /* In mobile view, the primary navigation & checkin are in bottom sticky bar */
+    display: none !important; /* Bottom bar takes care of actions */
   }
 
-  /* NEXT CARD ON MOBILE */
+  /* ==================== COMPACT NEXT CARD ==================== */
   .lc-next-card {
-    padding: 10px 12px;
-    margin-bottom: 14px;
+    padding: 6px 8px !important;
+    margin-bottom: 8px !important;
+    border-radius: 10px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .next-card-header {
+    margin-bottom: 4px !important;
+  }
+
+  .next-label {
+    font-size: 0.62rem !important;
+    font-weight: 800 !important;
+  }
+
+  .next-dist-pill {
+    font-size: 0.62rem !important;
+  }
+
+  .next-card-content {
+    gap: 8px !important;
   }
 
   .next-thumb-img {
-    width: 48px;
-    height: 48px;
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 6px !important;
   }
 
   .next-place-name {
-    font-size: 0.85rem;
+    font-size: 0.78rem !important;
+    margin-bottom: 1px !important;
   }
 
-  .next-place-time, .next-place-tip {
-    font-size: 0.72rem;
+  .next-place-time {
+    font-size: 0.66rem !important;
+    margin-bottom: 1px !important;
   }
 
-  /* EXPENSES ON MOBILE */
+  .next-place-tip {
+    font-size: 0.66rem !important;
+    line-height: 1.25 !important;
+  }
+
+  /* ==================== COMPACT TIMELINE STEPS ==================== */
+  .sidebar-section-card {
+    padding: 8px 10px !important;
+    border-radius: 12px !important;
+    margin-bottom: 8px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .ssc-header {
+    margin-bottom: 6px !important;
+    padding-bottom: 4px !important;
+  }
+
+  .ssc-header h4 {
+    font-size: 0.8rem !important;
+  }
+
+  .ssc-count {
+    font-size: 0.66rem !important;
+    padding: 1px 5px !important;
+  }
+
+  .lc-timeline-steps {
+    gap: 5px !important;
+  }
+
+  .lc-timeline-item {
+    padding: 4px 6px !important;
+    gap: 6px !important;
+    border-radius: 6px !important;
+  }
+
+  .tli-indicator {
+    width: 18px !important;
+  }
+
+  .tli-number,
+  .tli-check {
+    width: 18px !important;
+    height: 18px !important;
+    font-size: 0.62rem !important;
+  }
+
+  .tli-time-badge {
+    font-size: 0.64rem !important;
+  }
+
+  .tli-place-name {
+    font-size: 0.76rem !important;
+  }
+
+  .tli-type-tag {
+    font-size: 0.62rem !important;
+    padding: 1px 4px !important;
+  }
+
+  .tli-desc {
+    display: none !important; /* Hide verbose description in timeline on phone */
+  }
+
+  .tli-bottom-row {
+    font-size: 0.68rem !important;
+  }
+
+  /* ==================== EXPENSES ON MOBILE ==================== */
   .expense-overview-row {
     grid-template-columns: 1fr;
-    gap: 8px;
+    gap: 6px;
+  }
+
+  .exp-card {
+    padding: 8px 10px;
+    border-radius: 10px;
+  }
+
+  .exp-lbl {
+    font-size: 0.68rem;
+  }
+
+  .exp-val {
+    font-size: 1.05rem;
   }
 
   .exp-form-grid {
     grid-template-columns: 1fr;
-    gap: 8px;
+    gap: 6px;
   }
 
   .btn-add-exp {
     width: 100%;
-    padding: 10px;
+    padding: 8px;
+    font-size: 0.82rem;
   }
 
-  /* SOS ON MOBILE */
+  /* ==================== SOS ON MOBILE ==================== */
   .hotline-buttons {
     grid-template-columns: 1fr 1fr 1fr;
-    gap: 6px;
+    gap: 5px;
   }
 
   .hotline-btn {
-    padding: 8px 4px;
+    padding: 6px 3px;
   }
 
   .hl-num {
-    font-size: 1.15rem;
+    font-size: 1.05rem;
   }
 
   .hl-desc {
-    font-size: 0.65rem;
+    font-size: 0.62rem;
   }
 
   .nearby-grid {
     grid-template-columns: 1fr 1fr;
-    gap: 6px;
+    gap: 5px;
   }
 
   .nearby-btn {
-    padding: 8px 6px;
-    font-size: 0.74rem;
+    padding: 7px 5px;
+    font-size: 0.72rem;
   }
 
-  /* ==================== BOTTOM STICKY BAR (PHONE OPTIMIZED) ==================== */
+  /* ==================== BOTTOM STICKY BAR ==================== */
   .lc-mobile-bottom-bar {
     position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
-    background: rgba(255, 255, 255, 0.96);
+    background: rgba(255, 255, 255, 0.97);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-top: 1px solid rgba(226, 232, 240, 0.9);
     display: flex;
     align-items: center;
-    padding: 8px 12px max(8px, env(safe-area-inset-bottom));
-    gap: 8px;
-    box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.09);
+    padding: 6px 10px max(6px, env(safe-area-inset-bottom));
+    gap: 6px;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
     z-index: 100;
   }
 
   [data-theme='dark'] .lc-mobile-bottom-bar {
-    background: rgba(15, 23, 42, 0.96);
+    background: rgba(15, 23, 42, 0.97);
     border-color: rgba(30, 41, 59, 0.9);
-    box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.45);
   }
 
   .mob-bottom-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 5px;
-    height: 44px;
-    border-radius: 10px;
+    gap: 4px;
+    height: 40px;
+    border-radius: 9px;
     font-weight: 700;
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     text-decoration: none;
     border: none;
     cursor: pointer;
@@ -2920,9 +3149,9 @@ function handleFinishTripAndClose() {
   .mob-bottom-btn.btn-checkin {
     background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     color: #ffffff;
-    flex: 1.5;
+    flex: 1.4;
     min-width: 0;
-    box-shadow: 0 3px 12px rgba(16, 185, 129, 0.35);
+    box-shadow: 0 3px 10px rgba(16, 185, 129, 0.3);
   }
 
   .btn-checkin-text {
@@ -2939,7 +3168,7 @@ function handleFinishTripAndClose() {
   .mob-bottom-btn.btn-more {
     background: #f1f5f9;
     color: #334155;
-    flex: 0.9;
+    flex: 0.85;
     min-width: 0;
     border: 1px solid #e2e8f0;
   }
@@ -2951,20 +3180,129 @@ function handleFinishTripAndClose() {
   }
 }
 
-/* SPECIAL FIX FOR VERY NARROW PHONES (<= 360px: e.g. iPhone SE, Galaxy Fold cover) */
+/* ==================== FALLBACK: CLASS-BASED MOBILE VIEW ==================== */
+.live-companion-overlay.is-mobile-view .lc-container {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 100% !important;
+  height: 100dvh !important;
+  border-radius: 0 !important;
+  margin: 0 !important;
+  overflow-x: hidden !important;
+}
+
+.live-companion-overlay.is-mobile-view .badge-short-text,
+.live-companion-overlay.is-mobile-view .cost-short-text,
+.live-companion-overlay.is-mobile-view .dur-short-text,
+.live-companion-overlay.is-mobile-view .next-lbl-short {
+  display: inline !important;
+}
+
+.live-companion-overlay.is-mobile-view .badge-full-text,
+.live-companion-overlay.is-mobile-view .cost-full-text,
+.live-companion-overlay.is-mobile-view .dur-full-text,
+.live-companion-overlay.is-mobile-view .next-lbl-full {
+  display: none !important;
+}
+
+.live-companion-overlay.is-mobile-view .lc-body-content {
+  padding: 8px 10px 72px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  touch-action: pan-y !important;
+  overscroll-behavior-x: none !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.live-companion-overlay.is-mobile-view .lc-main-cockpit-grid {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+}
+
+.live-companion-overlay.is-mobile-view .lc-left-cockpit,
+.live-companion-overlay.is-mobile-view .lc-right-sidebar {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
+.live-companion-overlay.is-mobile-view .lc-now-card {
+  border-radius: 12px !important;
+  margin-bottom: 8px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.live-companion-overlay.is-mobile-view .now-hero-media {
+  height: 115px !important;
+}
+
+.live-companion-overlay.is-mobile-view .now-place-name {
+  font-size: 0.95rem !important;
+}
+
+.live-companion-overlay.is-mobile-view .now-details-body {
+  padding: 7px 9px !important;
+}
+
+.live-companion-overlay.is-mobile-view .now-action-buttons-bar {
+  display: none !important;
+}
+
+.live-companion-overlay.is-mobile-view .lc-next-card {
+  padding: 6px 8px !important;
+  margin-bottom: 8px !important;
+  border-radius: 10px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.live-companion-overlay.is-mobile-view .next-thumb-img {
+  width: 36px !important;
+  height: 36px !important;
+}
+
+.live-companion-overlay.is-mobile-view .sidebar-section-card {
+  padding: 8px 10px !important;
+  border-radius: 12px !important;
+  margin-bottom: 8px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.live-companion-overlay.is-mobile-view .tli-desc {
+  display: none !important;
+}
+
+/* ==================== SPECIAL FIX FOR NARROW PHONES (<= 360px) ==================== */
 @media (max-width: 360px) {
   .lc-trip-title {
-    font-size: 0.85rem;
+    font-size: 0.82rem;
   }
 
   .lc-live-pill {
-    padding: 1px 5px;
-    font-size: 0.6rem;
+    padding: 1px 4px;
+    font-size: 0.58rem;
+  }
+
+  .now-hero-media {
+    height: 100px !important;
+  }
+
+  .now-place-name {
+    font-size: 0.88rem !important;
   }
 
   .mob-bottom-btn {
-    font-size: 0.78rem;
+    font-size: 0.75rem;
     padding: 0 4px;
+    height: 38px;
   }
 
   .hotline-buttons {
