@@ -1231,7 +1231,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue'
 import api from '../../services/api'
 import LiveTripCompanion from '../planner/LiveTripCompanion.vue'
 
