@@ -4,6 +4,7 @@
     v-if="isMobileDevice"
     :nguoiDung="nguoiDung"
     :isDark="isDark"
+    :myTrips="myTripsList"
     :myTripsCount="myTripsList.length || 0"
     :favoritesCount="favoritesList.length || 0"
     :userLevelInfo="userLevelInfo"
@@ -11,6 +12,7 @@
     @openAuth="hienAuthModal = true"
     @logout="dangXuat"
     @userUpdated="(u) => { nguoiDung = u }"
+    @refreshTrips="taiChuyenDiCuaToi"
   />
 
   <!-- GIAO DIỆN DESKTOP / PC ĐẦY ĐỦ NGUYÊN BẢN -->
@@ -4595,7 +4597,26 @@ async function taiChuyenDiCuaToi() {
   if (!nguoiDung.value) return
   try {
     const res = await api.get('/social/my-trips')
-    myTripsList.value = res.data || []
+    const serverTrips = res.data || []
+
+    let localTrips = []
+    try {
+      const raw = localStorage.getItem('my_saved_trips')
+      if (raw) localTrips = JSON.parse(raw)
+    } catch (e) {}
+
+    const map = new Map()
+    serverTrips.forEach(t => map.set(String(t._id || t.id), t))
+    localTrips.forEach(t => {
+      const key = String(t._id || t.id)
+      if (!map.has(key)) {
+        map.set(key, t)
+      }
+    })
+
+    const merged = Array.from(map.values())
+    myTripsList.value = merged
+    localStorage.setItem('my_saved_trips', JSON.stringify(merged))
   } catch (e) {
     console.warn('Chưa tải được danh sách chuyến đi:', e.message)
   }

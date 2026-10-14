@@ -1255,12 +1255,13 @@ function batDauChuyenDiMobile(trip) {
 const props = defineProps({
   nguoiDung: { type: Object, default: null },
   isDark: { type: Boolean, default: false },
+  myTrips: { type: Array, default: () => [] },
   myTripsCount: { type: Number, default: 0 },
   favoritesCount: { type: Number, default: 0 },
   userLevelInfo: { type: Object, default: null }
 })
 
-const emit = defineEmits(['toggleDark', 'openAuth', 'logout', 'showToast', 'userUpdated'])
+const emit = defineEmits(['toggleDark', 'openAuth', 'logout', 'showToast', 'userUpdated', 'refreshTrips'])
 
 // SLIDESHOW HÌNH ẢNH THẬT 100% DANH THẮNG MIỀN TRUNG
 const heroSlides = [
@@ -2116,16 +2117,30 @@ async function savePlan() {
       created_at: new Date().toISOString()
     }
     
+    if (props.nguoiDung) {
+      try {
+        const res = await api.post('/social/my-trips', tripToSave)
+        if (res.data && res.data._id) {
+          tripToSave._id = res.data._id
+        }
+      } catch (err) {
+        console.warn('Lỗi lưu cloud:', err.message)
+      }
+    }
+    
     // Save to local storage
     const raw = localStorage.getItem('my_saved_trips')
     let list = raw ? JSON.parse(raw) : []
-    list.unshift(tripToSave)
+    const existIdx = list.findIndex(t => String(t._id || t.id) === String(tripToSave._id))
+    if (existIdx >= 0) {
+      list[existIdx] = tripToSave
+    } else {
+      list.unshift(tripToSave)
+    }
     localStorage.setItem('my_saved_trips', JSON.stringify(list))
     savedTrips.value = list
 
-    if (props.nguoiDung) {
-      await api.post('/social/my-trips', tripToSave)
-    }
+    emit('refreshTrips')
     isPlanSaved.value = true
     alert('Đã lưu chuyến đi thành công!')
   } catch (e) {
@@ -2133,12 +2148,54 @@ async function savePlan() {
   }
 }
 
-function loadSavedTrips() {
+async function loadSavedTrips() {
+  // 1. Nếu đã đăng nhập, luôn ưu tiên đồng bộ từ Server MongoDB
+  if (props.nguoiDung) {
+    try {
+      const res = await api.get('/social/my-trips')
+      if (res.data && Array.isArray(res.data)) {
+        savedTrips.value = res.data
+        localStorage.setItem('my_saved_trips', JSON.stringify(res.data))
+        return
+      }
+    } catch (e) {
+      console.warn('Lỗi tải chuyến đi từ server:', e.message)
+    }
+  }
+
+  // 2. Nếu có prop myTrips từ App.vue
+  if (props.myTrips && Array.isArray(props.myTrips) && props.myTrips.length > 0) {
+    savedTrips.value = props.myTrips
+    localStorage.setItem('my_saved_trips', JSON.stringify(props.myTrips))
+    return
+  }
+
+  // 3. Fallback: Lấy từ LocalStorage
   try {
     const raw = localStorage.getItem('my_saved_trips')
     if (raw) savedTrips.value = JSON.parse(raw)
   } catch (e) {}
 }
+
+// Tự động đồng bộ khi prop myTrips thay đổi
+watch(() => props.myTrips, (newVal) => {
+  if (newVal && Array.isArray(newVal) && newVal.length > 0) {
+    savedTrips.value = newVal
+  }
+}, { immediate: true })
+
+// Tự động tải lại chuyến đi khi người dùng đăng nhập hoặc chuyển sang tab Chuyến đi đã lưu
+watch(() => props.nguoiDung, (user) => {
+  if (user) {
+    loadSavedTrips()
+  }
+})
+
+watch(currentTab, (tab) => {
+  if (tab === 'mytrips') {
+    loadSavedTrips()
+  }
+})
 
 function openSavedTripDetail(trip) {
   generatedPlan.value = trip
@@ -2146,10 +2203,18 @@ function openSavedTripDetail(trip) {
   currentTab.value = 'explore'
 }
 
-function deleteSavedTrip(id) {
-  if (!confirm('Xóa chuyến đi này khỏi danh sách?')) return
+async function deleteSavedTrip(id) {
+  if (!confirm('Bạn có chắc muốn xóa chuyến đi này khỏi danh sách?\n\n⚠️ Hành động này không thể hoàn tác.')) return
+  try {
+    if (id && !String(id).startsWith('local-')) {
+      await api.delete(`/social/trips/${id}`)
+    }
+  } catch (e) {
+    console.warn('Lỗi xóa trên server:', e.message)
+  }
   savedTrips.value = savedTrips.value.filter(t => t._id !== id)
   localStorage.setItem('my_saved_trips', JSON.stringify(savedTrips.value))
+  emit('refreshTrips')
 }
 
 async function fetchWeather() {
