@@ -59,6 +59,11 @@
             <AppIcon name="wallet" :size="13" :color="actualSpent > (trip.total_budget || 0) ? '#ef4444' : '#f59e0b'" />
             <span>Chi tiêu: <b>{{ formatMoney(actualSpent) }}đ</b></span>
           </div>
+          <div class="sub-stat-sep">·</div>
+          <div class="sub-stat-chip trip-duration-chip" title="Tổng thời gian bạn đã đi du lịch">
+            <AppIcon name="clock" :size="13" color="#0284c7" />
+            <span>Đang đi: <b>{{ formattedTripDuration }}</b></span>
+          </div>
         </div>
 
         <!-- THIN PROGRESS BAR TRACK -->
@@ -276,12 +281,18 @@
                   <span class="badge-full-text">ĐANG Ở ĐÂY • ĐIỂM {{ currentStopIndex + 1 }}/{{ todayStops.length }}</span>
                   <span class="badge-short-text">ĐIỂM {{ currentStopIndex + 1 }}/{{ todayStops.length }}</span>
                 </span>
-                <span class="now-time-tag">
-                  <AppIcon name="clock" :size="12" /> {{ currentStop.time || '07:30' }}
-                </span>
-                <span v-if="isStopCompleted(currentDay, currentStopIndex)" class="now-done-status">
-                  ✓ Đã check-in
-                </span>
+                
+                <div class="now-time-tags-group">
+                  <span class="now-time-tag" title="Giờ dự kiến theo lịch trình">
+                    <AppIcon name="clock" :size="12" /> {{ currentStop.time || '07:30' }}
+                  </span>
+                  <span v-if="isCurrentStopArrived()" class="now-time-tag arrived-tag" title="Thời gian khách đã đến nơi thực tế">
+                    📍 Đến: <b>{{ getStopArrivalTime(currentDay, currentStopIndex) }}</b> ({{ getStopStayMinutes(currentDay, currentStopIndex) }}p)
+                  </span>
+                  <span v-if="isStopCompleted(currentDay, currentStopIndex)" class="now-done-status" title="Đã hoàn tất check-in">
+                    ✓ Đã Check-in
+                  </span>
+                </div>
               </div>
 
               <!-- PHOTO & TITLE HERO MEDIA -->
@@ -305,6 +316,20 @@
 
               <!-- DETAILS BODY -->
               <div class="now-details-body">
+                <!-- ARRIVAL & STAY STATUS BANNER -->
+                <div v-if="!isCurrentStopArrived()" class="stop-status-banner traveling">
+                  <span class="ssb-icon">🚗</span>
+                  <span class="ssb-txt">Đang di chuyển · Bấm <b>"Đã đến nơi"</b> khi bạn tới</span>
+                </div>
+                <div v-else-if="!isStopCompleted(currentDay, currentStopIndex)" class="stop-status-banner arrived">
+                  <span class="ssb-icon">📍</span>
+                  <span class="ssb-txt">Đã đến lúc <b>{{ getStopArrivalTime(currentDay, currentStopIndex) }}</b> (đã ở {{ getStopStayMinutes(currentDay, currentStopIndex) }}p) · Bấm <b>"Check-in"</b> để lưu kỷ niệm</span>
+                </div>
+                <div v-else class="stop-status-banner checked-in">
+                  <span class="ssb-icon">🎉</span>
+                  <span class="ssb-txt">Đã Check-in lúc <b>{{ getStopCheckinTime(currentDay, currentStopIndex) || 'xong' }}</b> · Bấm <b>"Điểm tiếp theo"</b> khi sẵn sàng rời đi</span>
+                </div>
+
                 <!-- INLINE CHIPS: COST, DURATION -->
                 <div class="now-cost-row">
                   <span class="now-cost-badge">
@@ -339,42 +364,79 @@
 
                 <!-- IN-CARD ACTIONS (ON DESKTOP SHOWS ALL, ON MOBILE SHOWS SECONDARY ACTIONS) -->
                 <div class="now-action-buttons-bar">
+                  <!-- BUTTON 1: ĐÃ ĐẾN NƠI -->
+                  <button
+                    type="button"
+                    :class="['btn-stop-action btn-arrived', { 'is-arrived': isCurrentStopArrived() }]"
+                    @click="handleMarkCurrentStopArrived"
+                    :title="isCurrentStopArrived() ? `Đã lưu thời gian đến lúc ${getStopArrivalTime(currentDay, currentStopIndex)}` : 'Đánh dấu tôi đã tới điểm này'"
+                  >
+                    <span>{{ isCurrentStopArrived() ? `📍 Đến lúc ${getStopArrivalTime(currentDay, currentStopIndex)}` : '📍 Tôi đã đến nơi' }}</span>
+                  </button>
+
+                  <!-- BUTTON 2: CHECK-IN -->
+                  <button
+                    type="button"
+                    :class="['btn-stop-action btn-checkin', { 'is-already-checked': isStopCompleted(currentDay, currentStopIndex) }]"
+                    @click="handleCheckinCurrentStop"
+                  >
+                    <AppIcon :name="isStopCompleted(currentDay, currentStopIndex) ? 'checkcircle2' : 'camera'" :size="16" />
+                    <span>{{ isStopCompleted(currentDay, currentStopIndex) ? '✓ Đã Check-in' : '📸 Check-in' }}</span>
+                  </button>
+
+                  <!-- BUTTON 3: CHỈ ĐƯỜNG MAPS -->
                   <a
                     :href="getGoogleMapsTurnByTurnUrl(currentStop)"
                     target="_blank"
                     rel="noreferrer"
-                    class="btn-now-nav"
+                    class="btn-stop-action btn-maps"
                     title="Mở Google Maps chỉ đường turn-by-turn"
                   >
-                    <AppIcon name="navigation" :size="16" />
+                    <AppIcon name="navigation" :size="15" />
                     <span>Chỉ đường Maps ↗</span>
                   </a>
 
+                  <!-- BUTTON 4: GHI CHÚ KỶ NIỆM -->
                   <button
                     type="button"
-                    :class="['btn-now-checkin', { 'is-already-checked': isStopCompleted(currentDay, currentStopIndex) }]"
-                    @click="handleCheckinCurrentStop"
-                  >
-                    <AppIcon :name="isStopCompleted(currentDay, currentStopIndex) ? 'checkcircle2' : 'check'" :size="18" />
-                    <span>{{ isStopCompleted(currentDay, currentStopIndex) ? 'Đã check-in ✓' : 'Đã đến nơi' }}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    class="btn-now-skip"
-                    title="Bỏ qua điểm này"
-                    @click="handleSkipCurrentStop"
-                  >
-                    <span>Bỏ qua ⏭️</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    class="btn-now-note"
-                    title="Ghi chú kỷ niệm"
+                    class="btn-stop-action btn-note"
+                    title="Ghi chép kỷ niệm / hình ảnh"
                     @click="openNoteDialogForCurrentStop"
                   >
-                    <AppIcon name="camera" :size="16" />
+                    <AppIcon name="camera" :size="15" />
+                    <span>Nhật ký</span>
+                  </button>
+
+                  <!-- BUTTON 5: ĐIỂM TIẾP THEO -->
+                  <button
+                    type="button"
+                    class="btn-stop-action btn-next-stop"
+                    @click="handleGoNextStop"
+                    title="Rời điểm này và chuyển sang địa điểm tiếp theo"
+                  >
+                    <span>{{ currentStopIndex < todayStops.length - 1 ? 'Điểm tiếp theo ❯' : 'Tổng kết ngày ❯' }}</span>
+                  </button>
+                </div>
+
+                <!-- PREV / NEXT MINI CONTROLS -->
+                <div class="now-prev-next-nav">
+                  <button
+                    type="button"
+                    class="btn-nav-prev"
+                    :disabled="currentStopIndex === 0"
+                    @click="handleGoPrevStop"
+                    title="Xem lại địa điểm trước"
+                  >
+                    ❮ Điểm trước
+                  </button>
+                  <span class="nav-stop-indicator">Điểm {{ currentStopIndex + 1 }} / {{ todayStops.length }}</span>
+                  <button
+                    type="button"
+                    class="btn-nav-next"
+                    @click="handleGoNextStop"
+                    title="Rời điểm này và sang điểm kế tiếp"
+                  >
+                    {{ currentStopIndex < todayStops.length - 1 ? 'Điểm tiếp theo ❯' : 'Tổng kết ngày ❯' }}
                   </button>
                 </div>
               </div>
@@ -470,7 +532,12 @@
                   </div>
 
                   <div class="tli-card-content">
-                    <div class="tli-time-badge">{{ act.time || `Điểm ${aIdx + 1}` }}</div>
+                    <div class="tli-time-badge">
+                      <span class="tli-plan-time">{{ act.time || `Điểm ${aIdx + 1}` }}</span>
+                      <span v-if="isStopArrived(currentDay, aIdx)" class="tli-arrived-pill">
+                        📍 Đến: {{ getStopArrivalTime(currentDay, aIdx) }}
+                      </span>
+                    </div>
                     <div class="tli-title-row">
                       <strong class="tli-place-name">{{ act.place || act.name }}</strong>
                       <span class="tli-type-tag">{{ getActivityTypeTag(act.type) }}</span>
@@ -520,30 +587,59 @@
 
       <!-- BOTTOM MOBILE STICKY NAV BAR -->
       <footer class="lc-mobile-bottom-bar" v-if="(isMobile || isSmallScreen) && activeSubTab === 'main' && currentStop">
+        <!-- MAPS BUTTON -->
         <a
           :href="getGoogleMapsTurnByTurnUrl(currentStop)"
           target="_blank"
           rel="noreferrer"
           class="mob-bottom-btn btn-gmaps"
+          title="Chỉ đường Google Maps"
         >
           <AppIcon name="navigation" :size="16" />
-          <span>Chỉ đường</span>
+          <span>Maps</span>
         </a>
+
+        <!-- NÚT TRẠNG THÁI: ĐÃ ĐẾN NƠI (KHI CHƯA ĐẾN) HOẶC CHECK-IN (KHI ĐÃ ĐẾN NƠI) -->
         <button
+          v-if="!isCurrentStopArrived()"
           type="button"
-          :class="['mob-bottom-btn btn-checkin', { 'is-done': isStopCompleted(currentDay, currentStopIndex) }]"
-          @click="handleCheckinCurrentStop"
+          class="mob-bottom-btn btn-arrive"
+          @click="handleMarkCurrentStopArrived"
+          title="Bấm khi bạn đã tới địa điểm này"
         >
-          <AppIcon :name="isStopCompleted(currentDay, currentStopIndex) ? 'checkcircle2' : 'check'" :size="18" />
-          <span class="btn-checkin-text">{{ isStopCompleted(currentDay, currentStopIndex) ? 'Đã Check-in ✓' : 'Đã đến nơi' }}</span>
+          <span class="btn-checkin-text">📍 Đã đến nơi</span>
         </button>
+
+        <button
+          v-else-if="!isStopCompleted(currentDay, currentStopIndex)"
+          type="button"
+          class="mob-bottom-btn btn-checkin"
+          @click="handleCheckinCurrentStop"
+          title="Bấm để Check-in lưu kỷ niệm"
+        >
+          <AppIcon name="camera" :size="16" />
+          <span class="btn-checkin-text">📸 Check-in</span>
+        </button>
+
+        <button
+          v-else
+          type="button"
+          class="mob-bottom-btn btn-checkin is-done"
+          @click="openNoteDialogForCurrentStop"
+          title="Đã check-in điểm này"
+        >
+          <AppIcon name="checkcircle2" :size="16" />
+          <span class="btn-checkin-text">✓ Đã Check-in</span>
+        </button>
+
+        <!-- NÚT ĐỊA ĐIỂM TIẾP THEO -->
         <button
           type="button"
-          class="mob-bottom-btn btn-more"
-          @click="activeSubTab = 'expenses'"
+          class="mob-bottom-btn btn-next-loc"
+          @click="handleGoNextStop"
+          title="Chuyển sang địa điểm tiếp theo"
         >
-          <AppIcon name="wallet" :size="16" />
-          <span>Chi tiêu</span>
+          <span>{{ currentStopIndex < todayStops.length - 1 ? 'Tiếp theo ❯' : 'Xong ngày 🎉' }}</span>
         </button>
       </footer>
     </div>
@@ -586,12 +682,12 @@
               <span class="rc-lbl">Tổng chi tiêu thực tế</span>
             </div>
             <div class="recap-cell">
-              <span class="rc-num">{{ totalDays }}</span>
-              <span class="rc-lbl">Số ngày khám phá</span>
+              <span class="rc-num">{{ formattedTripDurationFull }}</span>
+              <span class="rc-lbl">Tổng thời gian du lịch</span>
             </div>
             <div class="recap-cell">
-              <span class="rc-num">{{ expensesList.length }}</span>
-              <span class="rc-lbl">Khoản chi đã ghi</span>
+              <span class="rc-num">{{ totalDays }} ngày</span>
+              <span class="rc-lbl">Độ dài hành trình</span>
             </div>
           </div>
 
@@ -659,12 +755,58 @@ const activeSubTab = ref('main')
 const currentDay = ref(1)
 const currentStopIndex = ref(0)
 const completedStops = ref([]) // array of 'day-index' strings: e.g. ['1-0', '1-1']
+const stopArrivalTimes = ref({}) // { 'day-index': timestamp }
+const stopCheckinTimes = ref({}) // { 'day-index': timestamp }
 const stopNotes = ref({}) // { '1-0': 'note text' }
 const expensesList = ref([]) // [{ id, title, amount, category, time }]
 const showNoteDialog = ref(false)
 const tempNoteText = ref('')
 const showRecapModal = ref(false)
 const showConfettiAnim = ref(false)
+
+// Live Trip Stopwatch Timer
+const tripStartTime = ref(null)
+const nowTick = ref(Date.now())
+let timerInterval = null
+
+const tripElapsedSeconds = computed(() => {
+  if (!tripStartTime.value) return 0
+  return Math.max(0, Math.floor((nowTick.value - tripStartTime.value) / 1000))
+})
+
+const formattedTripDuration = computed(() => {
+  const totalSec = tripElapsedSeconds.value
+  const days = Math.floor(totalSec / 86400)
+  const hours = Math.floor((totalSec % 86400) / 3600)
+  const minutes = Math.floor((totalSec % 3600) / 60)
+  const seconds = totalSec % 60
+
+  if (days > 0) {
+    return `${days}d ${hours}h ${minutes}m`
+  }
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`
+  }
+  if (minutes > 0) {
+    return `${minutes}m ${seconds}s`
+  }
+  return `${seconds}s`
+})
+
+const formattedTripDurationFull = computed(() => {
+  const totalSec = tripElapsedSeconds.value
+  const days = Math.floor(totalSec / 86400)
+  const hours = Math.floor((totalSec % 86400) / 3600)
+  const minutes = Math.floor((totalSec % 3600) / 60)
+
+  if (days > 0) {
+    return `${days} ngày ${hours} giờ ${minutes} phút`
+  }
+  if (hours > 0) {
+    return `${hours} giờ ${minutes} phút`
+  }
+  return `${Math.max(1, minutes)} phút`
+})
 
 const newExpense = ref({
   title: '',
@@ -761,14 +903,20 @@ function loadSavedState() {
       currentDay.value = data.currentDay || 1
       currentStopIndex.value = data.currentStopIndex !== undefined ? data.currentStopIndex : 0
       completedStops.value = data.completedStops || []
+      stopArrivalTimes.value = data.stopArrivalTimes || {}
+      stopCheckinTimes.value = data.stopCheckinTimes || {}
       stopNotes.value = data.stopNotes || {}
       expensesList.value = data.expensesList || []
+      tripStartTime.value = data.tripStartTime || Date.now()
     } else {
       currentDay.value = 1
       currentStopIndex.value = 0
       completedStops.value = []
+      stopArrivalTimes.value = {}
+      stopCheckinTimes.value = {}
       stopNotes.value = {}
       expensesList.value = []
+      tripStartTime.value = Date.now()
     }
   } catch (e) {
     console.warn('Lỗi đọc live trip state:', e)
@@ -778,9 +926,12 @@ function loadSavedState() {
 function persistState() {
   try {
     const data = {
+      tripStartTime: tripStartTime.value || Date.now(),
       currentDay: currentDay.value,
       currentStopIndex: currentStopIndex.value,
       completedStops: completedStops.value,
+      stopArrivalTimes: stopArrivalTimes.value,
+      stopCheckinTimes: stopCheckinTimes.value,
       stopNotes: stopNotes.value,
       expensesList: expensesList.value,
       lastUpdated: Date.now()
@@ -805,10 +956,14 @@ onMounted(() => {
   }
   updateScreenSize()
   window.addEventListener('resize', updateScreenSize)
+  timerInterval = setInterval(() => {
+    nowTick.value = Date.now()
+  }, 1000)
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', updateScreenSize)
+  if (timerInterval) clearInterval(timerInterval)
 })
 
 // Day selection
@@ -831,7 +986,39 @@ function jumpToStop(index) {
   persistState()
 }
 
-// Stop Status
+// Stop Status & Arrival Helpers
+function isCurrentStopArrived() {
+  return isStopArrived(currentDay.value, currentStopIndex.value)
+}
+
+function isStopArrived(dayNum, stopIdx) {
+  const key = `${dayNum}-${stopIdx}`
+  return !!stopArrivalTimes.value[key]
+}
+
+function getStopArrivalTime(dayNum, stopIdx) {
+  const key = `${dayNum}-${stopIdx}`
+  const ts = stopArrivalTimes.value[key]
+  if (!ts) return ''
+  const d = new Date(ts)
+  return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`
+}
+
+function getStopCheckinTime(dayNum, stopIdx) {
+  const key = `${dayNum}-${stopIdx}`
+  const ts = stopCheckinTimes.value[key]
+  if (!ts) return ''
+  const d = new Date(ts)
+  return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`
+}
+
+function getStopStayMinutes(dayNum, stopIdx) {
+  const key = `${dayNum}-${stopIdx}`
+  const ts = stopArrivalTimes.value[key]
+  if (!ts) return 0
+  return Math.max(1, Math.floor((nowTick.value - ts) / 60000))
+}
+
 function isStopCompleted(dayNum, stopIdx) {
   return completedStops.value.includes(`${dayNum}-${stopIdx}`)
 }
@@ -853,11 +1040,30 @@ function isDayCompleted(dayNum) {
   return getDayCompletedCount(dayNum) >= total
 }
 
-// Checkin logic
+// 1. Mark Arrived (Lưu lại thời gian đến nơi - KHÔNG ĐẨY SANG ĐIỂM KHÁC)
+function handleMarkCurrentStopArrived() {
+  const key = `${currentDay.value}-${currentStopIndex.value}`
+  if (!stopArrivalTimes.value[key]) {
+    stopArrivalTimes.value[key] = Date.now()
+  }
+  if (navigator.vibrate) {
+    navigator.vibrate([80])
+  }
+  persistState()
+}
+
+// 2. Check-in Stop (Lưu check-in & nổ pháo hoa - KHÔNG TỰ ĐỘNG ĐẨY SANG ĐIỂM KHÁC)
 function handleCheckinCurrentStop() {
   const key = `${currentDay.value}-${currentStopIndex.value}`
+  
+  // Tự động ghi nhận giờ đến nếu chưa bấm
+  if (!stopArrivalTimes.value[key]) {
+    stopArrivalTimes.value[key] = Date.now()
+  }
+
   if (!completedStops.value.includes(key)) {
     completedStops.value.push(key)
+    stopCheckinTimes.value[key] = Date.now()
     
     // Haptic feedback if on mobile
     if (navigator.vibrate) {
@@ -869,38 +1075,36 @@ function handleCheckinCurrentStop() {
     setTimeout(() => {
       showConfettiAnim.value = false
     }, 2200)
+  }
+  persistState()
+}
 
-    // Advance to next stop if available
-    if (currentStopIndex.value < todayStops.value.length - 1) {
-      currentStopIndex.value++
-    } else {
-      if (currentDay.value < totalDays.value) {
-        setTimeout(() => {
-          if (confirm(`🎉 Bạn đã hoàn thành các điểm của Ngày ${currentDay.value}! Bạn có muốn chuyển sang Ngày ${currentDay.value + 1} không?`)) {
-            selectDay(currentDay.value + 1)
-          }
-        }, 1000)
-      } else {
-        setTimeout(() => {
-          showRecapModal.value = true
-        }, 1000)
-      }
-    }
+// 3. Tiến tới địa điểm tiếp theo (Chủ động bấm nút)
+function handleGoNextStop() {
+  if (currentStopIndex.value < todayStops.value.length - 1) {
+    currentStopIndex.value++
   } else {
-    if (currentStopIndex.value < todayStops.value.length - 1) {
-      currentStopIndex.value++
+    if (currentDay.value < totalDays.value) {
+      if (confirm(`🎉 Bạn đã đi hết các điểm của Ngày ${currentDay.value}! Bạn có muốn chuyển sang Ngày ${currentDay.value + 1} không?`)) {
+        selectDay(currentDay.value + 1)
+      }
+    } else {
+      showRecapModal.value = true
     }
   }
   persistState()
 }
 
-function handleSkipCurrentStop() {
-  if (currentStopIndex.value < todayStops.value.length - 1) {
-    currentStopIndex.value++
-  } else {
-    alert('Đây là điểm dừng chân cuối cùng của ngày hôm nay!')
+// 4. Lùi về địa điểm trước
+function handleGoPrevStop() {
+  if (currentStopIndex.value > 0) {
+    currentStopIndex.value--
+    persistState()
   }
-  persistState()
+}
+
+function handleSkipCurrentStop() {
+  handleGoNextStop()
 }
 
 // Note dialog
@@ -1083,6 +1287,7 @@ function handleBackdropClick() {
 
 function handleShareRecap() {
   const text = `🎉 Tôi vừa hoàn thành chuyến đi ${props.trip?.destination} (${totalDays.value} ngày)!\n` +
+    `⏱️ Tổng thời gian trải nghiệm: ${formattedTripDurationFull.value}\n` +
     `✅ Đã check-in ${completedCount.value}/${totalStopsCount.value} điểm đến\n` +
     `💰 Tổng chi tiêu thực tế: ${formatMoney(actualSpent.value)}đ\n` +
     `Tạo bởi AI Travel Trips Central VietNam 🌴`
@@ -1514,6 +1719,13 @@ function handleFinishTripAndClose() {
   flex-shrink: 0;
 }
 
+.now-time-tags-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
 .now-time-tag {
   font-size: 0.75rem;
   font-weight: 700;
@@ -1524,6 +1736,20 @@ function handleFinishTripAndClose() {
   white-space: nowrap;
 }
 
+.now-time-tag.arrived-tag {
+  color: #0284c7;
+  background: rgba(2, 132, 199, 0.08);
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(2, 132, 199, 0.2);
+}
+
+[data-theme='dark'] .now-time-tag.arrived-tag {
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+  border-color: rgba(56, 189, 248, 0.25);
+}
+
 [data-theme='dark'] .now-time-tag {
   color: #94a3b8;
 }
@@ -1532,6 +1758,10 @@ function handleFinishTripAndClose() {
   font-size: 0.75rem;
   font-weight: 800;
   color: #10b981;
+  background: rgba(16, 185, 129, 0.08);
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(16, 185, 129, 0.2);
   white-space: nowrap;
 }
 
@@ -1673,72 +1903,202 @@ function handleFinishTripAndClose() {
   color: #fde047;
 }
 
-/* ACTION BUTTONS */
+/* STOP STATUS BANNER */
+.stop-status-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  margin-bottom: 12px;
+}
+
+.stop-status-banner.traveling {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+}
+
+.stop-status-banner.arrived {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+}
+
+.stop-status-banner.checked-in {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #15803d;
+}
+
+[data-theme='dark'] .stop-status-banner.traveling {
+  background: #1e293b;
+  border-color: #334155;
+  color: #94a3b8;
+}
+
+[data-theme='dark'] .stop-status-banner.arrived {
+  background: rgba(30, 58, 138, 0.25);
+  border-color: rgba(59, 130, 246, 0.4);
+  color: #93c5fd;
+}
+
+[data-theme='dark'] .stop-status-banner.checked-in {
+  background: rgba(20, 83, 45, 0.25);
+  border-color: rgba(34, 197, 94, 0.4);
+  color: #86efac;
+}
+
+/* ACTION BUTTONS (DESKTOP) */
 .now-action-buttons-bar {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
-  margin-top: 16px;
+  margin-top: 14px;
 }
 
-.btn-now-nav {
+.btn-stop-action {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 10px 16px;
-  background: #0284c7;
-  color: #ffffff;
-  border-radius: 10px;
+  gap: 5px;
+  padding: 8px 14px;
+  border-radius: 8px;
   font-weight: 700;
-  font-size: 0.88rem;
-  text-decoration: none;
-  flex: 1;
-  box-shadow: 0 3px 10px rgba(2, 132, 199, 0.25);
-  white-space: nowrap;
-}
-
-.btn-now-checkin {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 10px 16px;
-  background: #10b981;
-  color: #ffffff;
-  border-radius: 10px;
-  font-weight: 700;
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   border: none;
   cursor: pointer;
-  flex: 1.2;
-  box-shadow: 0 3px 10px rgba(16, 185, 129, 0.25);
+  text-decoration: none;
+  transition: all 0.2s ease;
   white-space: nowrap;
 }
 
-.btn-now-checkin.is-already-checked {
+.btn-stop-action.btn-arrived {
+  background: #0284c7;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25);
+}
+
+.btn-stop-action.btn-arrived.is-arrived {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #86efac;
+  box-shadow: none;
+}
+
+[data-theme='dark'] .btn-stop-action.btn-arrived.is-arrived {
+  background: rgba(16, 185, 129, 0.15);
+  color: #86efac;
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.btn-stop-action.btn-checkin {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+}
+
+.btn-stop-action.btn-checkin.is-already-checked {
   background: #64748b;
   box-shadow: none;
 }
 
-.btn-now-skip, .btn-now-note {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px 12px;
+.btn-stop-action.btn-maps {
   background: #f1f5f9;
-  color: #475569;
-  border-radius: 10px;
+  color: #0284c7;
   border: 1px solid #cbd5e1;
-  font-weight: 600;
-  font-size: 0.82rem;
-  cursor: pointer;
-  white-space: nowrap;
 }
 
-[data-theme='dark'] .btn-now-skip, [data-theme='dark'] .btn-now-note {
+.btn-stop-action.btn-note {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+}
+
+.btn-stop-action.btn-next-stop {
+  background: #0f172a;
+  color: #ffffff;
+  margin-left: auto;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.25);
+}
+
+[data-theme='dark'] .btn-stop-action.btn-maps,
+[data-theme='dark'] .btn-stop-action.btn-note {
   background: #1e293b;
   border-color: #334155;
   color: #cbd5e1;
+}
+
+[data-theme='dark'] .btn-stop-action.btn-next-stop {
+  background: #38bdf8;
+  color: #0f172a;
+  box-shadow: 0 2px 8px rgba(56, 189, 248, 0.25);
+}
+
+/* PREV / NEXT NAV BAR */
+.now-prev-next-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed #e2e8f0;
+}
+
+[data-theme='dark'] .now-prev-next-nav {
+  border-color: #334155;
+}
+
+.btn-nav-prev,
+.btn-nav-next {
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-nav-prev:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-nav-next {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #0284c7;
+}
+
+[data-theme='dark'] .btn-nav-prev {
+  background: #1e293b;
+  border-color: #334155;
+  color: #cbd5e1;
+}
+
+.nav-stop-indicator {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #64748b;
+}
+
+/* TIMELINE ARRIVAL PILL */
+.tli-arrived-pill {
+  font-size: 0.65rem;
+  color: #059669;
+  font-weight: 700;
+  background: rgba(16, 185, 129, 0.12);
+  padding: 1px 5px;
+  border-radius: 4px;
+  margin-left: 4px;
+  display: inline-block;
+  border: 1px solid rgba(16, 185, 129, 0.25);
 }
 
 /* ==================== NEXT CARD ==================== */
@@ -3142,8 +3502,16 @@ function handleFinishTripAndClose() {
   .mob-bottom-btn.btn-gmaps {
     background: #0284c7;
     color: #ffffff;
-    flex: 1;
+    flex: 0.9;
     min-width: 0;
+  }
+
+  .mob-bottom-btn.btn-arrive {
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    color: #ffffff;
+    flex: 1.4;
+    min-width: 0;
+    box-shadow: 0 3px 10px rgba(2, 132, 199, 0.35);
   }
 
   .mob-bottom-btn.btn-checkin {
@@ -3165,18 +3533,19 @@ function handleFinishTripAndClose() {
     box-shadow: none;
   }
 
-  .mob-bottom-btn.btn-more {
+  .mob-bottom-btn.btn-next-loc {
     background: #f1f5f9;
-    color: #334155;
-    flex: 0.85;
+    color: #0284c7;
+    flex: 1.1;
     min-width: 0;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #cbd5e1;
+    font-weight: 800;
   }
 
-  [data-theme='dark'] .mob-bottom-btn.btn-more {
+  [data-theme='dark'] .mob-bottom-btn.btn-next-loc {
     background: #1e293b;
     border-color: #334155;
-    color: #cbd5e1;
+    color: #38bdf8;
   }
 }
 
