@@ -311,6 +311,7 @@
             @goMyTrips="activeTab = 'mytrips'"
             @openBillSplitter="hienBillSplitter = true"
             @openTravelPass="hienTravelPass = true"
+            @startTrip="batDauChuyenDiLive"
           />
         </section>
 
@@ -323,6 +324,7 @@
           @create-trip="startPlannerTransition"
           @open-auth="hienAuthModal = true"
           @open-trip="moLaiLichTrinh"
+          @start-trip="batDauChuyenDiLive"
           @share-trip="chiaSeChuyenDi"
           @delete-trip="xoaChuyenDi"
         />
@@ -487,6 +489,7 @@
       :trip="xemTripChiTiet"
       @close="hienModalChiTietTrip = false"
       @open-full-plan="(t) => { moLaiLichTrinh(t); hienModalChiTietTrip = false; }"
+      @start-trip="(t) => { batDauChuyenDiLive(t); hienModalChiTietTrip = false; }"
     />
 
     <!-- ==================== MODAL XEM CHI TIẾT KHÁCH SẠN & CHỌN PHÒNG ==================== -->
@@ -502,6 +505,15 @@
       @close="dongModalXemPhong"
       @change-search="() => { dongModalXemPhong(); activeTab = 'planner'; currentPlannerStep = 1; }"
       @choose-room="({ hotel, room }) => chonPhongTuModal(hotel, room)"
+    />
+
+    <!-- ==================== LIVE TRIP COMPANION (ĐỒNG HÀNH TRỰC TIẾP CHUYẾN ĐI - PC) ==================== -->
+    <LiveTripCompanion
+      :isOpen="showLiveTripCompanion"
+      :trip="activeLiveTrip"
+      :isMobile="false"
+      @close="showLiveTripCompanion = false"
+      @finish="handleFinishLiveTrip"
     />
 
     <!-- ==================== FLOATING CHATBOT AI ==================== -->
@@ -520,6 +532,7 @@ import ExploreTab from './components/home/ExploreTab.vue';
 import SavedTripsTab from './components/trips/SavedTripsTab.vue';
 import TripPlannerWizard from './components/planner/TripPlannerWizard.vue';
 import ItineraryTimeline from './components/planner/ItineraryTimeline.vue';
+import LiveTripCompanion from './components/planner/LiveTripCompanion.vue';
 import FavoritePlaces from './components/FavoritePlaces.vue';
 import UserProfile from './components/UserProfile.vue';
 
@@ -647,6 +660,28 @@ function handleOpenModalFromSearch(modalName) {
       activeTab.value = 'admin'
       break
   }
+}
+
+// ==================== LIVE TRIP COMPANION STATE & ACTIONS ====================
+const showLiveTripCompanion = ref(false)
+const activeLiveTrip = ref(null)
+
+function batDauChuyenDiLive(trip) {
+  const targetTrip = trip || lichTrinh.value
+  if (!targetTrip) {
+    alert('Vui lòng chọn hoặc tạo một lịch trình trước khi bắt đầu!')
+    return
+  }
+  if (targetTrip.days && !targetTrip.daysList) {
+    targetTrip.daysList = targetTrip.days
+  }
+  activeLiveTrip.value = targetTrip
+  showLiveTripCompanion.value = true
+}
+
+function handleFinishLiveTrip() {
+  showLiveTripCompanion.value = false
+  taiChuyenDiCuaToi()
 }
 
 const ALL_DESTINATIONS = 'Tất cả miền Trung'
@@ -12442,6 +12477,19 @@ button { cursor: pointer; }
   border: none;
 }
 
+.it-start-trip-btn {
+  background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 50%, #06b6d4 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(2, 132, 199, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.it-start-trip-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(2, 132, 199, 0.55);
+}
+
 .it-save-btn {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: #ffffff;
@@ -12469,6 +12517,47 @@ button { cursor: pointer; }
   border-color: #0284c7;
   transform: translateY(-2px);
   box-shadow: 0 4px 14px rgba(2, 132, 199, 0.15);
+}
+
+.tool-btn.start-tour-btn-highlight {
+  background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%) !important;
+  color: #ffffff !important;
+  font-weight: 700;
+  border: none;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.3);
+}
+
+.start-trip-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.3);
+}
+
+.start-trip-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.45);
+}
+
+.tdm-start-btn {
+  background: linear-gradient(135deg, #0284c7, #06b6d4) !important;
+  color: #fff !important;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+  flex: 1.2;
+}
+
+.tdm-start-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px rgba(2, 132, 199, 0.5);
 }
 
 .it-dec-icon {

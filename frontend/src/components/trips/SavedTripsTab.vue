@@ -26,7 +26,10 @@
         <h3>Chuyến đi {{ (trip.daysList || trip.days || []).length }} ngày tại {{ trip.destination }}</h3>
         <p>Dự toán: <b>{{ formatCurrency(trip.total_budget) }}đ</b> · {{ trip.people || 1 }} người</p>
         <div class="trip-actions">
-          <button class="open-trip-btn" @click="$emit('open-trip', trip)">Xem chi tiết ↗</button>
+          <button class="start-trip-btn" @click="$emit('start-trip', trip)">
+            <AppIcon name="navigation" :size="14" /> Bắt đầu 🚀
+          </button>
+          <button class="open-trip-btn" @click="$emit('open-trip', trip)">Chi tiết ↗</button>
           <button class="share-trip-btn" @click="$emit('share-trip', trip)">
             <AppIcon name="share" :size="14" /> Chia sẻ
           </button>
@@ -65,7 +68,7 @@ defineProps({
   }
 })
 
-defineEmits(['create-trip', 'open-auth', 'open-trip', 'share-trip', 'delete-trip'])
+defineEmits(['create-trip', 'open-auth', 'open-trip', 'start-trip', 'share-trip', 'delete-trip'])
 
 function formatCurrency(val) {
   if (!val && val !== 0) return '0'

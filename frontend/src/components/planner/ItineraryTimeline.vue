@@ -140,8 +140,21 @@
                 </div>
               </div>
 
-              <!-- NÚT HÀNH ĐỘNG CHÍNH: LƯU LỊCH TRÌNH HOẶC THAY ĐỔI LỊCH TRÌNH (YÊU CẦU 1) -->
+              <!-- NÚT HÀNH ĐỘNG CHÍNH: LƯU LỊCH TRÌNH HOẶC BẮT ĐẦU CHUYẾN ĐI (YÊU CẦU 1) -->
               <div class="itinerary-decision-actions-bar">
+                <button
+                  type="button"
+                  class="it-dec-btn it-start-trip-btn"
+                  @click="$emit('startTrip', lichTrinh)"
+                  title="Bắt đầu dẫn đường và đồng hành trong chuyến đi thực tế"
+                >
+                  <span class="it-dec-icon"><AppIcon name="navigation" size="22" /></span>
+                  <div class="it-dec-text">
+                    <strong>Bắt đầu lịch trình ngay 🚀</strong>
+                    <small>Mở trợ lý GPS dẫn đường, check-in & quản lý chi tiêu</small>
+                  </div>
+                </button>
+
                 <button
                   type="button"
                   class="it-dec-btn it-save-btn"
@@ -224,6 +237,9 @@
               </div>
 
               <div class="plan-tool-actions">
+                <button class="tool-btn start-tour-btn-highlight" @click="$emit('startTrip', lichTrinh)" title="Bắt đầu chế độ đồng hành GPS trực tiếp trong chuyến đi">
+                  <AppIcon name="navigation" size="15" /> 🚀 Bắt đầu chuyến đi
+                </button>
                 <button class="tool-btn ai-opt-highlight-btn" @click="toiUuCungDuongToanBo" title="Sắp xếp toàn bộ điểm đến theo vòng cung tối ưu di chuyển">
                   <AppIcon name="sparkles" size="15" /> AI Tối ưu thứ tự điểm đến
                 </button>
@@ -1132,7 +1148,8 @@ defineEmits([
   'openReplan',
   'goMyTrips',
   'openBillSplitter',
-  'openTravelPass'
+  'openTravelPass',
+  'startTrip'
 ])
 </script>
 

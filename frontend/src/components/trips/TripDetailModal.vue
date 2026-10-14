@@ -128,9 +128,13 @@
 
         <!-- Action buttons -->
         <div class="tdm-footer-actions">
+          <button class="tdm-action-btn tdm-start-btn" @click="$emit('start-trip', trip)">
+            <AppIcon name="navigation" :size="16" style="margin-right: 6px; vertical-align: -2px;" />
+            🚀 Bắt đầu lịch trình ngay
+          </button>
           <button class="tdm-action-btn tdm-open-btn" @click="$emit('open-full-plan', trip)">
             <AppIcon name="map" :size="16" style="margin-right: 6px; vertical-align: -2px;" />
-            Mở và xem đầy đủ lịch trình
+            Xem toàn bộ chi tiết
           </button>
         </div>
       </div>
@@ -153,7 +157,7 @@ const props = defineProps({
   }
 })
 
-defineEmits(['close', 'open-full-plan'])
+defineEmits(['close', 'open-full-plan', 'start-trip'])
 
 const activeDay = ref(null)
 

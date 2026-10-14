@@ -178,29 +178,157 @@
           <p>Tối ưu hóa các điểm đến, nhà xe và chi phí theo thời gian thực</p>
         </div>
 
-        <!-- GENERATED PLAN RESULT (Khi AI tạo xong) -->
+        <!-- GENERATED PLAN RESULT (Khi AI tạo xong - Chi tiết phong phú đầy đủ như bản PC) -->
         <div v-if="generatedPlan && !isGenerating" class="mobile-generated-plan">
+          
+          <!-- BANNER TỔNG QUAN CHUYẾN ĐI -->
           <div class="plan-summary-banner">
             <div class="plan-badge-line">
-              <span class="badge-emerald">LỊCH TRÌNH CÁ NHÂN HÓA</span>
-              <span class="badge-amber">{{ (generatedPlan.daysList || generatedPlan.days || []).length }} Ngày</span>
+              <span class="badge-emerald">✦ LỊCH TRÌNH CÁ NHÂN HÓA</span>
+              <span class="badge-amber">{{ (generatedPlan.daysList || generatedPlan.days || []).length }} Ngày {{ Math.max(1, (generatedPlan.daysList || generatedPlan.days || []).length - 1) }} Đêm</span>
             </div>
+            
             <h2 class="plan-dest-name">{{ generatedPlan.destination || 'Miền Trung' }}</h2>
-            <p class="plan-meta-info">
-              Dự toán: ~{{ formatMoney(generatedPlan.total_budget || 0) }}đ • {{ generatedPlan.people || 1 }} người
-            </p>
+            
+            <div class="plan-meta-stats-row">
+              <div class="pms-item">
+                <span class="pms-label">Dự toán tổng</span>
+                <strong class="pms-val text-emerald">~{{ formatMoney(generatedPlan.total_budget || 0) }}đ</strong>
+              </div>
+              <div class="pms-item">
+                <span class="pms-label">Số người</span>
+                <strong class="pms-val">{{ generatedPlan.people || 1 }} người</strong>
+              </div>
+              <div class="pms-item">
+                <span class="pms-label">Bình quân/người</span>
+                <strong class="pms-val">~{{ formatMoney(Math.round((generatedPlan.total_budget || 0) / (generatedPlan.people || 1))) }}đ</strong>
+              </div>
+            </div>
 
+            <!-- Nút hành động nhanh -->
             <div class="plan-quick-buttons">
+              <button class="btn-start-mobile-tour" @click="batDauChuyenDiMobile(generatedPlan)">
+                🚀 Bắt đầu lịch trình ngay
+              </button>
               <button class="btn-save-mobile-plan" @click="savePlan">
-                ❤️ {{ isPlanSaved ? 'Đã lưu' : 'Lưu chuyến đi' }}
+                ❤️ {{ isPlanSaved ? 'Đã lưu chuyến đi' : 'Lưu chuyến đi này' }}
               </button>
               <button class="btn-reset-mobile-plan" @click="generatedPlan = null">
-                ✕ Nhập lại
+                ↺ Lên lịch khác
               </button>
             </div>
           </div>
 
-          <!-- Day selector pills -->
+          <!-- BÓC TÁCH CHI PHÍ THÔNG MINH (BUDGET BREAKDOWN - ĐỒNG BỘ 100% VỚI PC) -->
+          <div v-if="generatedPlan.budget_breakdown" class="mobile-budget-breakdown-card">
+            <div class="m-card-header-line">
+              <h4 class="m-card-title">💰 Bóc tách dự toán chi phí</h4>
+              <span class="m-budget-total-pill">Tổng: {{ formatMoney(generatedPlan.total_budget || 0) }}đ</span>
+            </div>
+            
+            <!-- Cảnh báo nếu ngân sách thực tế vượt quá ngân sách mục tiêu -->
+            <div v-if="generatedPlan.is_over_budget" class="mobile-over-budget-banner">
+              <span class="mob-icon">⚠️</span>
+              <div class="mob-text">
+                <strong>VƯỢT NGÂN SÁCH MỤC TIÊU (+{{ generatedPlan.over_percent }}%)</strong>
+                <p>Mục tiêu: {{ formatMoney(generatedPlan.target_budget) }}đ · Thực tế: {{ formatMoney(generatedPlan.total_budget) }}đ (vượt +{{ formatMoney(generatedPlan.over_amount) }}đ)</p>
+              </div>
+            </div>
+
+            <div class="m-budget-grid-2x2">
+              <div class="m-budget-mini-item">
+                <div class="m-bmi-icon">🏨</div>
+                <div class="m-bmi-info">
+                  <span class="m-bmi-label">Khách sạn lưu trú</span>
+                  <strong class="m-bmi-val">{{ generatedPlan.self_hotel ? 'Tự túc (0đ)' : `${formatMoney(generatedPlan.budget_breakdown.hotel)}đ` }}</strong>
+                </div>
+              </div>
+              <div class="m-budget-mini-item">
+                <div class="m-bmi-icon">🚌</div>
+                <div class="m-bmi-info">
+                  <span class="m-bmi-label">Di chuyển / Vé xe</span>
+                  <strong class="m-bmi-val">{{ generatedPlan.self_transit ? `Xăng xe: ${formatMoney(generatedPlan.budget_breakdown.transportation)}đ` : `${formatMoney(generatedPlan.budget_breakdown.transportation)}đ` }}</strong>
+                </div>
+              </div>
+              <div class="m-budget-mini-item">
+                <div class="m-bmi-icon">🍜</div>
+                <div class="m-bmi-info">
+                  <span class="m-bmi-label">Ăn uống đặc sản</span>
+                  <strong class="m-bmi-val">{{ formatMoney(generatedPlan.budget_breakdown.food) }}đ</strong>
+                </div>
+              </div>
+              <div class="m-budget-mini-item">
+                <div class="m-bmi-icon">🎟️</div>
+                <div class="m-bmi-info">
+                  <span class="m-bmi-label">Vé tham quan</span>
+                  <strong class="m-bmi-val">{{ generatedPlan.free_places_only ? 'Miễn phí (0đ)' : `${formatMoney(generatedPlan.budget_breakdown.tickets)}đ` }}</strong>
+                </div>
+              </div>
+              <div v-if="generatedPlan.budget_breakdown.reserve" class="m-budget-mini-item full-width-item">
+                <div class="m-bmi-icon">🛡️</div>
+                <div class="m-bmi-info">
+                  <span class="m-bmi-label">Quỹ dự phòng (~5%)</span>
+                  <strong class="m-bmi-val">{{ formatMoney(generatedPlan.budget_breakdown.reserve) }}đ</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- KHÁCH SẠN LƯU TRÚ GỢI Ý (NẾU CÓ) -->
+          <div v-if="generatedPlan.hotel_recommendation" class="mobile-hotel-rec-card">
+            <div class="m-hotel-rec-top">
+              <div class="m-hotel-thumb-wrap">
+                <img
+                  :src="getPlaceImage(generatedPlan.hotel_recommendation)"
+                  :alt="generatedPlan.hotel_recommendation.name"
+                  class="m-hotel-thumb-img"
+                  loading="lazy"
+                  @error="onImageError"
+                />
+                <span class="m-hotel-badge">🏨 {{ generatedPlan.self_hotel ? 'Chỗ nghỉ tự túc' : 'Khách sạn lưu trú' }}</span>
+              </div>
+              <div class="m-hotel-info-block">
+                <h4 class="m-hotel-name">{{ generatedPlan.hotel_recommendation.name }}</h4>
+                <p class="m-hotel-addr">📍 {{ generatedPlan.hotel_recommendation.address }}</p>
+                <div class="m-hotel-rating-price">
+                  <span class="m-hotel-star">⭐ {{ generatedPlan.hotel_recommendation.rating || '4.8' }}</span>
+                  <span class="m-hotel-price">{{ generatedPlan.self_hotel ? '0đ (Tự túc)' : `~${formatMoney(generatedPlan.hotel_recommendation.price_per_night || 650000)}đ/đêm` }}</span>
+                </div>
+                <a
+                  :href="chiDuongUrl(generatedPlan.hotel_recommendation.name, generatedPlan.hotel_recommendation.address)"
+                  target="_blank"
+                  rel="noreferrer"
+                  class="m-hotel-map-link"
+                >
+                  Chỉ đường tới chỗ nghỉ ↗
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- CHẶNG KHỞI HÀNH XUẤT PHÁT (TRANSIT SUMMARY - NẾU CÓ) -->
+          <div v-if="generatedPlan.transit_summary || generatedPlan.origin" class="mobile-transit-card">
+            <div class="m-transit-header">
+              <span class="m-transit-badge">🚌 CHẶNG KHỞI HÀNH TỪ NƠI Ở</span>
+              <span class="m-transit-route">{{ generatedPlan.origin || 'Hà Nội' }} ➔ {{ generatedPlan.destination }}</span>
+            </div>
+            <div class="m-transit-body">
+              <div class="m-transit-detail-row">
+                <span>Phương tiện:</span>
+                <strong>{{ generatedPlan.self_transit ? 'Xe máy / Tự túc phương tiện (0đ vé)' : (generatedPlan.transit_summary?.selected_bus?.name || generatedPlan.transit_summary?.cheapestBus?.name || (generatedPlan.transportation === 'máy bay' ? 'Chuyến bay nội địa' : (generatedPlan.transportation === 'tàu hỏa' ? 'Tàu hoả Thống Nhất' : 'Xe khách giường nằm VIP'))) }}</strong>
+              </div>
+              <div v-if="generatedPlan.transit_summary?.estimated_distance_km" class="m-transit-detail-row">
+                <span>Cự ly quãng đường:</span>
+                <strong>~{{ generatedPlan.transit_summary.estimated_distance_km }} km</strong>
+              </div>
+              <div class="m-transit-detail-row">
+                <span>Dự toán di chuyển:</span>
+                <strong class="text-emerald">{{ generatedPlan.self_transit ? 'Tự túc (chỉ tính xăng xe)' : ('~' + formatMoney(generatedPlan.budget_breakdown?.transportation || generatedPlan.transit_summary?.cheapestBusTotal || 0) + 'đ') }}</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- THANH CHỌN NGÀY (DAY TABS) -->
           <div class="plan-day-pills-row">
             <button
               v-for="(day, dIdx) in (generatedPlan.daysList || generatedPlan.days || [])"
@@ -208,34 +336,143 @@
               :class="['day-pill-item', { active: currentActiveDayIndex === dIdx }]"
               @click="currentActiveDayIndex = dIdx"
             >
-              Ngày {{ day.day || dIdx + 1 }}
+              <span>Ngày {{ day.day || dIdx + 1 }}</span>
+              <small class="dpi-count">({{ (day.activities || []).length }} điểm)</small>
             </button>
           </div>
 
-          <!-- Active Day Schedule Timeline -->
+          <!-- KHỐI HOẠT ĐỘNG CHI TIẾT TRONG NGÀY -->
           <div v-if="currentDayActivities" class="day-activities-card">
-            <h3 class="day-activities-title">
-              {{ currentDayActivities.theme || `Lịch trình Ngày ${currentActiveDayIndex + 1}` }}
-            </h3>
+            
+            <!-- HEADER CỦA NGÀY & NÚT GOOGLE MAPS CẢ NGÀY -->
+            <div class="m-day-header-banner">
+              <div class="m-dhb-left">
+                <span class="m-day-counter">NGÀY {{ currentActiveDayIndex + 1 }} / {{ (generatedPlan.daysList || generatedPlan.days || []).length }}</span>
+                <h3 class="day-activities-title">
+                  {{ currentDayActivities.theme || `Khám phá & Ẩm thực Ngày ${currentActiveDayIndex + 1}` }}
+                </h3>
+              </div>
+              <!-- Nút mở lộ trình ngày trên Google Maps liên tục -->
+              <a
+                :href="taoLinkGoogleMapsChoNgay(currentDayActivities)"
+                target="_blank"
+                rel="noreferrer"
+                class="btn-day-maps-route"
+                title="Mở toàn bộ lộ trình ngày trên Google Maps dẫn đường liên tục"
+              >
+                🗺️ Lộ trình cả ngày ↗
+              </a>
+            </div>
 
+            <!-- DANH SÁCH THẺ HOẠT ĐỘNG (CHI TIẾT ĐẦY ĐỦ CÓ ẢNH THẬT) -->
             <div class="timeline-activity-list">
               <div
                 v-for="(act, aIdx) in (currentDayActivities.activities || [])"
                 :key="aIdx"
-                class="timeline-act-node"
+                class="m-act-card"
               >
-                <div class="act-time-pill">{{ act.time || `${8 + aIdx * 3}:00` }}</div>
-                <div class="act-info-box">
-                  <span class="act-category-tag">{{ act.period || 'Điểm đến' }}</span>
-                  <h4 class="act-place-title">{{ act.place || act.title || act.activity }}</h4>
-                  <p class="act-desc-text">{{ act.description || act.note }}</p>
-                  <div v-if="act.cost || act.tips" class="act-meta-tags">
-                    <span v-if="act.cost" class="act-cost-tag">💰 {{ formatMoney(act.cost) }}đ</span>
-                    <span v-if="act.tips" class="act-tip-tag">💡 {{ act.tips }}</span>
+                <!-- Dòng thời gian & Badge danh mục -->
+                <div class="m-act-top-bar">
+                  <div class="m-act-time-pill">
+                    <span class="mat-clock">⏰</span>
+                    <span>{{ act.time || `${7 + aIdx * 2}:30` }}</span>
                   </div>
+                  <span :class="['m-act-badge', getBadgeInfo(act).class]">
+                    {{ getBadgeInfo(act).icon }} {{ getBadgeInfo(act).label }}
+                  </span>
+                  <span v-if="act.estimated_cost > 0" class="m-act-cost-badge">
+                    💰 ~{{ formatMoney(act.estimated_cost) }}đ
+                  </span>
+                  <span v-else-if="act.estimated_cost === 0" class="m-act-cost-badge free">
+                    🎟️ Miễn phí vé
+                  </span>
+                </div>
+
+                <!-- ẢNH THẬT ĐỊA ĐIỂM SẮC NÉT (THUMBNAIL BANNER) -->
+                <div class="m-act-image-box">
+                  <img
+                    :src="getPlaceImage(act)"
+                    :alt="act.place"
+                    class="m-act-photo"
+                    loading="lazy"
+                    @error="onImageError"
+                  />
+                  <span class="m-act-index-tag">#{{ aIdx + 1 }}</span>
+                  <span v-if="act.rating" class="m-act-rating-pill">
+                    ⭐ {{ act.rating }} <small v-if="act.review_count">({{ act.review_count }})</small>
+                  </span>
+                </div>
+
+                <!-- THÔNG TIN CHI TIẾT ĐỊA ĐIỂM -->
+                <div class="m-act-content-box">
+                  <h4 class="m-act-name">{{ act.place || act.title }}</h4>
+                  
+                  <p v-if="act.address" class="m-act-address">
+                    <span class="m-pin-icon">📍</span> {{ act.address }}
+                  </p>
+
+                  <!-- MÔ TẢ TRẢI NGHIỆM CHI TIẾT (VĂN PHONG DU LỊCH) -->
+                  <p class="m-act-description">
+                    {{ layMoTaHoatDong(act) }}
+                  </p>
+
+                  <!-- MÓN ĐẶC SẢN NỔI BẬT NẾU LÀ QUÁN ĂN -->
+                  <div v-if="act.signature_dishes && act.signature_dishes.length" class="m-act-dishes-row">
+                    <span class="mad-icon">🍜</span>
+                    <strong>Đặc sản món tủ:</strong>
+                    <span>{{ act.signature_dishes.join(', ') }}</span>
+                  </div>
+
+                  <!-- HÀNG THÔNG TIN TIỆN ÍCH (Giờ mở cửa, thời gian dừng, trong nhà/ngoài trời) -->
+                  <div class="m-act-meta-pills">
+                    <span class="m-meta-pill" v-if="act.open_hours">
+                      ⏰ Mở cửa: {{ act.open_hours }}
+                    </span>
+                    <span class="m-meta-pill" v-if="act.dwell_time">
+                      ⏳ Dừng lại: {{ act.dwell_time }}
+                    </span>
+                    <span class="m-meta-pill" v-if="act.is_indoor === true">
+                      ☂️ Trong nhà
+                    </span>
+                    <span class="m-meta-pill" v-else-if="act.is_indoor === false">
+                      ☀️ Ngoài trời
+                    </span>
+                  </div>
+
+                  <!-- HÀNG NÚT HÀNH ĐỘNG: CHỈ ĐƯỜNG GOOGLE MAPS -->
+                  <div class="m-act-action-row">
+                    <a
+                      :href="chiDuongUrl(act.place, act.address)"
+                      target="_blank"
+                      rel="noreferrer"
+                      class="btn-act-direction"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+                      Chỉ đường Google Maps ↗
+                    </a>
+                  </div>
+                </div>
+
+                <!-- CHỈ BÁO DI CHUYỂN ĐẾN ĐIỂM TIẾP THEO (NẾU CÓ THỜI GIAN/CỰ LY) -->
+                <div v-if="act.travel_distance_km" class="m-travel-step-indicator">
+                  <span class="mts-line"></span>
+                  <span class="mts-pill">
+                    🛵 Di chuyển: ~{{ act.travel_distance_km }} km ({{ act.travel_duration_mins || 15 }} phút)
+                  </span>
+                  <span class="mts-line"></span>
                 </div>
               </div>
             </div>
+
+            <!-- CHẶNG NGHỈ ĐÊM TẠI KHÁCH SẠN VÀO CUỐI NGÀY -->
+            <div v-if="generatedPlan.hotel_recommendation" class="m-day-finish-box">
+              <span class="m-df-icon">🌙</span>
+              <div class="m-df-text">
+                <strong>Kết thúc ngày {{ currentActiveDayIndex + 1 }}</strong>
+                <p>Nghỉ ngơi và hồi phục năng lượng tại <b>{{ generatedPlan.hotel_recommendation.name }}</b> chuẩn bị cho ngày tiếp theo.</p>
+              </div>
+            </div>
+
           </div>
         </div>
 
@@ -286,7 +523,10 @@
               💰 {{ formatMoney(trip.total_budget || 0) }}đ • {{ trip.people || 1 }} người
             </p>
             <div class="trip-item-bottom">
-              <span class="trip-hint-text">Chạm để xem lộ trình →</span>
+              <button class="trip-start-fast-btn" @click.stop="batDauChuyenDiMobile(trip)">
+                🚀 Bắt đầu ngay
+              </button>
+              <span class="trip-hint-text">Xem chi tiết →</span>
               <button class="trip-delete-btn" @click.stop="deleteSavedTrip(trip._id)">
                 Xóa
               </button>
@@ -641,16 +881,45 @@
                 </button>
               </div>
 
-              <!-- Danh sách 4 thông tin cốt lõi -->
+              <!-- Danh sách các thông tin cốt lõi (Đồng bộ 100% chuẩn thuật toán PC) -->
               <div class="guidance-checklist-scroll">
                 
-                <!-- 1. Điểm đến -->
+                <!-- 0. Điểm khởi hành (Nơi xuất phát) -->
+                <div class="guidance-item" :class="{ 'is-ready': guidanceForm.origin }">
+                  <div class="g-item-header">
+                    <span class="g-item-icon">🛫</span>
+                    <div class="g-item-info">
+                      <div class="g-item-title-row">
+                        <span class="g-item-name">1. Nơi xuất phát (Điểm bắt đầu)</span>
+                        <span class="g-status-badge ready">
+                          {{ guidanceForm.origin ? '✓ Từ ' + guidanceForm.origin : 'Chọn nơi xuất phát' }}
+                        </span>
+                      </div>
+                      <span class="g-item-desc">Để AI tính chính xác cự ly, giá vé xe/tàu và lộ trình di chuyển</span>
+                    </div>
+                  </div>
+                  <div class="g-item-control">
+                    <div class="g-chips-scroll">
+                      <button
+                        v-for="orig in popularOrigins"
+                        :key="orig"
+                        type="button"
+                        :class="['g-chip-btn', { active: guidanceForm.origin === orig }]"
+                        @click="guidanceForm.origin = orig"
+                      >
+                        {{ orig }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 1. Điểm đến du lịch -->
                 <div class="guidance-item" :class="{ 'is-ready': guidanceForm.destination }">
                   <div class="g-item-header">
                     <span class="g-item-icon">📍</span>
                     <div class="g-item-info">
                       <div class="g-item-title-row">
-                        <span class="g-item-name">1. Điểm đến</span>
+                        <span class="g-item-name">2. Điểm đến du lịch</span>
                         <span class="g-status-badge" :class="guidanceForm.destination ? 'ready' : 'missing'">
                           {{ guidanceForm.destination ? '✓ ' + guidanceForm.destination : '⚠️ Cần chọn điểm đến' }}
                         </span>
@@ -673,15 +942,15 @@
                   </div>
                 </div>
 
-                <!-- 2. Số ngày đi -->
+                <!-- 2. Thời gian chuyến đi -->
                 <div class="guidance-item" :class="{ 'is-ready': guidanceForm.days }">
                   <div class="g-item-header">
                     <span class="g-item-icon">⏱️</span>
                     <div class="g-item-info">
                       <div class="g-item-title-row">
-                        <span class="g-item-name">2. Số ngày đi</span>
+                        <span class="g-item-name">3. Thời gian chuyến đi</span>
                         <span class="g-status-badge ready">
-                          {{ guidanceForm.days }} ngày {{ guidanceForm.days > 1 ? `${guidanceForm.days - 1} đêm` : '' }}
+                          {{ guidanceForm.days }} ngày {{ guidanceForm.nights }} đêm
                         </span>
                       </div>
                       <span class="g-item-desc">Để AI phân bổ các cụm tham quan hợp lý theo từng ngày</span>
@@ -696,7 +965,7 @@
                         :class="['g-chip-btn', { active: guidanceForm.days === d }]"
                         @click="selectGuidanceDays(d)"
                       >
-                        {{ d }} Ngày
+                        {{ d }} Ngày {{ d > 1 ? `${d - 1} Đêm` : 'Đi về trong ngày' }}
                       </button>
                     </div>
                   </div>
@@ -708,9 +977,9 @@
                     <span class="g-item-icon">👥</span>
                     <div class="g-item-info">
                       <div class="g-item-title-row">
-                        <span class="g-item-name">3. Số người tham gia</span>
-                        <span class="g-status-badge" :class="guidanceForm.peopleProvided ? 'ready' : 'notice'">
-                          {{ guidanceForm.peopleProvided ? `✓ ${guidanceForm.people} người` : '⚠️ Chưa có (Mặc định: 1)' }}
+                        <span class="g-item-name">4. Số người tham gia</span>
+                        <span class="g-status-badge ready">
+                          ✓ {{ guidanceForm.people }} người
                         </span>
                       </div>
                       <span class="g-item-desc">Để tính số phòng khách sạn, vé xe và khẩu phần ăn</span>
@@ -731,18 +1000,81 @@
                   </div>
                 </div>
 
-                <!-- 4. Ngân sách dự kiến -->
+                <!-- 4. Phương tiện di chuyển -->
+                <div class="guidance-item is-ready">
+                  <div class="g-item-header">
+                    <span class="g-item-icon">🚌</span>
+                    <div class="g-item-info">
+                      <div class="g-item-title-row">
+                        <span class="g-item-name">5. Phương tiện di chuyển</span>
+                        <span class="g-status-badge ready">
+                          ✓ {{ guidanceForm.selfTransit ? 'Tự túc xe (0đ vé)' : guidanceForm.transportation }}
+                        </span>
+                      </div>
+                      <span class="g-item-desc">Lựa chọn cách thức di chuyển tới điểm du lịch</span>
+                    </div>
+                  </div>
+                  <div class="g-item-control">
+                    <div class="g-chips-row">
+                      <button
+                        v-for="tr in transportOptions"
+                        :key="tr.key"
+                        type="button"
+                        :class="['g-chip-btn', { active: guidanceForm.transportation === tr.key }]"
+                        @click="guidanceForm.transportation = tr.key; guidanceForm.selfTransit = (tr.key === 'xe máy')"
+                      >
+                        {{ tr.icon }} {{ tr.label }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 5. Khách sạn & Nơi lưu trú -->
+                <div class="guidance-item is-ready" v-if="guidanceForm.days > 1">
+                  <div class="g-item-header">
+                    <span class="g-item-icon">🏨</span>
+                    <div class="g-item-info">
+                      <div class="g-item-title-row">
+                        <span class="g-item-name">6. Khách sạn & Lưu trú</span>
+                        <span class="g-status-badge ready">
+                          {{ guidanceForm.selfHotel ? '✓ Tự túc nơi ở (0đ)' : '✓ Khách sạn AI gợi ý' }}
+                        </span>
+                      </div>
+                      <span class="g-item-desc">Chọn nghỉ tại khách sạn/homestay hoặc tự túc chỗ ở</span>
+                    </div>
+                  </div>
+                  <div class="g-item-control">
+                    <div class="g-chips-row">
+                      <button
+                        type="button"
+                        :class="['g-chip-btn', { active: !guidanceForm.selfHotel }]"
+                        @click="guidanceForm.selfHotel = false"
+                      >
+                        🏨 Gợi ý phòng nghỉ theo ngân sách
+                      </button>
+                      <button
+                        type="button"
+                        :class="['g-chip-btn', { active: guidanceForm.selfHotel }]"
+                        @click="guidanceForm.selfHotel = true"
+                      >
+                        🏕️ Tự túc nơi ở (Nhà người thân/Homestay riêng)
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 6. Ngân sách dự kiến & Feasibility Check -->
                 <div class="guidance-item" :class="{ 'is-ready': guidanceForm.budgetProvided }">
                   <div class="g-item-header">
                     <span class="g-item-icon">💰</span>
                     <div class="g-item-info">
                       <div class="g-item-title-row">
-                        <span class="g-item-name">4. Ngân sách dự kiến</span>
-                        <span class="g-status-badge" :class="guidanceForm.budgetProvided ? 'ready' : 'notice'">
-                          {{ guidanceForm.budgetProvided ? `✓ ~${formatMoney(guidanceForm.budget)}đ` : '⚠️ Chưa có (Chọn mức)' }}
+                        <span class="g-item-name">7. Ngân sách chuyến đi</span>
+                        <span class="g-status-badge ready">
+                          ✓ ~{{ formatMoney(guidanceForm.budget) }}đ
                         </span>
                       </div>
-                      <span class="g-item-desc">Để AI gợi ý đúng phân khúc phòng ở và nhà hàng</span>
+                      <span class="g-item-desc">Để thuật toán co giãn giá ăn uống và phòng ở vừa vặn</span>
                     </div>
                   </div>
                   <div class="g-item-control">
@@ -759,10 +1091,66 @@
                         <span class="tier-desc">{{ tier.desc }}</span>
                       </button>
                     </div>
+
+                    <!-- Hộp cảnh báo nếu ngân sách quá eo hẹp (chuẩn PC) -->
+                    <div v-if="!tripFeasibility.feasible" class="m-unfeasible-warning">
+                      <div class="muw-text">
+                        <strong>⚠️ Ngân sách cần điều chỉnh:</strong>
+                        <p>{{ tripFeasibility.message }}</p>
+                      </div>
+                      <button
+                        type="button"
+                        class="btn-auto-fix-budget"
+                        @click="guidanceForm.budget = tripFeasibility.minFeasibleBudget"
+                      >
+                        ✨ Nâng ngân sách lên {{ formatMoney(tripFeasibility.minFeasibleBudget) }}đ
+                      </button>
+                    </div>
                   </div>
                 </div>
 
-                <!-- 5. Mẫu câu lệnh gợi ý chuẩn -->
+                <!-- 7. Sở thích trải nghiệm -->
+                <div class="guidance-item is-ready">
+                  <div class="g-item-header">
+                    <span class="g-item-icon">🎯</span>
+                    <div class="g-item-info">
+                      <div class="g-item-title-row">
+                        <span class="g-item-name">8. Sở thích trải nghiệm</span>
+                        <span class="g-status-badge ready">
+                          {{ guidanceForm.interests.length }} sở thích đã chọn
+                        </span>
+                      </div>
+                      <span class="g-item-desc">AI sẽ ưu tiên các điểm tham quan theo gu của bạn</span>
+                    </div>
+                  </div>
+                  <div class="g-item-control">
+                    <div class="g-chips-row">
+                      <button
+                        v-for="it in availableInterests"
+                        :key="it"
+                        type="button"
+                        :class="['g-chip-btn', { active: guidanceForm.interests.includes(it) }]"
+                        @click="toggleGuidanceInterest(it)"
+                      >
+                        <span v-if="guidanceForm.interests.includes(it)">✓ </span>{{ it }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 8. Chế độ Phượt tiết kiệm 100% miễn phí vé -->
+                <div class="guidance-free-mode-toggle">
+                  <label class="g-free-checkbox-label">
+                    <input
+                      type="checkbox"
+                      v-model="guidanceForm.freePlacesOnly"
+                      class="g-free-checkbox"
+                    />
+                    <span><strong>Phượt tự túc tiết kiệm:</strong> Chỉ gợi ý các điểm 100% MIỄN PHÍ VÉ (bãi biển, phố cổ, di tích mở...)</span>
+                  </label>
+                </div>
+
+                <!-- 9. Mẫu câu lệnh gợi ý chuẩn -->
                 <div class="guidance-examples-card">
                   <div class="g-ex-header">
                     <span>✨ Mẫu câu lệnh đầy đủ chuẩn xác nhất:</span>
@@ -793,8 +1181,8 @@
                   :disabled="isGenerating || !guidanceForm.destination"
                   @click="submitGuidancePlan"
                 >
-                  <span v-if="!isGenerating">🚀 Lên lịch với thông tin này</span>
-                  <span v-else>Đang tính...</span>
+                  <span v-if="!isGenerating">🚀 Khởi tạo lịch trình tối ưu</span>
+                  <span v-else>Đang tính toán chi phí...</span>
                 </button>
               </div>
 
@@ -830,12 +1218,39 @@
         <span>Cá nhân</span>
       </button>
     </nav>
+
+    <!-- MODAL ĐỒNG HÀNH TRỰC TIẾP CHUYẾN ĐI (LIVE TRIP COMPANION MOBILE) -->
+    <LiveTripCompanion
+      :isOpen="showMobileLiveCompanion"
+      :trip="mobileLiveTrip"
+      :isMobile="true"
+      @close="showMobileLiveCompanion = false"
+      @finish="showMobileLiveCompanion = false"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import api from '../../services/api'
+import LiveTripCompanion from '../planner/LiveTripCompanion.vue'
+
+// ==================== LIVE TRIP COMPANION MOBILE STATE & ACTIONS ====================
+const showMobileLiveCompanion = ref(false)
+const mobileLiveTrip = ref(null)
+
+function batDauChuyenDiMobile(trip) {
+  const t = trip || generatedPlan.value
+  if (!t) {
+    alert('Vui lòng tạo hoặc chọn một lịch trình trước khi bắt đầu!')
+    return
+  }
+  if (t.days && !t.daysList) {
+    t.daysList = t.days
+  }
+  mobileLiveTrip.value = t
+  showMobileLiveCompanion.value = true
+}
 
 const props = defineProps({
   nguoiDung: { type: Object, default: null },
@@ -1170,6 +1585,24 @@ function quickSelectCity(cityName) {
 // ==================== HƯỚNG DẪN & HOÀN THIỆN THÔNG TIN LỊCH TRÌNH ====================
 const showGuidanceSheet = ref(false)
 
+const popularOrigins = ['Hà Nội', 'TP. Hồ Chí Minh', 'Đà Nẵng', 'Huế', 'Nghệ An', 'Hải Phòng', 'Cần Thơ', 'Quảng Bình', 'Quảng Trị', 'Khánh Hòa']
+
+const transportOptions = [
+  { key: 'xe khách', label: 'Xe khách giường nằm', icon: '🚌', desc: 'Có tính vé xe liên tỉnh' },
+  { key: 'máy bay', label: 'Máy bay', icon: '✈️', desc: 'Chuyến bay nhanh' },
+  { key: 'tàu hỏa', label: 'Tàu hỏa', icon: '🚆', desc: 'Đường sắt ngắm cảnh' },
+  { key: 'xe máy', label: 'Xe máy / Tự túc xe', icon: '🛵', desc: '0đ vé xe liên tỉnh (chỉ tính xăng)' }
+]
+
+const availableInterests = [
+  'Ẩm thực đặc sản',
+  'Check-in sống ảo',
+  'Biển đảo & Nghỉ dưỡng',
+  'Di tích & Lịch sử',
+  'Cafe & Chill',
+  'Thiên nhiên hoang sơ'
+]
+
 const peopleOptions = [
   { val: 1, label: '1 người (Đơn thân)' },
   { val: 2, label: '2 người (Cặp đôi/Bạn bè)' },
@@ -1178,37 +1611,86 @@ const peopleOptions = [
 ]
 
 const budgetTierOptions = [
-  { key: 'budget', label: 'Bình dân / Tiết kiệm', perDay: 1500000, desc: 'Homestay, quán ăn địa phương, chi phí tối ưu' },
-  { key: 'medium', label: 'Tiêu chuẩn / Thoải mái', perDay: 2500000, desc: 'Khách sạn 3-4 sao, đặc sản phong phú, tiện nghi' },
-  { key: 'luxury', label: 'Sang trọng / Nghỉ dưỡng', perDay: 4500000, desc: 'Resort 4-5 sao, dịch vụ cao cấp trọn gói' }
+  { key: 'budget', label: 'Bình dân / Tiết kiệm', perDay: 1500000, desc: 'Homestay/dorm, quán ăn đặc sản bình dân, tối ưu chi phí' },
+  { key: 'medium', label: 'Tiêu chuẩn / Thoải mái', perDay: 2500000, desc: 'Khách sạn 3-4 sao, ẩm thực phong phú, lịch trình thảnh thơi' },
+  { key: 'luxury', label: 'Sang trọng / Nghỉ dưỡng', perDay: 4500000, desc: 'Resort 4-5 sao, nhà hàng cao cấp, dịch vụ trọn gói' }
 ]
 
 const promptExamples = [
-  '3 ngày ở Quảng Trị, 2 người, ngân sách 5 triệu, thích di tích & ẩm thực',
-  '3 ngày Đà Nẵng - Hội An, 2 người, ngân sách 6 triệu, thích check-in & biển',
-  '2 ngày 1 đêm ở Huế, 1 người, ngân sách 3 triệu, thích khám phá cố đô',
-  '4 ngày Quy Nhơn - Phú Yên, 4 người, ngân sách 15 triệu, thích hải sản & biển'
+  'Từ Hà Nội đi Đà Nẵng 3 ngày 2 đêm, 2 người, ngân sách 7 triệu, đi xe khách, thích ẩm thực & check-in',
+  'Từ TP.HCM đi Huế 3 ngày 2 đêm, 2 người, ngân sách 6 triệu, tự túc xe, thích di tích & ẩm thực cố đô',
+  'Từ Đà Nẵng đi Quy Nhơn 2 ngày 1 đêm, 2 người, ngân sách 4 triệu, thích biển & hải sản',
+  '4 ngày 3 đêm ở Quảng Bình, 4 người, ngân sách 16 triệu, thích khám phá hang động & suối Moọc'
 ]
 
 const guidanceForm = reactive({
+  origin: 'Hà Nội',
   destination: 'Đà Nẵng',
   days: 3,
-  people: 1,
-  peopleProvided: false,
-  budget: 4500000,
-  budgetTier: 'budget',
-  budgetProvided: false,
-  interests: []
+  nights: 2,
+  people: 2,
+  peopleProvided: true,
+  budget: 6000000,
+  budgetTier: 'medium',
+  budgetProvided: true,
+  transportation: 'xe khách',
+  selfTransit: false,
+  selfHotel: false,
+  freePlacesOnly: false,
+  interests: ['Ẩm thực đặc sản', 'Check-in sống ảo']
+})
+
+// Kiểm tra tính khả thi của ngân sách (Feasibility Check - Giống 100% bản PC)
+const tripFeasibility = computed(() => {
+  const budget = Number(guidanceForm.budget) || 0
+  const days = Math.max(1, Number(guidanceForm.days) || 1)
+  const people = Math.max(1, Number(guidanceForm.people) || 1)
+  const dest = guidanceForm.destination || 'Đà Nẵng'
+  const freeOnly = Boolean(guidanceForm.freePlacesOnly)
+  const perPersonPerDay = Math.round(budget / (days * people))
+  const minDailyPerPerson = days === 1 ? 150000 : 250000
+  const minFeasibleBudget = days === 1 ? (people * 150000) : (days * people * 250000)
+
+  if (freeOnly) {
+    return {
+      feasible: true,
+      mode: 'free_places_only',
+      perPersonPerDay,
+      minFeasibleBudget,
+      message: 'Chế độ phượt tự túc: AI chỉ xếp các điểm tham quan 100% miễn phí vé (0đ).'
+    }
+  }
+
+  if (budget < minFeasibleBudget) {
+    const maxFeasibleDays = Math.max(1, Math.floor(budget / (people * 250000)))
+    return {
+      feasible: false,
+      reason: 'INSUFFICIENT_BUDGET',
+      budget,
+      days,
+      people,
+      perPersonPerDay,
+      minDailyPerPerson,
+      minFeasibleBudget,
+      maxFeasibleDays,
+      message: `Ngân sách ${formatMoney(budget)}đ chưa khả thi cho chuyến đi ${days} ngày ${people} người tại ${dest} (trung bình chỉ ~${formatMoney(perPersonPerDay)}đ/người/ngày). Số tiền này khó chi trả đủ chỗ ở và 3 bữa ăn mỗi ngày.`
+    }
+  }
+
+  return {
+    feasible: true,
+    perPersonPerDay,
+    minFeasibleBudget
+  }
 })
 
 function openGuidanceSheet(fromIncomplete = false) {
   if (!fromIncomplete) {
-    guidanceForm.destination = 'Đà Nẵng'
-    guidanceForm.days = 3
-    guidanceForm.people = 2
-    guidanceForm.peopleProvided = false
-    guidanceForm.budgetTier = 'budget'
-    guidanceForm.budgetProvided = false
+    if (!guidanceForm.destination) guidanceForm.destination = 'Đà Nẵng'
+    if (!guidanceForm.days) guidanceForm.days = 3
+    guidanceForm.nights = Math.max(0, guidanceForm.days - 1)
+    if (!guidanceForm.people) guidanceForm.people = 2
+    if (!guidanceForm.budgetTier) guidanceForm.budgetTier = 'medium'
     recalcGuidanceBudget()
   }
   showGuidanceSheet.value = true
@@ -1216,6 +1698,7 @@ function openGuidanceSheet(fromIncomplete = false) {
 
 function selectGuidanceDays(d) {
   guidanceForm.days = d
+  guidanceForm.nights = Math.max(0, d - 1)
   recalcGuidanceBudget()
 }
 
@@ -1231,8 +1714,17 @@ function selectGuidanceBudgetTier(key) {
   recalcGuidanceBudget()
 }
 
+function toggleGuidanceInterest(it) {
+  const idx = guidanceForm.interests.indexOf(it)
+  if (idx >= 0) {
+    guidanceForm.interests.splice(idx, 1)
+  } else {
+    guidanceForm.interests.push(it)
+  }
+}
+
 function recalcGuidanceBudget() {
-  const tier = budgetTierOptions.find(t => t.key === guidanceForm.budgetTier) || budgetTierOptions[0]
+  const tier = budgetTierOptions.find(t => t.key === guidanceForm.budgetTier) || budgetTierOptions[1]
   guidanceForm.budget = tier.perDay * (guidanceForm.days || 1) * (guidanceForm.people || 1)
 }
 
@@ -1242,22 +1734,210 @@ function applyExamplePrompt(text) {
   handleDirectGenerateFromPrompt()
 }
 
+// ==================== THUẬT TOÁN ĐỒNG BỘ CHI PHÍ THỰC TẾ (ĐỒNG BỘ CHÍNH XÁC VỚI BẢN PC) ====================
+function tinhChiPhiKhachSan(plan) {
+  if (guidanceForm.selfHotel || plan?.self_hotel) return 0
+  if (!plan?.hotel_recommendation) return 0
+  const nights = plan.nights !== undefined ? Number(plan.nights) : (guidanceForm.nights !== undefined ? Number(guidanceForm.nights) : Math.max(0, (plan.daysList?.length || plan.days?.length || 1) - 1))
+  if (nights <= 0) return 0
+  const people = Number(plan.people) || Number(guidanceForm.people) || 2
+  const budget = Number(plan.target_budget || guidanceForm.budget || 3000000)
+  const aiPrice = Number(plan.hotel_recommendation.price_per_night) || 850000
+
+  // Tính ngưỡng giá khách sạn tối đa hợp lý theo ngân sách (tối đa 30% ngân sách cho khách sạn)
+  const maxHotelBudget = budget * 0.30
+  const maxPricePerNight = nights > 0 ? Math.round(maxHotelBudget / nights) : 300000
+  const effectivePrice = Math.min(aiPrice, maxPricePerNight)
+
+  if (effectivePrice <= 300000) {
+    return Math.round(effectivePrice * people * nights)
+  }
+  const rooms = Math.max(1, Math.ceil(people / 2))
+  return Math.round(effectivePrice * rooms * nights)
+}
+
+function dongBoChiPhiLichTrinh() {
+  if (!generatedPlan.value) return
+  const plan = generatedPlan.value
+  const people = Number(plan.people) || Number(guidanceForm.people) || 2
+  const allDays = plan.daysList || plan.days || []
+  const days = Math.max(1, allDays.length || guidanceForm.days || 3)
+
+  // 1. Chi phí khách sạn chính xác (đã tối ưu theo ngân sách và loại phòng)
+  const realHotel = tinhChiPhiKhachSan(plan)
+
+  // 2. Chi phí vé xe di chuyển:
+  // - Nếu bật "Tự túc xe" hoặc đi xe máy: KHÔNG tính vé xe liên tỉnh, chỉ tính xăng xe máy / nội tỉnh nhẹ nhàng
+  // - Nếu đi xe khách/tàu: Tính tiền vé xe đầy đủ (khứ hồi + di chuyển nội tỉnh)
+  const isSelfTransit = Boolean(guidanceForm.selfTransit || plan.self_transit || guidanceForm.transportation === 'xe máy')
+  guidanceForm.selfTransit = isSelfTransit
+  plan.self_transit = isSelfTransit
+  let roundTripBus = 0
+  let localTransport = days * 75000 * Math.max(1, Math.ceil(people / 2))
+
+  if (isSelfTransit) {
+    roundTripBus = 0
+    localTransport = days * 40000 * Math.max(1, Math.ceil(people / 2))
+  } else {
+    const busPrice = Number(plan.transit_summary?.selected_bus?.price || plan.transit_summary?.cheapestBus?.price || 320000)
+    roundTripBus = busPrice * people * 2
+  }
+  const realTransit = roundTripBus + localTransport
+
+  // 3. Chi phí vé tham quan ban đầu
+  let realTickets = 0
+  if (!guidanceForm.freePlacesOnly && !plan.free_places_only) {
+    allDays.forEach(d => {
+      (d.activities || []).forEach(a => {
+        const c = Number(a.estimated_cost) || 0
+        if (['attraction', 'checkin'].includes(a.type)) {
+          realTickets += c * people
+        }
+      })
+    })
+  } else {
+    realTickets = 0
+  }
+
+  // 4. THUẬT TOÁN CO GIÃN CHI PHÍ ĂN UỐNG ĐỘNG (DYNAMIC FOOD BUDGET SCALING)
+  const userTargetBudget = Number(plan.target_budget || guidanceForm.budget || 3500000)
+
+  // Lưu trữ danh sách bữa ăn và tính tổng tiền ăn thô ban đầu
+  const foodActivities = []
+  let rawFoodTotal = 0
+  allDays.forEach(d => {
+    (d.activities || []).forEach(a => {
+      if (['breakfast', 'lunch', 'dinner', 'restaurant', 'cafe'].includes(a.type)) {
+        if (a._raw_cost === undefined) {
+          a._raw_cost = Number(a.estimated_cost) || (a.type === 'breakfast' ? 45000 : a.type === 'cafe' ? 30000 : 150000)
+        }
+        foodActivities.push(a)
+        rawFoodTotal += (Number(a._raw_cost) || 0) * people
+      }
+    })
+  })
+
+  // Tính số tiền còn lại dành cho ăn uống sau khi trừ Khách sạn + Xe cộ + Vé tham quan (giữ ~5% quỹ dự phòng)
+  const fixedCosts = realHotel + realTransit + realTickets
+  const reserveTarget = Math.round(userTargetBudget * 0.05)
+  const availableBudgetForFood = Math.max(0, userTargetBudget - fixedCosts - reserveTarget)
+  const minSurvivalFood = days * people * 80000 // Tối thiểu 80k/người/ngày cho 3 bữa bình dân
+
+  let realFood = 0
+  if (foodActivities.length > 0) {
+    if (availableBudgetForFood >= minSurvivalFood && rawFoodTotal > availableBudgetForFood) {
+      // Co giãn tỷ lệ từng bữa ăn xuống để tổng chi phí tự động khống chế dưới ngân sách mục tiêu
+      const scaleRatio = availableBudgetForFood / Math.max(1, rawFoodTotal)
+      foodActivities.forEach(a => {
+        let scaled = (a._raw_cost || a.estimated_cost) * scaleRatio
+        if (a.type === 'breakfast') {
+          scaled = Math.max(25000, Math.min(45000, Math.round(scaled / 5000) * 5000))
+        } else if (a.type === 'cafe') {
+          scaled = Math.max(20000, Math.min(35000, Math.round(scaled / 5000) * 5000))
+        } else {
+          scaled = Math.max(35000, Math.min(100000, Math.round(scaled / 5000) * 5000))
+        }
+        a.estimated_cost = scaled
+      })
+      realFood = foodActivities.reduce((sum, a) => sum + (Number(a.estimated_cost) * people), 0)
+
+      // Cân chỉnh vi mô để đảm bảo không bị vượt quá do làm tròn số
+      if (realFood + fixedCosts + reserveTarget > userTargetBudget && availableBudgetForFood > 0) {
+        const excess = (realFood + fixedCosts + reserveTarget) - userTargetBudget
+        const trimPerAct = Math.ceil(excess / (foodActivities.length * people))
+        foodActivities.forEach(a => {
+          const floor = a.type === 'breakfast' ? 20000 : a.type === 'cafe' ? 15000 : 30000
+          a.estimated_cost = Math.max(floor, a.estimated_cost - trimPerAct)
+        })
+        realFood = foodActivities.reduce((sum, a) => sum + (Number(a.estimated_cost) * people), 0)
+      }
+    } else if (availableBudgetForFood < minSurvivalFood) {
+      // Khi ngân sách quá eo hẹp không đủ cả mức ăn tối thiểu
+      foodActivities.forEach(a => {
+        const floor = a.type === 'breakfast' ? 25000 : a.type === 'cafe' ? 20000 : 35000
+        a.estimated_cost = floor
+      })
+      realFood = foodActivities.reduce((sum, a) => sum + (Number(a.estimated_cost) * people), 0)
+    } else {
+      // Ngân sách dư dả, phục hồi về giá menu nguyên bản
+      foodActivities.forEach(a => {
+        if (a._raw_cost !== undefined) a.estimated_cost = a._raw_cost
+      })
+      realFood = rawFoodTotal
+    }
+  } else {
+    realFood = Math.min(availableBudgetForFood, days * people * 140000)
+  }
+
+  // 5. Tính toán tổng dự toán cuối cùng
+  const subtotal = realHotel + realTransit + realFood + realTickets
+  let realReserve = 0
+  if (userTargetBudget >= subtotal) {
+    realReserve = Math.min(Math.round(subtotal * 0.05), userTargetBudget - subtotal)
+  } else {
+    realReserve = Math.round(subtotal * 0.03)
+  }
+
+  plan.budget_breakdown = {
+    hotel: realHotel,
+    transportation: realTransit,
+    food: realFood,
+    tickets: realTickets,
+    reserve: realReserve
+  }
+  plan.total_budget = subtotal + realReserve
+  plan.target_budget = userTargetBudget
+  plan.is_over_budget = (subtotal + realReserve) > userTargetBudget
+  if (plan.is_over_budget) {
+    plan.over_amount = (subtotal + realReserve) - userTargetBudget
+    plan.over_percent = Math.round((plan.over_amount / userTargetBudget) * 100)
+  }
+}
+
 async function submitGuidancePlan() {
   showGuidanceSheet.value = false
   isGenerating.value = true
   isPlanSaved.value = false
   try {
     const payload = {
-      prompt: quickPromptText.value || `${guidanceForm.days} ngày ở ${guidanceForm.destination}`,
+      prompt: quickPromptText.value || `${guidanceForm.days} ngày ${guidanceForm.nights} đêm ở ${guidanceForm.destination}`,
+      origin: guidanceForm.origin || 'Hà Nội',
       destination: guidanceForm.destination || 'Đà Nẵng',
       days: Number(guidanceForm.days) || 3,
+      nights: Number(guidanceForm.nights) || Math.max(0, Number(guidanceForm.days) - 1),
       people: Number(guidanceForm.people) || 1,
-      budget: guidanceForm.budget,
-      total_budget: guidanceForm.budget,
-      interests: guidanceForm.interests
+      budget: Number(guidanceForm.budget) || (1500000 * guidanceForm.days * guidanceForm.people),
+      total_budget: Number(guidanceForm.budget) || (1500000 * guidanceForm.days * guidanceForm.people),
+      transportation: guidanceForm.transportation || 'xe khách',
+      self_transit: Boolean(guidanceForm.selfTransit || guidanceForm.transportation === 'xe máy'),
+      tu_tuc_phuong_tien: Boolean(guidanceForm.selfTransit || guidanceForm.transportation === 'xe máy'),
+      self_hotel: Boolean(guidanceForm.selfHotel),
+      tu_tuc_khach_san: Boolean(guidanceForm.selfHotel),
+      free_places_only: Boolean(guidanceForm.freePlacesOnly),
+      interests: guidanceForm.interests || []
     }
     const res = await api.post('/ai/plan', payload)
     generatedPlan.value = res.data
+    generatedPlan.value.nights = payload.nights
+    generatedPlan.value.origin = payload.origin
+    generatedPlan.value.transportation = payload.transportation
+    generatedPlan.value.self_transit = payload.self_transit
+    generatedPlan.value.self_hotel = payload.self_hotel
+    generatedPlan.value.free_places_only = payload.free_places_only
+
+    if (guidanceForm.selfHotel) {
+      generatedPlan.value.hotel_recommendation = {
+        name: 'Tự túc nơi ở / Homestay riêng',
+        address: `Khu vực ${guidanceForm.destination}`,
+        rating: 5.0,
+        price_per_night: 0,
+        description: 'Chỗ ở tự túc (nhà người thân hoặc homestay riêng). Chi phí lưu trú: 0đ.'
+      }
+    }
+
+    // CHẠY THUẬT TOÁN ĐỒNG BỘ CHI PHÍ THỰC TẾ
+    dongBoChiPhiLichTrinh()
+
     currentActiveDayIndex.value = 0
     currentTab.value = 'explore'
   } catch (err) {
@@ -1275,11 +1955,9 @@ async function handleGenerateFromPrompt() {
   }
 
   const text = quickPromptText.value.toLowerCase()
-  // Kiểm tra xem khách hàng đã nêu ngân sách và số người chưa
   const hasBudgetMention = /(\d+[\s.]*(triệu|trieu|tr|k|đ|vnđ)|ngân sách|ngan sach|chi phí)/i.test(text)
   const hasPeopleMention = /(\d+[\s.]*người|nguoi|bạn bè|gia đình|gia dinh|cặp đôi|cap doi|đơn thân)/i.test(text)
 
-  // Nhận diện nhanh điểm đến & số ngày từ câu lệnh
   let detectedDest = ''
   for (const city of cityList) {
     if (text.replace(/\s+/g, '').includes(city.toLowerCase().replace(/\s+/g, ''))) {
@@ -1290,11 +1968,11 @@ async function handleGenerateFromPrompt() {
   const dayMatch = text.match(/(\d+)\s*(ngày|ngay|N)/i)
   const detectedDays = dayMatch ? parseInt(dayMatch[1], 10) : 3
 
-  // NẾU CHƯA ĐỦ THÔNG TIN (ví dụ: thiếu ngân sách, hoặc thiếu số người, hoặc chưa rõ điểm đến):
-  // Thay vì hệ thống tự ý đoán mò, bật thông báo và hướng dẫn để khách hàng biết cần cung cấp những gì!
+  // Nếu câu lệnh chưa đủ các thông số quan trọng (ngân sách, số người, điểm đến), bật sheet để hoàn thiện
   if (!hasBudgetMention || !hasPeopleMention || !detectedDest) {
     guidanceForm.destination = detectedDest || 'Đà Nẵng'
     guidanceForm.days = detectedDays
+    guidanceForm.nights = Math.max(0, detectedDays - 1)
     guidanceForm.people = hasPeopleMention ? 2 : 1
     guidanceForm.peopleProvided = hasPeopleMention
     guidanceForm.budgetProvided = hasBudgetMention
@@ -1304,7 +1982,6 @@ async function handleGenerateFromPrompt() {
     return
   }
 
-  // Nếu khách hàng ĐÃ CUNG CẤP ĐẦY ĐỦ (Điểm đến + Ngày + Người + Ngân sách):
   await handleDirectGenerateFromPrompt()
 }
 
@@ -1315,9 +1992,10 @@ async function handleDirectGenerateFromPrompt() {
   try {
     let destination = 'Đà Nẵng'
     let days = 3
-    let people = 1
-    let budget = 4500000
+    let people = 2
+    let budget = 6000000
     let interests = []
+    let origin = 'Hà Nội'
 
     try {
       const { data: parsed } = await api.post('/ai/parse-prompt', { prompt: quickPromptText.value })
@@ -1336,18 +2014,44 @@ async function handleDirectGenerateFromPrompt() {
       if (foundCity) destination = foundCity
     }
 
+    // Nhận diện điểm xuất phát nếu có trong câu
+    for (const orig of popularOrigins) {
+      if (quickPromptText.value.toLowerCase().includes(`từ ${orig.toLowerCase()}`) ||
+          quickPromptText.value.toLowerCase().includes(`ở ${orig.toLowerCase()} đi`)) {
+        origin = orig
+        break
+      }
+    }
+
     const payload = {
       prompt: quickPromptText.value,
+      origin,
       destination,
       days,
+      nights: Math.max(0, days - 1),
       people,
       budget,
       total_budget: budget,
+      transportation: guidanceForm.transportation || 'xe khách',
+      self_transit: Boolean(guidanceForm.selfTransit || guidanceForm.transportation === 'xe máy'),
+      tu_tuc_phuong_tien: Boolean(guidanceForm.selfTransit || guidanceForm.transportation === 'xe máy'),
+      self_hotel: Boolean(guidanceForm.selfHotel),
+      tu_tuc_khach_san: Boolean(guidanceForm.selfHotel),
+      free_places_only: Boolean(guidanceForm.freePlacesOnly),
       interests
     }
 
     const res = await api.post('/ai/plan', payload)
     generatedPlan.value = res.data
+    generatedPlan.value.nights = payload.nights
+    generatedPlan.value.origin = payload.origin
+    generatedPlan.value.transportation = payload.transportation
+    generatedPlan.value.self_transit = payload.self_transit
+    generatedPlan.value.self_hotel = payload.self_hotel
+    generatedPlan.value.free_places_only = payload.free_places_only
+
+    dongBoChiPhiLichTrinh()
+
     currentActiveDayIndex.value = 0
     currentTab.value = 'explore'
   } catch (err) {
@@ -1370,14 +2074,28 @@ async function handleGenerateFromForm() {
     }
     const totalBudget = budgetMap[plannerForm.budgetTier] || (2500000 * plannerForm.days * plannerForm.people)
     const payload = {
+      origin: guidanceForm.origin || 'Hà Nội',
       destination: plannerForm.destination || 'Đà Nẵng',
       days: Number(plannerForm.days) || 3,
+      nights: Math.max(0, Number(plannerForm.days) - 1),
       people: Number(plannerForm.people) || 1,
       budget: totalBudget,
-      total_budget: totalBudget
+      total_budget: totalBudget,
+      transportation: guidanceForm.transportation || 'xe khách',
+      self_transit: Boolean(guidanceForm.selfTransit),
+      self_hotel: Boolean(guidanceForm.selfHotel),
+      free_places_only: Boolean(guidanceForm.freePlacesOnly)
     }
     const res = await api.post('/ai/plan', payload)
     generatedPlan.value = res.data
+    generatedPlan.value.nights = payload.nights
+    generatedPlan.value.origin = payload.origin
+    generatedPlan.value.transportation = payload.transportation
+    generatedPlan.value.self_transit = payload.self_transit
+    generatedPlan.value.self_hotel = payload.self_hotel
+
+    dongBoChiPhiLichTrinh()
+
     currentActiveDayIndex.value = 0
     currentTab.value = 'explore'
   } catch (err) {
@@ -1446,6 +2164,144 @@ async function fetchWeather() {
 function formatMoney(val) {
   if (!val) return '0'
   return Number(val).toLocaleString('vi-VN')
+}
+
+function getPlaceImage(place) {
+  if (place?.image) return place.image
+  if (place?.image_url) return place.image_url
+  const name = ((place?.name || place?.place || '') + '').toLowerCase()
+  const dest = (generatedPlan.value?.destination || '').toLowerCase()
+
+  // 1. Danh thắng & Điểm du lịch nổi tiếng
+  if (name.includes('bà nà') || name.includes('cầu vàng')) {
+    return 'https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?w=600&auto=format&fit=crop&q=80'
+  }
+  if (name.includes('phố cổ') || name.includes('hội an') || name.includes('chùa cầu')) {
+    return 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600&auto=format&fit=crop&q=80'
+  }
+  if (name.includes('đại nội') || name.includes('hoàng thành') || name.includes('cố đô') || name.includes('ngọ môn')) {
+    return 'https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=600&auto=format&fit=crop&q=80'
+  }
+  if (name.includes('chùa') || name.includes('thiên mụ') || name.includes('linh ứng') || name.includes('thiền viện')) {
+    return 'https://images.unsplash.com/photo-1548013146-72479768bada?w=600&auto=format&fit=crop&q=80'
+  }
+  if (name.includes('lăng') || name.includes('khải định') || name.includes('tự đức') || name.includes('minh mạng')) {
+    return 'https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=600&auto=format&fit=crop&q=80'
+  }
+  if (name.includes('sơn trà') || name.includes('ngũ hành sơn') || name.includes('bán đảo')) {
+    return 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=600&auto=format&fit=crop&q=80'
+  }
+  if (name.includes('cầu rồng') || name.includes('sông hàn') || name.includes('cầu tình yêu')) {
+    return 'https://images.unsplash.com/photo-1569154941061-e231b4725ef1?w=600&auto=format&fit=crop&q=80'
+  }
+  if (name.includes('phong nha') || name.includes('thiên đường') || name.includes('hang tối') || name.includes('động') || name.includes('sơn đoòng')) {
+    return 'https://images.unsplash.com/photo-1528127269322-539801943592?w=600&auto=format&fit=crop&q=80'
+  }
+  if (name.includes('suối') || name.includes('moọc') || name.includes('thác') || name.includes('rừng dừa') || name.includes('sinh thái') || name.includes('nam an')) {
+    return 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=600&auto=format&fit=crop&q=80'
+  }
+  if (name.includes('biển') || name.includes('mỹ khê') || name.includes('an bàng') || name.includes('nhật lệ') || name.includes('lăng cô') || name.includes('eo gió') || name.includes('kỳ co') || name.includes('đá nhảy')) {
+    return 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&auto=format&fit=crop&q=80'
+  }
+  if (name.includes('chợ') || name.includes('chợ hàn') || name.includes('chợ cồn') || name.includes('chợ đêm')) {
+    return 'https://images.unsplash.com/photo-1533900298318-6b8da08a523e?w=600&auto=format&fit=crop&q=80'
+  }
+
+  // 2. Ẩm thực, Quán nướng, Hải sản, Quán ăn
+  if (place?.type === 'restaurant' || place?.type === 'breakfast' || place?.type === 'lunch' || place?.type === 'dinner' ||
+      name.includes('nướng') || name.includes('hải sản') || name.includes('quán') || name.includes('tiệm') ||
+      name.includes('bún') || name.includes('mì') || name.includes('cơm') || name.includes('bánh') ||
+      name.includes('lẩu') || name.includes('gà') || name.includes('nem') || name.includes('cháo') || name.includes('ẩm thực')) {
+    if (name.includes('nướng') || name.includes('bbq') || name.includes('thương thương')) {
+      return 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600&auto=format&fit=crop&q=80'
+    }
+    if (name.includes('hải sản') || name.includes('seafood') || name.includes('bà tám') || name.includes('tư rảnh') || name.includes('tôm') || name.includes('cua') || name.includes('cá') || name.includes('ốc')) {
+      return 'https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=600&auto=format&fit=crop&q=80'
+    }
+    return 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=80'
+  }
+
+  // 3. Cafe & Quán nước
+  if (place?.type === 'cafe' || name.includes('cafe') || name.includes('coffee') || name.includes('cà phê') || name.includes('trà') || name.includes('chill')) {
+    return 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=600&auto=format&fit=crop&q=80'
+  }
+
+  // 4. Khách sạn & Nghỉ dưỡng
+  if (place?.type === 'hotel' || name.includes('hotel') || name.includes('resort') || name.includes('khách sạn') || name.includes('homestay') || name.includes('nhà nghỉ')) {
+    return 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&auto=format&fit=crop&q=80'
+  }
+
+  // 5. Mặc định theo vùng miền
+  if (dest.includes('huế')) return 'https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=600&auto=format&fit=crop&q=80'
+  if (dest.includes('hội an')) return 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600&auto=format&fit=crop&q=80'
+  if (dest.includes('đà nẵng')) return 'https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?w=600&auto=format&fit=crop&q=80'
+  
+  return 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600&auto=format&fit=crop&q=80'
+}
+
+function onImageError(e) {
+  e.target.src = 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600&auto=format&fit=crop&q=80'
+}
+
+function getBadgeInfo(act) {
+  if (!act) return { icon: '📍', label: 'Hoạt động', class: 'badge-attraction' }
+  const type = act.type || ''
+  const map = {
+    breakfast: { icon: '🍜', label: act.label || 'Ăn sáng', class: 'badge-breakfast' },
+    lunch: { icon: '🍲', label: act.label || 'Ăn trưa', class: 'badge-lunch' },
+    dinner: { icon: '🍷', label: act.label || 'Ăn tối', class: 'badge-dinner' },
+    restaurant: { icon: '🍽️', label: act.label || 'Ẩm thực', class: 'badge-dinner' },
+    checkin: { icon: '🏨', label: act.label || 'Nhận phòng', class: 'badge-hotel' },
+    checkout: { icon: '🏨', label: act.label || 'Trả phòng', class: 'badge-hotel' },
+    hotel: { icon: '🏨', label: act.label || 'Khách sạn', class: 'badge-hotel' },
+    cafe: { icon: '☕', label: act.label || 'Cafe & Chill', class: 'badge-cafe' },
+    attraction: { icon: '🏛️', label: act.label || 'Tham quan / Check-in', class: 'badge-attraction' }
+  }
+  if (map[type]) return map[type]
+  const pLower = (act.place || '').toLowerCase()
+  if (pLower.includes('quán') || pLower.includes('tiệm') || pLower.includes('hải sản') || pLower.includes('nướng') || pLower.includes('bánh') || pLower.includes('cơm')) {
+    return { icon: '🍽️', label: 'Ẩm thực', class: 'badge-dinner' }
+  }
+  if (pLower.includes('cafe') || pLower.includes('cà phê') || pLower.includes('trà')) {
+    return { icon: '☕', label: 'Cafe & Chill', class: 'badge-cafe' }
+  }
+  return { icon: '📍', label: 'Tham quan', class: 'badge-attraction' }
+}
+
+function layMoTaHoatDong(act) {
+  const desc = act.activity || act.description || act.note
+  if (desc && desc.trim().length > 10) return desc.trim()
+  const name = act.place || ''
+  const type = act.type || ''
+  if (type === 'breakfast' || type === 'lunch' || type === 'dinner' || type === 'restaurant') {
+    return `Thưởng thức ẩm thực đặc sản nức tiếng tại ${name}, nguyên liệu tươi ngon được chế biến theo công thức gia truyền đậm đà bản địa.`
+  }
+  if (type === 'cafe') {
+    return `Không gian thưởng thức cafe và đồ uống thanh mát tại ${name}, góc check-in thư giãn cực chill và ngắm cảnh phố phường.`
+  }
+  if (type === 'hotel' || type === 'checkin') {
+    return `Nghỉ ngơi và thư giãn tại ${name}, phòng ốc tiện nghi sạch sẽ, thuận tiện di chuyển tới các điểm du lịch lân cận.`
+  }
+  return `Khám phá và tham quan ${name}, chiêm ngưỡng cảnh quan ấn tượng, chụp ảnh sống ảo và trải nghiệm nét đẹp văn hóa địa phương.`
+}
+
+function chiDuongUrl(place, address = '') {
+  const dest = generatedPlan.value?.destination || 'Miền Trung'
+  const query = address ? `${place}, ${address}` : `${place}, ${dest}`
+  return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(query)}`
+}
+
+function taoLinkGoogleMapsChoNgay(day) {
+  if (!day || !day.activities || day.activities.length === 0) return 'https://www.google.com/maps'
+  const acts = day.activities
+  const dest = generatedPlan.value?.destination || 'Miền Trung'
+  const origin = encodeURIComponent(`${acts[0].place}, ${acts[0].address || dest}`)
+  const destination = encodeURIComponent(`${acts[acts.length - 1].place}, ${acts[acts.length - 1].address || dest}`)
+  if (acts.length <= 2) {
+    return `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=driving`
+  }
+  const waypoints = acts.slice(1, -1).slice(0, 8).map(a => encodeURIComponent(`${a.place}, ${a.address || dest}`)).join('|')
+  return `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&waypoints=${waypoints}&travelmode=driving`
 }
 
 function getWeatherEmoji(code) {
@@ -2003,174 +2859,924 @@ function getWeatherDesc(code) {
   50% { transform: scale(1.2); }
 }
 
-/* GENERATED PLAN SECTION */
+/* GENERATED PLAN SECTION (PHONG PHÚ ĐẦY ĐỦ CHI TIẾT NHƯ BẢN PC) */
 .mobile-generated-plan {
   margin: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
+/* BANNER TỔNG QUAN CHUYẾN ĐI */
 .plan-summary-banner {
-  background: linear-gradient(135deg, #1e293b, #0f172a);
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
   color: #fff;
-  border-radius: 16px;
-  padding: 16px;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.12);
-  margin-bottom: 12px;
+  border-radius: 20px;
+  padding: 18px 16px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .plan-badge-line {
   display: flex;
-  gap: 6px;
-  margin-bottom: 6px;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
 }
 
 .badge-emerald {
-  font-size: 0.6rem;
-  font-weight: 700;
+  font-size: 0.65rem;
+  font-weight: 800;
   background: #059669;
-  padding: 2px 6px;
-  border-radius: 10px;
+  color: #ffffff;
+  padding: 3px 8px;
+  border-radius: 999px;
+  letter-spacing: 0.03em;
 }
 
 .badge-amber {
-  font-size: 0.6rem;
-  font-weight: 700;
+  font-size: 0.65rem;
+  font-weight: 800;
   background: #f59e0b;
-  padding: 2px 6px;
-  border-radius: 10px;
+  color: #ffffff;
+  padding: 3px 8px;
+  border-radius: 999px;
 }
 
 .plan-dest-name {
   font-family: 'Playfair Display', serif;
-  font-size: 1.4rem;
-  margin-bottom: 2px;
+  font-size: 1.55rem;
+  font-weight: 800;
+  margin-bottom: 10px;
+  letter-spacing: -0.02em;
+  color: #ffffff;
 }
 
-.plan-meta-info {
-  font-size: 0.75rem;
-  opacity: 0.85;
-  margin-bottom: 12px;
+.plan-meta-stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 10px;
+  margin-bottom: 14px;
+}
+
+.pms-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pms-label {
+  font-size: 0.62rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.pms-val {
+  font-size: 0.76rem;
+  font-weight: 750;
+  color: #f8fafc;
+}
+
+.pms-val.text-emerald {
+  color: #34d399;
 }
 
 .plan-quick-buttons {
   display: flex;
-  gap: 8px;
+  gap: 10px;
 }
 
 .btn-save-mobile-plan {
-  flex: 1;
+  flex: 1.5;
   background: #059669;
   color: #fff;
   border: none;
-  border-radius: 8px;
-  padding: 7px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35);
+  transition: transform 0.15s ease;
+}
+
+.btn-save-mobile-plan:active {
+  transform: scale(0.97);
 }
 
 .btn-reset-mobile-plan {
-  background: transparent;
-  border: 1px solid rgba(255,255,255,0.3);
-  color: #fff;
-  border-radius: 8px;
-  padding: 7px 12px;
-  font-size: 0.75rem;
+  flex: 1;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #f1f5f9;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
 }
 
-.plan-day-pills-row {
+/* BÓC TÁCH NGÂN SÁCH THÔNG MINH */
+.mobile-budget-breakdown-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 14px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+:root[data-theme="dark"] .mobile-budget-breakdown-card {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.m-card-header-line {
   display: flex;
-  gap: 6px;
-  overflow-x: auto;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 10px;
 }
 
-.day-pill-item {
-  padding: 5px 12px;
+.m-card-title {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+:root[data-theme="dark"] .m-card-title {
+  color: #f8fafc;
+}
+
+.m-budget-total-pill {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #059669;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+:root[data-theme="dark"] .m-budget-total-pill {
+  background: rgba(6, 78, 59, 0.4);
+  border-color: rgba(52, 211, 153, 0.4);
+  color: #34d399;
+}
+
+.m-budget-grid-2x2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.m-budget-mini-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  border-radius: 12px;
+  padding: 8px 10px;
+}
+
+:root[data-theme="dark"] .m-budget-mini-item {
+  background: #0f172a;
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.m-bmi-icon {
+  font-size: 1.15rem;
+}
+
+.m-bmi-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.m-bmi-label {
+  font-size: 0.62rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+:root[data-theme="dark"] .m-bmi-label {
+  color: #94a3b8;
+}
+
+.m-bmi-val {
+  font-size: 0.74rem;
+  font-weight: 750;
+  color: #0f172a;
+}
+
+:root[data-theme="dark"] .m-bmi-val {
+  color: #f1f5f9;
+}
+
+/* THẺ KHÁCH SẠN LƯU TRÚ */
+.mobile-hotel-rec-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+:root[data-theme="dark"] .mobile-hotel-rec-card {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.m-hotel-rec-top {
+  display: flex;
+  gap: 12px;
+}
+
+.m-hotel-thumb-wrap {
+  width: 95px;
+  height: 95px;
+  border-radius: 14px;
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.m-hotel-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.m-hotel-badge {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  right: 4px;
+  background: rgba(15, 23, 42, 0.85);
+  color: #fde68a;
+  font-size: 0.55rem;
+  font-weight: 750;
+  text-align: center;
+  padding: 2px 4px;
+  border-radius: 4px;
+  backdrop-filter: blur(4px);
+}
+
+.m-hotel-info-block {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.m-hotel-name {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.3;
+}
+
+:root[data-theme="dark"] .m-hotel-name {
+  color: #f8fafc;
+}
+
+.m-hotel-addr {
+  font-size: 0.68rem;
+  color: #64748b;
+  margin: 2px 0 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+:root[data-theme="dark"] .m-hotel-addr {
+  color: #94a3b8;
+}
+
+.m-hotel-rating-price {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.m-hotel-star {
+  color: #f59e0b;
+}
+
+.m-hotel-price {
+  color: #059669;
+}
+
+:root[data-theme="dark"] .m-hotel-price {
+  color: #34d399;
+}
+
+.m-hotel-map-link {
+  font-size: 0.68rem;
+  font-weight: 750;
+  color: #0284c7;
+  text-decoration: none;
+}
+
+/* THẺ CHẶNG KHỞI HÀNH (TRANSIT) */
+.mobile-transit-card {
+  background: #f0fdf4;
+  border: 1.5px solid #86efac;
   border-radius: 16px;
-  border: 1px solid #cbd5e1;
+  padding: 12px 14px;
+}
+
+:root[data-theme="dark"] .mobile-transit-card {
+  background: rgba(6, 78, 59, 0.25);
+  border-color: rgba(52, 211, 153, 0.3);
+}
+
+.m-transit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.m-transit-badge {
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #065f46;
+  letter-spacing: 0.04em;
+}
+
+:root[data-theme="dark"] .m-transit-badge {
+  color: #34d399;
+}
+
+.m-transit-route {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+:root[data-theme="dark"] .m-transit-route {
+  color: #f1f5f9;
+}
+
+.m-transit-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 0.72rem;
+}
+
+.m-transit-detail-row {
+  display: flex;
+  justify-content: space-between;
+  color: #475569;
+}
+
+:root[data-theme="dark"] .m-transit-detail-row {
+  color: #94a3b8;
+}
+
+.m-transit-detail-row strong {
+  color: #0f172a;
+}
+
+:root[data-theme="dark"] .m-transit-detail-row strong {
+  color: #f8fafc;
+}
+
+/* THANH CHỌN NGÀY (DAY TABS) */
+.plan-day-pills-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 2px;
+  scrollbar-width: none;
+}
+
+.plan-day-pills-row::-webkit-scrollbar {
+  display: none;
+}
+
+.day-pill-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1.5px solid #cbd5e1;
   background: #ffffff;
   color: #334155;
-  font-size: 0.72rem;
-  font-weight: 600;
+  font-size: 0.75rem;
+  font-weight: 700;
   white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+:root[data-theme="dark"] .day-pill-item {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #cbd5e1;
 }
 
 .day-pill-item.active {
   background: #059669;
-  color: #fff;
+  color: #ffffff;
   border-color: #059669;
+  box-shadow: 0 3px 10px rgba(5, 150, 105, 0.35);
 }
 
+.dpi-count {
+  font-size: 0.65rem;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+/* KHỐI HOẠT ĐỘNG CHI TIẾT TRONG NGÀY */
 .day-activities-card {
-  background: #ffffff;
-  border-radius: 14px;
+  background: #f8fafc;
+  border-radius: 20px;
   padding: 14px;
   border: 1px solid #e2e8f0;
 }
 
-.day-activities-title {
-  font-size: 0.95rem;
-  font-weight: 700;
-  margin-bottom: 12px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid #f1f5f9;
+:root[data-theme="dark"] .day-activities-card {
+  background: #0f172a;
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
-.timeline-activity-list {
+.m-day-header-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+:root[data-theme="dark"] .m-day-header-banner {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.m-dhb-left {
   display: flex;
   flex-direction: column;
-  gap: 12px;
 }
 
-.timeline-act-node {
-  display: flex;
-  gap: 10px;
-}
-
-.act-time-pill {
-  font-size: 0.65rem;
-  font-weight: 700;
+.m-day-counter {
+  font-size: 0.62rem;
+  font-weight: 800;
   color: #059669;
-  background: rgba(5, 150, 105, 0.1);
-  padding: 2px 6px;
-  border-radius: 6px;
-  height: fit-content;
-  white-space: nowrap;
-}
-
-.act-info-box {
-  flex: 1;
-}
-
-.act-category-tag {
-  font-size: 0.6rem;
-  font-weight: 700;
-  color: #f59e0b;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
-.act-place-title {
-  font-size: 0.82rem;
-  font-weight: 700;
-  margin: 1px 0 3px;
+:root[data-theme="dark"] .m-day-counter {
+  color: #34d399;
 }
 
-.act-desc-text {
-  font-size: 0.72rem;
-  color: #64748b;
-  line-height: 1.4;
-  margin-bottom: 4px;
+.day-activities-title {
+  font-size: 0.96rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
 }
 
-.act-meta-tags {
-  display: flex;
+:root[data-theme="dark"] .day-activities-title {
+  color: #f8fafc;
+}
+
+.btn-day-maps-route {
+  display: inline-flex;
+  align-items: center;
   gap: 4px;
+  background: #ecfdf5;
+  border: 1.5px solid #86efac;
+  border-radius: 999px;
+  padding: 6px 12px;
+  color: #065f46;
+  font-size: 0.7rem;
+  font-weight: 750;
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow: 0 1px 4px rgba(5, 150, 105, 0.1);
+  transition: all 0.2s ease;
+}
+
+:root[data-theme="dark"] .btn-day-maps-route {
+  background: rgba(6, 78, 59, 0.6);
+  border-color: #34d399;
+  color: #ffffff;
+}
+
+.btn-day-maps-route:active {
+  transform: scale(0.96);
+}
+
+/* DANH SÁCH THẺ HOẠT ĐỘNG (RICH ACTIVITY CARDS) */
+.timeline-activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.m-act-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 12px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+:root[data-theme="dark"] .m-act-card {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+.m-act-top-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
   flex-wrap: wrap;
 }
 
-.act-cost-tag, .act-tip-tag {
-  font-size: 0.6rem;
-  padding: 1px 5px;
-  border-radius: 4px;
+.m-act-time-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #065f46;
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  border-radius: 8px;
+  padding: 3px 8px;
+}
+
+:root[data-theme="dark"] .m-act-time-pill {
+  background: rgba(6, 78, 59, 0.5);
+  border-color: rgba(52, 211, 153, 0.4);
+  color: #a7f3d0;
+}
+
+.mat-clock {
+  font-size: 0.75rem;
+}
+
+.m-act-badge {
+  font-size: 0.66rem;
+  font-weight: 750;
+  padding: 3px 8px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.badge-breakfast, .badge-cafe {
+  background: #fffbeb;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.badge-lunch, .badge-dinner {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.badge-attraction {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.badge-hotel {
+  background: #faf5ff;
+  color: #7e22ce;
+  border: 1px solid #e9d5ff;
+}
+
+:root[data-theme="dark"] .badge-breakfast,
+:root[data-theme="dark"] .badge-cafe {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fde68a;
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+:root[data-theme="dark"] .badge-lunch,
+:root[data-theme="dark"] .badge-dinner {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+:root[data-theme="dark"] .badge-attraction {
+  background: rgba(59, 130, 246, 0.15);
+  color: #93c5fd;
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+:root[data-theme="dark"] .badge-hotel {
+  background: rgba(168, 85, 247, 0.15);
+  color: #d8b4fe;
+  border-color: rgba(168, 85, 247, 0.3);
+}
+
+.m-act-cost-badge {
+  font-size: 0.68rem;
+  font-weight: 750;
+  color: #0f172a;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 3px 8px;
+  margin-left: auto;
+}
+
+.m-act-cost-badge.free {
+  color: #059669;
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+}
+
+:root[data-theme="dark"] .m-act-cost-badge {
+  background: #0f172a;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #f8fafc;
+}
+
+:root[data-theme="dark"] .m-act-cost-badge.free {
+  color: #34d399;
+  background: rgba(6, 78, 59, 0.4);
+  border-color: rgba(52, 211, 153, 0.3);
+}
+
+/* ẢNH THẬT ĐỊA ĐIỂM (THUMBNAIL BANNER) */
+.m-act-image-box {
+  width: 100%;
+  height: 145px;
+  border-radius: 14px;
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 10px;
+  background: #e2e8f0;
+}
+
+.m-act-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.m-act-card:hover .m-act-photo {
+  transform: scale(1.03);
+}
+
+.m-act-index-tag {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(4px);
+  color: #ffffff;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.m-act-rating-pill {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(4px);
+  color: #0f172a;
+  font-size: 0.68rem;
+  font-weight: 750;
+  padding: 3px 8px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+:root[data-theme="dark"] .m-act-rating-pill {
+  background: rgba(15, 23, 42, 0.9);
+  color: #fde68a;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.m-act-content-box {
+  display: flex;
+  flex-direction: column;
+}
+
+.m-act-name {
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 3px;
+  line-height: 1.35;
+}
+
+:root[data-theme="dark"] .m-act-name {
+  color: #f8fafc;
+}
+
+.m-act-address {
+  font-size: 0.72rem;
+  color: #64748b;
+  margin: 0 0 8px;
+  line-height: 1.3;
+}
+
+:root[data-theme="dark"] .m-act-address {
+  color: #94a3b8;
+}
+
+.m-pin-icon {
+  font-size: 0.75rem;
+}
+
+.m-act-description {
+  font-size: 0.77rem;
+  color: #334155;
+  line-height: 1.48;
+  margin: 0 0 10px;
+}
+
+:root[data-theme="dark"] .m-act-description {
+  color: #cbd5e1;
+}
+
+.m-act-dishes-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #fefce8;
+  border: 1px dashed #facc15;
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 0.72rem;
+  color: #854d0e;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+:root[data-theme="dark"] .m-act-dishes-row {
+  background: rgba(234, 179, 8, 0.1);
+  border-color: rgba(234, 179, 8, 0.3);
+  color: #fde047;
+}
+
+.mad-icon {
+  font-size: 0.85rem;
+}
+
+.m-act-meta-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.m-meta-pill {
+  font-size: 0.66rem;
+  font-weight: 600;
+  color: #475569;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 3px 7px;
+}
+
+:root[data-theme="dark"] .m-meta-pill {
+  background: #0f172a;
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+}
+
+.m-act-action-row {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-act-direction {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: #059669;
+  color: #ffffff;
+  border-radius: 12px;
+  padding: 9px 14px;
+  font-size: 0.76rem;
+  font-weight: 750;
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.25);
+  transition: transform 0.15s ease, background 0.2s ease;
+}
+
+.btn-act-direction:active {
+  transform: scale(0.97);
+  background: #047857;
+}
+
+/* CHỈ BÁO DI CHUYỂN GIỮA CÁC ĐIỂM (TRANSIT STEP) */
+.m-travel-step-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 0;
+}
+
+.mts-line {
+  flex: 1;
+  height: 1px;
+  background: #cbd5e1;
+}
+
+:root[data-theme="dark"] .mts-line {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.mts-pill {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #059669;
+  background: #ecfdf5;
+  border: 1px solid #86efac;
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+
+:root[data-theme="dark"] .mts-pill {
+  background: rgba(6, 78, 59, 0.4);
+  border-color: rgba(52, 211, 153, 0.3);
+  color: #34d399;
+}
+
+/* CHẶNG NGHỈ ĐÊM TẠI KHÁCH SẠN */
+.m-day-finish-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #faf5ff;
+  border: 1px solid #e9d5ff;
+  border-radius: 14px;
+  padding: 10px 14px;
+  margin-top: 14px;
+}
+
+:root[data-theme="dark"] .m-day-finish-box {
+  background: rgba(168, 85, 247, 0.12);
+  border-color: rgba(168, 85, 247, 0.25);
+}
+
+.m-df-icon {
+  font-size: 1.3rem;
+}
+
+.m-df-text {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.72rem;
+  color: #581c87;
+}
+
+:root[data-theme="dark"] .m-df-text {
+  color: #e9d5ff;
+}
+
+.m-df-text strong {
+  font-size: 0.76rem;
+  margin-bottom: 2px;
+}
+
+.m-df-text p {
+  margin: 0;
+  opacity: 0.85;
 }
 
 .act-cost-tag {
@@ -3785,6 +5391,144 @@ function getWeatherDesc(code) {
   border-color: #fbbf24;
 }
 
+/* OVER BUDGET BANNER */
+.mobile-over-budget-banner {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+:root[data-theme="dark"] .mobile-over-budget-banner {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+.mob-icon {
+  font-size: 1.2rem;
+}
+
+.mob-text strong {
+  display: block;
+  font-size: 0.72rem;
+  color: #dc2626;
+  font-weight: 800;
+  margin-bottom: 2px;
+}
+
+:root[data-theme="dark"] .mob-text strong {
+  color: #f87171;
+}
+
+.mob-text p {
+  margin: 0;
+  font-size: 0.68rem;
+  color: #475569;
+  line-height: 1.35;
+}
+
+:root[data-theme="dark"] .mob-text p {
+  color: #cbd5e1;
+}
+
+.full-width-item {
+  grid-column: 1 / -1;
+}
+
+/* UNFEASIBLE WARNING BOX IN GUIDANCE MODAL */
+.m-unfeasible-warning {
+  margin-top: 8px;
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+:root[data-theme="dark"] .m-unfeasible-warning {
+  background: rgba(244, 63, 94, 0.12);
+  border-color: rgba(244, 63, 94, 0.3);
+}
+
+.muw-text strong {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #e11d48;
+  margin-bottom: 2px;
+}
+
+:root[data-theme="dark"] .muw-text strong {
+  color: #fb7185;
+}
+
+.muw-text p {
+  margin: 0;
+  font-size: 0.68rem;
+  color: #475569;
+  line-height: 1.35;
+}
+
+:root[data-theme="dark"] .muw-text p {
+  color: #cbd5e1;
+}
+
+.btn-auto-fix-budget {
+  background: #e11d48;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: transform 0.15s ease;
+}
+
+.btn-auto-fix-budget:active {
+  transform: scale(0.97);
+}
+
+/* FREE MODE TOGGLE */
+.guidance-free-mode-toggle {
+  background: #f0fdf4;
+  border: 1px dashed #86efac;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+:root[data-theme="dark"] .guidance-free-mode-toggle {
+  background: rgba(34, 197, 94, 0.08);
+  border-color: rgba(34, 197, 94, 0.25);
+}
+
+.g-free-checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.72rem;
+  color: #166534;
+  cursor: pointer;
+  line-height: 1.4;
+}
+
+:root[data-theme="dark"] .g-free-checkbox-label {
+  color: #86efac;
+}
+
+.g-free-checkbox {
+  margin-top: 2px;
+  accent-color: #059669;
+  cursor: pointer;
+}
+
 .btn-guidance-generate {
   flex: 2;
   font-weight: 700;
@@ -3829,5 +5573,47 @@ function getWeatherDesc(code) {
 
 .nav-tab-btn.active {
   color: #059669;
+}
+
+/* NÚT BẮT ĐẦU LỊCH TRÌNH MOBILE */
+.btn-start-mobile-tour {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 13px 18px;
+  border-radius: 14px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #ffffff;
+  background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 50%, #06b6d4 100%);
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(2, 132, 199, 0.4);
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+  margin-bottom: 8px;
+}
+.btn-start-mobile-tour:active {
+  transform: scale(0.97);
+}
+
+.trip-start-fast-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 5px 12px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.35);
+  transition: transform 0.15s ease;
+}
+.trip-start-fast-btn:active {
+  transform: scale(0.95);
 }
 </style>

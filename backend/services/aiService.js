@@ -159,6 +159,21 @@ async function taoLichTrinh(duLieu) {
     console.warn('Không thể đọc địa điểm từ DB:', e.message)
   }
 
+  // Tự động nạp dữ liệu chuẩn từ file JSON nếu DB tạm thời không có địa điểm
+  if (!diaDiemDatabase || diaDiemDatabase.length === 0) {
+    try {
+      const fs = require('fs')
+      const path = require('path')
+      const localPlacesPath = path.join(__dirname, '../data/places_clean_production.json')
+      if (fs.existsSync(localPlacesPath)) {
+        const localList = JSON.parse(fs.readFileSync(localPlacesPath, 'utf8'))
+        diaDiemDatabase = localList.filter(p => (p.destination || '').toLowerCase().includes(diemDen.toLowerCase()))
+      }
+    } catch (e) {
+      console.warn('Không thể nạp places_clean_production.json:', e.message)
+    }
+  }
+
   // 2. Gọi Gemini AI với dữ liệu ngữ cảnh thực tế
   let result = null
   if (geminiKey) {
@@ -188,7 +203,7 @@ async function taoLichTrinh(duLieu) {
       people: duLieu.people || 1
     })
 
-    const isSelfTransit = Boolean(duLieu.self_transit || duLieu.tu_tuc_phuong_tien || duLieu.tuTucPhuongTien);
+    const isSelfTransit = Boolean(duLieu.self_transit || duLieu.tu_tuc_phuong_tien || duLieu.tuTucPhuongTien || duLieu.selfTransit);
     if (!isSelfTransit && result.budget_breakdown && transitData.cheapestBusTotal) {
       result.budget_breakdown.transportation = (result.budget_breakdown.transportation || 0) + transitData.cheapestBusTotal;
       result.total_budget = (result.total_budget || 0) + transitData.cheapestBusTotal;
@@ -221,7 +236,7 @@ async function goiGemini(duLieu, diaDiemDatabase, apiKey) {
         temperature: 0.2
       }
     },
-    { headers: { 'Content-Type': 'application/json' }, timeout: 25000 }
+    { headers: { 'Content-Type': 'application/json' }, timeout: 45000 }
   )
 
   const raw = res.data.candidates?.[0]?.content?.parts?.[0]?.text
@@ -712,13 +727,36 @@ async function taoLichTrinhThongMinh(duLieu, diaDiemDatabase) {
       lastPlaceInDay = placeObj;
     }
 
-    const restSang = layDiaDiemKhongTrung(cRestaurants.length > 0 ? cRestaurants : availableRestaurants, `Điểm tâm đặc sản ${diemDen}`, 'restaurant', 45000, dayAnchor)
-    addActivity('07:30', 'breakfast', 'Ăn sáng', restSang, `Thưởng thức món ngon đặc trưng xứ ${diemDen}`)
+    // Phân loại nhà hàng theo tính chất bữa ăn:
+    const isBreakfastItem = (p) => {
+      const txt = `${p.name} ${(p.tags || []).join(' ')} ${p.description || ''}`.toLowerCase();
+      const hasBf = /bún|phở|mì |mì quảng|bánh mì|cháo|điểm tâm|bánh cuốn|bánh bèo|bánh xèo|xôi|bánh canh|cao lầu|breakfast|morning|sáng/i.test(txt);
+      const isNight = /nướng|bbq|yakiniku|buffet|lẩu|nhậu|quán bia|bar|pub|hải sản|ốc |về đêm/i.test(txt);
+      return hasBf && !isNight;
+    };
+    const isDinnerItem = (p) => {
+      const txt = `${p.name} ${(p.tags || []).join(' ')} ${p.description || ''}`.toLowerCase();
+      return /hải sản|nướng|bbq|yakiniku|lẩu|nhậu|chợ đêm|phố ẩm thực|buffet|dinner|tối/i.test(txt);
+    };
+    const isLunchItem = (p) => {
+      const txt = `${p.name} ${(p.tags || []).join(' ')} ${p.description || ''}`.toLowerCase();
+      const isNight = /bar|pub|nhậu đêm|ốc đêm/i.test(txt);
+      return !isNight;
+    };
+
+    const cBreakfast = cRestaurants.filter(isBreakfastItem);
+    const aBreakfast = availableRestaurants.filter(isBreakfastItem);
+    const breakfastPool = cBreakfast.length > 0 ? cBreakfast : (aBreakfast.length > 0 ? aBreakfast : cRestaurants);
+    const restSang = layDiaDiemKhongTrung(breakfastPool, `Điểm tâm đặc sản ${diemDen} (Mì Quảng / Bún bò)`, 'breakfast', 45000, dayAnchor)
+    addActivity('07:30', 'breakfast', 'Ăn sáng', restSang, `Thưởng thức điểm tâm đặc sản trứ danh xứ ${diemDen}`)
 
     const attSang = layDiaDiemKhongTrung(cAttractions.length > 0 ? cAttractions : availableAttractions, `Danh thắng nổi tiếng ${diemDen}`, 'attraction', 100000, dayAnchor)
     addActivity('09:00', 'attraction', 'Tham quan / Check-in', attSang, `Khám phá địa danh biểu tượng của ${diemDen}`)
 
-    const restTrua = layDiaDiemKhongTrung(cRestaurants.length > 0 ? cRestaurants : availableRestaurants, `Nhà hàng đặc sản ${diemDen}`, 'restaurant', 150000, lastPlaceInDay)
+    const cLunch = cRestaurants.filter(isLunchItem);
+    const aLunch = availableRestaurants.filter(isLunchItem);
+    const lunchPool = cLunch.length > 0 ? cLunch : (aLunch.length > 0 ? aLunch : availableRestaurants);
+    const restTrua = layDiaDiemKhongTrung(lunchPool, `Nhà hàng cơm niêu đặc sản ${diemDen}`, 'lunch', 150000, lastPlaceInDay)
     addActivity('12:00', 'lunch', 'Ăn trưa', restTrua, `Dùng bữa trưa với các món đặc sản địa phương`)
 
     if (d === 1) {
@@ -758,8 +796,11 @@ async function taoLichTrinhThongMinh(duLieu, diaDiemDatabase) {
     const attChieu = layDiaDiemKhongTrung(cAttractions.length > 0 ? cAttractions : availableAttractions, `Điểm check-in chiều ${diemDen}`, 'attraction', 50000, lastPlaceInDay)
     addActivity('16:00', 'attraction', 'Tham quan / Check-in', attChieu, `Tiếp tục hành trình tham quan buổi chiều`)
 
-    const restToi = layDiaDiemKhongTrung(cRestaurants.length > 0 ? cRestaurants : availableRestaurants, `Nhà hàng ăn tối ${diemDen}`, 'restaurant', 200000, lastPlaceInDay)
-    addActivity('19:00', 'dinner', 'Ăn tối', restToi, `Dùng bữa tối, khám phá ẩm thực về đêm`)
+    const cDinner = cRestaurants.filter(isDinnerItem);
+    const aDinner = availableRestaurants.filter(isDinnerItem);
+    const dinnerPool = cDinner.length > 0 ? cDinner : (aDinner.length > 0 ? aDinner : availableRestaurants);
+    const restToi = layDiaDiemKhongTrung(dinnerPool, `Nhà hàng hải sản / ẩm thực đêm ${diemDen}`, 'dinner', 200000, lastPlaceInDay)
+    addActivity('19:00', 'dinner', 'Ăn tối', restToi, `Dùng bữa tối, thưởng thức ẩm thực hải sản và dạo phố về đêm`)
 
     mangNgay.push({ day: d, activities: actDay })
     previousAnchor = dayAnchor;
