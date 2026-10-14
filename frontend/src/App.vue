@@ -339,16 +339,23 @@
           <UserProfile v-if="nguoiDung"
             :nguoiDung="nguoiDung"
             :userLevelInfo="userLevelInfo"
+            :myTrips="myTripsList"
             :myTripsCount="myTripsList.length"
             :favoritesCount="favoritesList.length"
+            :favoritesList="favoritesList"
             :isEditingProfile="isEditingProfile"
             :profileForm="profileForm"
+            :isDark="isDark"
             @editProfile="editProfile"
             @dangXuat="dangXuat"
             @saveProfile="saveProfile"
             @cancelEdit="isEditingProfile = false"
             @handleAvatarUpload="handleAvatarUpload"
             @updateForm="(key, value) => { profileForm[key] = value }"
+            @goToTab="tab => handleTabChange(tab)"
+            @openTrip="moLaiLichTrinh"
+            @startTrip="batDauChuyenDiLive"
+            @toggleDark="toggleDark"
           />
           
           <div v-else class="auth-card" style="text-align: center; padding: 40px 20px;">
