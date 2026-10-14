@@ -21,6 +21,15 @@
           <div class="lc-header-actions">
             <button
               type="button"
+              :class="['lc-icon-btn bell-btn', { active: !!activeMovementAlert }]"
+              title="Thông báo giờ di chuyển (Bấm để thử chuông & nhắc nhở)"
+              @click="handleBellClick"
+            >
+              <AppIcon name="bell" :size="16" />
+              <span class="btn-lbl">Nhắc giờ</span>
+            </button>
+            <button
+              type="button"
               :class="['lc-icon-btn sos-btn', { active: activeSubTab === 'sos' }]"
               title="Cứu trợ khẩn cấp & Tiện ích"
               @click="activeSubTab = activeSubTab === 'sos' ? 'main' : 'sos'"
@@ -88,6 +97,52 @@
           </span>
         </button>
       </nav>
+
+      <!-- MOVEMENT / DEPARTURE ALERT FLOATING BANNER -->
+      <transition name="fade">
+        <div v-if="activeMovementAlert && activeSubTab === 'main'" class="lc-movement-alert-banner">
+          <div class="mab-pulse-ring">🔔</div>
+          <div class="mab-content">
+            <div class="mab-header-row">
+              <span class="mab-badge">{{ activeMovementAlert.badge || 'ĐÃ TỚI GIỜ DI CHUYỂN' }}</span>
+              <span v-if="activeMovementAlert.scheduledTime" class="mab-time-tag">
+                <AppIcon name="clock" :size="12" /> {{ activeMovementAlert.scheduledTime }}
+              </span>
+            </div>
+            <div class="mab-title">
+              <strong>{{ activeMovementAlert.title }}</strong>
+            </div>
+            <p class="mab-desc">{{ activeMovementAlert.message }}</p>
+            <div class="mab-actions">
+              <a
+                v-if="activeMovementAlert.targetStop"
+                :href="getGoogleMapsTurnByTurnUrl(activeMovementAlert.targetStop)"
+                target="_blank"
+                rel="noreferrer"
+                class="mab-btn btn-mab-maps"
+              >
+                <AppIcon name="navigation" :size="13" /> Maps chỉ đường ↗
+              </a>
+              <button
+                v-if="activeMovementAlert.targetStopIndex !== undefined"
+                type="button"
+                class="mab-btn btn-mab-go"
+                @click="jumpToTargetStopAndDismiss(activeMovementAlert.targetStopIndex)"
+              >
+                🚀 Sang điểm này ngay
+              </button>
+              <button
+                type="button"
+                class="mab-btn btn-mab-dismiss"
+                @click="dismissActiveAlert"
+                title="Bỏ qua thông báo này"
+              >
+                ✕ Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      </transition>
 
       <!-- MAIN BODY SPLIT -->
       <div class="lc-body-content">
@@ -444,18 +499,29 @@
 
             <!-- ALL DONE CARD FOR TODAY -->
             <div v-else class="lc-all-done-card">
-              <div class="adc-celebration-icon">🎉</div>
-              <h3>Tuyệt vời! Bạn đã hoàn thành toàn bộ Ngày {{ currentDay }}!</h3>
-              <p>Hãy nghỉ ngơi thư giãn tại khách sạn hoặc đi dạo phố đêm tự do nhé.</p>
-              
+              <div class="adc-header-badge">🌙 ĐÃ HOÀN TẤT LỘ TRÌNH NGÀY {{ currentDay }}</div>
+              <div class="adc-celebration-icon">✨</div>
+              <h3>Hôm nay bạn đã hoàn thành trọn vẹn {{ todayCompletedCount }}/{{ todayStops.length }} điểm dừng!</h3>
+              <p class="adc-desc">
+                Bạn có thể tự do nghỉ ngơi, cà phê đêm, thưởng thức ẩm thực địa phương hoặc về khách sạn ngủ một giấc thật ngon.
+              </p>
+
+              <div class="adc-next-day-info" v-if="currentDay < totalDays">
+                <div class="andi-icon">⏰</div>
+                <div class="andi-text">
+                  <strong>Khởi hành Ngày {{ currentDay + 1 }}:</strong>
+                  <span>Bạn có thể bắt đầu lịch trình ngày mới bất cứ khi nào bạn thức dậy hoặc sẵn sàng khởi hành.</span>
+                </div>
+              </div>
+
               <div class="adc-actions">
                 <button
                   v-if="currentDay < totalDays"
                   type="button"
                   class="btn-next-day-tour"
-                  @click="selectDay(currentDay + 1)"
+                  @click="startNextDay"
                 >
-                  🚀 Bắt đầu Ngày {{ currentDay + 1 }}
+                  🚀 Bắt đầu Ngày {{ currentDay + 1 }} (Khi bạn sẵn sàng)
                 </button>
                 <button
                   v-else
@@ -463,7 +529,14 @@
                   class="btn-finish-all-trip"
                   @click="showRecapModal = true"
                 >
-                  🏆 Xem Bảng Tổng Kết Chuyến Đi
+                  🏆 Xem Báo Cáo Tổng Kết Chuyến Đi
+                </button>
+                <button
+                  type="button"
+                  class="btn-review-today-stops"
+                  @click="currentStopIndex = Math.max(0, todayStops.length - 1)"
+                >
+                  ↩️ Xem lại các điểm Ngày {{ currentDay }}
                 </button>
               </div>
             </div>
@@ -489,7 +562,12 @@
                 />
                 <div class="next-info-block">
                   <h4 class="next-place-name">{{ nextStop.place || nextStop.name }}</h4>
-                  <p class="next-place-time">Giờ dự kiến: <b>{{ nextStop.time || 'Kế tiếp' }}</b></p>
+                  <p class="next-place-time">
+                    Giờ dự kiến: <b>{{ nextStop.time || 'Kế tiếp' }}</b>
+                    <span v-if="getNextStopDepartureStatus(nextStop)" :class="['departure-status-pill', getNextStopDepartureStatus(nextStop).type]">
+                      {{ getNextStopDepartureStatus(nextStop).text }}
+                    </span>
+                  </p>
                   <p class="next-place-tip">
                     💡 Mẹo: {{ getPreparationHint(nextStop) }}
                   </p>
@@ -572,6 +650,12 @@
                 <li>💵 Chuẩn bị sẵn tiền mặt lẻ để thanh toán gửi xe.</li>
               </ul>
               
+              <div class="test-alert-action-row">
+                <button type="button" class="btn-test-alert" @click="triggerTestMovementAlert">
+                  🔔 Thử chuông & báo giờ di chuyển
+                </button>
+              </div>
+
               <div class="end-trip-early-row">
                 <button type="button" class="btn-early-recap" @click="showRecapModal = true">
                   🏆 Kết thúc & Xem Báo Cáo Chuyến Đi
@@ -586,61 +670,95 @@
       </div>
 
       <!-- BOTTOM MOBILE STICKY NAV BAR -->
-      <footer class="lc-mobile-bottom-bar" v-if="(isMobile || isSmallScreen) && activeSubTab === 'main' && currentStop">
-        <!-- MAPS BUTTON -->
-        <a
-          :href="getGoogleMapsTurnByTurnUrl(currentStop)"
-          target="_blank"
-          rel="noreferrer"
-          class="mob-bottom-btn btn-gmaps"
-          title="Chỉ đường Google Maps"
-        >
-          <AppIcon name="navigation" :size="16" />
-          <span>Maps</span>
-        </a>
+      <footer class="lc-mobile-bottom-bar" v-if="(isMobile || isSmallScreen) && activeSubTab === 'main'">
+        <template v-if="currentStop">
+          <!-- MAPS BUTTON -->
+          <a
+            :href="getGoogleMapsTurnByTurnUrl(currentStop)"
+            target="_blank"
+            rel="noreferrer"
+            class="mob-bottom-btn btn-gmaps"
+            title="Chỉ đường Google Maps"
+          >
+            <AppIcon name="navigation" :size="16" />
+            <span>Maps</span>
+          </a>
 
-        <!-- NÚT TRẠNG THÁI: ĐÃ ĐẾN NƠI (KHI CHƯA ĐẾN) HOẶC CHECK-IN (KHI ĐÃ ĐẾN NƠI) -->
-        <button
-          v-if="!isCurrentStopArrived()"
-          type="button"
-          class="mob-bottom-btn btn-arrive"
-          @click="handleMarkCurrentStopArrived"
-          title="Bấm khi bạn đã tới địa điểm này"
-        >
-          <span class="btn-checkin-text">📍 Đã đến nơi</span>
-        </button>
+          <!-- NÚT TRẠNG THÁI: ĐÃ ĐẾN NƠI (KHI CHƯA ĐẾN) HOẶC CHECK-IN (KHI ĐÃ ĐẾN NƠI) -->
+          <button
+            v-if="!isCurrentStopArrived()"
+            type="button"
+            class="mob-bottom-btn btn-arrive"
+            @click="handleMarkCurrentStopArrived"
+            title="Bấm khi bạn đã tới địa điểm này"
+          >
+            <span class="btn-checkin-text">📍 Đã đến nơi</span>
+          </button>
 
-        <button
-          v-else-if="!isStopCompleted(currentDay, currentStopIndex)"
-          type="button"
-          class="mob-bottom-btn btn-checkin"
-          @click="handleCheckinCurrentStop"
-          title="Bấm để Check-in lưu kỷ niệm"
-        >
-          <AppIcon name="camera" :size="16" />
-          <span class="btn-checkin-text">📸 Check-in</span>
-        </button>
+          <button
+            v-else-if="!isStopCompleted(currentDay, currentStopIndex)"
+            type="button"
+            class="mob-bottom-btn btn-checkin"
+            @click="handleCheckinCurrentStop"
+            title="Bấm để Check-in lưu kỷ niệm"
+          >
+            <AppIcon name="camera" :size="16" />
+            <span class="btn-checkin-text">📸 Check-in</span>
+          </button>
 
-        <button
-          v-else
-          type="button"
-          class="mob-bottom-btn btn-checkin is-done"
-          @click="openNoteDialogForCurrentStop"
-          title="Đã check-in điểm này"
-        >
-          <AppIcon name="checkcircle2" :size="16" />
-          <span class="btn-checkin-text">✓ Đã Check-in</span>
-        </button>
+          <button
+            v-else
+            type="button"
+            class="mob-bottom-btn btn-checkin is-done"
+            @click="openNoteDialogForCurrentStop"
+            title="Đã check-in điểm này"
+          >
+            <AppIcon name="checkcircle2" :size="16" />
+            <span class="btn-checkin-text">✓ Đã Check-in</span>
+          </button>
 
-        <!-- NÚT ĐỊA ĐIỂM TIẾP THEO -->
-        <button
-          type="button"
-          class="mob-bottom-btn btn-next-loc"
-          @click="handleGoNextStop"
-          title="Chuyển sang địa điểm tiếp theo"
-        >
-          <span>{{ currentStopIndex < todayStops.length - 1 ? 'Tiếp theo ❯' : 'Xong ngày 🎉' }}</span>
-        </button>
+          <!-- NÚT ĐỊA ĐIỂM TIẾP THEO -->
+          <button
+            type="button"
+            class="mob-bottom-btn btn-next-loc"
+            @click="handleGoNextStop"
+            title="Chuyển sang địa điểm tiếp theo hoặc xong ngày"
+          >
+            <span>{{ currentStopIndex < todayStops.length - 1 ? 'Tiếp theo ❯' : 'Xong ngày 🎉' }}</span>
+          </button>
+        </template>
+
+        <!-- KHI ĐÃ HOÀN THÀNH CÁC ĐIỂM HÔM NAY: HIỂN THỊ NÚT BẮT ĐẦU NGÀY MỚI HOẶC XEM LẠI -->
+        <template v-else>
+          <button
+            type="button"
+            class="mob-bottom-btn btn-gmaps"
+            @click="currentStopIndex = Math.max(0, todayStops.length - 1)"
+            title="Xem lại điểm trước"
+          >
+            <span>↩️ Điểm trước</span>
+          </button>
+
+          <button
+            v-if="currentDay < totalDays"
+            type="button"
+            class="mob-bottom-btn btn-next-day-mob"
+            @click="startNextDay"
+            title="Bắt đầu ngày mới khi bạn sẵn sàng"
+          >
+            <span>🚀 Bắt đầu Ngày {{ currentDay + 1 }} ❯</span>
+          </button>
+
+          <button
+            v-else
+            type="button"
+            class="mob-bottom-btn btn-next-day-mob is-finish"
+            @click="showRecapModal = true"
+            title="Xem báo cáo tổng kết chuyến đi"
+          >
+            <span>🏆 Xem Tổng Kết Chuyến Đi</span>
+          </button>
+        </template>
       </footer>
     </div>
 
@@ -763,6 +881,11 @@ const showNoteDialog = ref(false)
 const tempNoteText = ref('')
 const showRecapModal = ref(false)
 const showConfettiAnim = ref(false)
+
+// Departure / Movement Alerts
+const activeMovementAlert = ref(null)
+const dismissedAlerts = ref([])
+const lastAlertSoundTime = ref(0)
 
 // Live Trip Stopwatch Timer
 const tripStartTime = ref(null)
@@ -958,6 +1081,7 @@ onMounted(() => {
   window.addEventListener('resize', updateScreenSize)
   timerInterval = setInterval(() => {
     nowTick.value = Date.now()
+    checkDepartureAlerts()
   }, 1000)
 })
 
@@ -971,13 +1095,15 @@ function selectDay(dayNum) {
   currentDay.value = dayNum
   const acts = daysList.value[dayNum - 1]?.activities || []
   let firstUnchecked = 0
+  let found = false
   for (let i = 0; i < acts.length; i++) {
     if (!isStopCompleted(dayNum, i)) {
       firstUnchecked = i
+      found = true
       break
     }
   }
-  currentStopIndex.value = firstUnchecked
+  currentStopIndex.value = found ? firstUnchecked : 0
   persistState()
 }
 
@@ -1084,15 +1210,22 @@ function handleGoNextStop() {
   if (currentStopIndex.value < todayStops.value.length - 1) {
     currentStopIndex.value++
   } else {
-    if (currentDay.value < totalDays.value) {
-      if (confirm(`🎉 Bạn đã đi hết các điểm của Ngày ${currentDay.value}! Bạn có muốn chuyển sang Ngày ${currentDay.value + 1} không?`)) {
-        selectDay(currentDay.value + 1)
-      }
-    } else {
-      showRecapModal.value = true
+    // Hoàn thành các điểm của ngày hôm nay
+    // KHÔNG dùng confirm(), KHÔNG tự động ép chuyển ngày mới!
+    // Khách hàng có thể tự do nghỉ ngơi và tự bấm bắt đầu ngày mới bất cứ khi nào họ muốn
+    currentStopIndex.value = todayStops.value.length
+    if (navigator.vibrate) {
+      navigator.vibrate([100, 50, 100])
     }
   }
   persistState()
+}
+
+// Bắt đầu ngày mới khi khách hàng sẵn sàng
+function startNextDay() {
+  if (currentDay.value < totalDays.value) {
+    selectDay(currentDay.value + 1)
+  }
 }
 
 // 4. Lùi về địa điểm trước
@@ -1105,6 +1238,218 @@ function handleGoPrevStop() {
 
 function handleSkipCurrentStop() {
   handleGoNextStop()
+}
+
+// ==========================================
+// THÔNG BÁO GIỜ DI CHUYỂN (DEPARTURE ALERTS)
+// ==========================================
+
+function parseTimeToMinutes(timeStr) {
+  if (!timeStr || typeof timeStr !== 'string') return null
+  const cleaned = timeStr.replace('h', ':').trim()
+  const match = cleaned.match(/(\d{1,2}):(\d{2})/)
+  if (!match) return null
+  const h = parseInt(match[1], 10)
+  const m = parseInt(match[2], 10)
+  if (isNaN(h) || isNaN(m)) return null
+  return h * 60 + m
+}
+
+function getCurrentClockMinutes() {
+  const d = new Date(nowTick.value)
+  return d.getHours() * 60 + d.getMinutes()
+}
+
+// Web Audio API Synthesizer Chime Sound
+function playChimeSound() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext
+    if (!AudioCtx) return
+    const ctx = new AudioCtx()
+    const now = ctx.currentTime
+    
+    // Note 1 (D5)
+    const osc1 = ctx.createOscillator()
+    const gain1 = ctx.createGain()
+    osc1.type = 'sine'
+    osc1.frequency.setValueAtTime(587.33, now)
+    osc1.frequency.exponentialRampToValueAtTime(880, now + 0.15)
+    gain1.gain.setValueAtTime(0.18, now)
+    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.6)
+    osc1.connect(gain1)
+    gain1.connect(ctx.destination)
+    osc1.start(now)
+    osc1.stop(now + 0.6)
+
+    // Note 2 (A5 -> D6)
+    const osc2 = ctx.createOscillator()
+    const gain2 = ctx.createGain()
+    osc2.type = 'sine'
+    osc2.frequency.setValueAtTime(880, now + 0.18)
+    osc2.frequency.exponentialRampToValueAtTime(1174.66, now + 0.35)
+    gain2.gain.setValueAtTime(0.22, now + 0.18)
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.9)
+    osc2.connect(gain2)
+    gain2.connect(ctx.destination)
+    osc2.start(now + 0.18)
+    osc2.stop(now + 0.9)
+  } catch (e) {
+    // Audio might be muted or blocked by browser before user gesture
+  }
+}
+
+function sendNativeNotification(title, body) {
+  if (typeof Notification !== 'undefined') {
+    if (Notification.permission === 'granted') {
+      try {
+        new Notification(title, { body, icon: '/favicon.ico' })
+      } catch (e) {}
+    } else if (Notification.permission !== 'denied') {
+      try {
+        Notification.requestPermission()
+      } catch (e) {}
+    }
+  }
+}
+
+function checkDepartureAlerts() {
+  if (!props.isOpen || activeSubTab.value !== 'main' || !todayStops.value || todayStops.value.length === 0) {
+    return
+  }
+
+  // Nếu không có điểm tiếp theo thì không kích hoạt cảnh báo di chuyển
+  if (!nextStop.value) return
+
+  const targetStop = nextStop.value
+  const targetStopIndex = currentStopIndex.value + 1
+  const alertId = `alert_${currentDay.value}_${targetStopIndex}_${targetStop.time || 'notime'}`
+
+  // Nếu người dùng đã bấm đóng thông báo này trong phiên hiện tại
+  if (dismissedAlerts.value.includes(alertId)) {
+    return
+  }
+
+  const currentClockMinutes = getCurrentClockMinutes()
+  const targetMinutes = parseTimeToMinutes(targetStop.time)
+
+  let shouldAlert = false
+  let alertBadge = 'ĐÃ TỚI GIỜ DI CHUYỂN'
+  let alertTitle = `Đã tới giờ di chuyển sang: ${targetStop.place || targetStop.name}`
+  let alertMessage = `Lịch trình dự kiến lúc ${targetStop.time || 'tiếp theo'}. Hãy kiểm tra tư trang và chuẩn bị lên đường nhé!`
+
+  if (targetMinutes !== null) {
+    const diff = targetMinutes - currentClockMinutes // số phút còn lại
+    // Nếu trong khoảng 10 phút trước giờ hẹn đến 60 phút sau giờ hẹn
+    if (diff <= 10 && diff >= -60) {
+      shouldAlert = true
+      if (diff > 0) {
+        alertBadge = `SẮP TỚI GIỜ • CÒN ${diff} PHÚT`
+        alertTitle = `Sắp đến giờ di chuyển sang: ${targetStop.place || targetStop.name}`
+        alertMessage = `Theo kế hoạch là ${targetStop.time} (còn ~${diff} phút). Hãy chuẩn bị di chuyển để kịp giờ nhé!`
+      } else {
+        alertBadge = '🔥 ĐÃ TỚI GIỜ DI CHUYỂN'
+        alertTitle = `Đã tới giờ di chuyển sang: ${targetStop.place || targetStop.name}`
+        alertMessage = `Giờ dự kiến là ${targetStop.time}. Đã đến lúc di chuyển sang điểm tiếp theo!`
+      }
+    }
+  }
+
+  // Kiểm tra phụ: Nếu khách đã check-in hoặc đến nơi ở điểm hiện tại trên 60 phút
+  if (!shouldAlert && isCurrentStopArrived()) {
+    const stayMins = getStopStayMinutes(currentDay.value, currentStopIndex.value)
+    if (stayMins >= 60) {
+      const stayAlertId = `stay_alert_${currentDay.value}_${currentStopIndex.value}`
+      if (!dismissedAlerts.value.includes(stayAlertId)) {
+        shouldAlert = true
+        alertBadge = `⏱️ ĐÃ Ở ĐÂY ${stayMins} PHÚT`
+        alertTitle = `Bạn đã trải nghiệm ở đây hơn 1 tiếng`
+        alertMessage = `Đã đến lúc chuẩn bị sang điểm tiếp theo: ${targetStop.place || targetStop.name} (${targetStop.time || 'kế tiếp'})!`
+      }
+    }
+  }
+
+  if (shouldAlert) {
+    if (!activeMovementAlert.value || activeMovementAlert.value.id !== alertId) {
+      activeMovementAlert.value = {
+        id: alertId,
+        badge: alertBadge,
+        title: alertTitle,
+        message: alertMessage,
+        scheduledTime: targetStop.time || '',
+        targetStop,
+        targetStopIndex
+      }
+
+      // Phát chuông báo và rung (tối đa 1 lần mỗi 2 phút)
+      if (Date.now() - lastAlertSoundTime.value > 120000) {
+        lastAlertSoundTime.value = Date.now()
+        playChimeSound()
+        if (navigator.vibrate) {
+          navigator.vibrate([150, 70, 150])
+        }
+        sendNativeNotification('Travel Tips: Đã tới giờ di chuyển!', alertTitle)
+      }
+    }
+  }
+}
+
+// Bỏ qua thông báo
+function dismissActiveAlert() {
+  if (activeMovementAlert.value) {
+    dismissedAlerts.value.push(activeMovementAlert.value.id)
+    activeMovementAlert.value = null
+  }
+}
+
+// Chuyển sang điểm đến ngay lập tức từ banner
+function jumpToTargetStopAndDismiss(idx) {
+  dismissActiveAlert()
+  jumpToStop(idx)
+}
+
+// Nút mô phỏng / Thử tính năng thông báo di chuyển
+function triggerTestMovementAlert() {
+  const target = nextStop.value || (todayStops.value && todayStops.value[0]) || { place: 'Địa điểm tiếp theo', time: '12:00' }
+  const targetIdx = nextStop.value ? currentStopIndex.value + 1 : 0
+  activeMovementAlert.value = {
+    id: 'test_alert_' + Date.now(),
+    badge: '🔔 THÔNG BÁO GIỜ DI CHUYỂN',
+    title: `Đã tới giờ di chuyển sang: ${target.place || target.name}`,
+    message: `Theo lịch trình đã lên sẵn lúc ${target.time || '12:00'}. Hãy chuẩn bị hành lý và mở Maps chỉ đường nhé!`,
+    scheduledTime: target.time || '12:00',
+    targetStop: target,
+    targetStopIndex: targetIdx
+  }
+  playChimeSound()
+  if (navigator.vibrate) {
+    navigator.vibrate([150, 70, 150])
+  }
+  sendNativeNotification('Travel Tips: Đã tới giờ di chuyển!', `Đã tới giờ di chuyển sang ${target.place || target.name}!`)
+}
+
+function handleBellClick() {
+  if (activeMovementAlert.value) {
+    dismissActiveAlert()
+  } else {
+    triggerTestMovementAlert()
+  }
+}
+
+// Trạng thái giờ giấc ở card Điểm tiếp theo
+function getNextStopDepartureStatus(stop) {
+  if (!stop || !stop.time) return null
+  const targetMin = parseTimeToMinutes(stop.time)
+  if (targetMin === null) return null
+  const currentMin = getCurrentClockMinutes()
+  const diff = targetMin - currentMin
+  if (diff <= 0 && diff >= -60) {
+    return { type: 'urgent', text: `🔥 Đã tới giờ di chuyển!` }
+  } else if (diff > 0 && diff <= 15) {
+    return { type: 'warning', text: `⏳ Còn ${diff}p nữa xuất phát` }
+  } else if (diff > 15) {
+    return { type: 'info', text: `⏰ Giờ hẹn: ${stop.time}` }
+  }
+  return null
 }
 
 // Note dialog
@@ -1472,6 +1817,20 @@ function handleFinishTripAndClose() {
 
 .lc-icon-btn.wallet-btn:hover, .lc-icon-btn.wallet-btn.active {
   background: #fde68a;
+}
+
+.lc-icon-btn.bell-btn {
+  background: #ffedd5;
+  color: #c2410c;
+}
+
+.lc-icon-btn.bell-btn:hover, .lc-icon-btn.bell-btn.active {
+  background: #fed7aa;
+}
+
+[data-theme='dark'] .lc-icon-btn.bell-btn {
+  background: rgba(234, 88, 12, 0.2);
+  color: #fdba74;
 }
 
 .lc-close-btn {
@@ -2187,9 +2546,225 @@ function handleFinishTripAndClose() {
   text-overflow: ellipsis;
 }
 
+/* DEPARTURE STATUS PILL IN NEXT STOP CARD */
+.departure-status-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 6px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.departure-status-pill.urgent {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+  animation: pulseUrgent 1.5s infinite;
+}
+
+[data-theme='dark'] .departure-status-pill.urgent {
+  background: #450a0a;
+  color: #fca5a5;
+  border-color: #991b1b;
+}
+
+.departure-status-pill.warning {
+  background: #fef3c7;
+  color: #d97706;
+  border: 1px solid #fde68a;
+}
+
+[data-theme='dark'] .departure-status-pill.warning {
+  background: #451a03;
+  color: #fde68a;
+  border-color: #92400e;
+}
+
+.departure-status-pill.info {
+  background: #e0f2fe;
+  color: #0284c7;
+  border: 1px solid #bae6fd;
+}
+
+[data-theme='dark'] .departure-status-pill.info {
+  background: #082f49;
+  color: #7dd3fc;
+  border-color: #0369a1;
+}
+
+@keyframes pulseUrgent {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.03); }
+}
+
+/* ==================== MOVEMENT / DEPARTURE ALERT BANNER ==================== */
+.lc-movement-alert-banner {
+  margin: 10px 16px 0;
+  padding: 12px 14px;
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+  border: 1px solid #fdba74;
+  border-radius: 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  box-shadow: 0 6px 18px rgba(234, 88, 12, 0.15);
+  animation: pulseMovementAlert 2s infinite ease-in-out;
+  position: relative;
+  z-index: 10;
+}
+
+[data-theme='dark'] .lc-movement-alert-banner {
+  background: linear-gradient(135deg, #2a1b0a 0%, #3d240f 100%);
+  border-color: #9a3412;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+}
+
+@keyframes pulseMovementAlert {
+  0%, 100% {
+    box-shadow: 0 4px 14px rgba(234, 88, 12, 0.15);
+  }
+  50% {
+    box-shadow: 0 6px 22px rgba(234, 88, 12, 0.3);
+  }
+}
+
+.mab-pulse-ring {
+  font-size: 1.4rem;
+  line-height: 1;
+  animation: bellRingAnim 1.2s infinite ease-in-out;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+@keyframes bellRingAnim {
+  0%, 100% { transform: rotate(0); }
+  15% { transform: rotate(14deg); }
+  30% { transform: rotate(-14deg); }
+  45% { transform: rotate(10deg); }
+  60% { transform: rotate(-6deg); }
+  75% { transform: rotate(0); }
+}
+
+.mab-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.mab-header-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+.mab-badge {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: #ea580c;
+  color: #ffffff;
+  text-transform: uppercase;
+}
+
+.mab-time-tag {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #c2410c;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(234, 88, 12, 0.12);
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+[data-theme='dark'] .mab-time-tag {
+  color: #fb923c;
+  background: rgba(251, 146, 60, 0.15);
+}
+
+.mab-title {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #9a3412;
+  margin-bottom: 3px;
+  line-height: 1.3;
+}
+
+[data-theme='dark'] .mab-title {
+  color: #fdba74;
+}
+
+.mab-desc {
+  font-size: 0.78rem;
+  color: #7c2d12;
+  margin: 0 0 10px;
+  line-height: 1.35;
+}
+
+[data-theme='dark'] .mab-desc {
+  color: #fed7aa;
+}
+
+.mab-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  border-radius: 8px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.btn-mab-maps {
+  background: #0284c7;
+  color: #ffffff;
+}
+
+.btn-mab-maps:hover {
+  background: #0369a1;
+}
+
+.btn-mab-go {
+  background: #ea580c;
+  color: #ffffff;
+}
+
+.btn-mab-go:hover {
+  background: #c2410c;
+}
+
+.btn-mab-dismiss {
+  background: transparent;
+  color: #9a3412;
+  border: 1px solid rgba(154, 52, 18, 0.3);
+}
+
+[data-theme='dark'] .btn-mab-dismiss {
+  color: #fdba74;
+  border-color: rgba(253, 186, 116, 0.3);
+}
+
 /* ==================== ALL DONE CARD ==================== */
 .lc-all-done-card {
-  padding: 30px 18px;
+  padding: 26px 18px;
   text-align: center;
   background: #ffffff;
   border-radius: 18px;
@@ -2202,8 +2777,25 @@ function handleFinishTripAndClose() {
   border-color: #1e2e4f;
 }
 
+.adc-header-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(2, 132, 199, 0.1);
+  color: #0284c7;
+  margin-bottom: 10px;
+}
+
+[data-theme='dark'] .adc-header-badge {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+}
+
 .adc-celebration-icon {
-  font-size: 2.5rem;
+  font-size: 2.2rem;
   margin-bottom: 8px;
 }
 
@@ -2212,26 +2804,75 @@ function handleFinishTripAndClose() {
   font-weight: 800;
   margin: 0 0 6px;
   color: #0f172a;
+  line-height: 1.35;
 }
 
 [data-theme='dark'] .lc-all-done-card h3 {
   color: #f8fafc;
 }
 
-.lc-all-done-card p {
+.adc-desc {
   color: #64748b;
   font-size: 0.85rem;
-  margin: 0 0 18px;
+  margin: 0 0 16px;
+  line-height: 1.4;
+}
+
+.adc-next-day-info {
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin: 0 auto 18px;
+  max-width: 480px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  text-align: left;
+}
+
+[data-theme='dark'] .adc-next-day-info {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.andi-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.andi-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.82rem;
+  color: #475569;
+  line-height: 1.4;
+}
+
+[data-theme='dark'] .andi-text {
+  color: #94a3b8;
+}
+
+.andi-text strong {
+  color: #0f172a;
+}
+
+[data-theme='dark'] .andi-text strong {
+  color: #f8fafc;
 }
 
 .adc-actions {
   display: flex;
   justify-content: center;
+  align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .btn-next-day-tour, .btn-finish-all-trip {
-  padding: 10px 20px;
+  padding: 10px 18px;
   border-radius: 10px;
   font-weight: 700;
   font-size: 0.88rem;
@@ -2240,11 +2881,74 @@ function handleFinishTripAndClose() {
   background: #0284c7;
   color: #ffffff;
   box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+  transition: all 0.2s ease;
+}
+
+.btn-next-day-tour:hover {
+  background: #0369a1;
 }
 
 .btn-finish-all-trip {
   background: #10b981;
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.btn-finish-all-trip:hover {
+  background: #059669;
+}
+
+.btn-review-today-stops {
+  padding: 9px 15px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.84rem;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+[data-theme='dark'] .btn-review-today-stops {
+  background: #1e293b;
+  border-color: #334155;
+  color: #cbd5e1;
+}
+
+.btn-review-today-stops:hover {
+  background: #e2e8f0;
+}
+
+[data-theme='dark'] .btn-review-today-stops:hover {
+  background: #334155;
+}
+
+/* SIDEBAR TEST ALERT BUTTON */
+.test-alert-action-row {
+  margin-bottom: 10px;
+}
+
+.btn-test-alert {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid #fdba74;
+  background: #fff7ed;
+  color: #c2410c;
+  font-weight: 700;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+[data-theme='dark'] .btn-test-alert {
+  background: rgba(234, 88, 12, 0.15);
+  border-color: #9a3412;
+  color: #fdba74;
+}
+
+.btn-test-alert:hover {
+  background: #ffedd5;
 }
 
 /* ==================== SIDEBAR RIGHT / TIMELINE ==================== */
@@ -3546,6 +4250,21 @@ function handleFinishTripAndClose() {
     background: #1e293b;
     border-color: #334155;
     color: #38bdf8;
+  }
+
+  .mob-bottom-btn.btn-next-day-mob {
+    background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+    color: #ffffff;
+    flex: 2;
+    min-width: 0;
+    border: none;
+    font-weight: 800;
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+  }
+
+  .mob-bottom-btn.btn-next-day-mob.is-finish {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
   }
 }
 
