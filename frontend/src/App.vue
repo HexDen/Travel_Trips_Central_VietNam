@@ -723,13 +723,9 @@ const isDark = ref(false)
 
 function toggleDark() {
   isDark.value = !isDark.value
-  if (isDark.value) {
-    document.documentElement.setAttribute('data-theme', 'dark')
-    localStorage.setItem('theme', 'dark')
-  } else {
-    document.documentElement.removeAttribute('data-theme')
-    localStorage.setItem('theme', 'light')
-  }
+  const themeVal = isDark.value ? 'dark' : 'light'
+  document.documentElement.setAttribute('data-theme', themeVal)
+  localStorage.setItem('theme', themeVal)
 }
 
 // Danh sách 11 Tỉnh/Thành phố Miền Trung & Tây Nguyên sau sáp nhập (Ảnh HD thực tế 100%)
@@ -4874,6 +4870,9 @@ onMounted(async () => {
   if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
     isDark.value = true
     document.documentElement.setAttribute('data-theme', 'dark')
+  } else {
+    isDark.value = false
+    document.documentElement.setAttribute('data-theme', 'light')
   }
 
   if (localStorage.getItem('travel_token')) {

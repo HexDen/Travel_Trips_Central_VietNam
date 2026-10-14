@@ -22,6 +22,7 @@
 
   /* Typography & Đạt chuẩn tương phản WCAG 2.2 AA / AAA (Tối thiểu 4.5:1) */
   --text-main: #0f172a; /* Slate 900 - Tương phản 13:1 so với nền trắng */
+  --text-color: #0f172a; /* Alias tương thích ngược */
   --text-sub: #475569; /* Slate 600 - Tương phản 5.5:1, vượt chuẩn WCAG AA */
   --text-muted: #64748b; /* Slate 500 */
 
@@ -89,6 +90,7 @@
 
   /* Typography Dark Mode */
   --text-main: #f8fafc; /* Slate 50 - Tương phản cực cao */
+  --text-color: #f8fafc; /* Alias tương thích ngược */
   --text-sub: #cbd5e1; /* Slate 300 - Dễ đọc */
   --text-muted: #94a3b8; /* Slate 400 */
 
