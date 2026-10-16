@@ -561,10 +561,42 @@ async function taoLichTrinhThongMinh(duLieu, diaDiemDatabase) {
   const soNgay = Number(duLieu.days) || 3
   const nganSach = Number(duLieu.budget) || 3000000
   const soNguoi = Number(duLieu.people) || 1
-  const soThich = Array.isArray(duLieu.interests) ? duLieu.interests : []
+  const soThich = Array.isArray(duLieu.interests) ? duLieu.interests : (Array.isArray(duLieu.soThich) ? duLieu.soThich : [])
+  const nhipDo = duLieu.pace || duLieu.nhipDo || duLieu.nhip_do || 'kham_pha'
+  const phuongTienNoiThanh = duLieu.local_transport || duLieu.phuongTienNoiThanh || duLieu.phuong_tien_noi_thanh || 'xe_may'
+  const specialConstraints = duLieu.special_constraints || duLieu.rang_buoc || duLieu.rangBuoc || {}
   const selectedPlaces = Array.isArray(duLieu.selected_places) ? duLieu.selected_places : []
 
-  const availableAttractions = [...diaDiemDatabase.filter(p => p.type === 'attraction')]
+  // Phân tích sở thích trọng tâm
+  const isBeachInterest = soThich.some(s => /biển|beach|đảo/i.test(s))
+  const isCultureInterest = soThich.some(s => /văn hóa|lịch sử|di sản/i.test(s))
+  const isNatureInterest = soThich.some(s => /thiên nhiên|sinh thái|núi|rừng/i.test(s))
+  const isFoodInterest = soThich.some(s => /ăn uống|ẩm thực|đặc sản/i.test(s))
+  const isEntertainInterest = soThich.some(s => /giải trí|vui chơi|check-in/i.test(s))
+
+  function scorePlaceByInterests(p) {
+    let score = 0
+    const txt = `${p.name} ${(p.tags || []).join(' ')} ${p.description || ''}`.toLowerCase()
+    if (isBeachInterest && /biển|beach|mỹ khê|bãi|sơn trà|kỳ co|nha trang|hòn|cù lao|vịnh|eo gió|đảo/i.test(txt)) score += 60
+    if (isCultureInterest && /chùa|đại nội|cố đô|bảo tàng|lăng|phố cổ|thánh địa|di tích|di sản|lịch sử/i.test(txt)) score += 60
+    if (isNatureInterest && /thác|đèo|núi|động|phong nha|bà nà|rừng|suối|ngũ hành|vườn quốc gia|sinh thái/i.test(txt)) score += 60
+    if (isFoodInterest && /chợ|ẩm thực|đặc sản|quán|hải sản|phố đi bộ/i.test(txt)) score += 50
+    if (isEntertainInterest && /vui chơi|công viên|asia park|vinwonders|cầu rồng|bar|cafe|view/i.test(txt)) score += 50
+
+    if (specialConstraints?.nguoiLonTuoi) {
+      if (/núi|đèo|leo dốc|bậc thang|thác/i.test(txt)) score -= 40
+      if (/chùa|bảo tàng|công viên|di tích/i.test(txt)) score += 20
+    }
+    if (specialConstraints?.coTreNho) {
+      if (/công viên|vui chơi|bãi tắm|asia park|vinwonders/i.test(txt)) score += 30
+    }
+    return score
+  }
+
+  let availableAttractions = [...diaDiemDatabase.filter(p => p.type === 'attraction')]
+  if (soThich.length > 0 || specialConstraints?.nguoiLonTuoi || specialConstraints?.coTreNho) {
+    availableAttractions.sort((a, b) => scorePlaceByInterests(b) - scorePlaceByInterests(a))
+  }
   const availableRestaurants = [...diaDiemDatabase.filter(p => p.type === 'restaurant')]
   const availableCafes = [...diaDiemDatabase.filter(p => p.type === 'cafe')]
 
@@ -785,6 +817,38 @@ async function taoLichTrinhThongMinh(duLieu, diaDiemDatabase) {
 
     let lastPlaceInDay = hotelChon; // Luôn bắt đầu ngày mới từ khách sạn
 
+    function tinhLyDoDeXuatPoi(placeObj, type) {
+      const txt = `${placeObj.name} ${(placeObj.tags || []).join(' ')} ${placeObj.description || ''}`.toLowerCase();
+      if (specialConstraints?.anChay && ['breakfast', 'lunch', 'dinner'].includes(type)) {
+        return 'Phù hợp nhu cầu ẩm thực chay & thanh đạm';
+      }
+      if (specialConstraints?.nguoiLonTuoi && /chùa|bảo tàng|công viên|di tích/i.test(txt)) {
+        return 'Địa hình bằng phẳng, thuận tiện cho người lớn tuổi';
+      }
+      if (specialConstraints?.coTreNho && /công viên|vui chơi|asia park|vinwonders/i.test(txt)) {
+        return 'Không gian an toàn, thân thiện cho gia đình có trẻ nhỏ';
+      }
+      if (isBeachInterest && /biển|beach|mỹ khê|bãi|sơn trà|kỳ co|nha trang|vịnh/i.test(txt)) {
+        return 'Phù hợp sở thích Biển & thư giãn miền duyên hải';
+      }
+      if (isCultureInterest && /chùa|đại nội|cố đô|bảo tàng|lăng|phố cổ|di tích|di sản/i.test(txt)) {
+        return 'Ưu tiên Di sản Văn hóa theo sở thích của bạn';
+      }
+      if (isNatureInterest && /thác|đèo|núi|động|phong nha|bà nà|suối|sinh thái/i.test(txt)) {
+        return 'Trải nghiệm Thắng cảnh Thiên nhiên & Sinh thái đặc sắc';
+      }
+      if (isFoodInterest && (['breakfast', 'lunch', 'dinner'].includes(type) || /chợ|đặc sản|ẩm thực/i.test(txt))) {
+        return 'Thưởng thức Tinh hoa Ẩm thực & Đặc sản địa phương';
+      }
+      if (isEntertainInterest && (/vui chơi|công viên|cầu rồng|chợ đêm/i.test(txt) || type === 'cafe')) {
+        return 'Điểm Vui chơi & Giải trí sôi động';
+      }
+      if (nhipDo === 'thong_tha') {
+        return 'Không gian thoáng đãng, phù hợp nhịp độ thong thả';
+      }
+      return 'Điểm check-in nổi bật dành cho lịch trình năng động';
+    }
+
     function addActivity(time, type, label, placeObj, fallbackActivityText, customDwell = null) {
       let travel_from = null;
       let travel_distance_km = null;
@@ -797,8 +861,12 @@ async function taoLichTrinhThongMinh(duLieu, diaDiemDatabase) {
           travel_from = lastPlaceInDay.name;
           travel_distance_km = Number(dist.toFixed(1));
           travel_duration_mins = Math.max(5, Math.round((dist / 32) * 60));
-          const transportCost = Math.round(dist * 14000 / 1000) * 1000;
-          travel_cost = `~${transportCost.toLocaleString('vi-VN')}đ`;
+          if (phuongTienNoiThanh === 'taxi') {
+            const transportCost = Math.round(dist * 15000 / 1000) * 1000;
+            travel_cost = `~${transportCost.toLocaleString('vi-VN')}đ`;
+          } else {
+            travel_cost = dist < 2 ? '0đ (gần)' : '~10.000đ xăng';
+          }
         }
       }
       
@@ -813,6 +881,7 @@ async function taoLichTrinhThongMinh(duLieu, diaDiemDatabase) {
         place: placeObj.name,
         address: placeObj.address || `Khu vực trung tâm ${diemDen}`,
         activity: activityText,
+        recommendation_reason: tinhLyDoDeXuatPoi(placeObj, type),
         estimated_cost: placeObj.estimated_cost || 50000,
         rating: placeObj.rating || 4.7,
         review_count: taoSoLuongDanhGia(placeObj.name),
@@ -825,7 +894,7 @@ async function taoLichTrinhThongMinh(duLieu, diaDiemDatabase) {
         travel_duration_mins,
         travel_cost,
         open_hours: placeObj.open_hours || layGioMoCuaUocTinh(type),
-        dwell_time: customDwell || placeObj.dwell_time || (type === 'attraction' ? '1.5 - 2 tiếng' : type === 'cafe' ? '45 phút' : '1 tiếng'),
+        dwell_time: customDwell || placeObj.dwell_time || (nhipDo === 'thong_tha' ? (type === 'attraction' ? '2 - 2.5 tiếng' : type === 'cafe' ? '1.5 tiếng' : '1 tiếng') : (type === 'attraction' ? '1.5 - 2 tiếng' : type === 'cafe' ? '45 phút' : '1 tiếng')),
         best_time: placeObj.best_time || (type === 'cafe' ? '15:00 - 17:00' : 'Tuỳ chọn'),
         is_indoor: placeObj.is_indoor !== undefined ? placeObj.is_indoor : (type === 'cafe' || type === 'restaurant' || type === 'hotel'),
         signature_dishes: placeObj.signature_dishes || [],
@@ -990,11 +1059,18 @@ async function taoLichTrinhThongMinh(duLieu, diaDiemDatabase) {
       const restTrua = layDiaDiemKhongTrung(lunchPool, `Nhà hàng cơm niêu đặc sản ${diemDen}`, 'lunch', 150000, lastPlaceInDay);
       addActivity('12:00', 'lunch', 'Ăn trưa', restTrua, `Dùng bữa trưa ẩm thực địa phương`);
 
-      const cafeChieu = layDiaDiemKhongTrung(cCafes.length > 0 ? cCafes : availableCafes, `Quán Cafe view đẹp ${diemDen}`, 'cafe', 50000, lastPlaceInDay);
-      addActivity('14:30', 'cafe', 'Cafe & Chill', cafeChieu, `Thưởng thức cafe và nghỉ ngơi nhẹ`);
+      if (nhipDo === 'thong_tha') {
+        // Nhịp độ thong thả: Chiều nghỉ dưỡng, cafe view đẹp hoặc bãi biển thư thái 2 tiếng, không vội vã
+        const cafeChieu = layDiaDiemKhongTrung(cCafes.length > 0 ? cCafes : availableCafes, `Quán Cafe view đẹp ${diemDen}`, 'cafe', 50000, lastPlaceInDay);
+        addActivity('15:00', 'cafe', 'Nghỉ dưỡng & Cafe', cafeChieu, `Thư thái thưởng thức cà phê ngắm cảnh và nghỉ ngơi nhẹ nhàng`, '2.5 tiếng');
+      } else {
+        // Nhịp độ khám phá nhiều: Năng động 2 chặng chiều
+        const cafeChieu = layDiaDiemKhongTrung(cCafes.length > 0 ? cCafes : availableCafes, `Quán Cafe view đẹp ${diemDen}`, 'cafe', 50000, lastPlaceInDay);
+        addActivity('14:30', 'cafe', 'Cafe & Chill', cafeChieu, `Thưởng thức cafe và nghỉ ngơi nhẹ`);
 
-      const attChieu = layDiaDiemKhongTrung(cAttractions.length > 0 ? cAttractions : availableAttractions, `Điểm check-in chiều ${diemDen}`, 'attraction', 50000, lastPlaceInDay);
-      addActivity('16:00', 'attraction', 'Tham quan / Check-in', attChieu, `Tiếp tục hành trình tham quan`);
+        const attChieu = layDiaDiemKhongTrung(cAttractions.length > 0 ? cAttractions : availableAttractions, `Điểm check-in chiều ${diemDen}`, 'attraction', 50000, lastPlaceInDay);
+        addActivity('16:00', 'attraction', 'Tham quan / Check-in', attChieu, `Tiếp tục hành trình tham quan`);
+      }
 
       const restToi = layDiaDiemKhongTrung(dinnerPool, `Nhà hàng hải sản / ẩm thực đêm ${diemDen}`, 'dinner', 200000, lastPlaceInDay);
       addActivity('19:00', 'dinner', 'Ăn tối', restToi, `Dùng bữa tối, thưởng thức ẩm thực`);

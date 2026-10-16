@@ -697,6 +697,14 @@ const formDuLieu = reactive({
   nganSach: 3000000,
   soNguoi: 1,
   soThich: [],
+  nhipDo: 'kham_pha', // 'kham_pha' (Năng động, 4-5 điểm/ngày) | 'thong_tha' (Nghỉ dưỡng, 2-3 điểm/ngày)
+  phuongTienNoiThanh: 'xe_may', // 'xe_may' (Thuê xe máy) | 'taxi' (Taxi/Grab) | 'xe_rieng' (Xe cá nhân)
+  rangBuoc: {
+    anChay: false,
+    nguoiLonTuoi: false,
+    coTreNho: false,
+    khongGianYenTinh: false
+  },
   ngayBatDau: todayIso,
   ngayKetThuc: '',
   phuongTien: '',
@@ -1985,12 +1993,14 @@ async function layViTriHienTaiChoDiemXuatPhat() {
       setTimeout(() => { personalityToast.value = null }, 5000)
     }
   } catch (err) {
+    // Tự động mở bộ chọn thủ công khi bị từ chối quyền vị trí (Yêu cầu 20)
+    showManualWardPicker.value = true
     personalityToast.value = {
       icon: 'alert-triangle',
-      title: 'Không thể định vị GPS',
-      desc: err.message || 'Vui lòng kiểm tra quyền truy cập vị trí trên trình duyệt.'
+      title: 'Đã chuyển sang chế độ chọn thủ công',
+      desc: 'Quyền vị trí bị từ chối hoặc không khả dụng. Vui lòng chọn Tỉnh thành, Quận huyện và Phường xã bên dưới.'
     }
-    setTimeout(() => { personalityToast.value = null }, 4500)
+    setTimeout(() => { personalityToast.value = null }, 5000)
   } finally {
     isLocatingOrigin.value = false
   }
@@ -2252,18 +2262,48 @@ function chonGioXuatPhatTau(train, timeStr) {
   }, 700)
 }
 
+function tinhLyDoDeXuatKhachSan(hotel) {
+  const nights = Number(formDuLieu.soDem) || Math.max(1, (Number(formDuLieu.soNgay) || 1) - 1)
+  const rooms = soPhongCan.value
+  const price = Number(hotel.price_from || hotel.price || 0)
+  const totalCost = price * nights * rooms
+  const budget = Number(formDuLieu.nganSach) || 0
+  const ratio = budget > 0 ? (totalCost / budget) : 0.3
+  const txt = `${hotel.name} ${hotel.address || ''} ${(hotel.tags || []).join(' ')}`.toLowerCase()
+
+  if (txt.includes('biển') || txt.includes('beach') || txt.includes('mỹ khê') || txt.includes('nha trang') || txt.includes('sầm sơn') || txt.includes('cửa lò') || txt.includes('nhật lệ')) {
+    return 'Gần biển, tiện tắm biển và ngắm hoàng hôn'
+  }
+  if (ratio > 0 && ratio <= 0.35) {
+    return `Phù hợp ngân sách: Tiền phòng chiếm ~${Math.round(ratio * 100)}% tổng tài chính`
+  }
+  if (formDuLieu.soNguoi >= 3) {
+    return `Tối ưu đoàn ${formDuLieu.soNguoi} người: ${rooms} phòng nghỉ rộng rãi`
+  }
+  if (txt.includes('trung tâm') || txt.includes('hải châu') || txt.includes('phố cổ') || txt.includes('bạch đằng')) {
+    return 'Vị trí trung tâm, thuận tiện ăn uống và di chuyển'
+  }
+  if (Number(hotel.rating || 0) >= 4.7) {
+    return `Đánh giá cao (${hotel.rating} sao), dịch vụ tiện nghi xuất sắc`
+  }
+  return 'Được đánh giá cao về độ sạch sẽ & tiện nghi'
+}
+
 // Danh sách khách sạn theo điểm đến hiện tại
 const availableHotels = computed(() => {
   return getHotelsForDestination(formDuLieu.diemDen || 'Đà Nẵng', places.value || [])
 })
 
-// State Sắp xếp, Bộ lọc và Thu gọn/Xem thêm Khách sạn (Yêu cầu 5)
+// State Sắp xếp, Bộ lọc và Thu gọn/Xem thêm Khách sạn (Yêu cầu 5 & 19)
 const hotelSortBy = ref('default') // 'default' | 'price_asc' | 'price_desc' | 'rating_desc'
 const hotelStarFilter = ref('all') // 'all' | '5' | '4' | '3'
 const hotelDisplayLimit = ref(4)
 
 const filteredSortedHotels = computed(() => {
-  let list = [...availableHotels.value]
+  let list = availableHotels.value.map(h => ({
+    ...h,
+    recommendation_reason: tinhLyDoDeXuatKhachSan(h)
+  }))
   if (hotelStarFilter.value !== 'all') {
     const target = Number(hotelStarFilter.value)
     list = list.filter(h => Number(h.stars || 4) === target)
@@ -2768,16 +2808,14 @@ const thoiTiet = ref(null)
 const filterExploreType = ref('all')
 
 // ==================== AI PERSONALITY STATE (MỤC 6, 7, 8) ====================
-// 6. Loading messages luân phiên khi AI đang tạo lịch trình
+// 6. Loading messages luân phiên khi AI đang tạo lịch trình (Yêu cầu 20: Rõ ràng tiến trình, không dùng icon)
 const LOADING_MESSAGES = [
-  '🤖 Đang hỏi ý kiến Google Maps...',
-  '🧠 Đang tính xem bạn có đủ sức đi 7 điểm trong một ngày không...',
-  '🍜 Đang tìm quán ăn ngon nhưng chưa làm bạn phá sản...',
-  '🗺️ Đang sắp xếp hành trình...',
-  '💸 Đang kiểm tra ví của bạn...',
-  '🚗 Đang tính quãng đường...',
-  '😈 Đang loại những điểm “check-in cho có”...',
-  '☀️ Đang kiểm tra xem bạn có chịu nổi cái nắng miền Trung không...'
+  'Đang phân tích sở thích và tuyển chọn các danh thắng biểu tượng...',
+  'Đang tính toán khoảng cách và tối ưu phương tiện di chuyển nội thành...',
+  'Đang cân đối hạn mức ngân sách và điều phối nhịp độ chuyến đi...',
+  'Đang kiểm tra thời gian mở cửa và khoảng đệm di chuyển giữa các điểm...',
+  'Đang đối soát chi phí phòng khách sạn và bảng dự toán chi tiết...',
+  'Đang hoàn thiện bản đồ cung đường và hướng dẫn trải nghiệm thực tế...'
 ]
 
 const currentLoadingMessageIndex = ref(0)
@@ -3503,8 +3541,25 @@ function lamSachMoTa(text, act) {
   return cleaned;
 }
 
+function getIntraCityTransportInfo(dist) {
+  const d = Number(dist) || 2;
+  if (d <= 1.2) {
+    return { mode: 'Đi bộ thư thả', cost: '0đ' };
+  }
+  const localMode = formDuLieu.phuongTienNoiThanh || 'xe_may';
+  if (localMode === 'taxi') {
+    const costVal = Math.round(d * 15000 / 1000) * 1000;
+    return { mode: 'Taxi / Xe công nghệ', cost: `~${costVal.toLocaleString('vi-VN')}đ` };
+  }
+  if (localMode === 'xe_rieng') {
+    return { mode: 'Xe cá nhân tự lái', cost: d < 3 ? '0đ (gần)' : '~10.000đ xăng' };
+  }
+  // Mặc định xe máy thuê nội thành
+  return { mode: 'Xe máy thuê nội thành', cost: d < 3 ? '0đ (gần)' : '~10.000đ xăng' };
+}
+
 function getTravelEstimate(act, day, actIndex) {
-  // 1. Nếu là hoạt động đầu tiên của Ngày 1: Chặng khởi hành từ nơi xuất phát đến điểm đến (Yêu cầu 3)
+  // 1. Hoạt động đầu tiên của Ngày 1: Chặng khởi hành liên tỉnh từ nơi xuất phát đến điểm đến
   if (day && day.day === 1 && actIndex === 0) {
     const isLocal = formDuLieu.daODiemDen || transitRouteInfo.value?.isLocalSameCity;
     const origin = formDuLieu.diemKhoiHanh || formDuLieu.diemDen || 'Đà Nẵng';
@@ -3515,12 +3570,12 @@ function getTravelEstimate(act, day, actIndex) {
       from: isLocal ? 'Điểm xuất phát nội thành' : origin,
       distance: dist,
       duration: dur,
-      cost: isLocal ? '0đ (Đã ở điểm đến)' : (bus?.price ? `${dinhDangTien(bus.price)}đ/vé` : 'Đã tính vé'),
+      cost: isLocal ? '0đ (Đã ở điểm đến)' : (bus?.price ? `${dinhDangTien(bus.price)}đ/vé` : 'Đã tính vé liên tỉnh'),
       mode: isLocal ? 'Xe máy / Taxi nội thành' : (bus ? `${bus.name} (${bus.type})` : (formDuLieu.phuongTien || 'Xe khách'))
     };
   }
 
-  // 2. Nếu là hoạt động đầu tiên của các ngày tiếp theo: Di chuyển từ khách sạn lưu trú
+  // 2. Hoạt động đầu tiên của các ngày tiếp theo: Di chuyển từ khách sạn lưu trú (Nội thành)
   if (day && actIndex === 0) {
     const hotel = lichTrinh.value?.hotel_recommendation;
     const fromName = hotel?.name || 'Khách sạn lưu trú';
@@ -3533,24 +3588,26 @@ function getTravelEstimate(act, day, actIndex) {
         dur = `${calc.phut} phút`;
       }
     }
+    const localInfo = getIntraCityTransportInfo(dist);
     return {
       from: fromName,
       distance: dist,
       duration: dur,
-      cost: `~${Math.round(dist * 14000 / 1000) * 1000}đ`,
-      mode: dist < 1.5 ? 'Đi bộ thư thả' : dist < 5 ? 'Xe máy tiện lợi' : 'Ô tô / Taxi'
+      cost: localInfo.cost,
+      mode: localInfo.mode
     };
   }
 
-  // 3. Dữ liệu có cấu trúc từ backend
+  // 3. Dữ liệu có cấu trúc từ backend (Nội thành)
   if (act.travel_from && act.travel_duration_mins) {
     const dist = Number(act.travel_distance_km || 1);
+    const localInfo = getIntraCityTransportInfo(dist);
     return {
       from: act.travel_from,
       duration: `${act.travel_duration_mins} phút`,
       distance: dist,
-      cost: act.travel_cost || `~${Math.round(dist * 14000 / 1000) * 1000}đ`,
-      mode: dist < 1.5 ? 'Đi bộ thư thả' : dist < 6 ? 'Xe máy tiện lợi' : 'Ô tô / Taxi'
+      cost: act.travel_cost || localInfo.cost,
+      mode: localInfo.mode
     };
   }
 
@@ -3559,37 +3616,39 @@ function getTravelEstimate(act, day, actIndex) {
   const match = rawText.match(/\(Từ (.*?) di chuyển ~([0-9.]+)km, khoảng ([0-9]+) phút(?:, phí taxi ước tính (.*?))?\)/);
   if (match) {
     const dist = parseFloat(match[2]);
+    const localInfo = getIntraCityTransportInfo(dist);
     return {
       from: match[1],
       distance: match[2],
       duration: `${match[3]} phút`,
-      cost: match[4] || null,
-      mode: dist < 1.5 ? 'Đi bộ thư thả' : dist < 6 ? 'Xe máy tiện lợi' : 'Ô tô / Taxi'
+      cost: match[4] || localInfo.cost,
+      mode: localInfo.mode
     };
   }
 
-  // 5. Tính toán trực tiếp theo tọa độ điểm trước đó trong ngày
+  // 5. Tính toán trực tiếp theo tọa độ điểm trước đó trong ngày (Nội thành)
   if (day && day.activities && actIndex > 0) {
     const prev = day.activities[actIndex - 1];
     if (prev && prev.latitude && prev.longitude && act.latitude && act.longitude) {
       const calc = tinhKhoangCachVaThoiGian(prev, act);
       if (calc && calc.distKm > 0.1 && calc.distKm < 150) {
-        const cost = Math.round(calc.distKm * 14000 / 1000) * 1000;
+        const localInfo = getIntraCityTransportInfo(calc.distKm);
         return {
           from: prev.name || prev.place || 'Điểm trước',
           distance: calc.distKm,
           duration: `${calc.phut} phút`,
-          cost: `~${cost.toLocaleString('vi-VN')}đ`,
-          mode: `${calc.phuongTien} ${calc.labelPhuongTien}`
+          cost: localInfo.cost,
+          mode: localInfo.mode
         };
       }
     } else if (prev) {
+      const localInfo = getIntraCityTransportInfo(2.8);
       return {
         from: prev.place || prev.name || 'Điểm trước',
         distance: 2.8,
         duration: '10 - 15 phút',
-        cost: '~35.000đ',
-        mode: 'Xe máy / Taxi'
+        cost: localInfo.cost,
+        mode: localInfo.mode
       };
     }
   }
@@ -4554,6 +4613,12 @@ async function taoLichTrinh() {
       tu_tuc_khach_san: Boolean(formDuLieu.tuTucKhachSan || formDuLieu.hotelStayType === 'free' || formDuLieu.hotelStayType === 'prebooked'),
       hotel_stay_type: formDuLieu.hotelStayType,
       prebooked_hotel_cost: Number(formDuLieu.prebookedHotelCost) || 0,
+      local_transport: formDuLieu.phuongTienNoiThanh,
+      phuong_tien_noi_thanh: formDuLieu.phuongTienNoiThanh,
+      pace: formDuLieu.nhipDo,
+      nhip_do: formDuLieu.nhipDo,
+      special_constraints: formDuLieu.rangBuoc,
+      rang_buoc: formDuLieu.rangBuoc,
       dem_tren_xe: Boolean(formDuLieu.demTrenXe),
       ngan_sach_mode: formDuLieu.nganSachMode,
       ngan_sach_bao_gom_di_chuyen: Boolean(formDuLieu.nganSachBaoGomDiChuyen),
@@ -4647,7 +4712,7 @@ async function taoLichTrinh() {
   } catch (e) {
     const msg = e?.response?.data?.error || e.message;
     if (e?.response?.data?.is_unfeasible) {
-      taoPlanError.value = `⛔ Chuyến đi không thể thực hiện: ${msg}`;
+      taoPlanError.value = `Chuyến đi không thể thực hiện: ${msg}`;
       currentPlannerStep.value = 2;
     } else {
       taoPlanError.value = 'Quá trình tạo lịch trình gặp sự cố: ' + msg;

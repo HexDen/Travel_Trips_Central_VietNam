@@ -535,6 +535,9 @@
                               <span class="car-cost" v-if="act.estimated_cost"><AppIcon name="wallet" size="12" /> {{ dinhDangTien(act.estimated_cost) }}đ</span>
                             </div>
                             <div class="car-sub">
+                              <span class="car-reason-pill" v-if="act.recommendation_reason">
+                                {{ act.recommendation_reason.replace(/^Lý do:\s*|^Lý do đề xuất:\s*/i, '') }}
+                              </span>
                               <span class="car-addr" v-if="act.address"><AppIcon name="pin" size="12" /> {{ act.address }}</span>
                               <span class="car-eta" v-if="getTravelEstimate(act, day, actIndex)">
                                 <AppIcon name="clock" size="12" /> {{ getTravelEstimate(act, day, actIndex).duration }} ({{ getTravelEstimate(act, day, actIndex).distance }} km)
@@ -693,6 +696,11 @@
                                 <span v-for="tag in (act.tags || []).slice(0, 1)" :key="tag" class="meta-tag-pill tag-theme">
                                   <AppIcon name="tag" size="12" /> {{ tag }}
                                 </span>
+                              </div>
+
+                              <!-- Lý do đề xuất cá nhân hóa theo sở thích & nhịp độ (Yêu cầu 18 - NO ICON) -->
+                              <div v-if="act.recommendation_reason" class="act-curated-reason-banner">
+                                <strong>Lý do đề xuất:</strong> {{ act.recommendation_reason.replace(/^Lý do:\s*|^Lý do đề xuất:\s*/i, '') }}
                               </div>
 
                               <p v-if="act.address" class="act-address"><AppIcon name="pin" size="14" /> {{ act.address }}</p>
@@ -1629,6 +1637,53 @@ const onSwipeSaveChange = (e) => {
   box-shadow:
     inset 3px 3px 5px rgba(0, 0, 0, 0.4),
     inset -3px -3px 7px rgba(255, 255, 255, 0.08);
+}
+
+/* Lý do đề xuất cá nhân hóa (Yêu cầu 18 - NO ICON) */
+.act-curated-reason-banner {
+  margin: 8px 0;
+  padding: 8px 12px;
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(129, 140, 248, 0.25);
+  border-left: 3px solid #818cf8;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: #c7d2fe;
+}
+.act-curated-reason-banner strong {
+  color: #a5b4fc;
+  font-weight: 600;
+  margin-right: 4px;
+}
+:root[data-theme="light"] .act-curated-reason-banner {
+  background: rgba(99, 102, 241, 0.08);
+  border-color: rgba(99, 102, 241, 0.2);
+  border-left: 3px solid #6366f1;
+  color: #3730a3;
+}
+:root[data-theme="light"] .act-curated-reason-banner strong {
+  color: #312e81;
+}
+
+.car-reason-pill {
+  display: inline-block;
+  padding: 2px 7px;
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(129, 140, 248, 0.3);
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #c7d2fe;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+:root[data-theme="light"] .car-reason-pill {
+  background: rgba(99, 102, 241, 0.09);
+  border-color: rgba(99, 102, 241, 0.25);
+  color: #4338ca;
 }
 </style>
 

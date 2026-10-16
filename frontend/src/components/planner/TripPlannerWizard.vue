@@ -29,28 +29,58 @@
               </div>
             </div>
 
-            <!-- Tiến trình Wizard (Có thể bấm để quay lại các bước trước) -->
+            <!-- Tiến trình Wizard (Phân biệt rõ bước đã hoàn thành, đang thực hiện và chưa tới - Yêu cầu 20) -->
             <div class="wizard-progress">
               <button
                 type="button"
-                :class="['step-indicator', { active: currentPlannerStep >= 1, clickable: currentPlannerStep > 1 }]"
+                :class="[
+                  'step-indicator',
+                  {
+                    'step-completed': currentPlannerStep > 1,
+                    'step-current active': currentPlannerStep === 1,
+                    'clickable': currentPlannerStep > 1
+                  }
+                ]"
                 @click="goToStep(1)"
-                title="Quay lại Bước 1: Điểm đến"
+                title="Quay lại Bước 1: Điểm đến & Thời gian"
               >
-                1. Điểm đến
+                <span class="step-status-tag" v-if="currentPlannerStep > 1">[Đã xong]</span>
+                <span class="step-status-tag" v-else-if="currentPlannerStep === 1">[Đang điền]</span>
+                1. Điểm đến &amp; Thời gian
               </button>
-              <div class="step-divider"></div>
+              <div class="step-divider" :class="{ completed: currentPlannerStep > 1 }"></div>
               <button
                 type="button"
-                :class="['step-indicator', { active: currentPlannerStep >= 2, clickable: currentPlannerStep > 2 }]"
-                @click="goToStep(2)"
-                title="Quay lại Bước 2: Tài chính & Địa điểm"
+                :class="[
+                  'step-indicator',
+                  {
+                    'step-completed': currentPlannerStep > 2,
+                    'step-current active': currentPlannerStep === 2,
+                    'step-pending': currentPlannerStep < 2,
+                    'clickable': currentPlannerStep > 2
+                  }
+                ]"
+                @click="currentPlannerStep > 2 ? goToStep(2) : null"
+                title="Bước 2: Ngân sách &amp; Sở thích"
               >
-                2. Tài chính & Địa điểm
+                <span class="step-status-tag" v-if="currentPlannerStep > 2">[Đã xong]</span>
+                <span class="step-status-tag" v-else-if="currentPlannerStep === 2">[Đang điền]</span>
+                <span class="step-status-tag" v-else>[Chưa tới]</span>
+                2. Ngân sách &amp; Sở thích
               </button>
-              <div class="step-divider"></div>
-              <div :class="['step-indicator', { active: currentPlannerStep >= 3 }]">
-                3. Di chuyển & Lưu trú
+              <div class="step-divider" :class="{ completed: currentPlannerStep > 2 }"></div>
+              <div
+                :class="[
+                  'step-indicator',
+                  {
+                    'step-current active': currentPlannerStep === 3,
+                    'step-pending': currentPlannerStep < 3
+                  }
+                ]"
+              >
+                <span class="step-status-tag" v-if="currentPlannerStep === 3">[Đang điền]</span>
+                <span class="step-status-tag" v-else>[Chưa tới]</span>
+                3. Di chuyển &amp; Lưu trú
               </div>
             </div>
 
@@ -574,6 +604,130 @@
                     </div>
                   </div>
                   <button type="button" class="fmb-turnoff" @click="formDuLieu.freePlacesOnly = false"><AppIcon name="x" :size="14" /> Tắt</button>
+                </div>
+              </div>
+
+              <!-- PHẦN HỎI SỞ THÍCH VÀ NHỊP ĐỘ Ở MỨC VỪA ĐỦ (YÊU CẦU 18 - NO ICON) -->
+              <div class="user-preferences-card full-width" style="margin-top: 16px;">
+                <div class="upc-header">
+                  <span class="upc-kicker">CÁ NHÂN HÓA TRẢI NGHIỆM</span>
+                  <h4>Sở thích &amp; Nhịp độ chuyến đi</h4>
+                  <p class="upc-subtitle">Chọn nhanh phong cách để AI đề xuất các điểm đến và thời gian lưu lại phù hợp nhất với bạn.</p>
+                </div>
+
+                <!-- 1. CHỌN SỞ THÍCH (5 LỰA CHỌN TRỌNG TÂM - NO ICON) -->
+                <div class="preference-group">
+                  <label class="preference-group-label">Sở thích trọng tâm (Chọn một hoặc nhiều):</label>
+                  <div class="interest-chips-grid">
+                    <button
+                      v-for="item in interestOptions"
+                      :key="item.id"
+                      type="button"
+                      :class="['interest-chip-btn', { active: isInterestActive(item.id) }]"
+                      @click="toggleInterest(item.id)"
+                    >
+                      <span class="icb-title">{{ item.name }}</span>
+                      <small class="icb-desc">{{ item.desc }}</small>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- 2. CHỌN NHỊP ĐỘ CHUYẾN ĐI (2 LỰA CHỌN - NO ICON) -->
+                <div class="preference-group" style="margin-top: 18px;">
+                  <label class="preference-group-label">Nhịp độ chuyến đi:</label>
+                  <div class="pace-options-grid">
+                    <label
+                      :class="['pace-card', { active: formDuLieu.nhipDo === 'thong_tha' }]"
+                      @click="formDuLieu.nhipDo = 'thong_tha'"
+                    >
+                      <input
+                        type="radio"
+                        name="paceOption"
+                        value="thong_tha"
+                        :checked="formDuLieu.nhipDo === 'thong_tha'"
+                      />
+                      <div class="pace-card-info">
+                        <strong>Thong thả (Nghỉ dưỡng nhẹ nhàng)</strong>
+                        <p>2 - 3 điểm/ngày. Dành nhiều thời gian thư giãn tại bãi biển, cafe và khách sạn. Không phải di chuyển vội vã.</p>
+                      </div>
+                    </label>
+
+                    <label
+                      :class="['pace-card', { active: formDuLieu.nhipDo === 'kham_pha' }]"
+                      @click="formDuLieu.nhipDo = 'kham_pha'"
+                    >
+                      <input
+                        type="radio"
+                        name="paceOption"
+                        value="kham_pha"
+                        :checked="formDuLieu.nhipDo === 'kham_pha'"
+                      />
+                      <div class="pace-card-info">
+                        <strong>Khám phá nhiều (Năng động)</strong>
+                        <p>4 - 5 điểm/ngày. Tối ưu thời gian và cung đường để trải nghiệm tối đa các danh lam thắng cảnh và ẩm thực.</p>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- 3. RÀNG BUỘC KHÁC ĐỂ TÙY CHỌN (COLLAPSIBLE ACCORDION - NO ICON) -->
+                <div class="extra-constraints-accordion" style="margin-top: 18px;">
+                  <button
+                    type="button"
+                    class="extra-constraints-toggle"
+                    @click="hienRangBuocTuyChon = !hienRangBuocTuyChon"
+                  >
+                    <span>Ràng buộc &amp; Nhu cầu đặc biệt (Tùy chọn)</span>
+                    <span class="accordion-arrow">{{ hienRangBuocTuyChon ? '▲ Thu gọn' : '▼ Mở rộng' }}</span>
+                  </button>
+
+                  <div v-show="hienRangBuocTuyChon" class="extra-constraints-content">
+                    <div class="constraint-checkboxes-grid" v-if="formDuLieu.rangBuoc">
+                      <label class="constraint-checkbox-item">
+                        <input
+                          type="checkbox"
+                          v-model="formDuLieu.rangBuoc.anChay"
+                        />
+                        <div class="cci-text">
+                          <strong>Ẩm thực chay / Thanh đạm</strong>
+                          <small>Ưu tiên nhà hàng chay hoặc món ăn thanh đạm</small>
+                        </div>
+                      </label>
+
+                      <label class="constraint-checkbox-item">
+                        <input
+                          type="checkbox"
+                          v-model="formDuLieu.rangBuoc.nguoiLonTuoi"
+                        />
+                        <div class="cci-text">
+                          <strong>Đi cùng người lớn tuổi</strong>
+                          <small>Hạn chế leo dốc bậc thang cao, ưu tiên điểm bằng phẳng</small>
+                        </div>
+                      </label>
+
+                      <label class="constraint-checkbox-item">
+                        <input
+                          type="checkbox"
+                          v-model="formDuLieu.rangBuoc.coTreNho"
+                        />
+                        <div class="cci-text">
+                          <strong>Đi cùng trẻ nhỏ</strong>
+                          <small>Ưu tiên khu vui chơi an toàn, di chuyển gần</small>
+                        </div>
+                      </label>
+
+                      <label class="constraint-checkbox-item">
+                        <input
+                          type="checkbox"
+                          v-model="formDuLieu.rangBuoc.khongGianYenTinh"
+                        />
+                        <div class="cci-text">
+                          <strong>Ưu tiên không gian yên tĩnh</strong>
+                          <small>Tránh các điểm tụ tập quá đông đúc, ồn ào</small>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -1172,6 +1326,61 @@
                     </div>
                   </div>
                 </div>
+
+                <!-- BỘ CHỌN PHƯƠNG TIỆN NỘI THÀNH TẠI ĐIỂM ĐẾN (YÊU CẦU 17 - TÁCH RÕ 3 CHẶNG - NO ICON) -->
+                <div class="local-transport-selector-card full-width" style="margin-top: 24px;">
+                  <div class="ltsc-header">
+                    <div>
+                      <span class="ltsc-kicker">CHẶNG 2: DI CHUYỂN TẠI ĐIỂM ĐẾN</span>
+                      <h4>Phương tiện đi lại nội thành {{ formDuLieu.diemDen }}</h4>
+                      <p class="ltsc-desc">Hệ thống phân biệt rõ: Chiều đi liên tỉnh, Di chuyển tại điểm đến và Chiều về. Chọn xe khách liên tỉnh không khiến các chặng trong thành phố mặc định dùng xe khách.</p>
+                    </div>
+                    <span class="ltsc-mode-tag">
+                      Đang chọn: {{ formDuLieu.phuongTienNoiThanh === 'taxi' ? 'Taxi / Grab' : (formDuLieu.phuongTienNoiThanh === 'xe_rieng' ? 'Xe cá nhân tự lái' : 'Thuê xe máy') }}
+                    </span>
+                  </div>
+
+                  <div class="local-transport-grid">
+                    <label :class="['local-trans-card', { active: formDuLieu.phuongTienNoiThanh === 'xe_may' }]">
+                      <input
+                        type="radio"
+                        name="localTransportMode"
+                        value="xe_may"
+                        v-model="formDuLieu.phuongTienNoiThanh"
+                      />
+                      <div class="ltc-body">
+                        <strong>Thuê xe máy (~120.000đ/ngày)</strong>
+                        <p>Chủ động ngắm cảnh, luồn lách phố nhỏ, chi phí tiết kiệm tối đa cho cá nhân và cặp đôi.</p>
+                      </div>
+                    </label>
+
+                    <label :class="['local-trans-card', { active: formDuLieu.phuongTienNoiThanh === 'taxi' }]">
+                      <input
+                        type="radio"
+                        name="localTransportMode"
+                        value="taxi"
+                        v-model="formDuLieu.phuongTienNoiThanh"
+                      />
+                      <div class="ltc-body">
+                        <strong>Taxi / Xe công nghệ Grab (~15.000đ/km)</strong>
+                        <p>Có máy lạnh, an toàn, không lo nắng mưa, thoải mái cho gia đình có người lớn tuổi hoặc trẻ nhỏ.</p>
+                      </div>
+                    </label>
+
+                    <label :class="['local-trans-card', { active: formDuLieu.phuongTienNoiThanh === 'xe_rieng' }]">
+                      <input
+                        type="radio"
+                        name="localTransportMode"
+                        value="xe_rieng"
+                        v-model="formDuLieu.phuongTienNoiThanh"
+                      />
+                      <div class="ltc-body">
+                        <strong>Xe cá nhân tự lái (0đ thuê)</strong>
+                        <p>Tự túc xe máy hoặc ô tô riêng mang theo. Chi phí thuê 0đ, chỉ tính tiền nhiên liệu di chuyển thực tế.</p>
+                      </div>
+                    </label>
+                  </div>
+                </div>
               </div>
 
               <!-- PHẦN 2: CHỌN KHÁCH SẠN VÀ XEM PHÒNG (GIAO DIỆN HÌNH 3, 4, 5 - YÊU CẦU 3) -->
@@ -1330,6 +1539,14 @@
                     </div>
                   </div>
 
+                  <!-- BANNER TÓM TẮT ĐỀ XUẤT KHÁCH SẠN TINH GỌN (YÊU CẦU 19 - NO ICON) -->
+                  <div class="curated-hotel-intro-card">
+                    <div class="chic-content">
+                      <strong>Khách sạn đề xuất tối ưu theo ngân sách &amp; địa điểm:</strong>
+                      <span>Hệ thống chọn lọc trước <strong>{{ displayedHotels.length }} nơi lưu trú phù hợp nhất</strong> cho ngân sách {{ dinhDangTien(formDuLieu.nganSach) }}đ và đoàn {{ formDuLieu.soNguoi }} khách (cần {{ soPhongCan }} phòng). Bạn có thể chọn ngay hoặc bấm "Xem thêm" để duyệt toàn bộ danh sách.</span>
+                    </div>
+                  </div>
+
                   <!-- GRID KHÁCH SẠN VỚI NÚT "XEM PHÒNG" MÀU VÀNG (CHUẨN HÌNH 3) -->
                   <div class="hotel-catalog-grid">
                     <div
@@ -1352,6 +1569,10 @@
                         <span v-if="formDuLieu.khachSanDaChon?.id === hotel.id && !formDuLieu.tuTucKhachSan" class="hcc-selected-tag">✓ Đang chọn</span>
                       </div>
                       <div class="hcc-content">
+                        <!-- Lý do đề xuất ngắn gọn (Yêu cầu 19 - NO ICON) -->
+                        <div v-if="hotel.recommendation_reason" class="hcc-curated-badge">
+                          <span>{{ hotel.recommendation_reason }}</span>
+                        </div>
                         <h4 class="hcc-title">{{ hotel.name }}</h4>
                         <div class="hcc-stars">
                           <span v-for="s in Number(hotel.stars || 4)" :key="s" class="star-icon">★</span>
@@ -1371,7 +1592,7 @@
                     </div>
                   </div>
 
-                  <!-- CHỨC NĂNG THU GỌN VÀ XEM THÊM KHÁCH SẠN (YÊU CẦU 5) -->
+                  <!-- CHỨC NĂNG THU GỌN VÀ XEM THÊM KHÁCH SẠN (YÊU CẦU 5 & 19) -->
                   <div v-if="filteredSortedHotels.length > 4" class="hotel-pagination-actions">
                     <button
                       v-if="hotelDisplayLimit < filteredSortedHotels.length"
@@ -1379,7 +1600,7 @@
                       class="hpa-btn hpa-btn-more"
                       @click="xemThemKhachSan"
                     >
-                      <AppIcon name="chevron-down" :size="15" /> Xem thêm (+{{ Math.min(8, filteredSortedHotels.length - hotelDisplayLimit) }} khách sạn)
+                      Xem thêm (+{{ Math.min(8, filteredSortedHotels.length - hotelDisplayLimit) }} khách sạn khác)
                     </button>
                     <button
                       v-if="hotelDisplayLimit < filteredSortedHotels.length"
@@ -1395,7 +1616,7 @@
                       class="hpa-btn hpa-btn-collapse"
                       @click="thuGonKhachSan"
                     >
-                      <AppIcon name="chevron-up" :size="15" /> Thu gọn (Về 4 khách sạn)
+                      Thu gọn về 4 khách sạn khuyên dùng
                     </button>
                   </div>
                 </div>
@@ -1724,9 +1945,32 @@
               </div>
             </div>
 
-            <!-- LỖI KHI TẠO LỊCH TRÌNH -->
-            <div v-if="taoPlanError" class="crawl-alert-banner" style="background:#fef2f2; border:1px solid #fca5a5; color:#991b1b; margin-top:16px; font-weight:600; display:flex; align-items:center; gap:8px;">
-              <AppIcon name="alert" size="18" /> {{ taoPlanError }}
+            <!-- TRẠNG THÁI THẤT BẠI & NÚT THỬ LẠI (YÊU CẦU 20 - NO ICON) -->
+            <div v-if="taoPlanError" class="plan-failure-recovery-card">
+              <div class="pfrc-inner">
+                <div class="pfrc-header-row">
+                  <span class="pfrc-badge">[THÔNG BÁO SỰ CỐ]</span>
+                  <strong class="pfrc-title">Chưa thể hoàn tất lịch trình</strong>
+                </div>
+                <p class="pfrc-message">{{ taoPlanError }}</p>
+                <div class="pfrc-actions">
+                  <button
+                    type="button"
+                    class="pfrc-btn-retry"
+                    @click="taoLichTrinh"
+                    :disabled="dangTao"
+                  >
+                    Thử lại ngay
+                  </button>
+                  <button
+                    type="button"
+                    class="pfrc-btn-back"
+                    @click="goToStep(2)"
+                  >
+                    Xem lại ngân sách &amp; sở thích
+                  </button>
+                </div>
+              </div>
             </div>
 
             <!-- WIZARD FOOTER NAVIGATION -->
@@ -2508,6 +2752,54 @@ function goToStep(step) {
   if (step < props.currentPlannerStep) {
     emit('update:currentPlannerStep', step)
     window.scrollTo({ top: 120, behavior: 'smooth' })
+  }
+}
+
+// ==================== YÊU CẦU 18: SỞ THÍCH, NHỊP ĐỘ & RÀNG BUỘC (NO ICON) ====================
+const hienRangBuocTuyChon = ref(false)
+
+const interestOptions = [
+  { id: 'bien', name: 'Biển', desc: 'Bãi biển, tắm biển, ngắm hoàng hôn, hải sản ven biển' },
+  { id: 'van_hoa', name: 'Văn hóa & Lịch sử', desc: 'Di sản thế giới, lăng tẩm, phố cổ, bảo tàng' },
+  { id: 'thien_nhien', name: 'Thiên nhiên & Sinh thái', desc: 'Rừng núi, hang động kỳ vĩ, thác nước, sinh thái' },
+  { id: 'an_uong', name: 'Ẩm thực & Đặc sản', desc: 'Đặc sản địa phương, phố ẩm thực, chợ đêm' },
+  { id: 'giai_tri', name: 'Giải trí & Vui chơi', desc: 'Khu vui chơi, công viên giải trí, cafe view đẹp' }
+]
+
+function isInterestActive(id) {
+  const current = props.formDuLieu?.soThich || []
+  return current.some(item => {
+    const s = (typeof item === 'string' ? item.toLowerCase() : '')
+    if (id === 'bien') return s.includes('biển') || s.includes('beach')
+    if (id === 'van_hoa') return s.includes('văn hóa') || s.includes('lịch sử') || s.includes('di sản')
+    if (id === 'thien_nhien') return s.includes('thiên nhiên') || s.includes('sinh thái') || s.includes('núi')
+    if (id === 'an_uong') return s.includes('ăn uống') || s.includes('ẩm thực') || s.includes('đặc sản')
+    if (id === 'giai_tri') return s.includes('giải trí') || s.includes('vui chơi')
+    return false
+  })
+}
+
+function toggleInterest(id) {
+  if (!props.formDuLieu) return
+  if (!Array.isArray(props.formDuLieu.soThich)) {
+    props.formDuLieu.soThich = []
+  }
+  const opt = interestOptions.find(o => o.id === id)
+  const optName = opt ? opt.name : id
+  const idx = props.formDuLieu.soThich.findIndex(item => {
+    const s = (typeof item === 'string' ? item.toLowerCase() : '')
+    if (id === 'bien') return s.includes('biển') || s.includes('beach')
+    if (id === 'van_hoa') return s.includes('văn hóa') || s.includes('lịch sử') || s.includes('di sản')
+    if (id === 'thien_nhien') return s.includes('thiên nhiên') || s.includes('sinh thái') || s.includes('núi')
+    if (id === 'an_uong') return s.includes('ăn uống') || s.includes('ẩm thực') || s.includes('đặc sản')
+    if (id === 'giai_tri') return s.includes('giải trí') || s.includes('vui chơi')
+    return false
+  })
+
+  if (idx >= 0) {
+    props.formDuLieu.soThich.splice(idx, 1)
+  } else {
+    props.formDuLieu.soThich.push(optName)
   }
 }
 
@@ -7594,6 +7886,501 @@ button.step-indicator.clickable:hover {
     opacity: .1;
     transform: translate(-20px, -5px);
   }
+}
+
+/* ==================== YÊU CẦU 17, 18, 19, 20: STYLES (NO ICON) ==================== */
+
+/* 1. Stepper indicator states (Yêu cầu 20) */
+.step-indicator.step-completed {
+  color: #059669;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  cursor: pointer;
+}
+.step-indicator.step-current {
+  color: #2563eb;
+  background: rgba(37, 99, 235, 0.15);
+  border: 1px solid rgba(37, 99, 235, 0.4);
+  font-weight: 700;
+}
+.step-indicator.step-pending {
+  color: #94a3b8;
+  background: transparent;
+  opacity: 0.7;
+}
+.step-status-tag {
+  font-size: 11px;
+  margin-right: 4px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+.step-divider.completed {
+  background: #10b981;
+}
+
+/* 2. User Preferences Card (Yêu cầu 18) */
+.user-preferences-card {
+  background: rgba(30, 41, 59, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 20px 24px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+:root[data-theme="light"] .user-preferences-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+.upc-header .upc-kicker {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #38bdf8;
+  margin-bottom: 4px;
+}
+.upc-header h4 {
+  margin: 0 0 4px 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: #f8fafc;
+}
+:root[data-theme="light"] .upc-header h4 {
+  color: #0f172a;
+}
+.upc-subtitle {
+  margin: 0;
+  font-size: 13px;
+  color: #94a3b8;
+}
+.preference-group-label {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #cbd5e1;
+  margin-bottom: 10px;
+}
+:root[data-theme="light"] .preference-group-label {
+  color: #334155;
+}
+
+/* Interest chips */
+.interest-chips-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 10px;
+}
+.interest-chip-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+:root[data-theme="light"] .interest-chip-btn {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+.interest-chip-btn:hover {
+  border-color: rgba(56, 189, 248, 0.4);
+  transform: translateY(-2px);
+}
+.interest-chip-btn.active {
+  background: rgba(14, 165, 233, 0.15);
+  border-color: #0ea5e9;
+  box-shadow: 0 0 16px rgba(14, 165, 233, 0.25);
+}
+.icb-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin-bottom: 4px;
+}
+:root[data-theme="light"] .icb-title {
+  color: #0f172a;
+}
+.interest-chip-btn.active .icb-title {
+  color: #38bdf8;
+}
+:root[data-theme="light"] .interest-chip-btn.active .icb-title {
+  color: #0284c7;
+}
+.icb-desc {
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: #94a3b8;
+}
+
+/* Pace selector */
+.pace-options-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+.pace-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+:root[data-theme="light"] .pace-card {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+.pace-card:hover {
+  border-color: rgba(56, 189, 248, 0.4);
+}
+.pace-card.active {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: #10b981;
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.2);
+}
+.pace-card input[type="radio"] {
+  margin-top: 3px;
+  accent-color: #10b981;
+  cursor: pointer;
+}
+.pace-card-info strong {
+  display: block;
+  font-size: 14px;
+  color: #f1f5f9;
+  margin-bottom: 4px;
+}
+:root[data-theme="light"] .pace-card-info strong {
+  color: #0f172a;
+}
+.pace-card.active .pace-card-info strong {
+  color: #10b981;
+}
+:root[data-theme="light"] .pace-card.active .pace-card-info strong {
+  color: #059669;
+}
+.pace-card-info p {
+  margin: 0;
+  font-size: 12px;
+  color: #94a3b8;
+  line-height: 1.45;
+}
+
+/* Optional Constraints Accordion */
+.extra-constraints-accordion {
+  border-top: 1px dashed rgba(255, 255, 255, 0.12);
+  padding-top: 12px;
+}
+:root[data-theme="light"] .extra-constraints-accordion {
+  border-color: #e2e8f0;
+}
+.extra-constraints-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px 0;
+}
+.extra-constraints-toggle:hover {
+  color: #38bdf8;
+}
+.accordion-arrow {
+  font-size: 11.5px;
+  color: #38bdf8;
+}
+.extra-constraints-content {
+  margin-top: 12px;
+}
+.constraint-checkboxes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+.constraint-checkbox-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+:root[data-theme="light"] .constraint-checkbox-item {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+}
+.constraint-checkbox-item input[type="checkbox"] {
+  margin-top: 3px;
+  accent-color: #38bdf8;
+  cursor: pointer;
+}
+.cci-text strong {
+  display: block;
+  font-size: 12.5px;
+  color: #f1f5f9;
+}
+:root[data-theme="light"] .cci-text strong {
+  color: #0f172a;
+}
+.cci-text small {
+  display: block;
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 2px;
+  line-height: 1.35;
+}
+
+/* 3. Local Transport Selector Card (Yêu cầu 17) */
+.local-transport-selector-card {
+  background: rgba(30, 41, 59, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  padding: 20px 24px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+:root[data-theme="light"] .local-transport-selector-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+.ltsc-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.ltsc-kicker {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: #10b981;
+  margin-bottom: 4px;
+}
+.ltsc-header h4 {
+  margin: 0 0 4px 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: #f8fafc;
+}
+:root[data-theme="light"] .ltsc-header h4 {
+  color: #0f172a;
+}
+.ltsc-desc {
+  margin: 0;
+  font-size: 12.5px;
+  color: #94a3b8;
+  line-height: 1.45;
+}
+.ltsc-mode-tag {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #10b981;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+:root[data-theme="light"] .ltsc-mode-tag {
+  color: #059669;
+}
+.local-transport-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+.local-trans-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+:root[data-theme="light"] .local-trans-card {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+.local-trans-card:hover {
+  border-color: rgba(56, 189, 248, 0.4);
+}
+.local-trans-card.active {
+  background: rgba(14, 165, 233, 0.12);
+  border-color: #0ea5e9;
+  box-shadow: 0 0 16px rgba(14, 165, 233, 0.2);
+}
+.local-trans-card input[type="radio"] {
+  margin-top: 3px;
+  accent-color: #0ea5e9;
+  cursor: pointer;
+}
+.ltc-body strong {
+  display: block;
+  font-size: 13.5px;
+  color: #f1f5f9;
+  margin-bottom: 4px;
+}
+:root[data-theme="light"] .ltc-body strong {
+  color: #0f172a;
+}
+.local-trans-card.active .ltc-body strong {
+  color: #38bdf8;
+}
+:root[data-theme="light"] .local-trans-card.active .ltc-body strong {
+  color: #0284c7;
+}
+.ltc-body p {
+  margin: 0;
+  font-size: 12px;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+/* 4. Hotel Curated Banner & Badges (Yêu cầu 19) */
+.curated-hotel-intro-card {
+  background: rgba(14, 165, 233, 0.08);
+  border: 1px solid rgba(14, 165, 233, 0.25);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+:root[data-theme="light"] .curated-hotel-intro-card {
+  background: #f0f9ff;
+  border-color: #bae6fd;
+}
+.chic-content strong {
+  display: block;
+  font-size: 13px;
+  color: #38bdf8;
+  margin-bottom: 2px;
+}
+:root[data-theme="light"] .chic-content strong {
+  color: #0284c7;
+}
+.chic-content span {
+  font-size: 12px;
+  color: #cbd5e1;
+  line-height: 1.45;
+}
+:root[data-theme="light"] .chic-content span {
+  color: #334155;
+}
+.hcc-curated-badge {
+  display: inline-block;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #10b981;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  margin-bottom: 6px;
+}
+:root[data-theme="light"] .hcc-curated-badge {
+  color: #059669;
+}
+
+/* 5. Plan Failure Recovery Card (Yêu cầu 20) */
+.plan-failure-recovery-card {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: 14px;
+  padding: 16px 20px;
+  margin-top: 20px;
+  margin-bottom: 8px;
+}
+:root[data-theme="light"] .plan-failure-recovery-card {
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+.pfrc-header-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.pfrc-badge {
+  background: #dc2626;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.4px;
+}
+.pfrc-title {
+  font-size: 15px;
+  color: #f87171;
+}
+:root[data-theme="light"] .pfrc-title {
+  color: #dc2626;
+}
+.pfrc-message {
+  margin: 0 0 12px 0;
+  font-size: 13px;
+  color: #cbd5e1;
+  line-height: 1.5;
+}
+:root[data-theme="light"] .pfrc-message {
+  color: #7f1d1d;
+}
+.pfrc-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.pfrc-btn-retry {
+  background: #dc2626;
+  color: #ffffff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.pfrc-btn-retry:hover {
+  background: #b91c1c;
+  transform: translateY(-1px);
+}
+.pfrc-btn-back {
+  background: rgba(255, 255, 255, 0.1);
+  color: #f1f5f9;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+:root[data-theme="light"] .pfrc-btn-back {
+  background: #ffffff;
+  color: #334155;
+  border-color: #cbd5e1;
+}
+.pfrc-btn-back:hover {
+  background: rgba(255, 255, 255, 0.15);
 }
 </style>
 
