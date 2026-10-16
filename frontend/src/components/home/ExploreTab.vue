@@ -181,31 +181,8 @@
       </div>
     </div>
 
-    <!-- Widget Thời tiết thời gian thực -->
-    <div v-if="weather" class="app-weather-widget" v-reveal>
-      <div class="weather-widget-header">
-        <div>
-          <span class="weather-label">THỜI TIẾT HIỆN TẠI</span>
-          <h4>{{ weather.location.name }}</h4>
-        </div>
-        <div class="weather-temp-now">
-          <span class="weather-icon-large">
-            <AppIcon :name="getWeatherIcon(weather.current.weatherCode)" :size="28" />
-          </span>
-          <strong>{{ Math.round(weather.current.temperature) }}°C</strong>
-        </div>
-      </div>
-      <p class="weather-summary">
-        <b>{{ getWeatherDesc(weather.current.weatherCode) }}</b> · Cảm giác như {{ Math.round(weather.current.feelsLike) }}°C · Gió {{ weather.current.windSpeed }} km/h
-      </p>
-      <div class="weather-forecast-strip">
-        <div v-for="day in weather.daily" :key="day.date" class="forecast-item">
-          <small>{{ formatDay(day.date) }}</small>
-          <span><AppIcon :name="getWeatherIcon(day.weatherCode)" :size="16" /></span>
-          <b>{{ Math.round(day.max) }}°</b>
-        </div>
-      </div>
-    </div>
+    <!-- Widget Thời tiết thời gian thực 3D Glassmorphic Capsule -->
+    <WeatherGlassCard3D v-if="weather" :weather="weather" />
 
     <!-- TỔNG QUAN BỀ DÀY LỊCH SỬ & DI SẢN MIỀN TRUNG KHI CHỌN "TẤT CẢ" -->
     <CentralHeritageOverview
@@ -381,6 +358,7 @@ import VolumeSlider from '../common/VolumeSlider.vue'
 import SkeletonCard from '../SkeletonCard.vue'
 import MapComponent from '../MapComponent.vue'
 import CentralHeritageOverview from './CentralHeritageOverview.vue'
+import WeatherGlassCard3D from './WeatherGlassCard3D.vue'
 
 const props = defineProps({
   allDestinationsConst: {
