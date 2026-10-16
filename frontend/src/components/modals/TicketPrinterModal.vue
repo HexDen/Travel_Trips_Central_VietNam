@@ -173,30 +173,35 @@ const isFlipped = ref(false)
   align-items: center;
   justify-content: flex-start;
   user-select: none;
+  margin-top: 30px;
 }
 
 .ticket-close-btn {
   position: absolute;
-  top: -10px;
+  top: -50px;
   right: 15px;
   z-index: 100;
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.28);
   color: #fff;
   font-size: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
 }
 
 .ticket-close-btn:hover {
-  background: rgba(239, 68, 68, 0.8);
-  transform: scale(1.08);
+  background: rgba(239, 68, 68, 0.85);
+  border-color: rgba(239, 68, 68, 0.9);
+  transform: scale(1.1) rotate(90deg);
 }
 
 /* ==================== KHE MÁY IN VÉ (OUTPUT SLOT) ==================== */
@@ -385,7 +390,7 @@ const isFlipped = ref(false)
 .ticket-body {
   display: block;
   position: relative;
-  width: 320px;
+  width: 345px;
   min-height: 360px;
   border-radius: 12px 12px 0px 0px;
   background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 60%, #ccfbf1 100%);
@@ -411,7 +416,8 @@ const isFlipped = ref(false)
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 16px;
+  gap: 6px;
+  padding: 12px 14px;
   border-bottom: 1.5px dashed rgba(15, 23, 42, 0.2);
   height: 52px;
   position: relative;
@@ -433,31 +439,37 @@ const isFlipped = ref(false)
 .ticket-body header::after { right: -7px; }
 
 .ticket-name {
-  font-size: 0.95rem;
-  letter-spacing: -0.5px;
+  font-size: 0.86rem;
+  letter-spacing: -0.3px;
   display: flex;
-  gap: 4px;
+  gap: 3px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .ticket-name .bold { font-weight: 900; color: #0284c7; }
 
 .ticket-brand {
-  font-size: 0.72rem;
+  font-size: 0.67rem;
   font-weight: 800;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
   color: #0d9488;
   text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .ticket-time {
   font-size: 0.78rem;
   font-weight: 700;
   color: #64748b;
+  white-space: nowrap;
 }
 
 .barcode {
   display: inline-block;
-  height: 22px;
-  width: 60px;
+  height: 20px;
+  width: 50px;
+  flex-shrink: 0;
   background: repeating-linear-gradient(
     90deg,
     #0f172a 0px 2px,
@@ -512,24 +524,29 @@ const isFlipped = ref(false)
 .ticket-bottom-bar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 8px;
   margin-top: auto;
-  padding-right: 75px;
+  padding-right: 72px;
 }
 
 .number {
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   font-weight: 900;
   color: #0284c7;
+  white-space: nowrap;
 }
 
 .flip-hint-tag {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 700;
   color: #0d9488;
   background: rgba(13, 148, 136, 0.12);
   padding: 3px 8px;
   border-radius: 20px;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
   animation: pulseHint 2s infinite ease-in-out;
 }
 
@@ -652,6 +669,6 @@ const isFlipped = ref(false)
 }
 
 .ticket:hover .reflex::before {
-  transform: translateX(320px) skewX(-25deg);
+  transform: translateX(370px) skewX(-25deg);
 }
 </style>
