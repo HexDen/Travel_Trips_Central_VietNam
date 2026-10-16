@@ -686,15 +686,18 @@ function handleFinishLiveTrip() {
 
 const ALL_DESTINATIONS = 'Tất cả miền Trung'
 
+// Ngày mặc định là ngày hôm nay theo giờ địa phương
+const todayIso = new Date().toISOString().split('T')[0]
+
 const formDuLieu = reactive({
   diemKhoiHanh: '',
   diemDen: 'Đà Nẵng',
-  soNgay: 0,
-  soDem: 0,
-  nganSach: 0,
-  soNguoi: 0,
+  soNgay: 3,
+  soDem: 2,
+  nganSach: 3000000,
+  soNguoi: 1,
   soThich: [],
-  ngayBatDau: '2026-10-06',
+  ngayBatDau: todayIso,
   ngayKetThuc: '',
   phuongTien: '',
   yeuCauKhachSan: '',
@@ -706,7 +709,14 @@ const formDuLieu = reactive({
   phongDaChon: null,
   freePlacesOnly: false,
   tuTucPhuongTien: false,
-  tuTucKhachSan: false
+  tuTucKhachSan: false,
+  nganSachMode: 'total', // 'total' (Cả đoàn) | 'per_person' (Mỗi người)
+  nganSachPerPerson: 3000000,
+  nganSachBaoGomDiChuyen: true,
+  nganSachBaoGomKhachSan: true,
+  hotelStayType: 'need_booking', // 'need_booking' | 'free' | 'prebooked'
+  prebookedHotelCost: 0,
+  demTrenXe: false
 })
 
 // Dark Mode State
@@ -1254,7 +1264,7 @@ const aiProvinceSubtitle = computed(() => {
 })
 
 // LỊCH TRÌNH KHỞI HÀNH & CHỌN NGÀY ĐI (THEO SCREENSHOT 3)
-const todayIso = new Date().toISOString().split('T')[0]
+// todayIso đã được khởi tạo phía trên trước formDuLieu
 
 const DEPARTURE_MONTHS = [
   { label: 'Tháng 10 2026', key: '2026-10', defaultDate: '2026-10-06' },
@@ -2504,18 +2514,16 @@ const maxSoDem = computed(() => {
   return formDuLieu.soNgay
 })
 
-function tangSoNgay() {
-  formDuLieu.soNgay++
+
+
+function giamSoNgay() {
+  formDuLieu.soNgay = Math.max(1, (Number(formDuLieu.soNgay) || 1) - 1)
   formDuLieu.soDem = Math.max(0, formDuLieu.soNgay - 1)
 }
 
-function giamSoNgay() {
-  formDuLieu.soNgay = Math.max(0, formDuLieu.soNgay - 1)
-  if (formDuLieu.soNgay === 0) {
-    formDuLieu.soDem = 0
-  } else {
-    formDuLieu.soDem = Math.max(0, formDuLieu.soNgay - 1)
-  }
+function tangSoNgay() {
+  formDuLieu.soNgay = (Number(formDuLieu.soNgay) || 0) + 1
+  formDuLieu.soDem = Math.max(0, formDuLieu.soNgay - 1)
 }
 
 function tangSoDem() {
@@ -2531,8 +2539,9 @@ function giamSoDem() {
 }
 
 watch(() => formDuLieu.soNgay, (newVal) => {
-  const val = Number(newVal) || 0
-  if (val === 0) {
+  const val = Number(newVal) || 1
+  if (val < 1) {
+    formDuLieu.soNgay = 1
     formDuLieu.soDem = 0
   } else {
     const minN = Math.max(0, val - 2)
@@ -4117,12 +4126,12 @@ function resetAllPlannerState() {
   // Reset formDuLieu về trạng thái ban đầu
   formDuLieu.diemKhoiHanh = ''
   formDuLieu.diemDen = 'Đà Nẵng'
-  formDuLieu.soNgay = 0
-  formDuLieu.soDem = 0
-  formDuLieu.nganSach = 0
-  formDuLieu.soNguoi = 0
+  formDuLieu.soNgay = 3
+  formDuLieu.soDem = 2
+  formDuLieu.nganSach = 3000000
+  formDuLieu.soNguoi = 1
   formDuLieu.soThich = []
-  formDuLieu.ngayBatDau = todayIso.value || '2026-10-06'
+  formDuLieu.ngayBatDau = todayIso
   formDuLieu.ngayKetThuc = ''
   formDuLieu.phuongTien = ''
   formDuLieu.tuTucPhuongTien = false
@@ -4134,8 +4143,14 @@ function resetAllPlannerState() {
   formDuLieu.khachSanDaChon = null
   formDuLieu.phongDaChon = null
   formDuLieu.freePlacesOnly = false
-  formDuLieu.tuTucPhuongTien = false
   formDuLieu.tuTucKhachSan = false
+  formDuLieu.nganSachMode = 'total'
+  formDuLieu.nganSachPerPerson = 3000000
+  formDuLieu.nganSachBaoGomDiChuyen = true
+  formDuLieu.nganSachBaoGomKhachSan = true
+  formDuLieu.hotelStayType = 'need_booking'
+  formDuLieu.prebookedHotelCost = 0
+  formDuLieu.demTrenXe = false
 
   transitTab.value = ''
   step3ActiveSubtab.value = 'transit'
@@ -4455,13 +4470,47 @@ async function taoLichTrinh() {
       selected_departure_time: formDuLieu.gioXuatPhatChon,
       self_transit: Boolean(formDuLieu.tuTucPhuongTien),
       tu_tuc_phuong_tien: Boolean(formDuLieu.tuTucPhuongTien),
-      self_hotel: Boolean(formDuLieu.tuTucKhachSan),
-      tu_tuc_khach_san: Boolean(formDuLieu.tuTucKhachSan)
+      self_hotel: Boolean(formDuLieu.tuTucKhachSan || formDuLieu.hotelStayType === 'free' || formDuLieu.hotelStayType === 'prebooked'),
+      tu_tuc_khach_san: Boolean(formDuLieu.tuTucKhachSan || formDuLieu.hotelStayType === 'free' || formDuLieu.hotelStayType === 'prebooked'),
+      hotel_stay_type: formDuLieu.hotelStayType,
+      prebooked_hotel_cost: Number(formDuLieu.prebookedHotelCost) || 0,
+      dem_tren_xe: Boolean(formDuLieu.demTrenXe),
+      ngan_sach_mode: formDuLieu.nganSachMode,
+      ngan_sach_bao_gom_di_chuyen: Boolean(formDuLieu.nganSachBaoGomDiChuyen),
+      ngan_sach_bao_gom_khach_san: Boolean(formDuLieu.nganSachBaoGomKhachSan)
     })
     lichTrinh.value = res.data
     lichTrinh.value.nights = formDuLieu.soDem
-    // Đồng bộ khách sạn đã chọn hoặc tự túc nơi ở
-    if (formDuLieu.tuTucKhachSan) {
+    // Đồng bộ khách sạn đã chọn, ở miễn phí, hoặc đã đặt chỗ trước
+    if (formDuLieu.hotelStayType === 'free') {
+      lichTrinh.value.self_hotel = true
+      lichTrinh.value.hotel_recommendation = {
+        name: 'Ở miễn phí / Tự túc nơi ở',
+        address: `Khu vực ${formDuLieu.diemDen || 'Miền Trung'}`,
+        rating: 5.0,
+        price_per_night: 0,
+        room_name: 'Chỗ nghỉ miễn phí (0đ)',
+        description: 'Chỗ ở miễn phí (nhà người thân, bạn bè hoặc cắm trại tự túc). Chi phí lưu trú: 0đ.',
+        image: null,
+        latitude: null,
+        longitude: null
+      }
+    } else if (formDuLieu.hotelStayType === 'prebooked') {
+      lichTrinh.value.self_hotel = true
+      lichTrinh.value.prebooked_hotel = true
+      lichTrinh.value.prebooked_cost = Number(formDuLieu.prebookedHotelCost) || 0
+      lichTrinh.value.hotel_recommendation = {
+        name: 'Đã đặt chỗ trước',
+        address: `Khu vực ${formDuLieu.diemDen || 'Miền Trung'}`,
+        rating: 5.0,
+        price_per_night: Number(formDuLieu.prebookedHotelCost) || 0,
+        room_name: 'Phòng đã đặt chỗ trước',
+        description: `Đã đặt chỗ trước với chi phí: ${dinhDangTien(formDuLieu.prebookedHotelCost)}đ. Khoản này không tính thêm vào chi tiêu hàng ngày.`,
+        image: null,
+        latitude: null,
+        longitude: null
+      }
+    } else if (formDuLieu.tuTucKhachSan) {
       lichTrinh.value.self_hotel = true
       lichTrinh.value.hotel_recommendation = {
         name: 'Tự túc nơi ở / Homestay riêng',

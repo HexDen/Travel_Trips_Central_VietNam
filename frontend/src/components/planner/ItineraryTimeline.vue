@@ -764,11 +764,21 @@
                           </p>
                           <div class="dhsc-footer-row">
                             <span class="dhsc-price">
-                              Giá phòng: <b>{{ dinhDangTien(lichTrinh.hotel_recommendation.price_per_night || 850000) }}đ</b>
-                              <small>{{ (lichTrinh.hotel_recommendation.price_per_night || 850000) <= 300000 ? '/đêm/người' : '/đêm/phòng' }}</small>
+                              <template v-if="lichTrinh.prebooked_hotel">
+                                Chi phí đã trả: <b>{{ dinhDangTien(lichTrinh.prebooked_cost || lichTrinh.hotel_recommendation.price_per_night) }}đ</b>
+                                <small>(Đã thanh toán trước)</small>
+                              </template>
+                              <template v-else-if="!lichTrinh.hotel_recommendation.price_per_night || lichTrinh.hotel_recommendation.price_per_night === 0">
+                                <b>0đ (Ở miễn phí)</b>
+                              </template>
+                              <template v-else>
+                                Giá phòng: <b>{{ dinhDangTien(lichTrinh.hotel_recommendation.price_per_night || 850000) }}đ</b>
+                                <small>{{ (lichTrinh.hotel_recommendation.price_per_night || 850000) <= 300000 ? '/đêm/người' : '/đêm/phòng' }}</small>
+                              </template>
                             </span>
                             <div style="display: flex; gap: 8px; align-items: center;">
                               <button
+                                v-if="!lichTrinh.prebooked_hotel && lichTrinh.hotel_recommendation.price_per_night > 0"
                                 type="button"
                                 class="dhsc-room-view-btn"
                                 @click.stop="moModalXemPhong(lichTrinh.hotel_recommendation)"

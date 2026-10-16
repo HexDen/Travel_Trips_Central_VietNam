@@ -304,15 +304,17 @@
                       class="app-input departure-date-input"
                       :min="todayIso"
                     />
+                    <span v-if="dateValidationError" class="dsb-inline-error">{{ dateValidationError }}</span>
                   </div>
 
                   <div class="dsb-ctrl-field">
                     <label><AppIcon name="clock" :size="15" /> Số ngày đi:</label>
                     <div class="stepper-input dsb-stepper">
-                      <button type="button" @click="giamSoNgay" :disabled="formDuLieu.soNgay <= 0">-</button>
+                      <button type="button" @click="giamSoNgay" :disabled="formDuLieu.soNgay <= 1">-</button>
                       <span class="dsb-stepper-val">{{ formDuLieu.soNgay }} ngày</span>
                       <button type="button" @click="tangSoNgay">+</button>
                     </div>
+                    <span v-if="formDuLieu.soNgay < 1" class="dsb-inline-error">Tối thiểu 1 ngày</span>
                   </div>
 
                   <div class="dsb-ctrl-field">
@@ -327,10 +329,11 @@
                   <div class="dsb-ctrl-field">
                     <label><AppIcon name="users" :size="15" /> Số người tham gia:</label>
                     <div class="stepper-input dsb-stepper">
-                      <button type="button" @click="formDuLieu.soNguoi = Math.max(0, formDuLieu.soNguoi - 1)">-</button>
+                      <button type="button" @click="formDuLieu.soNguoi = Math.max(1, (formDuLieu.soNguoi || 1) - 1)" :disabled="formDuLieu.soNguoi <= 1">-</button>
                       <span class="dsb-stepper-val">{{ formDuLieu.soNguoi }} người</span>
-                      <button type="button" @click="formDuLieu.soNguoi++">+</button>
+                      <button type="button" @click="formDuLieu.soNguoi = (Number(formDuLieu.soNguoi) || 0) + 1">+</button>
                     </div>
+                    <span v-if="formDuLieu.soNguoi < 1" class="dsb-inline-error">Tối thiểu 1 người</span>
                   </div>
 
                   <div class="dsb-ctrl-field">
@@ -344,13 +347,28 @@
                   </div>
                 </div>
 
+                <!-- TÙY CHỌN ĐÊM TRÊN PHƯƠNG TIỆN (XỬ LÝ RIÊNG ĐÊM TRÊN XE/TÀU) -->
+                <div class="overnight-transit-field">
+                  <label class="overnight-transit-label">
+                    <input
+                      type="checkbox"
+                      v-model="formDuLieu.demTrenXe"
+                      class="overnight-transit-checkbox"
+                    />
+                    <span class="otl-text">Có đêm di chuyển trên xe khách hoặc tàu hỏa (chuyến đêm liên tỉnh)</span>
+                  </label>
+                  <div v-if="formDuLieu.demTrenXe" class="overnight-transit-note">
+                    Đã tính 1 đêm di chuyển trên phương tiện. Số đêm khách sạn cần đặt điều chỉnh thành <strong>{{ computedHotelNights }} đêm</strong> (Nhận phòng: {{ hotelCheckInDisplay }} - Trả phòng: {{ hotelCheckOutDisplay }}).
+                  </div>
+                </div>
+
                 <!-- Tóm tắt lịch trình chi tiết -->
                 <div class="trip-date-summary-banner" v-if="formDuLieu.ngayBatDau && formDuLieu.soNgay > 0">
                   <span class="tdsb-icon"><AppIcon name="sparkles" :size="16" /></span>
                   <div class="tdsb-text">
                     Lịch trình: <b>{{ dinhDangNgayTuan(formDuLieu.ngayBatDau) }}</b>
                     ➔ <b>{{ dinhDangNgayTuan(formDuLieu.ngayKetThuc || ngayKetThucDisplay) }}</b>
-                    <span>({{ formDuLieu.soNgay }} ngày {{ formDuLieu.soDem }} đêm • {{ formDuLieu.soNguoi }} khách tại {{ formDuLieu.diemDen }})</span>
+                    <span>({{ formDuLieu.soNgay }} ngày {{ formDuLieu.soDem }} đêm • {{ formDuLieu.soNguoi }} khách tại {{ formDuLieu.diemDen }}<template v-if="formDuLieu.demTrenXe"> • {{ computedHotelNights }} đêm khách sạn</template>)</span>
                   </div>
                 </div>
               </div>
@@ -359,25 +377,134 @@
 
             <!-- BƯỚC 2: TÀI CHÍNH & DI CHUYỂN -->
             <div v-show="currentPlannerStep === 2" class="app-form-grid wizard-step-content">
-              <!-- KHUNG NHẬP NGÂN SÁCH THỦ CÔNG (ĐÃ XÓA MỨC GIÁ & THANH KÉO THEO YÊU CẦU 2) -->
+              <!-- KHUNG NHẬP NGÂN SÁCH THỦ CÔNG & PHẠM VI CHI PHÍ -->
               <div class="unified-budget-card manual-budget-card full-width">
-                <div class="field-label-between">
-                  <label class="budget-section-label">
-                    <AppIcon name="wallet" :size="17" /> Nhập ngân sách của bạn
-                  </label>
+                <div class="budget-card-top-row">
+                  <div class="budget-title-wrap">
+                    <label class="budget-section-label">
+                      {{ formDuLieu.nganSachMode === 'per_person' ? 'Ngân sách dự kiến cho mỗi người' : 'Tổng ngân sách cho cả nhóm, toàn chuyến đi' }}
+                    </label>
+                    <p class="budget-calc-sub">
+                      {{ formDuLieu.nganSachMode === 'per_person' 
+                        ? `Tương đương tổng ngân sách cả đoàn: ${dinhDangTien(formDuLieu.nganSach)} VNĐ (${formDuLieu.soNguoi} người)`
+                        : `Tương đương ~${dinhDangTien(Math.round((Number(formDuLieu.nganSach) || 0) / Math.max(1, Number(formDuLieu.soNguoi) || 1)))} VNĐ / người (${formDuLieu.soNguoi} người, ${formDuLieu.soNgay} ngày)` }}
+                    </p>
+                  </div>
+
+                  <!-- BỘ CHUYỂN ĐỔI CHẾ ĐỘ NGÂN SÁCH (TOÀN NHÓM VS MỖI NGƯỜI) - KHÔNG DÙNG ICON -->
+                  <div class="budget-mode-segmented-control">
+                    <button
+                      type="button"
+                      :class="['bmsc-btn', { active: formDuLieu.nganSachMode !== 'per_person' }]"
+                      @click="setBudgetMode('total')"
+                    >
+                      Toàn nhóm
+                    </button>
+                    <button
+                      type="button"
+                      :class="['bmsc-btn', { active: formDuLieu.nganSachMode === 'per_person' }]"
+                      @click="setBudgetMode('per_person')"
+                    >
+                      Mỗi người
+                    </button>
+                  </div>
                 </div>
 
                 <div class="manual-budget-input-wrapper">
-                  <span class="mbi-icon"><AppIcon name="wallet" :size="20" /></span>
                   <input
                     type="text"
                     inputmode="numeric"
-                    :value="formattedBudgetDisplay"
+                    :value="formDuLieu.nganSachMode === 'per_person' ? formattedPerPersonBudgetDisplay : formattedBudgetDisplay"
                     @input="handleManualBudgetInput"
-                    placeholder="Nhập ngân sách của bạn (VNĐ)..."
+                    :placeholder="formDuLieu.nganSachMode === 'per_person' ? 'Nhập ngân sách cho 1 người (VNĐ)...' : 'Nhập tổng ngân sách cho cả đoàn (VNĐ)...'"
                     class="manual-budget-input"
                   />
                   <span class="mbi-currency">VNĐ</span>
+                </div>
+
+                <!-- CÂU HỎI PHẠM VI NGÂN SÁCH (CÓ BAO GỒM VÉ ĐI LẠI VÀ KHÁCH SẠN HAY CHƯA) -->
+                <div class="budget-scope-section">
+                  <span class="bss-title">Phạm vi ngân sách dự kiến bao gồm:</span>
+                  <div class="bss-checkboxes-row">
+                    <label class="bss-checkbox-label">
+                      <input
+                        type="checkbox"
+                        v-model="formDuLieu.nganSachBaoGomDiChuyen"
+                        class="bss-checkbox"
+                      />
+                      <span>Bao gồm vé xe / tàu / máy bay khứ hồi</span>
+                    </label>
+                    <label class="bss-checkbox-label">
+                      <input
+                        type="checkbox"
+                        v-model="formDuLieu.nganSachBaoGomKhachSan"
+                        class="bss-checkbox"
+                      />
+                      <span>Bao gồm tiền phòng khách sạn / nơi lưu trú</span>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- TÌNH TRẠNG CHỖ NGHỈ: TÁCH Ở MIỄN PHÍ VỚI ĐÃ ĐẶT CHỖ (NHẬP CHI PHÍ ĐÃ TRẢ) -->
+                <div class="accommodation-status-section">
+                  <span class="ass-title">Tùy chọn chỗ nghỉ:</span>
+                  <div class="ass-options-grid">
+                    <label :class="['ass-card', { active: formDuLieu.hotelStayType === 'need_booking' }]">
+                      <input
+                        type="radio"
+                        v-model="formDuLieu.hotelStayType"
+                        value="need_booking"
+                        @change="onStayTypeChange('need_booking')"
+                      />
+                      <div class="ass-card-text">
+                        <strong>Cần gợi ý nơi ở</strong>
+                        <small>AI sẽ gợi ý phòng khách sạn phù hợp với ngân sách</small>
+                      </div>
+                    </label>
+
+                    <label :class="['ass-card', { active: formDuLieu.hotelStayType === 'free' }]">
+                      <input
+                        type="radio"
+                        v-model="formDuLieu.hotelStayType"
+                        value="free"
+                        @change="onStayTypeChange('free')"
+                      />
+                      <div class="ass-card-text">
+                        <strong>Ở miễn phí (0đ)</strong>
+                        <small>Ở nhà người thân, bạn bè hoặc cắm trại tự túc</small>
+                      </div>
+                    </label>
+
+                    <label :class="['ass-card', { active: formDuLieu.hotelStayType === 'prebooked' }]">
+                      <input
+                        type="radio"
+                        v-model="formDuLieu.hotelStayType"
+                        value="prebooked"
+                        @change="onStayTypeChange('prebooked')"
+                      />
+                      <div class="ass-card-text">
+                        <strong>Đã đặt chỗ trước</strong>
+                        <small>Đã đặt phòng riêng — nhập chi phí đã trả</small>
+                      </div>
+                    </label>
+                  </div>
+
+                  <!-- Ô NHẬP CHI PHÍ ĐÃ TRẢ TRƯỚC KHI ĐÃ ĐẶT CHỖ -->
+                  <div v-if="formDuLieu.hotelStayType === 'prebooked'" class="prebooked-cost-container">
+                    <label class="pcc-label">Chi phí nơi ở đã thanh toán trước:</label>
+                    <div class="pcc-input-wrap">
+                      <input
+                        type="text"
+                        inputmode="numeric"
+                        :value="formattedPrebookedCostDisplay"
+                        @input="handlePrebookedCostInput"
+                        placeholder="Nhập số tiền đã trả trước (VNĐ)..."
+                        class="pcc-input"
+                      />
+                      <span class="pcc-currency">VNĐ</span>
+                    </div>
+                    <small class="pcc-hint">Khoản chi phí này được tính vào tổng tài chính và không trừ vào tiền ăn uống, vé tham quan hàng ngày.</small>
+                  </div>
                 </div>
 
                 <!-- CẢNH BÁO CHUYẾN ĐI BẤT KHẢ THI HOẶC CHỌN ĐIỂM FREE -->
@@ -438,11 +565,32 @@
               <div class="places-picker-box full-width" style="margin-top: 16px;">
                 <div class="picker-top">
                   <div>
-                    <h4>Nhập địa điểm muốn đến</h4>
+                    <h4>Nhập địa điểm muốn đến (Không bắt buộc)</h4>
+                    <small class="picker-subtitle">Chưa biết đi đâu? Bạn có thể bỏ trống để AI tự động chọn lọc theo thời gian &amp; ngân sách.</small>
                   </div>
-                  <span v-if="selectedPlaces.length" class="badge-selected-count">
-                    <AppIcon name="check" size="14" /> Đã chọn {{ selectedPlaces.length }} điểm
-                  </span>
+                  <div class="picker-top-actions">
+                    <button
+                      type="button"
+                      :class="['btn-assistant-suggest', { active: assistantAutoSuggestMode && !selectedPlaces.length }]"
+                      @click="deTroLyDeXuat"
+                    >
+                      Để trợ lý đề xuất
+                    </button>
+                    <span v-if="selectedPlaces.length" class="badge-selected-count">
+                      Đã chọn {{ selectedPlaces.length }} điểm
+                    </span>
+                  </div>
+                </div>
+
+                <!-- BANNER TRỢ LÝ ĐỀ XUẤT (KHÔNG DÙNG ICON) -->
+                <div v-if="assistantAutoSuggestMode && !selectedPlaces.length" class="assistant-suggest-active-card">
+                  <div class="asac-content">
+                    <strong>Chế độ trợ lý đề xuất đang bật:</strong>
+                    <span>Hệ thống sẽ tự động tổng hợp những địa danh đặc sắc nhất tại {{ formDuLieu.diemDen }} phù hợp với chuyến đi {{ formDuLieu.soNgay }} ngày {{ formDuLieu.soDem }} đêm.</span>
+                  </div>
+                  <button type="button" class="asac-cancel-btn" @click="assistantAutoSuggestMode = false">
+                    Tự chọn điểm
+                  </button>
                 </div>
 
 
@@ -557,6 +705,34 @@
                 <!-- Thông báo AI Crawler (nếu có) -->
                 <div v-if="thongBaoCrawl" class="crawl-alert-banner">
                   <span>{{ thongBaoCrawl }}</span>
+                </div>
+              </div>
+
+              <!-- THANH TẠO BẢN NHÁP NHANH (BỎ QUA CHỌN PHƯƠNG TIỆN & KHÁCH SẠN NẾU MUỐN XEM LỊCH TRÌNH NGAY) -->
+              <div class="step2-quick-draft-bar full-width">
+                <div class="sqd-content">
+                  <div class="sqd-text">
+                    <strong>Sẵn sàng lên lịch trình</strong>
+                    <p>Bạn có thể tạo ngay bản nháp lịch trình hoàn chỉnh để xem trước. Nơi ở và phương tiện có thể bổ sung hoặc điều chỉnh bất kỳ lúc nào.</p>
+                  </div>
+                  <div class="sqd-actions">
+                    <button
+                      type="button"
+                      class="sqd-btn-primary"
+                      @click="taoLichTrinh"
+                      :disabled="dangTao || (!tripFeasibility.feasible && !formDuLieu.freePlacesOnly)"
+                    >
+                      Tạo bản nháp lịch trình ngay
+                    </button>
+                    <button
+                      type="button"
+                      class="sqd-btn-secondary"
+                      @click="tiepTheoWizard"
+                      :disabled="dangTao"
+                    >
+                      Tùy chọn: Chọn trước nơi ở &amp; xe (Bước 3) →
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1504,21 +1680,30 @@
                   </div>
               </div>
 
-              <!-- KHI CHƯA CHỌN ĐỦ CẢ 2: HƯỚNG DẪN HOÀN TẤT CHỌN ĐỂ XÁC NHẬN -->
+              <!-- HƯỚNG DẪN TÙY CHỌN BỔ SUNG & NÚT TẠO LỊCH TRÌNH NGAY KHÔNG CẦN CHỜ (KHÔNG DÙNG ICON) -->
               <div v-else class="step3-pending-guide-box">
-                <div class="spgb-icon"><AppIcon name="info" :size="20" /></div>
                 <div class="spgb-content">
-                  <p style="margin: 0;">
-                    <strong>Chưa đủ điều kiện xác nhận vé:</strong> Vui lòng chọn 
+                  <p class="spgb-desc">
+                    <strong>Tùy chọn bổ sung phương tiện &amp; nơi ở:</strong> Bạn có thể chọn trước 
                     <span :class="['spgb-badge', { done: daXongPhuongTien }]">
-                      {{ daXongPhuongTien ? '✓ Đã chọn Phương tiện' : '1. Phương tiện di chuyển' }}
+                      {{ daXongPhuongTien ? 'Đã chọn Phương tiện' : 'Phương tiện di chuyển' }}
                     </span>
                     và 
                     <span :class="['spgb-badge', { done: daXongKhachSan }]">
-                      {{ daXongKhachSan ? '✓ Đã chọn Lưu trú' : '2. Khách sạn / Nơi ở' }}
+                      {{ daXongKhachSan ? 'Đã chọn Nơi ở' : 'Khách sạn / Nơi ở' }}
                     </span>
-                    ở các mục phía trên. Sau đó hệ thống sẽ xuất thẻ vé để bạn xác nhận trước khi bắt đầu tạo lịch trình!
+                    ở các mục phía trên. Hoặc bạn có thể bấm tạo lịch trình ngay để xem bản nháp trước.
                   </p>
+                  <div class="spgb-actions-row">
+                    <button
+                      type="button"
+                      class="btn-step3-direct-plan"
+                      @click="taoLichTrinh"
+                      :disabled="dangTao || (!tripFeasibility.feasible && !formDuLieu.freePlacesOnly)"
+                    >
+                      Tạo lịch trình ngay (Không cần chọn đủ 2 mục)
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -2451,19 +2636,139 @@ watch(
   { deep: true }
 )
 
-// ==================== MANUAL BUDGET INPUT LOGIC ====================
+// ==================== STEP 1: VALIDATION & HOTEL NIGHTS COMPUTATION ====================
+const dateValidationError = computed(() => {
+  const start = props.formDuLieu?.ngayBatDau
+  if (!start) return 'Vui lòng chọn ngày khởi hành hợp lệ.'
+  if (props.todayIso && start < props.todayIso) {
+    return 'Ngày khởi hành không được ở quá khứ. Vui lòng chọn từ hôm nay trở đi.'
+  }
+  return ''
+})
+
+const computedHotelNights = computed(() => {
+  const totalNights = Number(props.formDuLieu?.soDem) || 0
+  if (totalNights <= 0) return 0
+  if (props.formDuLieu?.demTrenXe) {
+    return Math.max(0, totalNights - 1)
+  }
+  return totalNights
+})
+
+const hotelCheckInDisplay = computed(() => {
+  if (!props.formDuLieu?.ngayBatDau) return ''
+  if (props.formDuLieu?.demTrenXe) {
+    try {
+      const parts = props.formDuLieu.ngayBatDau.split('-')
+      const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10))
+      d.setDate(d.getDate() + 1)
+      const yyyy = d.getFullYear()
+      const mm = String(d.getMonth() + 1).padStart(2, '0')
+      const dd = String(d.getDate()).padStart(2, '0')
+      return `${dd}/${mm}/${yyyy}`
+    } catch (e) {
+      return props.formDuLieu.ngayBatDau
+    }
+  }
+  return props.formDuLieu.ngayBatDau
+})
+
+const hotelCheckOutDisplay = computed(() => {
+  return props.formDuLieu?.ngayKetThuc || props.ngayKetThucDisplay || ''
+})
+
+// ==================== STEP 2: MANUAL BUDGET & SCOPE LOGIC ====================
 const formattedBudgetDisplay = computed(() => {
   const val = Number(props.formDuLieu?.nganSach)
   if (!val || isNaN(val) || val <= 0) return ''
   return new Intl.NumberFormat('vi-VN').format(val)
 })
 
+const formattedPerPersonBudgetDisplay = computed(() => {
+  const people = Math.max(1, Number(props.formDuLieu?.soNguoi) || 1)
+  const val = Number(props.formDuLieu?.nganSachPerPerson) || Math.round((Number(props.formDuLieu?.nganSach) || 0) / people)
+  if (!val || isNaN(val) || val <= 0) return ''
+  return new Intl.NumberFormat('vi-VN').format(val)
+})
+
+function setBudgetMode(mode) {
+  props.formDuLieu.nganSachMode = mode
+  const people = Math.max(1, Number(props.formDuLieu?.soNguoi) || 1)
+  if (mode === 'per_person') {
+    if (!props.formDuLieu.nganSachPerPerson || props.formDuLieu.nganSachPerPerson <= 0) {
+      props.formDuLieu.nganSachPerPerson = Math.round((Number(props.formDuLieu.nganSach) || 0) / people)
+    }
+  } else {
+    if (props.formDuLieu.nganSachPerPerson > 0) {
+      props.formDuLieu.nganSach = props.formDuLieu.nganSachPerPerson * people
+    }
+  }
+}
+
 function handleManualBudgetInput(e) {
   const raw = e.target.value.replace(/\D/g, '')
   const num = raw ? parseInt(raw, 10) : 0
-  props.formDuLieu.nganSach = num
+  const people = Math.max(1, Number(props.formDuLieu?.soNguoi) || 1)
+
+  if (props.formDuLieu.nganSachMode === 'per_person') {
+    props.formDuLieu.nganSachPerPerson = num
+    props.formDuLieu.nganSach = num * people
+  } else {
+    props.formDuLieu.nganSach = num
+    props.formDuLieu.nganSachPerPerson = Math.round(num / people)
+  }
+
   if (e.target) {
     e.target.value = num > 0 ? new Intl.NumberFormat('vi-VN').format(num) : ''
+  }
+}
+
+// Đồng bộ tổng ngân sách khi số người thay đổi ở chế độ "Mỗi người"
+watch(() => props.formDuLieu?.soNguoi, (newPeople) => {
+  const p = Math.max(1, Number(newPeople) || 1)
+  if (props.formDuLieu?.nganSachMode === 'per_person' && props.formDuLieu.nganSachPerPerson > 0) {
+    props.formDuLieu.nganSach = props.formDuLieu.nganSachPerPerson * p
+  }
+})
+
+// ==================== TÌNH TRẠNG CHỖ NGHỈ & ĐÃ ĐẶT CHỖ TRƯỚC ====================
+const formattedPrebookedCostDisplay = computed(() => {
+  const val = Number(props.formDuLieu?.prebookedHotelCost)
+  if (!val || isNaN(val) || val <= 0) return ''
+  return new Intl.NumberFormat('vi-VN').format(val)
+})
+
+function handlePrebookedCostInput(e) {
+  const raw = e.target.value.replace(/\D/g, '')
+  const num = raw ? parseInt(raw, 10) : 0
+  props.formDuLieu.prebookedHotelCost = num
+  if (e.target) {
+    e.target.value = num > 0 ? new Intl.NumberFormat('vi-VN').format(num) : ''
+  }
+}
+
+function onStayTypeChange(type) {
+  props.formDuLieu.hotelStayType = type
+  if (type === 'free') {
+    props.formDuLieu.tuTucKhachSan = true
+    props.formDuLieu.khachSanDaChon = null
+    props.formDuLieu.phongDaChon = null
+  } else if (type === 'prebooked') {
+    props.formDuLieu.tuTucKhachSan = true
+    props.formDuLieu.khachSanDaChon = null
+    props.formDuLieu.phongDaChon = null
+  } else {
+    props.formDuLieu.tuTucKhachSan = false
+  }
+}
+
+// ==================== TRỢ LÝ ĐỀ XUẤT ĐỊA ĐIỂM ====================
+const assistantAutoSuggestMode = ref(false)
+
+function deTroLyDeXuat() {
+  assistantAutoSuggestMode.value = true
+  if (typeof props.clearAllSelectedPlaces === 'function') {
+    props.clearAllSelectedPlaces()
   }
 }
 
@@ -3042,6 +3347,61 @@ onUnmounted(() => {
 }
 
 /* ==================== MANUAL BUDGET INPUT ==================== */
+/* ==================== STEP 1: INLINE VALIDATION & OVERNIGHT TRANSIT ==================== */
+.dsb-inline-error {
+  display: block;
+  font-size: 11.5px;
+  color: #ef4444;
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+.overnight-transit-field {
+  margin-top: 14px;
+  padding: 12px 16px;
+  background: rgba(2, 132, 199, 0.05);
+  border: 1px dashed rgba(2, 132, 199, 0.25);
+  border-radius: 10px;
+}
+
+:root[data-theme="dark"] .overnight-transit-field {
+  background: rgba(56, 189, 248, 0.06);
+  border-color: rgba(56, 189, 248, 0.2);
+}
+
+.overnight-transit-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-color, #1e293b);
+  cursor: pointer;
+}
+
+:root[data-theme="dark"] .overnight-transit-label {
+  color: #f1f5f9;
+}
+
+.overnight-transit-checkbox {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--primary, #0284c7);
+  cursor: pointer;
+}
+
+.overnight-transit-note {
+  margin-top: 8px;
+  font-size: 12.5px;
+  color: #0369a1;
+  line-height: 1.5;
+}
+
+:root[data-theme="dark"] .overnight-transit-note {
+  color: #38bdf8;
+}
+
+/* ==================== MANUAL BUDGET INPUT & ENHANCED SCOPE ==================== */
 .manual-budget-card {
   padding: 18px 22px;
   background: var(--card-bg, #ffffff);
@@ -3054,15 +3414,472 @@ onUnmounted(() => {
   border-color: rgba(51, 65, 85, 0.7);
 }
 
+.budget-card-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.budget-mode-segmented-control {
+  display: flex;
+  background: rgba(148, 163, 184, 0.15);
+  padding: 3px;
+  border-radius: 9999px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+:root[data-theme="dark"] .budget-mode-segmented-control {
+  background: rgba(15, 23, 42, 0.6);
+  border-color: rgba(51, 65, 85, 0.8);
+}
+
+.bmsc-btn {
+  border: none;
+  background: transparent;
+  color: var(--text-sub, #64748b);
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.bmsc-btn.active {
+  background: var(--primary, #0284c7);
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
+}
+
 .budget-calc-sub {
   font-size: 13px;
   color: var(--text-sub, #475569);
   font-weight: 500;
+  margin-top: 3px;
+}
+
+:root[data-theme="dark"] .budget-calc-sub {
+  color: #94a3b8;
 }
 
 .budget-calc-sub b {
   color: var(--accent, #ea580c);
   font-weight: 700;
+}
+
+.budget-scope-section {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-color, #e2e8f0);
+}
+
+:root[data-theme="dark"] .budget-scope-section {
+  border-color: rgba(51, 65, 85, 0.6);
+}
+
+.bss-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-color, #1e293b);
+  display: block;
+  margin-bottom: 10px;
+}
+
+:root[data-theme="dark"] .bss-title {
+  color: #f1f5f9;
+}
+
+.bss-checkboxes-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bss-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-color, #334155);
+  cursor: pointer;
+}
+
+:root[data-theme="dark"] .bss-checkbox-label {
+  color: #cbd5e1;
+}
+
+.bss-checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary, #0284c7);
+  cursor: pointer;
+}
+
+/* ==================== ACCOMMODATION STATUS ==================== */
+.accommodation-status-section {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-color, #e2e8f0);
+}
+
+:root[data-theme="dark"] .accommodation-status-section {
+  border-color: rgba(51, 65, 85, 0.6);
+}
+
+.ass-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-color, #1e293b);
+  display: block;
+  margin-bottom: 10px;
+}
+
+:root[data-theme="dark"] .ass-title {
+  color: #f1f5f9;
+}
+
+.ass-options-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+@media (max-width: 768px) {
+  .ass-options-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ass-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border: 1.5px solid var(--border-color, #cbd5e1);
+  border-radius: 10px;
+  background: var(--input-bg, #f8fafc);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+:root[data-theme="dark"] .ass-card {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+.ass-card.active {
+  border-color: var(--primary, #0284c7);
+  background: rgba(2, 132, 199, 0.05);
+  box-shadow: 0 0 0 1px var(--primary, #0284c7);
+}
+
+:root[data-theme="dark"] .ass-card.active {
+  border-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.1);
+}
+
+.ass-card input {
+  margin-top: 3px;
+  accent-color: var(--primary, #0284c7);
+}
+
+.ass-card-text strong {
+  display: block;
+  font-size: 13px;
+  color: var(--text-color, #1e293b);
+  margin-bottom: 2px;
+}
+
+:root[data-theme="dark"] .ass-card-text strong {
+  color: #f1f5f9;
+}
+
+.ass-card-text small {
+  display: block;
+  font-size: 11.5px;
+  color: var(--text-sub, #64748b);
+  line-height: 1.35;
+}
+
+:root[data-theme="dark"] .ass-card-text small {
+  color: #94a3b8;
+}
+
+.prebooked-cost-container {
+  margin-top: 12px;
+  padding: 12px 14px;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 10px;
+}
+
+.pcc-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #b45309;
+  display: block;
+  margin-bottom: 6px;
+}
+
+:root[data-theme="dark"] .pcc-label {
+  color: #fcd34d;
+}
+
+.pcc-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  max-width: 320px;
+}
+
+.pcc-input {
+  width: 100%;
+  padding: 8px 50px 8px 12px;
+  border: 1px solid #d97706;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  background: #ffffff;
+  color: #1e293b;
+}
+
+:root[data-theme="dark"] .pcc-input {
+  background: #1e293b;
+  color: #ffffff;
+  border-color: #f59e0b;
+}
+
+.pcc-currency {
+  position: absolute;
+  right: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #b45309;
+}
+
+:root[data-theme="dark"] .pcc-currency {
+  color: #fcd34d;
+}
+
+.pcc-hint {
+  display: block;
+  font-size: 11.5px;
+  color: #92400e;
+  margin-top: 6px;
+}
+
+:root[data-theme="dark"] .pcc-hint {
+  color: #fde68a;
+}
+
+/* ==================== ASSISTANT AUTO SUGGEST ==================== */
+.picker-subtitle {
+  display: block;
+  font-size: 12px;
+  color: var(--text-sub, #64748b);
+  margin-top: 2px;
+}
+
+.picker-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-assistant-suggest {
+  border: 1px solid var(--primary, #0284c7);
+  background: rgba(2, 132, 199, 0.08);
+  color: var(--primary, #0284c7);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+:root[data-theme="dark"] .btn-assistant-suggest {
+  border-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+}
+
+.btn-assistant-suggest.active,
+.btn-assistant-suggest:hover {
+  background: var(--primary, #0284c7);
+  color: #ffffff;
+}
+
+:root[data-theme="dark"] .btn-assistant-suggest.active,
+:root[data-theme="dark"] .btn-assistant-suggest:hover {
+  background: #38bdf8;
+  color: #0f172a;
+}
+
+.assistant-suggest-active-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 10px;
+  margin-top: 10px;
+}
+
+:root[data-theme="dark"] .assistant-suggest-active-card {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(52, 211, 153, 0.3);
+}
+
+.asac-content strong {
+  display: block;
+  font-size: 13px;
+  color: #065f46;
+  margin-bottom: 2px;
+}
+
+:root[data-theme="dark"] .asac-content strong {
+  color: #6ee7b7;
+}
+
+.asac-content span {
+  font-size: 12px;
+  color: #047857;
+}
+
+:root[data-theme="dark"] .asac-content span {
+  color: #a7f3d0;
+}
+
+.asac-cancel-btn {
+  border: none;
+  background: transparent;
+  color: #065f46;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  white-space: nowrap;
+}
+
+:root[data-theme="dark"] .asac-cancel-btn {
+  color: #6ee7b7;
+}
+
+/* ==================== QUICK DRAFT ACTION BAR ==================== */
+.step2-quick-draft-bar {
+  margin-top: 24px;
+  padding: 18px 22px;
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.08) 0%, rgba(99, 102, 241, 0.08) 100%);
+  border: 1.5px solid rgba(2, 132, 199, 0.25);
+  border-radius: 14px;
+}
+
+:root[data-theme="dark"] .step2-quick-draft-bar {
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.15) 0%, rgba(99, 102, 241, 0.15) 100%);
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+.sqd-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.sqd-text strong {
+  display: block;
+  font-size: 15px;
+  color: var(--text-color, #0f172a);
+  margin-bottom: 3px;
+}
+
+:root[data-theme="dark"] .sqd-text strong {
+  color: #ffffff;
+}
+
+.sqd-text p {
+  font-size: 12.5px;
+  color: var(--text-sub, #64748b);
+  margin: 0;
+}
+
+:root[data-theme="dark"] .sqd-text p {
+  color: #94a3b8;
+}
+
+.sqd-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.sqd-btn-primary {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 11px 22px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+}
+
+.sqd-btn-primary:hover:not(:disabled) {
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 18px rgba(2, 132, 199, 0.45);
+}
+
+.sqd-btn-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.sqd-btn-secondary {
+  background: transparent;
+  color: var(--primary, #0284c7);
+  border: 1px solid var(--primary, #0284c7);
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+:root[data-theme="dark"] .sqd-btn-secondary {
+  color: #38bdf8;
+  border-color: #38bdf8;
+}
+
+.sqd-btn-secondary:hover {
+  background: rgba(2, 132, 199, 0.08);
+}
+
+.btn-step3-direct-plan {
+  margin-top: 10px;
+  background: var(--primary, #0284c7);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-step3-direct-plan:hover:not(:disabled) {
+  background: #0369a1;
 }
 
 .manual-budget-input-wrapper {
