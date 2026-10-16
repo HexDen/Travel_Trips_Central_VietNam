@@ -197,17 +197,15 @@
                         </header>
 
                         <div class="contents">
-                          <div class="event" style="margin-top: -24px;">
+                          <div class="event">
                             <div>
-                              <span class="bold" style="font-size: 1.6rem;">CẢM ƠN BẠN</span>
+                              <span class="bold">CẢM ƠN BẠN</span>
                             </div>
-                            <div style="font-size: 11px; letter-spacing: 0.2em; color: #2f4c8b; margin-top: 6px;">
-                              ĐÃ TIN TƯỞNG TRAVEL MIỀN TRUNG
-                            </div>
+                            <div>ĐÃ TIN TƯỞNG TRAVEL MIỀN TRUNG</div>
                           </div>
 
                           <div class="qrcode">
-                            <svg viewBox="0 0 100 100" width="120" height="120" fill="#2f4c8b">
+                            <svg viewBox="0 0 100 100" width="80" height="80" fill="#2f4c8b">
                               <path d="M10,10 h30 v30 h-30 z M15,15 v20 h20 v-20 z M20,20 h10 v10 h-10 z" />
                               <path d="M60,10 h30 v30 h-30 z M65,15 v20 h20 v-20 z M70,20 h10 v10 h-10 z" />
                               <path d="M10,60 h30 v30 h-30 z M15,65 v20 h20 v-20 z M20,70 h10 v10 h-10 z" />
@@ -957,8 +955,37 @@ onUnmounted(() => {
   display: block;
 }
 
+.back .contents {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 16px 16px 20px;
+}
+
+.back .contents .event {
+  margin-top: 0;
+  text-align: center;
+}
+
+.back .contents .event span.bold {
+  font-size: 1.45rem;
+}
+
+.back .contents .event div:nth-child(2) {
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  color: #2f4c8b;
+  margin-top: 5px;
+  margin-left: 0;
+  white-space: nowrap;
+}
+
 .back .qrcode {
-  margin-top: 8px;
+  position: relative;
+  margin-top: 14px;
+  width: 80px;
+  height: 80px;
 }
 
 .back .qrcode::after {
