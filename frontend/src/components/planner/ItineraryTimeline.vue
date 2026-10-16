@@ -6,38 +6,12 @@
               <button type="button" class="plan-back-btn" @click="yeuCauQuayLai" title="Quay lại bước chọn thông số ban đầu">
                 <AppIcon name="arrowleft" size="18" /> Quay lại trang lập lịch trình
               </button>
-              <div class="plan-top-nav-right">
-                <span class="plan-saved-status" v-if="daLuuLichTrinhHienTai">
+              <div class="plan-top-nav-right" v-if="daLuuLichTrinhHienTai">
+                <span class="plan-saved-status">
                   <AppIcon name="checkcircle2" size="16" /> Đã lưu vào Chuyến đi
                 </span>
-                <button v-else type="button" class="plan-quick-save-btn" @click="luuLichTrinhHienTai" title="Lưu nhanh lịch trình này">
-                  <AppIcon name="save" size="15" /> Lưu chuyến đi
-                </button>
               </div>
             </div>
-
-            <!-- Personality Completion Banner (Khi AI tạo lịch trình xong) -->
-            <transition name="fade-slide">
-              <div v-if="hienCompletionBanner" class="ai-completion-banner confetti-celebration">
-                <div class="acb-left">
-                  <div class="acb-icon"><AppIcon name="sparkles" size="28" /></div>
-                </div>
-                <div class="acb-content">
-                  <div class="acb-badge">ĐỘI HÌNH ĐÃ SẴN SÀNG PHÁ ĐẢO THẾ GIỚI ẢO!</div>
-                  <h4>{{ activeCompletionQuote.title }}</h4>
-                  <p>{{ activeCompletionQuote.desc }}</p>
-                  <!-- Đội hình nhảy múa -->
-                  <div class="celebrating-squad">
-                    <div class="celeb-avatar-wrap celeb-1" title="Trưởng đoàn / Trùm cuối"><img src="/shrek.jpg" class="celeb-avatar" alt="Trùm cuối"></div>
-                    <div class="celeb-avatar-wrap celeb-2" title="Thủ quỹ kiêm Đòi nợ"><img src="/avatars/friend1.png" class="celeb-avatar" alt="Thủ quỹ"></div>
-                    <div class="celeb-avatar-wrap celeb-3" title="Chúa tể lười biếng / Trùm kêu ca"><img src="/avatars/friend2.jpg" class="celeb-avatar" style="object-position: center 25%;" alt="Chúa tể lười"></div>
-                    <div class="celeb-avatar-wrap celeb-4" title="Thánh sống ảo / Chuyên gia check-in"><img src="/avatars/friend3.jpg" class="celeb-avatar" alt="Thánh sống ảo"></div>
-                    <div class="celeb-avatar-wrap celeb-5" title="Hoa tiêu / Google Maps chạy bằng cơm"><img src="/avatars/friend4.jpg" class="celeb-avatar" style="object-position: center 20%;" alt="Hoa tiêu"></div>
-                  </div>
-                </div>
-                <button class="acb-close" @click="$emit('update:hienCompletionBanner', false)" title="Đóng banner"><AppIcon name="x" size="14" /></button>
-              </div>
-            </transition>
 
             <!-- Thẻ tổng quan kết quả -->
             <div class="plan-summary-card" :class="{ 'is-over-budget-card': lichTrinh.is_over_budget }">
@@ -53,31 +27,6 @@
                   <span class="savings-badge"><AppIcon name="sparkles" size="14" /> Đã tối ưu tuyến đường & chi phí</span>
                 </div>
                 <h2>Hành trình {{ lichTrinh.daysList.length }} Ngày {{ lichTrinh.nights !== undefined ? lichTrinh.nights : formDuLieu.soDem }} Đêm Tuyệt Vời</h2>
-                
-                <!-- ĐỘI HÌNH PHÁ ĐẢO (SQUAD AVATARS) -->
-                <div class="squad-avatars-group" title="Đội hình phá đảo">
-                  <span class="squad-label">Đội hình:</span>
-                  <div class="squad-overlap">
-                    <div class="squad-avatar-wrap" title="Trưởng đoàn / Trùm cuối">
-                      <img src="/shrek.jpg" class="sq-img" alt="Trùm cuối">
-                    </div>
-                    <div class="squad-avatar-wrap" title="Thủ quỹ kiêm Đòi nợ" v-if="lichTrinh.people >= 2">
-                      <img src="/avatars/friend1.png" class="sq-img" alt="Thủ quỹ">
-                    </div>
-                    <div class="squad-avatar-wrap" title="Chúa tể lười biếng / Trùm kêu ca" v-if="lichTrinh.people >= 3">
-                      <img src="/avatars/friend2.jpg" class="sq-img sq-cyclo" alt="Chúa tể lười">
-                    </div>
-                    <div class="squad-avatar-wrap" title="Thánh sống ảo / Chuyên gia check-in" v-if="lichTrinh.people >= 4">
-                      <img src="/avatars/friend3.jpg" class="sq-img" alt="Thánh sống ảo">
-                    </div>
-                    <div class="squad-avatar-wrap" title="Hoa tiêu / Google Maps chạy bằng cơm" v-if="lichTrinh.people >= 5">
-                      <img src="/avatars/friend4.jpg" class="sq-img sq-smirk" alt="Hoa tiêu">
-                    </div>
-                    <div class="squad-avatar-wrap sq-more" v-if="lichTrinh.people > 5">
-                      +{{ lichTrinh.people - 5 }}
-                    </div>
-                  </div>
-                </div>
 
                 <p class="summary-budget" :class="{ 'has-over-budget': lichTrinh.is_over_budget }">
                   <template v-if="lichTrinh.is_over_budget">
@@ -140,65 +89,78 @@
                 </div>
               </div>
 
-              <!-- NÚT HÀNH ĐỘNG CHÍNH: LƯU LỊCH TRÌNH HOẶC BẮT ĐẦU CHUYẾN ĐI (YÊU CẦU 1) -->
+              <!-- NÚT HÀNH ĐỘNG CHÍNH: HIỆU ỨNG GẠT / VUỐT ĐỂ LƯU LỊCH TRÌNH CÓ VIỀN LED CHẠY QUANH -->
               <div class="itinerary-decision-actions-bar">
-                <button
-                  type="button"
-                  class="it-dec-btn it-start-trip-btn"
-                  @click="$emit('startTrip', lichTrinh)"
-                  title="Bắt đầu dẫn đường và đồng hành trong chuyến đi thực tế"
-                >
-                  <span class="it-dec-icon"><AppIcon name="navigation" size="22" /></span>
-                  <div class="it-dec-text">
-                    <strong>Bắt đầu lịch trình ngay 🚀</strong>
-                    <small>Mở trợ lý GPS dẫn đường, check-in & quản lý chi tiêu</small>
-                  </div>
-                </button>
+                <div class="swipe-beam-wrapper">
+                  <input
+                    type="checkbox"
+                    id="swipe-toggle"
+                    class="swipe-toggle"
+                    :checked="daLuuLichTrinhHienTai"
+                    @change="onSwipeSaveChange"
+                  />
 
-                <button
-                  type="button"
-                  class="it-dec-btn it-save-btn"
-                  :class="{ 'is-saved': daLuuLichTrinhHienTai }"
-                  @click="luuLichTrinhHienTai"
-                  title="Lưu lại lịch trình này để xem lại bất cứ lúc nào"
-                >
-                  <span class="it-dec-icon"><AppIcon :name="daLuuLichTrinhHienTai ? 'checkcircle2' : 'save'" size="22" /></span>
-                  <div class="it-dec-text">
-                    <strong>{{ daLuuLichTrinhHienTai ? 'Đã lưu lịch trình' : 'Lưu lại lịch trình này' }}</strong>
-                    <small>{{ daLuuLichTrinhHienTai ? 'Bấm để xem danh sách chuyến đi đã lưu' : 'Lưu vào tài khoản / bộ nhớ máy' }}</small>
-                  </div>
-                </button>
+                  <label
+                    class="swipe-container"
+                    for="swipe-toggle"
+                    :title="daLuuLichTrinhHienTai ? 'Lịch trình đã được lưu (Bấm để xem danh sách chuyến đi)' : 'Gạt để lưu lại lịch trình này'"
+                  >
+                    <div class="swipe-fill"></div>
+                    <div class="dent-effect"></div>
+                    <div class="glass-effect-layer"></div>
+                    <div class="glass-tint-layer"></div>
+                    <div class="glass-shine-layer"></div>
 
-                <button
-                  type="button"
-                  class="it-dec-btn it-replan-btn"
-                  @click="yeuCauQuayLai"
-                  title="Quay lại thay đổi thông số hoặc lên phương án mới"
-                >
-                  <span class="it-dec-icon"><AppIcon name="arrowleft" size="22" /></span>
-                  <div class="it-dec-text">
-                    <strong>Quay lại / Đổi lịch trình</strong>
-                    <small>Quay về bước chọn thông số ban đầu</small>
-                  </div>
-                </button>
-              </div>
+                    <div class="text-container">
+                      <span class="swipe-text">Lưu lịch trình</span>
+                      <span class="text-confirmed">Lịch trình đã được lưu</span>
+                    </div>
 
-              <!-- Thông báo khi lưu thành công -->
-              <transition name="fade">
-                <div v-if="thongBaoLuuThanhCong" class="save-success-banner">
-                  <span><AppIcon name="sparkles" size="16" /> <strong>Đã lưu lịch trình thành công!</strong> Bạn có thể mở lại tại tab "Chuyến đi đã lưu".</span>
-                  <button type="button" class="ssb-view-btn" @click="$emit('goMyTrips')">Xem ngay ↗</button>
+                    <div class="swipe-handle">
+                      <div class="icon-container">
+                        <svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke-width="2">
+                          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                        <svg
+                          class="checkmark-icon"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke-width="3"
+                        >
+                          <path d="M5 13l4 4L19 7"></path>
+                        </svg>
+                      </div>
+                    </div>
+                  </label>
                 </div>
-              </transition>
 
-              <!-- Thanh phân bổ ngân sách khoa học -->
-              <div v-if="lichTrinh.budget_breakdown" class="budget-breakdown-row">
-                <div class="bb-pill"><span><AppIcon name="hotel" size="14" /> Khách sạn:</span> <b>{{ dinhDangTien(lichTrinh.budget_breakdown.hotel) }}đ</b></div>
-                <div class="bb-pill"><span><AppIcon name="utensils" size="14" /> Ăn uống:</span> <b>{{ dinhDangTien(lichTrinh.budget_breakdown.food) }}đ</b></div>
-                <div class="bb-pill"><span><AppIcon name="car" size="14" /> Di chuyển:</span> <b>{{ dinhDangTien(lichTrinh.budget_breakdown.transportation) }}đ</b></div>
-                <div class="bb-pill"><span><AppIcon name="ticket" size="14" /> Vé & Check-in:</span> <b>{{ dinhDangTien(lichTrinh.budget_breakdown.tickets) }}đ</b></div>
-                <div class="bb-pill"><span><AppIcon name="shield" size="14" /> Dự phòng:</span> <b>{{ dinhDangTien(lichTrinh.budget_breakdown.reserve) }}đ</b></div>
+                <svg style="display: none">
+                  <filter id="glass-distortion">
+                    <feTurbulence
+                      type="fractalNoise"
+                      baseFrequency="0.02 0.05"
+                      numOctaves="2"
+                      result="turbulence"
+                    ></feTurbulence>
+                    <feDisplacementMap
+                      in="SourceGraphic"
+                      in2="turbulence"
+                      scale="10"
+                      xChannelSelector="R"
+                      yChannelSelector="G"
+                    ></feDisplacementMap>
+                  </filter>
+                </svg>
               </div>
+
+              <!-- Popup Máy In Vé Thông Báo Lưu Thành Công & 3D Flip Cảm Ơn -->
+              <TicketPrinterModal
+                :isOpen="thongBaoLuuThanhCong"
+                :destination="lichTrinh?.destination || formDuLieu?.destination"
+                @close="$emit('update:thongBaoLuuThanhCong', false)"
+                @goMyTrips="$emit('goMyTrips')"
+              />
 
               <!-- Thẻ nghiệm thu chi phí thực tế (Budget Audit & Balance) -->
               <div v-if="lichTrinh.budget_audit" class="budget-audit-card" :class="lichTrinh.budget_audit.fit_status">
@@ -243,23 +205,11 @@
                 <button class="tool-btn ai-opt-highlight-btn" @click="toiUuCungDuongToanBo" title="Sắp xếp toàn bộ điểm đến theo vòng cung tối ưu di chuyển">
                   <AppIcon name="sparkles" size="15" /> AI Tối ưu thứ tự điểm đến
                 </button>
-                <a
-                  :href="googleMapsAllStopsUrl"
-                  target="_blank"
-                  rel="noreferrer"
-                  class="tool-btn gmap-all-stops-btn"
-                  title="Mở toàn bộ lộ trình trên Google Maps có sẵn GPS dẫn đường liên tục"
-                >
-                  <AppIcon name="map" size="15" /> Mở toàn bộ trên Google Maps ↗
-                </a>
                 <button class="tool-btn zalo-share-btn" @click="moModalInfographic" title="Xuất lịch trình dạng thẻ Infographic để gửi nhóm Zalo/Messenger">
                   <AppIcon name="phone" size="15" /> Xuất thẻ chia sẻ Zalo
                 </button>
                 <button class="tool-btn" @click="$emit('openBillSplitter')" title="Tính tiền chia đều cho nhóm">
                   <AppIcon name="wallet" size="15" /> Chia tiền nhóm
-                </button>
-                <button class="tool-btn" @click="$emit('openTravelPass')" title="Xuất vé hành trình offline">
-                  <AppIcon name="ticket" size="15" /> Xuất vé Offline
                 </button>
                 <button class="tool-btn rain-btn" @click="moModalTranhMua(0)" :disabled="dangDieuChinh" title="Tự động đổi điểm tham quan trong nhà nếu trời mưa">
                   <AppIcon name="cloudrain" size="15" /> Đổi lịch tránh mưa
@@ -310,10 +260,7 @@
               <!-- Cột Trái: Dòng thời gian từng ngày (Timeline) (Hiển thị khi Timeline hoặc Split View) -->
               <transition name="view-fade">
                 <div v-show="itineraryViewMode !== 'map'" class="app-timeline-wrap" style="position: relative;">
-                  <!-- XÍCH LÔ DẪN ĐƯỜNG SCROLL (Ý TƯỞNG 4) -->
-                  <div class="cyclo-scroll-indicator" title="Chiếc xích lô dẫn đường">
-                    <img src="/avatars/friend2.jpg" class="sq-cyclo" alt="Cyclo">
-                  </div>
+
                   <!-- THANH ĐIỀU KHIỂN TINH GỌN LỊCH TRÌNH (TỐI ƯU YÊU CẦU 2: KHÔNG DÀI DÒNG) -->
                   <div class="timeline-compact-filter-toolbar">
                     <!-- Hàng 1: Tabs chọn ngày linh hoạt -->
@@ -730,28 +677,6 @@
                               <!-- Mô tả giá trị thực tế không rập khuôn -->
                               <p class="act-desc">{{ lamSachMoTa(act.activity, act) }}</p>
 
-                              <!-- BONG BÓNG BÌNH LUẬN VUI NHỘN (SQUAD SPEECH BUBBLE) -->
-                              <div v-if="day.day === 1 && actIndex === 0" class="squad-speech-bubble">
-                                <img src="/shrek.jpg" class="sq-chat-avatar" alt="Trùm cuối">
-                                <div class="sq-chat-text">"Tất cả tập trung! {{ act.time }} bắt đầu xuất phát nhé mấy đứa! Lề mề bỏ ở nhà nha! 📣"</div>
-                              </div>
-                              <div v-else-if="act.estimated_cost === 0 && act.type !== 'transport'" class="squad-speech-bubble">
-                                <img src="/avatars/friend1.png" class="sq-chat-avatar" alt="Thủ quỹ">
-                                <div class="sq-chat-text">"Chỗ này FREE nha anh em, đỡ tốn tiền quỹ của tui! Quá đã! 🤑"</div>
-                              </div>
-                              <div v-else-if="actIndex % 5 === 2" class="squad-speech-bubble">
-                                <img src="/avatars/friend2.jpg" class="sq-chat-avatar sq-cyclo" alt="Chúa tể lười">
-                                <div class="sq-chat-text">"Trời ơi đi nãy giờ mỏi chân quá, tới chỗ này có chỗ nằm nghỉ không dạ... 🚲"</div>
-                              </div>
-                              <div v-else-if="actIndex % 5 === 3 && (act.type === 'checkin' || act.type === 'explore')" class="squad-speech-bubble">
-                                <img src="/avatars/friend3.jpg" class="sq-chat-avatar" alt="Thánh sống ảo">
-                                <div class="sq-chat-text">"Góc này lên hình chắc cháy máy! Đưa máy đây nháy cho mấy tấm thần sầu nè 🌹📸"</div>
-                              </div>
-                              <div v-else-if="actIndex % 5 === 4 && act.type === 'food'" class="squad-speech-bubble">
-                                <img src="/avatars/friend4.jpg" class="sq-chat-avatar sq-smirk" alt="Hoa tiêu">
-                                <div class="sq-chat-text">"Review 4.8 sao đấy, ăn không ngon tui đền! Tin tui đi 😏"</div>
-                              </div>
-
                               <div v-if="act.signature_dishes && act.signature_dishes.length > 0" class="act-signature-box">
                                 <span class="asb-title"><AppIcon name="utensils" size="14" /> Món phải thử (Signature):</span>
                                 <span class="asb-dishes">{{ act.signature_dishes.join(', ') }}</span>
@@ -1065,6 +990,7 @@
 
 <script setup>
 import AppIcon from '../common/AppIcon.vue'
+import TicketPrinterModal from '../modals/TicketPrinterModal.vue'
 
 const props = defineProps({
   lichTrinh: { type: Object, required: true },
@@ -1136,7 +1062,8 @@ const props = defineProps({
   xuatPdf: { type: Function, default: () => {} }
 })
 
-defineEmits([
+const emit = defineEmits([
+  'update:thongBaoLuuThanhCong',
   'update:hienCompletionBanner',
   'update:selectedDay',
   'update:showAllDays',
@@ -1151,5 +1078,450 @@ defineEmits([
   'openTravelPass',
   'startTrip'
 ])
+
+const onSwipeSaveChange = (e) => {
+  if (props.daLuuLichTrinhHienTai) {
+    emit('goMyTrips')
+  } else {
+    props.luuLichTrinhHienTai()
+  }
+}
 </script>
+
+<style scoped>
+.itinerary-decision-actions-bar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 20px 0;
+}
+
+/* KHỐI BAO BỌC VỚI HIỆU ỨNG ĐÈN LED CHẠY QUANH VIỀN NÚT */
+.swipe-beam-wrapper {
+  position: relative;
+  padding: 3px;
+  border-radius: 38px;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 12px 30px rgba(0, 0, 0, 0.12),
+    0 0 16px rgba(6, 182, 212, 0.2);
+  transition: all 0.3s ease;
+}
+
+/* ĐÈN LED QUANG PHỔ XOAY 360 ĐỘ CHẠY QUANH VIỀN NÚT */
+.swipe-beam-wrapper::before {
+  content: "";
+  position: absolute;
+  inset: -200%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg 200deg,
+    rgba(6, 182, 212, 0.35) 230deg,
+    #06b6d4 260deg,
+    #3b82f6 285deg,
+    #8b5cf6 310deg,
+    #ec4899 335deg,
+    #f59e0b 350deg,
+    #10b981 360deg
+  );
+  animation: rotateSwipeBeam 4s linear infinite;
+  z-index: 0;
+  pointer-events: none;
+}
+
+@keyframes rotateSwipeBeam {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* NỘI DUNG NẰM NỔI TRÊN LỚP LED */
+.swipe-beam-wrapper > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* KHI ĐÃ LƯU: VIỀN PHÁT SÁNG EMERALD MINT RỰC RỠ */
+.swipe-beam-wrapper:has(#swipe-toggle:checked) {
+  box-shadow:
+    0 14px 32px rgba(16, 185, 129, 0.3),
+    0 0 24px rgba(16, 185, 129, 0.4);
+}
+
+.swipe-beam-wrapper:has(#swipe-toggle:checked)::before {
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg 180deg,
+    rgba(16, 185, 129, 0.3) 220deg,
+    #34d399 270deg,
+    #10b981 320deg,
+    #a1ffc0 360deg
+  );
+}
+
+:root[data-theme="dark"] .swipe-beam-wrapper {
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.6),
+    0 0 18px rgba(56, 189, 248, 0.25);
+}
+
+.swipe-toggle {
+  display: none;
+}
+
+.swipe-container {
+  width: 320px;
+  height: 70px;
+  background: #e0e5ec;
+  border-radius: 35px;
+  box-shadow:
+    -7px -7px 15px rgba(255, 255, 255, 0.8),
+    7px 7px 15px rgba(0, 0, 0, 0.1);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.dent-effect {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: radial-gradient(
+      circle at 75% 75%,
+      rgba(0, 0, 0, 0.25) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 25% 25%,
+      rgba(255, 255, 255, 0.5) 0%,
+      transparent 40%
+    );
+  mix-blend-mode: overlay;
+  z-index: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    left 0.6s cubic-bezier(0.23, 1, 0.32, 1),
+    opacity 0.5s ease;
+}
+
+.swipe-container::after {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 35px;
+  background: linear-gradient(145deg, #86e3ce, #a1ffc0);
+  z-index: -1;
+  filter: blur(20px);
+  opacity: 0;
+  transform: scale(0.9);
+  transition:
+    opacity 0.7s ease,
+    transform 0.7s ease;
+  transition-delay: 0.5s;
+}
+
+.swipe-handle {
+  position: absolute;
+  left: 5px;
+  width: 60px;
+  height: 60px;
+  background: #e0e5ec;
+  border-radius: 50%;
+  box-shadow:
+    -3px -3px 7px rgba(255, 255, 255, 0.9),
+    3px 3px 5px rgba(0, 0, 0, 0.2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+  z-index: 6;
+}
+
+.swipe-container:active .swipe-handle {
+  transform: scale(1.05);
+  box-shadow:
+    -4px -4px 10px rgba(255, 255, 255, 0.9),
+    4px 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.icon-container {
+  width: 28px;
+  height: 28px;
+  position: relative;
+}
+
+.lock-icon,
+.checkmark-icon {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.lock-icon {
+  stroke: #8a9baf;
+}
+
+.lock-icon path,
+.lock-icon rect {
+  transition: stroke-dashoffset 0.4s cubic-bezier(0.5, 0, 0.9, 0.5);
+}
+
+.lock-icon path {
+  stroke-dasharray: 35;
+  stroke-dashoffset: 0;
+}
+
+.lock-icon rect {
+  stroke-dasharray: 58;
+  stroke-dashoffset: 0;
+}
+
+.checkmark-icon {
+  stroke: #41c5a7;
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  opacity: 0;
+  transition:
+    stroke-dashoffset 0.4s ease-out 0.2s,
+    opacity 0.2s ease-out 0.2s;
+}
+
+.text-container {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 5;
+}
+
+.swipe-text,
+.text-confirmed {
+  font-size: 16px;
+  font-weight: 600;
+  font-family: inherit;
+  position: absolute;
+  transition: opacity 0.4s ease-in-out;
+}
+
+.swipe-text {
+  color: #8a9baf;
+  opacity: 1;
+}
+
+.text-confirmed {
+  color: white;
+  opacity: 0;
+}
+
+.swipe-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 100%;
+  background: linear-gradient(145deg, #86e3ce, #a1ffc0);
+  border-radius: 35px;
+  transition: width 0.6s cubic-bezier(0.6, 0.04, 0.98, 0.34);
+  z-index: 1;
+}
+
+.glass-effect-layer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 100%;
+  border-radius: 35px;
+  z-index: 2;
+  transition: width 0.6s cubic-bezier(0.6, 0.04, 0.98, 0.34);
+}
+
+.glass-tint-layer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 100%;
+  border-radius: 35px;
+  background: rgba(255, 255, 255, 0.2);
+  z-index: 3;
+  transition: width 0.6s cubic-bezier(0.6, 0.04, 0.98, 0.34);
+}
+
+.glass-shine-layer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 100%;
+  border-radius: 35px;
+  box-shadow: inset 1px 1px 1px 0 rgba(255, 255, 255, 0.4);
+  z-index: 4;
+  transition:
+    width 0.6s cubic-bezier(0.6, 0.04, 0.98, 0.34),
+    box-shadow 0.5s ease-out;
+  overflow: hidden;
+}
+
+.glass-shine-layer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 60px;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.5),
+    transparent
+  );
+  transform: translateX(-100px) skewX(-25deg);
+  opacity: 0;
+}
+
+@keyframes shine-animation {
+  0% {
+    transform: translateX(-100px) skewX(-25deg);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(320px) skewX(-25deg);
+    opacity: 0;
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+}
+
+#swipe-toggle:checked + .swipe-container {
+  transform: scale(0.98);
+  box-shadow:
+    -2px -2px 5px rgba(255, 255, 255, 0.7),
+    2px 2px 8px rgba(71, 199, 163, 0.4);
+}
+
+#swipe-toggle:checked + .swipe-container::after {
+  opacity: 0.7;
+  transform: scale(1);
+  animation: pulse-glow 2.5s infinite ease-in-out;
+  animation-delay: 0.5s;
+}
+
+#swipe-toggle:checked + .swipe-container .glass-shine-layer {
+  box-shadow:
+    inset 3px 3px 6px rgba(55, 84, 78, 0.3),
+    inset -2px -2px 5px rgba(255, 255, 255, 0.5);
+}
+
+#swipe-toggle:checked + .swipe-container .swipe-handle {
+  left: calc(100% - 65px);
+  background: #e0e5ec;
+  box-shadow:
+    inset 3px 3px 5px rgba(0, 0, 0, 0.15),
+    inset -3px -3px 7px rgba(255, 255, 255, 1);
+}
+
+#swipe-toggle:checked + .swipe-container .dent-effect {
+  left: calc(100% - 65px);
+  opacity: 0.7;
+  transition-delay: 0.05s;
+}
+
+#swipe-toggle:checked + .swipe-container .swipe-fill,
+#swipe-toggle:checked + .swipe-container .glass-effect-layer,
+#swipe-toggle:checked + .swipe-container .glass-tint-layer,
+#swipe-toggle:checked + .swipe-container .glass-shine-layer {
+  width: 100%;
+}
+
+#swipe-toggle:checked + .swipe-container .glass-effect-layer {
+  filter: url(#glass-distortion);
+}
+
+#swipe-toggle:checked + .swipe-container .glass-shine-layer::before {
+  animation: shine-animation 1s cubic-bezier(0.23, 1, 0.32, 1) 0.3s;
+}
+
+#swipe-toggle:checked + .swipe-container .lock-icon path {
+  stroke-dashoffset: 35;
+}
+#swipe-toggle:checked + .swipe-container .lock-icon rect {
+  stroke-dashoffset: 58;
+}
+
+#swipe-toggle:checked + .swipe-container .checkmark-icon {
+  opacity: 1;
+  stroke-dashoffset: 0;
+}
+
+#swipe-toggle:checked + .swipe-container .swipe-text {
+  opacity: 0;
+}
+
+#swipe-toggle:checked + .swipe-container .text-confirmed {
+  opacity: 1;
+  transition-delay: 0.2s;
+}
+
+/* DARK THEME ADAPTATION */
+:root[data-theme="dark"] .swipe-container {
+  background: #1e293b;
+  box-shadow:
+    -5px -5px 12px rgba(255, 255, 255, 0.04),
+    5px 5px 15px rgba(0, 0, 0, 0.6);
+}
+
+:root[data-theme="dark"] .swipe-handle {
+  background: #334155;
+  box-shadow:
+    -3px -3px 7px rgba(255, 255, 255, 0.06),
+    3px 3px 5px rgba(0, 0, 0, 0.4);
+}
+
+:root[data-theme="dark"] .swipe-text {
+  color: #94a3b8;
+}
+
+:root[data-theme="dark"] #swipe-toggle:checked + .swipe-container .swipe-handle {
+  background: #1e293b;
+  box-shadow:
+    inset 3px 3px 5px rgba(0, 0, 0, 0.4),
+    inset -3px -3px 7px rgba(255, 255, 255, 0.08);
+}
+</style>
 

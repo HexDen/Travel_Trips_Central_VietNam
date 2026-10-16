@@ -24,15 +24,15 @@
 
       <!-- THANH ĐIỀU HƯỚNG CHÍNH (GLASS RADIO GROUP VỚI HIỆU ỨNG GLIDER ĐÀN HỒI) -->
       <nav class="desktop-nav" aria-label="Điều hướng chính" role="tablist">
-        <div class="glass-radio-group" :class="{ 'has-admin': nguoiDung && nguoiDung.role === 'admin' }">
+        <div class="glass-radio-group" :key="activeTab" :class="{ 'has-admin': nguoiDung && nguoiDung.role === 'admin' }">
           <input
             type="radio"
             name="nav-tab"
             id="glass-explore"
             :checked="activeTab === 'explore'"
-            @change="$emit('update:activeTab', 'explore')"
+            @click="onNavClick($event, 'explore')"
           />
-          <label for="glass-explore" title="Khám phá các điểm đến Miền Trung">
+          <label for="glass-explore" title="Khám phá các điểm đến Miền Trung" @click="onNavClick($event, 'explore')">
             <AppIcon name="compass" :size="18" class="nav-icon" />
             <span>Khám phá</span>
           </label>
@@ -42,9 +42,9 @@
             name="nav-tab"
             id="glass-planner"
             :checked="activeTab === 'planner'"
-            @change="$emit('update:activeTab', 'planner')"
+            @click="onNavClick($event, 'planner')"
           />
-          <label for="glass-planner" title="Lập kế hoạch du lịch thông minh cùng AI">
+          <label for="glass-planner" title="Lập kế hoạch du lịch thông minh cùng AI" @click="onNavClick($event, 'planner')">
             <AppIcon name="calendar" :size="18" class="nav-icon" />
             <span>Lên lịch</span>
           </label>
@@ -54,9 +54,9 @@
             name="nav-tab"
             id="glass-mytrips"
             :checked="activeTab === 'mytrips'"
-            @change="$emit('update:activeTab', 'mytrips')"
+            @click="onNavClick($event, 'mytrips')"
           />
-          <label for="glass-mytrips" title="Danh sách các chuyến đi đã lưu">
+          <label for="glass-mytrips" title="Danh sách các chuyến đi đã lưu" @click="onNavClick($event, 'mytrips')">
             <AppIcon name="luggage" :size="18" class="nav-icon" />
             <span>Chuyến đi</span>
           </label>
@@ -67,9 +67,9 @@
               name="nav-tab"
               id="glass-admin"
               :checked="activeTab === 'admin'"
-              @change="$emit('update:activeTab', 'admin')"
+              @click="onNavClick($event, 'admin')"
             />
-            <label for="glass-admin" title="Quản trị hệ thống">
+            <label for="glass-admin" title="Quản trị hệ thống" @click="onNavClick($event, 'admin')">
               <AppIcon name="dashboard" :size="18" class="nav-icon" />
               <span>Admin</span>
             </label>
@@ -135,13 +135,18 @@
 <script setup>
 import GlobalCommandSearch from '../common/GlobalCommandSearch.vue'
 
-defineProps({
+const props = defineProps({
   activeTab: { type: String, required: true },
   nguoiDung: { type: Object, default: null },
   isDark: { type: Boolean, default: false }
 })
 
-defineEmits(['update:activeTab', 'openAuth', 'toggleDark', 'selectCity', 'planCity', 'openModal'])
+const emit = defineEmits(['update:activeTab', 'openAuth', 'toggleDark', 'selectCity', 'planCity', 'openModal'])
+
+function onNavClick(e, tab) {
+  if (e) e.preventDefault()
+  emit('update:activeTab', tab)
+}
 </script>
 
 <style scoped>
