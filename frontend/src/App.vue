@@ -1713,6 +1713,78 @@ const dynamicBudget = computed(() => {
 // ==================== AI TỐI ƯU CUNG ĐƯỜNG DI CHUYỂN (NEAREST NEIGHBOR LOOP) ====================
 const toiUuThanhCongDay = ref(null)
 
+function revalidateAndRecalculateSchedule(plan) {
+  if (!plan || !plan.daysList) return
+
+  const diemDen = plan.destination || formDuLieu.diemDen || 'Đà Nẵng'
+  const hotel = plan.hotel_recommendation || formDuLieu.khachSanDaChon || { name: `Khách sạn tại ${diemDen}`, address: `Trung tâm ${diemDen}` }
+  const lockedDepTime = formDuLieu.gioXuatPhatChon || plan.selected_departure_time || '19:15'
+  const depHour = parseInt((lockedDepTime.match(/^(\d{2})/) || [])[1] || '19', 10)
+  const isEveningReturn = depHour >= 18
+
+  plan.daysList.forEach((day) => {
+    const isFirstDay = day.day === 1
+    const isLastDay = day.day === plan.daysList.length
+
+    let prevNode = hotel
+    const cleanActivities = []
+
+    ;(day.activities || []).forEach((act) => {
+      if (!act.place && !act.activity) return
+
+      let travel_from = prevNode.name || 'Khách sạn'
+      let travel_distance_km = 0
+      let travel_duration_mins = 5
+      let travel_cost = '~15.000đ'
+
+      if (prevNode.latitude && act.latitude) {
+        const dist = Math.hypot(
+          (Number(act.latitude) - Number(prevNode.latitude)) * 111,
+          (Number(act.longitude) - Number(prevNode.longitude)) * 111 * Math.cos(Number(act.latitude) * Math.PI / 180)
+        )
+        if (dist > 0.2 && dist < 120) {
+          travel_distance_km = Number(dist.toFixed(1))
+          travel_duration_mins = Math.max(5, Math.round((dist / 30) * 60))
+          travel_cost = `~${(Math.round(dist * 14000 / 1000) * 1000).toLocaleString('vi-VN')}đ`
+        }
+      }
+
+      cleanActivities.push({
+        ...act,
+        travel_from,
+        travel_distance_km,
+        travel_duration_mins,
+        travel_cost
+      })
+
+      if (act.latitude && act.longitude) {
+        prevNode = act
+      }
+    })
+
+    if (isLastDay) {
+      // Đảm bảo không trùng giờ 12:00 giữa trả phòng và ăn trưa
+      cleanActivities.forEach(a => {
+        if (a.type === 'checkout') a.time = '11:15'
+        else if (a.type === 'lunch') a.time = '12:00'
+      })
+      if (isEveningReturn) {
+        cleanActivities.forEach(a => {
+          if (a.type === 'dinner' && (a.time === '19:00' || a.time === '19:15' || a.time === '19:30')) {
+            a.time = '16:45'
+            a.label = 'Ăn chiều / Tối sớm'
+          }
+        })
+      }
+    }
+
+    day.activities = cleanActivities
+  })
+
+  dongBoChiPhiLichTrinh()
+  renderLeafletMap()
+}
+
 function toiUuCungDuongNgay(dayIndex) {
   if (!lichTrinh.value?.daysList?.[dayIndex]) return
   const day = lichTrinh.value.daysList[dayIndex]
@@ -1762,8 +1834,8 @@ function toiUuCungDuongNgay(dayIndex) {
     }
   }, 4500)
 
-  // Vẽ lại bản đồ lộ trình Leaflet nếu đang mở
-  renderLeafletMap()
+  // Tái chuẩn hóa toàn bộ khoảng cách và đồng bộ lại chi phí
+  revalidateAndRecalculateSchedule(lichTrinh.value)
 }
 
 function toiUuCungDuongToanBo() {
@@ -1771,6 +1843,7 @@ function toiUuCungDuongToanBo() {
   lichTrinh.value.daysList.forEach((_, idx) => {
     toiUuCungDuongNgay(idx)
   })
+  revalidateAndRecalculateSchedule(lichTrinh.value)
 }
 
 // ==================== CẢNH BÁO THỜI TIẾT TRỰC TIẾP (WEATHER-AWARE PLANNING) ====================
@@ -2577,22 +2650,25 @@ function tinhGioDenNoi(departTimeStr, durationStr) {
   const pad = (n) => String(n).padStart(2, '0')
   const formattedTime = `${pad(endHours)}:${pad(endMinutes)}`
   const dayTag = daysDiff > 0 ? ` (+${daysDiff} ngày)` : ''
+  const isOvernight = daysDiff > 0 || (startH >= 18 && hours >= 6)
 
   return {
     time: formattedTime,
     nextDay: daysDiff > 0,
+    isOvernight: isOvernight,
     text: `${formattedTime}${dayTag}`
   }
 }
 
 const gioXuatPhatDi = computed(() => {
+  if (formDuLieu.gioXuatPhatChon) return formDuLieu.gioXuatPhatChon
   if (formDuLieu.phuongTien === 'máy bay') return '08:00'
   if (formDuLieu.phuongTien === 'tàu hỏa') return '20:55'
   if (formDuLieu.phuongTien === 'xe máy') return '06:00'
   if (formDuLieu.nhaXeDaChon?.depart_times) {
     return formDuLieu.nhaXeDaChon.depart_times.split(',')[0].trim()
   }
-  return '17:30'
+  return '19:15'
 })
 
 const gioXuatPhatVe = computed(() => {
@@ -2601,9 +2677,9 @@ const gioXuatPhatVe = computed(() => {
   if (formDuLieu.phuongTien === 'xe máy') return '14:00'
   if (formDuLieu.nhaXeDaChon?.depart_times) {
     const times = formDuLieu.nhaXeDaChon.depart_times.split(',').map(s => s.trim())
-    return times[times.length - 1] || '17:30'
+    return times[times.length - 1] || formDuLieu.gioXuatPhatChon || '19:15'
   }
-  return '17:30'
+  return formDuLieu.gioXuatPhatChon || '19:15'
 })
 
 const thoiGianDiChuyenText = computed(() => {
@@ -3430,16 +3506,17 @@ function lamSachMoTa(text, act) {
 function getTravelEstimate(act, day, actIndex) {
   // 1. Nếu là hoạt động đầu tiên của Ngày 1: Chặng khởi hành từ nơi xuất phát đến điểm đến (Yêu cầu 3)
   if (day && day.day === 1 && actIndex === 0) {
-    const origin = formDuLieu.diemKhoiHanh || 'Hà Nội';
+    const isLocal = formDuLieu.daODiemDen || transitRouteInfo.value?.isLocalSameCity;
+    const origin = formDuLieu.diemKhoiHanh || formDuLieu.diemDen || 'Đà Nẵng';
     const bus = formDuLieu.nhaXeDaChon || lichTrinh.value?.transit_summary?.selected_bus;
-    const dist = Number(lichTrinh.value?.transit_summary?.estimated_distance_km || transitRouteInfo.value?.estimatedDistanceKm || 669);
-    const dur = bus?.duration || (dist > 500 ? '13 – 14 giờ' : '4 – 6 giờ');
+    const dist = Number(lichTrinh.value?.transit_summary?.estimated_distance_km || transitRouteInfo.value?.estimatedDistanceKm || (isLocal ? 15 : getEstimatedDistance(origin, formDuLieu.diemDen)));
+    const dur = isLocal ? '20 - 30 phút' : (bus?.duration || (dist > 500 ? '13 – 14 giờ' : '4 – 6 giờ'));
     return {
-      from: origin,
+      from: isLocal ? 'Điểm xuất phát nội thành' : origin,
       distance: dist,
       duration: dur,
-      cost: bus?.price ? `${dinhDangTien(bus.price)}đ/vé` : 'Đã tính vé',
-      mode: bus ? `${bus.name} (${bus.type})` : 'Xe khách giường nằm VIP'
+      cost: isLocal ? '0đ (Đã ở điểm đến)' : (bus?.price ? `${dinhDangTien(bus.price)}đ/vé` : 'Đã tính vé'),
+      mode: isLocal ? 'Xe máy / Taxi nội thành' : (bus ? `${bus.name} (${bus.type})` : (formDuLieu.phuongTien || 'Xe khách'))
     };
   }
 
@@ -3625,6 +3702,9 @@ const googleMapsDayRouteUrl = computed(() => {
 })
 
 function tinhChiPhiKhachSan(plan) {
+  if (formDuLieu.hotelStayType === 'free') return 0
+  if (formDuLieu.hotelStayType === 'prebooked') return Number(formDuLieu.prebookedHotelCost || plan?.prebooked_cost) || 0
+  if (plan?.prebooked_hotel) return Number(plan.prebooked_cost || formDuLieu.prebookedHotelCost) || 0
   if (formDuLieu.tuTucKhachSan || plan?.self_hotel) return 0
   if (formDuLieu.khachSanDaChon && formDuLieu.phongDaChon) {
     const nights = plan?.nights !== undefined ? Number(plan.nights) : (formDuLieu.soDem !== undefined ? Number(formDuLieu.soDem) : Math.max(0, (plan?.daysList?.length || 1) - 1))
@@ -4591,7 +4671,8 @@ async function dieuChinhTranhMua() {
     })
     lichTrinh.value.days = res.data.days
     lichTrinh.value.daysList = res.data.days
-    alert('🌧️ AI đã cập nhật lịch trình sang các hoạt động trong nhà tránh mưa thành công!')
+    revalidateAndRecalculateSchedule(lichTrinh.value)
+    alert('AI đã cập nhật lịch trình sang các hoạt động trong nhà tránh mưa và tính toán lại toàn bộ thời gian, chi phí thành công!')
   } catch (e) {
     alert('Không thể đổi lịch: ' + (e?.response?.data?.error || e.message))
   } finally {

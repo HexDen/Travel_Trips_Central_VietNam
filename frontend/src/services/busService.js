@@ -409,18 +409,81 @@ const KM_MARKERS = {
   'Cà Mau': 2140
 };
 
+export const PROVINCE_DISTRICT_MAP = {
+  'đà nẵng': ['đà nẵng', 'hải châu', 'hòa cường', 'hòa cường bắc', 'hòa cường nam', 'thanh khê', 'sơn trà', 'ngũ hành sơn', 'liên chiểu', 'cẩm lệ', 'hòa vang', 'hoàng sa', 'bà nà', 'mỹ khê', 'non nước', 'thuận phước', 'thạch thang', 'nam dương', 'bình hiên', 'bình thuận', 'phước ninh', 'an hải', 'phước mỹ', 'mân thái', 'thọ quang', 'nại hiên đông', 'mỹ an', 'khuê mỹ', 'hòa quý', 'hòa hải', 'an khê', 'chính gián', 'tam thuận', 'xuân hà', 'thanh khê đông', 'thanh khê tây', 'vĩnh trung', 'tân chính', 'hòa hiệp', 'hòa khánh', 'hòa minh', 'khuê trung', 'hòa phát', 'hòa an', 'hòa thọ', 'hòa xuân'],
+  'huế': ['huế', 'thừa thiên huế', 'thừa thiên - huế', 'hương thủy', 'hương trà', 'phú vang', 'phú lộc', 'phong điền', 'quảng điền', 'a lưới', 'nam đông', 'vỹ dạ', 'phú hội', 'thuận hòa', 'thuận lộc', 'tây lộc', 'kim long', 'hương long', 'thủy xuân', 'thủy biều', 'an cựu', 'phước vĩnh', 'xuân phú', 'lăng cô'],
+  'hội an': ['hội an', 'quảng nam', 'tam kỳ', 'điện bàn', 'duy xuyên', 'thăng bình', 'quế sơn', 'núi thành', 'tiên phước', 'cẩm phô', 'minh an', 'sơn phong', 'cẩm an', 'cẩm châu', 'cẩm hà', 'cẩm nam', 'cẩm thanh', 'tân an', 'thanh hà', 'an bàng', 'cửa đại'],
+  'quảng nam': ['quảng nam', 'hội an', 'tam kỳ', 'điện bàn', 'duy xuyên', 'thăng bình', 'quế sơn', 'núi thành', 'tiên phước'],
+  'quảng bình': ['quảng bình', 'đồng hới', 'ba đồn', 'bố trạch', 'lệ thủy', 'quảng ninh', 'quảng trạch', 'tuyên hóa', 'minh hóa', 'phong nha'],
+  'quảng trị': ['quảng trị', 'đông hà', 'gio linh', 'vĩnh linh', 'triệu phong', 'hải lăng', 'cam lộ', 'đakrông', 'hướng hóa', 'la vang', 'cửa việt'],
+  'hà tĩnh': ['hà tĩnh', 'hồng lĩnh', 'kỳ anh', 'nghi xuân', 'can lộc', 'đức thọ', 'hương sơn', 'hương khê', 'thạch hà', 'cẩm xuyên', 'lộc hà', 'thiên cầm'],
+  'nghệ an': ['nghệ an', 'vinh', 'cửa lò', 'thái hòa', 'diễn châu', 'quỳnh lưu', 'nam đàn', 'hưng nguyên', 'nghi lộc', 'yên thành', 'đô lương'],
+  'thanh hóa': ['thanh hóa', 'sầm sơn', 'bỉm sơn', 'nghi sơn', 'tĩnh gia', 'hoằng hóa', 'quảng xương', 'đông sơn', 'hà trung', 'hậu lộc', 'nga sơn', 'thọ xuân', 'pù luông'],
+  'khánh hòa': ['khánh hòa', 'nha trang', 'cam ranh', 'ninh hòa', 'vạn ninh', 'diên khánh', 'cam lâm', 'khánh vĩnh', 'khánh sơn'],
+  'nha trang': ['nha trang', 'khánh hòa', 'cam ranh', 'ninh hòa'],
+  'bình định': ['bình định', 'quy nhơn', 'an nhơn', 'hoài nhơn', 'phù cát', 'phù mỹ', 'tuy phước', 'tây sơn'],
+  'quy nhơn': ['quy nhơn', 'bình định'],
+  'phú yên': ['phú yên', 'tuy hòa', 'sông cầu', 'đông hòa', 'tuy an', 'đồng xuân', 'phú hòa', 'tây hòa', 'sơn hòa', 'sông hinh'],
+  'tuy hòa': ['tuy hòa', 'phú yên'],
+  'lâm đồng': ['lâm đồng', 'đà lạt', 'bảo lộc', 'lạc dương', 'đơn dương', 'đức trọng', 'lâm hà', 'di linh', 'bảo lâm'],
+  'đà lạt': ['đà lạt', 'lâm đồng'],
+  'đắk lắk': ['đắk lắk', 'buôn ma thuột', 'buôn hồ', 'krông pắc', 'cư m\'gar', 'ea kar', 'buôn đôn', 'hồ lắk'],
+  'buôn ma thuột': ['buôn ma thuột', 'đắk lắk']
+};
+
+export function isSameLocality(origin, destination) {
+  if (!origin || !destination) return false;
+  const o = origin.toLowerCase().trim();
+  const d = destination.toLowerCase().trim();
+  if (o === d) return true;
+  if (o.includes(d) || d.includes(o)) return true;
+
+  for (const [prov, subAreas] of Object.entries(PROVINCE_DISTRICT_MAP)) {
+    const dMatches = d.includes(prov) || subAreas.some(sub => d.includes(sub));
+    if (dMatches) {
+      const oMatches = o.includes(prov) || subAreas.some(sub => o.includes(sub));
+      if (oMatches) return true;
+    }
+  }
+  return false;
+}
+
+export function normalizeCityKey(name) {
+  const n = (name || '').toLowerCase().trim();
+  if (n.includes('hà nội')) return 'Hà Nội';
+  if (n.includes('hồ chí minh') || n.includes('sài gòn') || n.includes('tphcm')) return 'TP. Hồ Chí Minh';
+  if (n.includes('đà nẵng')) return 'Đà Nẵng';
+  if (n.includes('huế')) return 'Huế';
+  if (n.includes('hội an')) return 'Hội An';
+  if (n.includes('quảng nam')) return 'Quảng Nam';
+  if (n.includes('quảng ngãi')) return 'Quảng Ngãi';
+  if (n.includes('quảng bình') || n.includes('đồng hới')) return 'Quảng Bình';
+  if (n.includes('quảng trị') || n.includes('đông hà')) return 'Quảng Trị';
+  if (n.includes('hà tĩnh')) return 'Hà Tĩnh';
+  if (n.includes('nghệ an') || n.includes('vinh')) return 'Nghệ An';
+  if (n.includes('thanh hóa')) return 'Thanh Hóa';
+  if (n.includes('quy nhơn') || n.includes('bình định')) return 'Quy Nhơn';
+  if (n.includes('phú yên') || n.includes('tuy hòa')) return 'Phú Yên';
+  if (n.includes('nha trang') || n.includes('khánh hòa')) return 'Nha Trang';
+  if (n.includes('đà lạt') || n.includes('lâm đồng')) return 'Đà Lạt';
+  if (n.includes('đắk lắk') || n.includes('buôn ma thuột')) return 'Đắk Lắk';
+  return (name || '').trim();
+}
+
 export function getEstimatedDistance(origin = 'Hà Nội', destination = 'Đà Nẵng') {
   const org = (origin || '').trim()
   const dest = (destination || '').trim()
 
-  if (org.toLowerCase() === dest.toLowerCase()) return 15;
+  if (isSameLocality(org, dest)) return 15;
 
-  // Fallback map override for specific complex paths
-  if (CITY_DISTANCES[org] && CITY_DISTANCES[org][dest]) return CITY_DISTANCES[org][dest];
-  if (CITY_DISTANCES[dest] && CITY_DISTANCES[dest][org]) return CITY_DISTANCES[dest][org];
+  const normOrg = normalizeCityKey(org);
+  const normDest = normalizeCityKey(dest);
 
-  let markerOrg = KM_MARKERS[org];
-  let markerDest = KM_MARKERS[dest];
+  if (CITY_DISTANCES[normOrg] && CITY_DISTANCES[normOrg][normDest]) return CITY_DISTANCES[normOrg][normDest];
+  if (CITY_DISTANCES[normDest] && CITY_DISTANCES[normDest][normOrg]) return CITY_DISTANCES[normDest][normOrg];
+
+  let markerOrg = KM_MARKERS[org] || KM_MARKERS[normOrg];
+  let markerDest = KM_MARKERS[dest] || KM_MARKERS[normDest];
 
   // Map full address like "120 Nguyễn Văn Linh, Quận Hải Châu, Đà Nẵng" by finding matching city
   const sortedKeys = Object.keys(KM_MARKERS).sort((a, b) => b.length - a.length);
@@ -437,12 +500,66 @@ export function getEstimatedDistance(origin = 'Hà Nội', destination = 'Đà N
     return Math.abs(markerOrg - markerDest);
   }
 
+  // Tra cứu theo vùng địa lý
+  if (org.includes('Hà Nội') || normOrg === 'Hà Nội') {
+    if (dest.includes('Đà Nẵng') || normDest === 'Đà Nẵng') return 768;
+    if (dest.includes('Huế') || normDest === 'Huế') return 669;
+    if (dest.includes('Quảng Bình') || normDest === 'Quảng Bình') return 493;
+    if (dest.includes('Nha Trang') || normDest === 'Nha Trang') return 1272;
+    if (dest.includes('Đà Lạt') || normDest === 'Đà Lạt') return 1398;
+    return 700;
+  }
+
   return 350; // Fallback
 }
 
 export function getBusOperatorsForRoute(origin = 'Hà Nội', destination = 'Đà Nẵng', people = 1) {
   const numPeople = Math.max(1, Number(people) || 1)
+  const isLocalSameCity = isSameLocality(origin, destination)
   const distance = getEstimatedDistance(origin, destination)
+
+  if (isLocalSameCity) {
+    const localCostComparison = [
+      {
+        type: 'local',
+        name: 'Tự túc xe máy / Taxi nội thành',
+        icon: '',
+        estimated_cost_per_person: 0,
+        total_group_cost: 0,
+        duration: '15 - 30 phút',
+        duration_hours: 0.5,
+        is_cheapest: true,
+        is_fastest: true,
+        advantage: `Bạn đã có mặt tại địa bàn ${destination}. Không phát sinh vé xe liên tỉnh, di chuyển thuận tiện nội thành.`
+      }
+    ];
+
+    return {
+      origin,
+      destination,
+      isLocalSameCity: true,
+      distanceKm: 15,
+      estimatedDistanceKm: 15,
+      durationText: '15 - 30 phút',
+      operators: [],
+      cheapestBus: {
+        id: 'local-transit',
+        name: 'Tự túc xe máy / Taxi nội thành',
+        type: 'Nội thành (0đ vé liên tỉnh)',
+        price: 0,
+        totalForGroup: 0,
+        departureTimes: ['Chủ động bất kỳ lúc nào'],
+        depart_times: 'Chủ động',
+        pickup: `Nội thành ${origin}`,
+        dropoff: `Trung tâm ${destination}`,
+        hotline: '1900 6067'
+      },
+      trains: [],
+      flights: [],
+      vehicleComparison: localCostComparison
+    };
+  }
+
   const normOrigin = (origin || '').toLowerCase().trim()
   const normDest = (destination || '').toLowerCase().trim()
 

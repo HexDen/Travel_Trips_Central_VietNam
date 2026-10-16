@@ -195,6 +195,13 @@
                     <span class="bad-label"><AppIcon name="ticket" size="14" /> Vé vui chơi check-in:</span>
                     <b>{{ dinhDangTien(lichTrinh.budget_audit.audit_breakdown?.tickets || lichTrinh.budget_breakdown?.tickets || 0) }}đ</b>
                   </div>
+                  <div class="bad-item">
+                    <span class="bad-label">Dự phòng phát sinh (5%):</span>
+                    <b>{{ dinhDangTien(lichTrinh.budget_audit.audit_breakdown?.reserve || lichTrinh.budget_breakdown?.reserve || 0) }}đ</b>
+                  </div>
+                </div>
+                <div class="bac-formula-note" style="margin-top: 8px; font-size: 12px; opacity: 0.85;">
+                  Tổng chi phí tính toán = Đi lại + Khách sạn + Ăn uống + Vé tham quan + Dự phòng (5%) = <b>{{ dinhDangTien(lichTrinh.budget_audit.calculated_total) }}đ</b>
                 </div>
               </div>
 
@@ -357,6 +364,7 @@
                     <div class="day-header-pill">
                       <div class="dhp-left">
                         <span class="day-num">NGÀY {{ day.day }}</span>
+                        <span v-if="formatDayDate(day.day)" class="day-calendar-date">({{ formatDayDate(day.day) }})</span>
                         <span class="day-activities-count">{{ day.activities.length }} hoạt động</span>
                       </div>
                       <div class="dhp-right">
@@ -416,22 +424,29 @@
                         <div class="odjc-time-col">
                           <span class="odjc-time">{{ gioXuatPhatDi }}</span>
                           <div class="odjc-bullet"><AppIcon :name="layIconPhuongTien(formDuLieu.phuongTien)" size="18" /></div>
-                          <span class="odjc-time-dest" title="Dự kiến đến nơi">➔ {{ gioDenNoiDuKien.time }}</span>
+                          <span class="odjc-time-dest" title="Dự kiến đến nơi">➔ {{ gioDenNoiDuKien?.time || gioDenNoiDuKien?.text || gioDenNoiDuKien }}</span>
                         </div>
                         <div class="odjc-card-content">
                           <div class="odjc-header">
                             <span class="odjc-badge">CHẶNG KHỞI HÀNH TỪ NƠI XUẤT PHÁT</span>
                             <span class="odjc-duration-pill"><AppIcon name="clock" size="13" /> Di chuyển: <b>{{ thoiGianDiChuyenText }}</b></span>
                           </div>
-                          <h4 class="odjc-title">{{ formDuLieu.diemKhoiHanh }} ➔ {{ lichTrinh.destination }}</h4>
+                          <h4 class="odjc-title">{{ (formDuLieu.daODiemDen || transitRouteInfo.isLocalSameCity) ? ('Bạn đã ở tại ' + lichTrinh.destination) : (formDuLieu.diemKhoiHanh + ' ➔ ' + lichTrinh.destination) }}</h4>
                           <div class="odjc-meta-grid">
                             <div class="odjc-meta-item">
                               <span class="omi-label">Thời gian xuất phát:</span>
-                              <strong class="text-emerald">{{ gioXuatPhatDi }} (Ngày 1)</strong>
+                              <strong class="text-emerald">
+                                {{ gioXuatPhatDi }}
+                                <template v-if="gioDenNoiDuKien?.isOvernight || gioDenNoiDuKien?.nextDay"> (Tối hôm trước - Khởi hành đêm)</template>
+                                <template v-else> (Ngày 1)</template>
+                              </strong>
                             </div>
                             <div class="odjc-meta-item">
                               <span class="omi-label">Dự kiến đến nơi:</span>
-                              <strong class="text-emerald">{{ gioDenNoiDuKien.text }}</strong>
+                              <strong class="text-emerald">
+                                {{ gioDenNoiDuKien?.time || gioDenNoiDuKien?.text || gioDenNoiDuKien }}
+                                <template v-if="gioDenNoiDuKien?.isOvernight || gioDenNoiDuKien?.nextDay"> (Sáng Ngày 1)</template>
+                              </strong>
                             </div>
                             <div class="odjc-meta-item">
                               <span class="omi-label">Phương tiện di chuyển:</span>
@@ -439,7 +454,7 @@
                             </div>
                             <div class="odjc-meta-item">
                               <span class="omi-label">Cự ly quãng đường:</span>
-                              <strong>~{{ (lichTrinh.transit_summary?.estimated_distance_km || transitRouteInfo.estimatedDistanceKm || 669) }} km</strong>
+                              <strong>~{{ (lichTrinh.transit_summary?.estimated_distance_km || transitRouteInfo.estimatedDistanceKm || (formDuLieu.daODiemDen ? 15 : getEstimatedDistance(formDuLieu.diemKhoiHanh, lichTrinh.destination))) }} km</strong>
                             </div>
                             <div class="odjc-meta-item">
                               <span class="omi-label">Điểm đón khách:</span>
@@ -467,7 +482,16 @@
                             </a>
                           </div>
                           <p class="odjc-note">
-                            <AppIcon name="plane" size="14" /> Chuyến đi khởi hành lúc <b>{{ gioXuatPhatDi }}</b> từ {{ formDuLieu.diemKhoiHanh }}. Đoàn đến {{ lichTrinh.destination }} dự kiến vào <b>{{ gioDenNoiDuKien.text }}</b>, di chuyển về nhận phòng / gửi hành lý tại {{ lichTrinh.hotel_recommendation?.name || 'khách sạn' }} trước khi bắt đầu lịch trình tham quan.
+                            <AppIcon :name="layIconPhuongTien(formDuLieu.phuongTien)" size="14" />
+                            <template v-if="formDuLieu.daODiemDen || transitRouteInfo.isLocalSameCity">
+                              Bạn đã có mặt tại <b>{{ lichTrinh.destination }}</b>. Chuyến đi bắt đầu trực tiếp từ điểm hẹn lưu trú mà không cần di chuyển liên tỉnh (0đ vé liên tỉnh).
+                            </template>
+                            <template v-else-if="gioDenNoiDuKien?.isOvernight || gioDenNoiDuKien?.nextDay">
+                              Chuyến đi khởi hành tối hôm trước lúc <b>{{ gioXuatPhatDi }}</b> từ {{ formDuLieu.diemKhoiHanh }}. Đoàn đến {{ lichTrinh.destination }} dự kiến vào sáng Ngày 1 lúc <b>{{ gioDenNoiDuKien?.time || gioDenNoiDuKien }}</b>, di chuyển về nhận phòng / gửi hành lý tại {{ lichTrinh.hotel_recommendation?.name || 'khách sạn' }} trước khi bắt đầu lịch trình tham quan.
+                            </template>
+                            <template v-else>
+                              Chuyến đi khởi hành lúc <b>{{ gioXuatPhatDi }}</b> từ {{ formDuLieu.diemKhoiHanh }}. Đoàn đến {{ lichTrinh.destination }} dự kiến vào <b>{{ gioDenNoiDuKien?.text || gioDenNoiDuKien }}</b>, di chuyển về nhận phòng / gửi hành lý tại {{ lichTrinh.hotel_recommendation?.name || 'khách sạn' }} trước khi bắt đầu lịch trình tham quan.
+                            </template>
                           </p>
                         </div>
                       </div>
@@ -490,7 +514,7 @@
                           @click="toggleExpandCard(`act-${day.day}-${actIndex}`)"
                         >
                           <div class="car-time-col">
-                            <span class="car-time">{{ act.time }}</span>
+                            <span class="car-time">{{ act.time }}<template v-if="getEndTime(act)"> - {{ getEndTime(act) }}</template></span>
                             <span class="car-dot" :class="getBadgeInfo(act).class"></span>
                           </div>
 
@@ -504,7 +528,10 @@
                               <span :class="['badge-type-mini', getBadgeInfo(act).class]">
                                 <AppIcon :name="getBadgeInfo(act).icon" size="13" /> {{ getBadgeInfo(act).label }}
                               </span>
-                              <h4 class="car-title" @click.stop="panToActivity(act)">{{ act.place }}</h4>
+                              <h4 class="car-title" @click.stop="panToActivity(act)">
+                                {{ act.place }}
+                                <span v-if="act.verified === false" class="act-unverified-tag" title="Gợi ý cần xác nhận">[Gợi ý cần xác nhận]</span>
+                              </h4>
                               <span class="car-cost" v-if="act.estimated_cost"><AppIcon name="wallet" size="12" /> {{ dinhDangTien(act.estimated_cost) }}đ</span>
                             </div>
                             <div class="car-sub">
@@ -564,7 +591,7 @@
                           </div>
 
                           <div class="activity-time-col">
-                            <span class="activity-time">{{ act.time }}</span>
+                            <span class="activity-time">{{ act.time }}<template v-if="getEndTime(act)"> - {{ getEndTime(act) }}</template></span>
                             <div class="activity-bullet"></div>
                           </div>
 
@@ -588,7 +615,10 @@
                                   <span :class="['badge-type', getBadgeInfo(act).class]">
                                     <AppIcon :name="getBadgeInfo(act).icon" size="14" /> {{ getBadgeInfo(act).label }}
                                   </span>
-                                  <h4 class="place-name" :title="act.place" @click="panToActivity(act)">{{ act.place }}</h4>
+                                  <h4 class="place-name" :title="act.place" @click="panToActivity(act)">
+                                    {{ act.place }}
+                                    <span v-if="act.verified === false" class="act-unverified-tag" title="Gợi ý cần xác nhận">[Gợi ý cần xác nhận]</span>
+                                  </h4>
                                 </div>
                                 <div class="act-actions-group">
                                   <button
@@ -803,14 +833,14 @@
                         <div class="orjc-time-col">
                           <span class="orjc-time">{{ gioXuatPhatVe }}</span>
                           <div class="orjc-bullet"><AppIcon :name="layIconPhuongTien(formDuLieu.phuongTien)" size="18" /></div>
-                          <span class="orjc-time-dest" title="Dự kiến về đến nơi">➔ {{ gioVeDenNoiDuKien.time }}</span>
+                          <span class="orjc-time-dest" title="Dự kiến về đến nơi">➔ {{ gioVeDenNoiDuKien?.time || gioVeDenNoiDuKien?.text || gioVeDenNoiDuKien }}</span>
                         </div>
                         <div class="orjc-card-content">
                           <div class="orjc-header">
                             <span class="orjc-badge">CHẶNG RA VỀ / KẾT THÚC HÀNH TRÌNH</span>
                             <span class="orjc-duration-pill"><AppIcon name="clock" size="13" /> Di chuyển về: <b>{{ thoiGianDiChuyenText }}</b></span>
                           </div>
-                          <h4 class="orjc-title">{{ lichTrinh.destination }} ➔ {{ formDuLieu.diemKhoiHanh }}</h4>
+                          <h4 class="orjc-title">{{ (formDuLieu.daODiemDen || transitRouteInfo.isLocalSameCity) ? ('Kết thúc lịch trình tại ' + lichTrinh.destination) : (lichTrinh.destination + ' ➔ ' + formDuLieu.diemKhoiHanh) }}</h4>
                           <div class="orjc-meta-grid">
                             <div class="orjc-meta-item">
                               <span class="omi-label">Thời gian xuất phát về:</span>
@@ -818,7 +848,10 @@
                             </div>
                             <div class="orjc-meta-item">
                               <span class="omi-label">Dự kiến về đến nơi:</span>
-                              <strong class="text-emerald">{{ gioVeDenNoiDuKien.text }}</strong>
+                              <strong class="text-emerald">
+                                {{ gioVeDenNoiDuKien?.time || gioVeDenNoiDuKien?.text || gioVeDenNoiDuKien }}
+                                <template v-if="gioVeDenNoiDuKien?.isOvernight || gioVeDenNoiDuKien?.nextDay"> (Sáng hôm sau)</template>
+                              </strong>
                             </div>
                             <div class="orjc-meta-item">
                               <span class="omi-label">Phương tiện về:</span>
@@ -826,7 +859,7 @@
                             </div>
                             <div class="orjc-meta-item">
                               <span class="omi-label">Cự ly di chuyển về:</span>
-                              <strong>~{{ (lichTrinh.transit_summary?.estimated_distance_km || transitRouteInfo.estimatedDistanceKm || 669) }} km</strong>
+                              <strong>~{{ (lichTrinh.transit_summary?.estimated_distance_km || transitRouteInfo.estimatedDistanceKm || (formDuLieu.daODiemDen ? 15 : getEstimatedDistance(lichTrinh.destination, formDuLieu.diemKhoiHanh))) }} km</strong>
                             </div>
                             <div class="orjc-meta-item">
                               <span class="omi-label">Điểm đón khách về:</span>
@@ -838,7 +871,7 @@
                             </div>
                             <div class="orjc-meta-item" v-if="lichTrinh.hotel_recommendation">
                               <span class="omi-label">Check-out khách sạn:</span>
-                              <strong>12:00 Trả phòng {{ lichTrinh.hotel_recommendation.name }}</strong>
+                              <strong>11:30 Trả phòng & gửi hành lý tại {{ lichTrinh.hotel_recommendation.name }}</strong>
                             </div>
                             <div class="orjc-meta-item" v-if="formDuLieu.nhaXeDaChon?.price">
                               <span class="omi-label">Giá vé lượt về:</span>
@@ -854,7 +887,7 @@
                             </a>
                           </div>
                           <p class="orjc-note">
-                            <AppIcon name="heart" size="14" /> Chúc quý khách thượng lộ bình an! Đoàn khởi hành từ {{ lichTrinh.destination }} lúc <b>{{ gioXuatPhatVe }}</b> và dự kiến về đến {{ formDuLieu.diemKhoiHanh }} lúc <b>{{ gioVeDenNoiDuKien.text }}</b>. Toàn bộ chuyến đi kết thúc tốt đẹp!
+                            <AppIcon name="heart" size="14" /> Chúc quý khách thượng lộ bình an! Đoàn khởi hành từ {{ lichTrinh.destination }} lúc <b>{{ gioXuatPhatVe }}</b> và dự kiến về đến {{ formDuLieu.diemKhoiHanh }} lúc <b>{{ gioVeDenNoiDuKien?.time || gioVeDenNoiDuKien?.text || gioVeDenNoiDuKien }}</b><template v-if="gioVeDenNoiDuKien?.isOvernight || gioVeDenNoiDuKien?.nextDay"> (Sáng hôm sau)</template>. Toàn bộ chuyến đi kết thúc tốt đẹp!
                           </p>
                         </div>
                       </div>
@@ -1001,6 +1034,7 @@
 <script setup>
 import AppIcon from '../common/AppIcon.vue'
 import TicketPrinterModal from '../modals/TicketPrinterModal.vue'
+import { getEstimatedDistance } from '../../services/busService'
 
 const props = defineProps({
   lichTrinh: { type: Object, required: true },
@@ -1020,8 +1054,8 @@ const props = defineProps({
   gioXuatPhatDi: { type: String, default: '' },
   gioXuatPhatVe: { type: String, default: '' },
   thoiGianDiChuyenText: { type: String, default: '' },
-  gioDenNoiDuKien: { type: String, default: '' },
-  gioVeDenNoiDuKien: { type: String, default: '' },
+  gioDenNoiDuKien: { type: [Object, String], default: () => ({ time: '', text: '' }) },
+  gioVeDenNoiDuKien: { type: [Object, String], default: () => ({ time: '', text: '' }) },
   googleMapsAllStopsUrl: { type: String, default: '' },
   googleMapsDayRouteUrl: { type: String, default: '' },
   toiUuThanhCongDay: { type: [Number, String, null], default: null },
@@ -1089,6 +1123,51 @@ const emit = defineEmits([
   'startTrip'
 ])
 
+function formatDayDate(dayNum) {
+  if (!props.formDuLieu?.ngayKhoiHanh) return ''
+  const base = new Date(props.formDuLieu.ngayKhoiHanh)
+  if (isNaN(base.getTime())) return ''
+  const target = new Date(base)
+  target.setDate(target.getDate() + (dayNum - 1))
+  const daysOfWeek = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy']
+  const dow = daysOfWeek[target.getDay()]
+  const day = String(target.getDate()).padStart(2, '0')
+  const month = String(target.getMonth() + 1).padStart(2, '0')
+  const year = target.getFullYear()
+  return `${dow}, ${day}/${month}/${year}`
+}
+
+function getEndTime(act) {
+  if (!act || !act.time) return ''
+  const parts = String(act.time).split(':')
+  if (parts.length !== 2) return ''
+  const h = parseInt(parts[0], 10)
+  const m = parseInt(parts[1], 10)
+  if (isNaN(h) || isNaN(m)) return ''
+  
+  let duration = 60
+  if (act.duration_minutes) {
+    duration = Number(act.duration_minutes)
+  } else if (act.dwell_time) {
+    const dMatch = String(act.dwell_time).match(/(\d+)/)
+    if (dMatch) duration = parseInt(dMatch[1], 10)
+    if (String(act.dwell_time).includes('tiếng') || String(act.dwell_time).includes('giờ')) {
+      duration = duration * 60
+    }
+  } else if (act.type === 'food') {
+    duration = 60
+  } else if (act.type === 'sightseeing') {
+    duration = 90
+  } else if (act.type === 'hotel') {
+    duration = 45
+  }
+  
+  const totalMin = h * 60 + m + duration
+  const endH = Math.floor(totalMin / 60) % 24
+  const endM = totalMin % 60
+  return `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`
+}
+
 const onSwipeSaveChange = (e) => {
   if (props.daLuuLichTrinhHienTai) {
     emit('goMyTrips')
@@ -1099,6 +1178,24 @@ const onSwipeSaveChange = (e) => {
 </script>
 
 <style scoped>
+.act-unverified-tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #d97706;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+.day-calendar-date {
+  font-size: 13px;
+  font-weight: 500;
+  opacity: 0.85;
+  margin-left: 6px;
+}
 .itinerary-decision-actions-bar {
   display: flex;
   justify-content: center;

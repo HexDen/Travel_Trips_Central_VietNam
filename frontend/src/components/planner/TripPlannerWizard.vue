@@ -65,11 +65,15 @@
                   <span class="route-origin-tag">Xuất phát: <b>{{ formDuLieu.diemKhoiHanh || '?' }}</b></span>
                 </div>
 
-                <!-- SLIDER CHUYỂN ĐỔI 2 OPTIONS (THỦ CÔNG HOẶC VỊ TRÍ HIỆN TẠI) -->
+                <!-- SLIDER CHUYỂN ĐỔI 3 OPTIONS (THỦ CÔNG, GPS, TÔI ĐÃ Ở ĐIỂM ĐẾN) -->
                 <div class="origin-mode-wrapper">
                   <div
                     class="radio-group origin-mode-group"
-                    :class="{ 'is-manual': originMethod === 'manual', 'is-gps': originMethod === 'gps' }"
+                    :class="{
+                      'is-manual': originMethod === 'manual',
+                      'is-gps': originMethod === 'gps',
+                      'is-at-destination': originMethod === 'at_destination'
+                    }"
                   >
                     <div class="slider"></div>
                     <div class="radio-option">
@@ -97,6 +101,18 @@
                         <span v-if="isLocatingOrigin" class="gps-spinner" aria-hidden="true"></span>
                         <AppIcon v-else name="compass" :size="15" class="mode-icon" />
                         <span>{{ isLocatingOrigin ? 'Đang định vị GPS...' : 'Xác nhận vị trí hiện tại' }}</span>
+                      </label>
+                    </div>
+                    <div class="radio-option">
+                      <input
+                        type="radio"
+                        name="originOption"
+                        id="origin-opt-at-destination"
+                        :checked="originMethod === 'at_destination'"
+                        @click="chonPhuongThucOrigin('at_destination')"
+                      />
+                      <label for="origin-opt-at-destination" class="radio-label">
+                        <span>Tôi đã ở điểm đến</span>
                       </label>
                     </div>
                   </div>
@@ -785,7 +801,7 @@
                       <h3>Phương tiện di chuyển tuyến {{ formDuLieu.diemKhoiHanh || 'Điểm đi' }} ➔ {{ formDuLieu.diemDen }}</h3>
                     </div>
                     <div class="bos-badges-group">
-                      <span class="bos-dist-badge">Cự ly: ~{{ transitRouteInfo.estimatedDistanceKm || transitRouteInfo.distanceKm || 350 }} km</span>
+                      <span class="bos-dist-badge">Cự ly: ~{{ transitRouteInfo.estimatedDistanceKm || transitRouteInfo.distanceKm || (formDuLieu.daODiemDen ? 15 : getEstimatedDistance(formDuLieu.diemKhoiHanh, formDuLieu.diemDen)) }} km</span>
                     </div>
                   </div>
 
@@ -859,11 +875,11 @@
                         </div>
                         <div class="ttc-metric">
                           <span class="ttc-metric-lbl"><AppIcon name="navigation" :size="14" /> Cự ly quãng đường:</span>
-                          <strong class="ttc-metric-val">~{{ transitRouteInfo.estimatedDistanceKm || transitRouteInfo.distanceKm || 350 }} km</strong>
+                          <strong class="ttc-metric-val">~{{ transitRouteInfo.estimatedDistanceKm || transitRouteInfo.distanceKm || (formDuLieu.daODiemDen ? 15 : getEstimatedDistance(formDuLieu.diemKhoiHanh, formDuLieu.diemDen)) }} km</strong>
                         </div>
                         <div class="ttc-metric">
                           <span class="ttc-metric-lbl"><AppIcon name="clock" :size="14" /> Thời gian ước tính:</span>
-                          <strong class="ttc-metric-val">~{{ Math.max(2, Math.round((transitRouteInfo.estimatedDistanceKm || 350) / 45)) }} giờ chạy xe</strong>
+                          <strong class="ttc-metric-val">~{{ Math.max(1, Math.round((transitRouteInfo.estimatedDistanceKm || (formDuLieu.daODiemDen ? 15 : getEstimatedDistance(formDuLieu.diemKhoiHanh, formDuLieu.diemDen))) / 45)) }} giờ chạy xe</strong>
                         </div>
                       </div>
 
@@ -1600,7 +1616,7 @@
                       <div class="ptpc-badge-row">
                         <div class="ptpc-title-tag">
                           <AppIcon name="sparkles" :size="14" />
-                          <span>SKYLUXE TRAVEL • THẺ XÁC NHẬN CHUYẾN ĐI ĐÃ XUẤT</span>
+                          <span>SKYLUXE TRAVEL • BẢN TÓM TẮT PHƯƠNG ÁN DỰ KIẾN</span>
                         </div>
                         <span class="ptpc-click-hint">Bấm để xem popup phóng to ↗</span>
                       </div>
@@ -1627,9 +1643,9 @@
                         </div>
 
                         <div class="ptpc-col total-col">
-                          <span class="ptpc-lbl">TỔNG THANH TOÁN:</span>
+                          <span class="ptpc-lbl">TỔNG CHI PHÍ DỰ KIẾN:</span>
                           <strong class="ptpc-price">{{ dinhDangTien(tongThanhToanTatCa) }} VNĐ</strong>
-                          <small class="ptpc-status-tag">✓ ĐÃ XÁC NHẬN</small>
+                          <small class="ptpc-status-tag">PHƯƠNG ÁN DỰ KIẾN</small>
                         </div>
                       </div>
                     </div>
@@ -2036,10 +2052,12 @@
                     <div class="st-main-part">
                       <!-- MỤC 1: THÔNG TIN CHUYẾN BAY / DI CHUYỂN -->
                       <div class="st-flight-section">
-                        <span class="st-section-tag">THÔNG TIN CHUYẾN BAY</span>
+                        <span class="st-section-tag">
+                          {{ formDuLieu.tuTucPhuongTien ? 'PHƯƠNG ÁN XE CÁ NHÂN DỰ KIẾN' : (formDuLieu.tauDaChon ? 'PHƯƠNG ÁN TÀU HỎA DỰ KIẾN' : (formDuLieu.nhaXeDaChon ? 'PHƯƠNG ÁN XE KHÁCH DỰ KIẾN' : (formDuLieu.chuyenBayDaChon ? 'PHƯƠNG ÁN CHUYẾN BAY DỰ KIẾN' : 'PHƯƠNG ÁN DI CHUYỂN DỰ KIẾN'))) }}
+                        </span>
                         <div class="st-flight-route-row">
                           <h3 class="st-route-title">
-                            {{ formDuLieu.diemKhoiHanh || 'Hà Nội' }} ({{ getCityCode(formDuLieu.diemKhoiHanh) }}) ➔ {{ formDuLieu.diemDen || 'Tokyo' }} ({{ getCityCode(formDuLieu.diemDen) }})
+                            {{ formDuLieu.diemKhoiHanh || 'Điểm đi' }} ({{ getCityCode(formDuLieu.diemKhoiHanh) }}) ➔ {{ formDuLieu.diemDen || 'Điểm đến' }} ({{ getCityCode(formDuLieu.diemDen) }})
                           </h3>
                           <!-- QR Code góc phải -->
                           <div class="st-qr-code-box">
@@ -2057,7 +2075,7 @@
                             <template v-else-if="formDuLieu.chuyenBayDaChon">{{ formDuLieu.chuyenBayDaChon.name || 'VN310' }}</template>
                             <template v-else-if="formDuLieu.tauDaChon">Tàu {{ formDuLieu.tauDaChon.name }}</template>
                             <template v-else-if="formDuLieu.nhaXeDaChon">Xe {{ formDuLieu.nhaXeDaChon.name }}</template>
-                            <template v-else>VN310</template>
+                            <template v-else>Phương tiện dự kiến</template>
                           </span>
                           <span class="stfm-sep">|</span>
                           <span class="stfm-datetime">
@@ -2077,7 +2095,7 @@
                       <div class="st-hotel-section">
                         <span class="st-section-tag">THÔNG TIN KHÁCH SẠN</span>
                         <h4 class="st-hotel-name">
-                          {{ formDuLieu.tuTucKhachSan ? 'Tự túc nơi ở / Homestay riêng' : (formDuLieu.khachSanDaChon?.name || 'Park Hyatt Tokyo') }}
+                          {{ formDuLieu.tuTucKhachSan ? 'Tự túc nơi ở / Homestay riêng' : (formDuLieu.khachSanDaChon?.name || ('Khách sạn tại ' + (formDuLieu.diemDen || 'Điểm đến'))) }}
                         </h4>
 
                         <div class="st-hotel-content-grid">
@@ -2098,14 +2116,14 @@
                           <!-- Cột thông tin phòng -->
                           <div class="st-hotel-room-info">
                             <strong class="st-room-name">
-                              {{ formDuLieu.tuTucKhachSan ? 'Chỗ nghỉ riêng' : (formDuLieu.phongDaChon?.name || 'Phòng Park Suite King') }}
+                              {{ formDuLieu.tuTucKhachSan ? 'Chỗ nghỉ riêng' : (formDuLieu.phongDaChon?.name || 'Phòng tiêu chuẩn đã chọn') }}
                             </strong>
                             <div class="st-room-dates">
                               <div>Check-in: <span>{{ ngayKhoiHanhFormatted }}</span></div>
                               <div>Check-out: <span>{{ ngayKetThucFormatted }}</span></div>
                             </div>
                             <div class="st-booking-code">
-                              Mã đặt phòng: <span>PKY{{ Math.abs(((formDuLieu.khachSanDaChon?.name || 'VN').split('').reduce((a,c)=>a+c.charCodeAt(0),987654)) % 900000 + 100000) }}</span>
+                              Trạng thái: <span>Phương án dự kiến (Chờ nhà cung cấp xác nhận)</span>
                             </div>
                           </div>
                         </div>
@@ -2113,7 +2131,7 @@
 
                       <!-- DÒNG ĐÁY: TỔNG THANH TOÁN -->
                       <div class="st-total-row">
-                        <span class="st-total-label">TỔNG THANH TOÁN:</span>
+                        <span class="st-total-label">TỔNG CHI PHÍ DỰ KIẾN:</span>
                         <strong class="st-total-value">{{ dinhDangTien(tongThanhToanTatCa) }} VNĐ</strong>
                       </div>
                     </div>
@@ -2121,14 +2139,14 @@
                     <!-- CUỐNG VÉ (BÊN PHẢI) -->
                     <div class="st-stub-part">
                       <div class="st-stub-passenger">
-                        <span class="st-stub-label">Tới điểm sắm</span>
+                        <span class="st-stub-label">Tới điểm đến</span>
                         <strong class="st-stub-name">{{ customerDisplayName }}</strong>
                       </div>
 
                       <div class="st-stub-grid">
                         <div class="st-sg-item">
-                          <span class="st-sg-lbl">Passenger</span>
-                          <strong class="st-sg-val">VN310</strong>
+                          <span class="st-sg-lbl">Phương tiện</span>
+                          <strong class="st-sg-val">{{ formDuLieu.tuTucPhuongTien ? 'Xe riêng' : (formDuLieu.nhaXeDaChon ? formDuLieu.nhaXeDaChon.name : (formDuLieu.tauDaChon ? formDuLieu.tauDaChon.name : (formDuLieu.chuyenBayDaChon?.name || 'Chuyến đi'))) }}</strong>
                         </div>
                         <div class="st-sg-item">
                           <span class="st-sg-lbl">Seat</span>
@@ -2493,11 +2511,15 @@ function goToStep(step) {
   }
 }
 
-// ==================== SLIDER 2 OPTIONS ĐIỂM KHỞI HÀNH (THỦ CÔNG HOẶC VỊ TRÍ HIỆN TẠI) ====================
-const originMethod = ref(props.showManualWardPicker ? 'manual' : (props.formDuLieu?.diemKhoiHanh ? 'manual' : 'manual'))
+// ==================== SLIDER 3 OPTIONS ĐIỂM KHỞI HÀNH (THỦ CÔNG, VỊ TRÍ HIỆN TẠI, TÔI ĐÃ Ở ĐIỂM ĐẾN) ====================
+const originMethod = ref(
+  props.formDuLieu?.daODiemDen
+    ? 'at_destination'
+    : (props.showManualWardPicker ? 'manual' : 'manual')
+)
 
 watch(() => props.showManualWardPicker, (val) => {
-  if (val) {
+  if (val && originMethod.value !== 'at_destination') {
     originMethod.value = 'manual'
   }
 })
@@ -2505,6 +2527,9 @@ watch(() => props.showManualWardPicker, (val) => {
 function chonPhuongThucOrigin(method) {
   originMethod.value = method
   if (method === 'manual') {
+    if (props.formDuLieu) {
+      props.formDuLieu.daODiemDen = false
+    }
     if (!props.showManualWardPicker) {
       if (typeof props.toggleManualWardPicker === 'function') {
         props.toggleManualWardPicker()
@@ -2513,11 +2538,32 @@ function chonPhuongThucOrigin(method) {
       }
     }
   } else if (method === 'gps') {
+    if (props.formDuLieu) {
+      props.formDuLieu.daODiemDen = false
+    }
     if (props.showManualWardPicker) {
       emit('update:showManualWardPicker', false)
     }
     if (typeof props.layViTriHienTaiChoDiemXuatPhat === 'function') {
       props.layViTriHienTaiChoDiemXuatPhat()
+    }
+  } else if (method === 'at_destination') {
+    if (props.showManualWardPicker) {
+      emit('update:showManualWardPicker', false)
+    }
+    if (props.formDuLieu) {
+      props.formDuLieu.daODiemDen = true
+      props.formDuLieu.tuTucPhuongTien = true
+      props.formDuLieu.phuongTien = 'tự túc'
+      props.formDuLieu.diemKhoiHanh = props.formDuLieu.diemDen || 'Đà Nẵng'
+      props.formDuLieu.chiTietDiemKhoiHanh = {
+        name: props.formDuLieu.diemDen || 'Đà Nẵng',
+        province: props.formDuLieu.diemDen || 'Đà Nẵng',
+        isAtDestination: true
+      }
+    }
+    if (typeof props.chonDiemKhoiHanh === 'function') {
+      props.chonDiemKhoiHanh(props.formDuLieu?.diemDen || 'Đà Nẵng')
     }
   }
 }
@@ -2585,6 +2631,12 @@ function handleSelectCity(cityName) {
   if (typeof props.chonNhanhDiemDen === 'function') {
     props.chonNhanhDiemDen(cityName)
   }
+  if (originMethod.value === 'at_destination' || props.formDuLieu?.daODiemDen) {
+    props.formDuLieu.diemKhoiHanh = cityName
+    if (typeof props.chonDiemKhoiHanh === 'function') {
+      props.chonDiemKhoiHanh(cityName)
+    }
+  }
   nextTick(() => {
     updateSlider()
     const targetEl = cityOptionRefs.get(cityName)
@@ -2597,6 +2649,12 @@ function handleSelectCity(cityName) {
 watch(
   () => props.formDuLieu?.diemDen,
   (newVal) => {
+    if (newVal && (originMethod.value === 'at_destination' || props.formDuLieu?.daODiemDen)) {
+      props.formDuLieu.diemKhoiHanh = newVal
+      if (typeof props.chonDiemKhoiHanh === 'function') {
+        props.chonDiemKhoiHanh(newVal)
+      }
+    }
     nextTick(() => {
       updateSlider()
       const targetEl = cityOptionRefs.get(newVal)
@@ -2966,7 +3024,7 @@ const hasAirportSupport = computed(() => {
   if (dest === 'Tất cả miền Trung') return true
   const hasDestAirport = Boolean(PROVINCE_AIRPORT_MAP[dest])
   if (!hasDestAirport) return false
-  const dist = props.transitRouteInfo?.estimatedDistanceKm || props.transitRouteInfo?.distanceKm || 350
+  const dist = props.transitRouteInfo?.estimatedDistanceKm || props.transitRouteInfo?.distanceKm || (props.formDuLieu?.daODiemDen ? 15 : getEstimatedDistance(orig, dest))
   if (dist < 200) return false // Chặng ngắn < 200km không có chuyến bay thương mại!
   if (orig) {
     const hasOrigAirport = Boolean(PROVINCE_AIRPORT_MAP[orig]) || ['Hà Nội', 'TP. Hồ Chí Minh', 'Đà Nẵng', 'Hải Phòng', 'Cần Thơ'].includes(orig)
@@ -3196,7 +3254,7 @@ watch([
 const flightOperators = computed(() => {
   const orig = props.formDuLieu?.diemKhoiHanh || 'Hà Nội'
   const dest = props.formDuLieu?.diemDen || 'Đà Nẵng'
-  const dist = props.transitRouteInfo?.estimatedDistanceKm || props.transitRouteInfo?.distanceKm || 650
+  const dist = props.transitRouteInfo?.estimatedDistanceKm || props.transitRouteInfo?.distanceKm || (props.formDuLieu?.daODiemDen ? 15 : getEstimatedDistance(orig, dest))
   const numPeople = props.formDuLieu?.soNguoi || 1
 
   const departAirport = PROVINCE_AIRPORT_MAP[orig] || `Sân bay khu vực ${orig}`
@@ -4319,7 +4377,7 @@ button.step-indicator.clickable:hover {
   position: relative;
   animation: slide-in 0.6s ease-out;
   width: 100%;
-  max-width: 520px;
+  max-width: 680px;
   height: 44px;
   box-sizing: border-box;
 }
@@ -4475,17 +4533,23 @@ button.step-indicator.clickable:hover {
   opacity: 1;
 }
 
-/* Ajuste automático del slider cho 2 options */
+/* Ajuste automático del slider cho 3 options */
 .origin-mode-group:has(#origin-opt-manual:checked) .slider,
 .origin-mode-group.is-manual .slider {
   left: 4px;
-  width: calc(50% - 4px);
+  width: calc(33.333% - 4px);
 }
 
 .origin-mode-group:has(#origin-opt-gps:checked) .slider,
 .origin-mode-group.is-gps .slider {
-  left: calc(50%);
-  width: calc(50% - 4px);
+  left: calc(33.333% + 2px);
+  width: calc(33.333% - 4px);
+}
+
+.origin-mode-group:has(#origin-opt-at-destination:checked) .slider,
+.origin-mode-group.is-at-destination .slider {
+  left: calc(66.666%);
+  width: calc(33.333% - 4px);
 }
 
 /* Efecto de pulso en el slider */
