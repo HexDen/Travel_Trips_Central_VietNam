@@ -1,115 +1,125 @@
 <template>
-  <div v-if="isOpen" class="ticket-modal-overlay" @click.self="$emit('close')">
-    <div class="ticket-modal-wrapper">
-      <!-- Nút đóng nhanh -->
-      <button type="button" class="ticket-close-btn" @click="$emit('close')" title="Đóng">
-        ✕
-      </button>
+  <Teleport to="body">
+    <div v-if="isOpen" class="ticket-modal-overlay" @click.self="$emit('close')">
+      <div class="ticket-modal-wrapper">
+        <!-- Nút đóng nhanh độc lập phía trên máy in -->
+        <button
+          type="button"
+          class="ticket-close-btn"
+          @click="$emit('close')"
+          title="Đóng (Esc)"
+          aria-label="Đóng cửa sổ máy in vé"
+        >
+          ✕
+        </button>
 
-      <!-- KHE MÁY IN VÉ (PRINTER OUTPUT SLOT) -->
-      <div class="output">
-        <div class="wrap-colors-1"><div class="bg-colors"></div></div>
-        <div class="wrap-colors-2"><div class="bg-colors"></div></div>
-        <div class="cover"></div>
-      </div>
+        <!-- KHE MÁY IN VÉ (PRINTER OUTPUT SLOT CÓ LED NEON) -->
+        <div class="output">
+          <div class="wrap-colors-1"><div class="bg-colors"></div></div>
+          <div class="wrap-colors-2"><div class="bg-colors"></div></div>
+          <div class="cover"></div>
+          <!-- Vệt bóng tối từ khe in hắt xuống tờ vé như hình 2 -->
+          <div class="slot-shadow"></div>
+        </div>
 
-      <!-- KHU VỰC VÉ IN VÀ HIỆU ỨNG 3D FLIP -->
-      <div class="area">
-        <div class="area-wrapper">
-          <div class="ticket-mask">
-            <div class="ticket">
-              <div
-                class="ticket-flip-container"
-                :class="{ 'is-flipped': isFlipped }"
-                @click="isFlipped = !isFlipped"
-                title="Nhấp hoặc rê chuột để lật mặt vé"
-              >
-                <div class="float">
-                  <!-- MẶT TRƯỚC: LỊCH TRÌNH ĐÃ ĐƯỢC LƯU -->
-                  <div class="front">
-                    <div class="ticket-body">
-                      <div class="reflex"></div>
+        <!-- KHU VỰC VÉ IN VÀ HIỆU ỨNG 3D FLIP -->
+        <div class="area">
+          <div class="area-wrapper">
+            <div class="ticket-mask" :class="{ 'is-printed': isPrinted }">
+              <div class="ticket" :key="animationKey">
+                <div
+                  class="ticket-flip-container"
+                  :class="{ 'is-flipped': isFlipped }"
+                  @click="isFlipped = !isFlipped"
+                  title="Nhấp hoặc rê chuột để lật mặt vé"
+                >
+                  <div class="float" :class="{ 'can-float': isPrinted }">
+                    <!-- MẶT TRƯỚC: LỊCH TRÌNH ĐÃ ĐƯỢC LƯU -->
+                    <div class="front">
+                      <div class="ticket-body">
+                        <div class="reflex"></div>
 
-                      <header>
-                        <div class="ticket-name">
-                          <span class="bold">DIGITAL</span>
-                          <span>PASS</span>
-                        </div>
-                        <div class="ticket-brand">TRAVEL MIỀN TRUNG</div>
-                        <div class="barcode"></div>
-                      </header>
-
-                      <div class="contents">
-                        <div class="event">
-                          <div class="event-badge">✨ THÔNG BÁO XÁC NHẬN</div>
-                          <div class="event-title">LỊCH TRÌNH CỦA BẠN</div>
-                          <div class="event-subtitle">ĐÃ ĐƯỢC LƯU THÀNH CÔNG!</div>
-                          <p class="event-desc">
-                            Chuyến đi <b>{{ destination || 'Miền Trung' }}</b> đã được lưu vào hệ thống.
-                          </p>
-                        </div>
-
-                        <div class="ticket-bottom-bar">
-                          <div class="number">#TRIP-2026</div>
-                          <div class="flip-hint-tag">
-                            <span>Lật mặt sau ↻</span>
+                        <header>
+                          <div class="ticket-name">
+                            <span class="bold">DIGITAL</span>
+                            <span>PASS</span>
                           </div>
-                        </div>
+                          <div class="ticket-brand">TRAVEL MIỀN TRUNG</div>
+                          <div class="barcode"></div>
+                        </header>
 
-                        <div class="qrcode">
-                          <svg viewBox="0 0 100 100" width="64" height="64" fill="#1e293b">
-                            <path d="M10,10 h30 v30 h-30 z M15,15 v20 h20 v-20 z M20,20 h10 v10 h-10 z" />
-                            <path d="M60,10 h30 v30 h-30 z M65,15 v20 h20 v-20 z M70,20 h10 v10 h-10 z" />
-                            <path d="M10,60 h30 v30 h-30 z M15,65 v20 h20 v-20 z M20,70 h10 v10 h-10 z" />
-                            <rect x="50" y="50" width="8" height="8" />
-                            <rect x="62" y="50" width="8" height="8" />
-                            <rect x="74" y="50" width="8" height="8" />
-                            <rect x="86" y="50" width="8" height="8" />
-                            <rect x="50" y="62" width="8" height="8" />
-                            <rect x="74" y="62" width="8" height="8" />
-                            <rect x="50" y="74" width="8" height="8" />
-                            <rect x="62" y="74" width="8" height="8" />
-                            <rect x="86" y="74" width="8" height="8" />
-                            <rect x="50" y="86" width="8" height="8" />
-                            <rect x="74" y="86" width="8" height="8" />
-                            <rect x="86" y="86" width="8" height="8" />
-                          </svg>
+                        <div class="contents">
+                          <div class="event">
+                            <div class="event-badge">✨ THÔNG BÁO XÁC NHẬN</div>
+                            <div class="event-title">LỊCH TRÌNH CỦA BẠN</div>
+                            <div class="event-subtitle">ĐÃ ĐƯỢC LƯU THÀNH CÔNG!</div>
+                            <p class="event-desc">
+                              Chuyến đi <b>{{ destination || 'Miền Trung' }}</b> đã được lưu vào hệ thống.
+                            </p>
+                          </div>
+
+                          <div class="ticket-bottom-bar">
+                            <div class="number">#TRIP-2026</div>
+                            <div class="flip-hint-tag">
+                              <span>Lật mặt sau ↻</span>
+                            </div>
+                          </div>
+
+                          <div class="qrcode">
+                            <svg viewBox="0 0 100 100" width="60" height="60" fill="#0f766e">
+                              <path d="M10,10 h30 v30 h-30 z M15,15 v20 h20 v-20 z M20,20 h10 v10 h-10 z" />
+                              <path d="M60,10 h30 v30 h-30 z M65,15 v20 h20 v-20 z M70,20 h10 v10 h-10 z" />
+                              <path d="M10,60 h30 v30 h-30 z M15,65 v20 h20 v-20 z M20,70 h10 v10 h-10 z" />
+                              <rect x="50" y="50" width="8" height="8" />
+                              <rect x="62" y="50" width="8" height="8" />
+                              <rect x="74" y="50" width="8" height="8" />
+                              <rect x="86" y="50" width="8" height="8" />
+                              <rect x="50" y="62" width="8" height="8" />
+                              <rect x="74" y="62" width="8" height="8" />
+                              <rect x="50" y="74" width="8" height="8" />
+                              <rect x="62" y="74" width="8" height="8" />
+                              <rect x="86" y="74" width="8" height="8" />
+                              <rect x="50" y="86" width="8" height="8" />
+                              <rect x="74" y="86" width="8" height="8" />
+                              <rect x="86" y="86" width="8" height="8" />
+                            </svg>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  <!-- MẶT SAU: LỜI CẢM ƠN ĐÃ TIN TƯỞNG TRAVEL MIỀN TRUNG -->
-                  <div class="back">
-                    <div class="ticket-body">
-                      <div class="reflex"></div>
+                    <!-- MẶT SAU: LỜI CẢM ƠN ĐÃ TIN TƯỞNG TRAVEL MIỀN TRUNG -->
+                    <div class="back">
+                      <div class="ticket-body ticket-back">
+                        <div class="reflex"></div>
 
-                      <header>
-                        <div class="ticket-name">
-                          <span class="bold">THANK</span>
-                          <span>YOU</span>
-                        </div>
-                        <div class="ticket-brand">TRAVEL MIỀN TRUNG</div>
-                        <div class="ticket-time">{{ new Date().toLocaleDateString('vi-VN') }}</div>
-                      </header>
+                        <header>
+                          <div class="ticket-name">
+                            <span class="bold">THANK</span>
+                            <span>YOU</span>
+                          </div>
+                          <div class="ticket-brand">TRAVEL MIỀN TRUNG</div>
+                          <div class="ticket-time">{{ new Date().toLocaleDateString('vi-VN') }}</div>
+                        </header>
 
-                      <div class="contents contents-back">
-                        <div class="event-back">
-                          <div class="heart-icon">💖</div>
-                          <div class="thanks-title">CẢM ƠN BẠN ĐÃ TIN TƯỞNG</div>
-                          <div class="thanks-brand">TRAVEL MIỀN TRUNG!</div>
-                          <p class="thanks-msg">
-                            Chúc bạn và người thân có một hành trình khám phá Miền Trung ngập tràn niềm vui và những kỷ niệm khó quên.
-                          </p>
-                        </div>
+                        <div class="contents contents-back">
+                          <div class="event-back">
+                            <div class="heart-icon">💖</div>
+                            <div class="thanks-title">CẢM ƠN BẠN ĐÃ TIN TƯỞNG</div>
+                            <div class="thanks-brand">TRAVEL MIỀN TRUNG!</div>
+                            <p class="thanks-msg">
+                              Chúc bạn và người thân có một hành trình khám phá Miền Trung ngập tràn niềm vui và những kỷ niệm khó quên.
+                            </p>
+                          </div>
 
-                        <div class="ticket-back-actions" @click.stop>
-                          <button type="button" class="btn-view-trips" @click="$emit('goMyTrips')">
-                            Xem chuyến đi của tôi ↗
-                          </button>
-                          <button type="button" class="btn-close-ticket" @click="$emit('close')">
-                            Tiếp tục xem lịch trình
-                          </button>
+                          <div class="ticket-back-actions" @click.stop>
+                            <button type="button" class="btn-view-trips" @click="$emit('goMyTrips')">
+                              🎒 Xem Trong Chuyến Đi Đã Lưu
+                            </button>
+                            <button type="button" class="btn-close-ticket" @click="$emit('close')">
+                              Tiếp tục xem lịch trình
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -121,13 +131,13 @@
         </div>
       </div>
     </div>
-  </div>
+  </Teleport>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch, onUnmounted } from 'vue'
 
-defineProps({
+const props = defineProps({
   isOpen: {
     type: Boolean,
     default: false
@@ -141,6 +151,36 @@ defineProps({
 defineEmits(['close', 'goMyTrips'])
 
 const isFlipped = ref(false)
+const isPrinted = ref(false)
+const animationKey = ref(0)
+let printTimer = null
+
+watch(
+  () => props.isOpen,
+  (newVal) => {
+    if (newVal) {
+      animationKey.value++
+      isFlipped.value = false
+      isPrinted.value = false
+      document.body.classList.add('ticket-modal-open')
+
+      if (printTimer) clearTimeout(printTimer)
+      // Sau 2.6s mô-tơ máy in hoàn tất in vé, mở overflow để float & flip 3D mượt mà
+      printTimer = setTimeout(() => {
+        isPrinted.value = true
+      }, 2600)
+    } else {
+      document.body.classList.remove('ticket-modal-open')
+      if (printTimer) clearTimeout(printTimer)
+    }
+  },
+  { immediate: true }
+)
+
+onUnmounted(() => {
+  document.body.classList.remove('ticket-modal-open')
+  if (printTimer) clearTimeout(printTimer)
+})
 </script>
 
 <style scoped>
@@ -148,14 +188,14 @@ const isFlipped = ref(false)
 .ticket-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(3, 7, 18, 0.82);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  z-index: 99999;
+  background: rgba(3, 7, 18, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  z-index: 999999;
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: fadeInModal 0.3s ease;
+  animation: fadeInModal 0.25s ease;
 }
 
 @keyframes fadeInModal {
@@ -163,10 +203,14 @@ const isFlipped = ref(false)
   to { opacity: 1; }
 }
 
+:global(body.ticket-modal-open) {
+  overflow: hidden !important;
+}
+
 .ticket-modal-wrapper {
   position: relative;
   width: 100%;
-  max-width: 420px;
+  max-width: 440px;
   height: 520px;
   display: flex;
   flex-direction: column;
@@ -176,17 +220,18 @@ const isFlipped = ref(false)
   margin-top: 30px;
 }
 
+/* NÚT ĐÓNG X ĐỘC LẬP TRÊN NỀN TỐI (KHÔNG BỊ ĐÈ LÊN KHE IN) */
 .ticket-close-btn {
   position: absolute;
   top: -50px;
   right: 15px;
   z-index: 100;
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.28);
-  color: #fff;
+  color: #ffffff;
   font-size: 16px;
   display: flex;
   align-items: center;
@@ -199,12 +244,12 @@ const isFlipped = ref(false)
 }
 
 .ticket-close-btn:hover {
-  background: rgba(239, 68, 68, 0.85);
-  border-color: rgba(239, 68, 68, 0.9);
+  background: rgba(239, 68, 68, 0.88);
+  border-color: rgba(239, 68, 68, 0.95);
   transform: scale(1.1) rotate(90deg);
 }
 
-/* ==================== KHE MÁY IN VÉ (OUTPUT SLOT) ==================== */
+/* ==================== KHE MÁY IN VÉ (PRINTER OUTPUT SLOT) ==================== */
 .output {
   align-self: center;
   background: #101216;
@@ -253,11 +298,16 @@ const isFlipped = ref(false)
   bottom: 0;
   left: 0;
   pointer-events: none;
+  z-index: 1;
 }
 
 .output .wrap-colors-1 {
-  opacity: 0.35;
+  opacity: 0.45;
   filter: blur(3px);
+}
+
+.output .wrap-colors-2 {
+  opacity: 0.85;
 }
 
 .output .bg-colors {
@@ -288,9 +338,10 @@ const isFlipped = ref(false)
   left: 0;
   border-radius: inherit;
   position: absolute;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: #ffffff14;
-  opacity: 0.4;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.08);
+  opacity: 0.5;
+  z-index: 3;
 }
 
 .output::after {
@@ -306,6 +357,19 @@ const isFlipped = ref(false)
   z-index: 5;
 }
 
+/* Vệt bóng tối từ khe in hắt xuống giấy (đặc trưng như hình 2) */
+.output .slot-shadow {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  bottom: -18px;
+  height: 20px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.3) 60%, transparent 100%);
+  z-index: 35;
+  pointer-events: none;
+  border-radius: 0 0 10px 10px;
+}
+
 @keyframes cycle-rotate {
   from { transform: translateX(-50%) rotate(0deg); }
   to { transform: translateX(-50%) rotate(360deg); }
@@ -318,30 +382,92 @@ const isFlipped = ref(false)
   justify-content: center;
   position: relative;
   width: 100%;
-  height: 440px;
   top: -18px;
+  z-index: 20;
+}
+
+.area-wrapper {
+  position: relative;
+  display: flex;
+  justify-content: center;
 }
 
 .ticket-mask {
   position: relative;
-  overflow: visible;
+  overflow: hidden;
   display: flex;
   justify-content: center;
   perspective: 1200px;
+  width: 380px;
+  padding-top: 2px;
+  padding-bottom: 24px;
+  mask-image: linear-gradient(rgba(0, 0, 0, 0.1) 0%, white 14px);
+  -webkit-mask-image: linear-gradient(rgba(0, 0, 0, 0.1) 0%, white 14px);
+}
+
+.ticket-mask.is-printed {
+  overflow: visible;
+  mask-image: none;
+  -webkit-mask-image: none;
 }
 
 .ticket {
-  animation: ticket-print-feed 2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: ticket-print-feed 2.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   perspective: 2500px;
 }
 
+/* HIỆU ỨNG MÔ TƠ BƯỚC IN VÉ THEO TỪNG NHỊP (CHUI TỪ KHE RA NHƯ HÌNH 2) */
 @keyframes ticket-print-feed {
-  0% { transform: translateY(-240px); opacity: 0; }
-  15% { transform: translateY(-190px); opacity: 1; }
-  35% { transform: translateY(-130px); }
-  55% { transform: translateY(-70px); }
-  75% { transform: translateY(-15px); }
-  100% { transform: translateY(10px); opacity: 1; }
+  /* 0%: Giấu hoàn toàn bên trong khe máy in */
+  0% {
+    transform: translateY(-370px);
+  }
+
+  /* Nhịp in 1: Nhô đáy vé răng cưa + QR ra khỏi khe (y hệt hình 2) */
+  9% {
+    transform: translateY(-295px);
+  }
+  15% {
+    transform: translateY(-295px);
+  }
+
+  /* Nhịp in 2: Đẩy tiếp mã #TRIP-2026 và tag gợi ý lật mặt sau */
+  23% {
+    transform: translateY(-220px);
+  }
+  29% {
+    transform: translateY(-220px);
+  }
+
+  /* Nhịp in 3: Đẩy tiếp phần chi tiết chuyến đi */
+  40% {
+    transform: translateY(-140px);
+  }
+  46% {
+    transform: translateY(-140px);
+  }
+
+  /* Nhịp in 4: Đẩy tiếp tiêu đề "LỊCH TRÌNH CỦA BẠN ĐÃ ĐƯỢC LƯU" */
+  58% {
+    transform: translateY(-55px);
+  }
+  64% {
+    transform: translateY(-55px);
+  }
+
+  /* Nhịp in 5: Toàn bộ đầu vé thoát khỏi khe máy in */
+  78% {
+    transform: translateY(18px);
+  }
+  86% {
+    transform: translateY(12px); /* Nhún nẩy cơ học nhẹ của giấy khi ra khỏi lô cuốn */
+  }
+  94% {
+    transform: translateY(16px);
+  }
+  100% {
+    transform: translateY(16px);
+  }
 }
 
 .ticket:hover .ticket-flip-container,
@@ -350,7 +476,7 @@ const isFlipped = ref(false)
 }
 
 .ticket-flip-container {
-  transition: transform 0.7s cubic-bezier(0.19, 1, 0.22, 1);
+  transition: transform 0.75s cubic-bezier(0.19, 1, 0.22, 1);
   transform-style: preserve-3d;
   position: relative;
   cursor: pointer;
@@ -358,12 +484,15 @@ const isFlipped = ref(false)
 
 .float {
   transform-style: preserve-3d;
+}
+
+.float.can-float {
   animation: floatTicket 3.5s ease-in-out infinite;
 }
 
 @keyframes floatTicket {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+  50% { transform: translateY(-8px); }
 }
 
 .front,
@@ -396,20 +525,30 @@ const isFlipped = ref(false)
   background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 60%, #ccfbf1 100%);
   color: #0f172a;
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.65), 0 0 1px rgba(0, 0, 0, 0.15);
-  overflow: hidden;
+  overflow: visible;
 }
 
+/* ĐÁY VÉ CẮT RĂNG CƯA TAM GIÁC SẮC NÉT (NHƯ HÌNH 2) */
 .ticket-body::after {
   content: "";
   display: block;
   position: absolute;
-  bottom: -16px;
+  bottom: -14px;
   left: 0;
   background:
-    radial-gradient(circle at 8px 0, transparent 8px, #ccfbf1 8.5px);
-  background-size: 16px 16px;
-  height: 16px;
+    -webkit-linear-gradient(-135deg, #ccfbf1 50%, transparent 50%) 0 50%,
+    -webkit-linear-gradient(-45deg, #ccfbf1 50%, transparent 50%) 0 50%,
+    transparent;
+  background:
+    linear-gradient(315deg, #ccfbf1 50%, transparent 50%) 0 50%,
+    linear-gradient(45deg, #ccfbf1 50%, transparent 50%) 0 50%,
+    transparent;
+  background-repeat: repeat-x;
+  background-size: 14px 14px;
+  height: 14px;
   width: 100%;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.12));
 }
 
 .ticket-body header {
@@ -421,19 +560,21 @@ const isFlipped = ref(false)
   border-bottom: 1.5px dashed rgba(15, 23, 42, 0.2);
   height: 52px;
   position: relative;
-  background: rgba(255, 255, 255, 0.7);
+  text-align: left;
 }
 
-.ticket-body header::before,
-.ticket-body header::after {
+/* Hai lỗ khuyết tròn hai bên mép vé */
+.ticket-body header::after,
+.ticket-body header::before {
   content: "";
-  position: absolute;
+  display: block;
   width: 14px;
   height: 14px;
-  background: #101216;
+  background-color: #0a0f1d;
+  position: absolute;
   border-radius: 50%;
+  z-index: 12;
   bottom: -7px;
-  z-index: 10;
 }
 .ticket-body header::before { left: -7px; }
 .ticket-body header::after { right: -7px; }
@@ -476,30 +617,41 @@ const isFlipped = ref(false)
     transparent 2px 4px,
     #0f172a 4px 5px,
     transparent 5px 8px,
-    #0f172a 8px 11px
+    #0f172a 8px 11px,
+    transparent 11px 13px,
+    #0f172a 13px 16px,
+    transparent 16px 17px,
+    #0f172a 17px 20px
   );
 }
 
-/* NỘI DUNG VÉ MẶT TRƯỚC */
 .contents {
-  padding: 18px 18px 26px;
   display: flex;
   flex-direction: column;
-  position: relative;
+  padding: 16px 18px 20px;
   min-height: 290px;
+  position: relative;
+}
+
+.event {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  margin-top: 4px;
 }
 
 .event-badge {
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 800;
-  color: #059669;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
+  color: #0d9488;
   text-transform: uppercase;
   margin-bottom: 6px;
 }
 
 .event-title {
-  font-size: 1.18rem;
+  font-size: 1.35rem;
   font-weight: 900;
   color: #0f172a;
   letter-spacing: -0.5px;
@@ -507,18 +659,19 @@ const isFlipped = ref(false)
 }
 
 .event-subtitle {
-  font-size: 1.15rem;
+  font-size: 1.35rem;
   font-weight: 900;
   color: #0d9488;
   letter-spacing: -0.5px;
-  margin-bottom: 8px;
+  line-height: 1.2;
+  margin-bottom: 12px;
 }
 
 .event-desc {
-  font-size: 0.85rem;
+  font-size: 0.88rem;
   color: #475569;
-  line-height: 1.45;
-  margin: 0 0 16px 0;
+  line-height: 1.5;
+  margin: 0;
 }
 
 .ticket-bottom-bar {
