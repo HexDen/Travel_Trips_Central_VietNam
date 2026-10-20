@@ -77,75 +77,13 @@
             </svg>
           </div>
         </div>
-
-        <!-- TIÊU ĐỀ ANIMATION TỪ MẪU -->
-        <div id="title">
-          <span>AI TRAVEL ASSISTANT</span>
-        </div>
-
-        <!-- ĐIỂM ĐẾN ĐANG LẬP KẾ HOẠCH -->
-        <h2 class="starry-subheading">
-          Đang kiến tạo hành trình {{ destination || 'Miền Trung' }}
-        </h2>
-
-        <!-- THẺ TÓM TẮT THÔNG SỐ HÀNH TRÌNH -->
-        <div class="starry-trip-badge">
-          <span class="badge-item">
-            <AppIcon name="MapPin" :size="14" color="#fb7185" />
-            {{ origin || 'Điểm xuất phát' }} ➔ {{ destination || 'Miền Trung' }}
-          </span>
-          <span class="badge-separator">•</span>
-          <span class="badge-item">
-            <AppIcon name="Calendar" :size="14" color="#38bdf8" />
-            {{ days || 3 }} Ngày {{ nights || 2 }} Đêm
-          </span>
-        </div>
-
-        <!-- THÔNG ĐIỆP ĐỘNG LUÂN PHIÊN KHI TẠO -->
-        <div class="starry-message-box">
-          <transition name="msg-slide" mode="out-in">
-            <p :key="messageIndex" class="starry-message-text">
-              {{ currentMessage }}
-            </p>
-          </transition>
-        </div>
-
-        <!-- THANH TIẾN TRÌNH NEON SCANNING -->
-        <div class="starry-progress-wrapper">
-          <div class="starry-progress-bar"></div>
-        </div>
-
-        <!-- CÁC CHỈ BÁO THỰC THI (CHECKPOINTS) -->
-        <div class="starry-checkpoints">
-          <div class="checkpoint-tag">
-            <span class="cp-pulse"></span>
-            <span>Rà soát 5.800+ điểm đến</span>
-          </div>
-          <div class="checkpoint-tag">
-            <span class="cp-pulse"></span>
-            <span>Tối ưu cung đường Google Maps</span>
-          </div>
-          <div class="checkpoint-tag">
-            <span class="cp-pulse"></span>
-            <span>Khớp ngân sách du lịch</span>
-          </div>
-        </div>
-
-        <!-- MẸO DU LỊCH NGẪU NHIÊN -->
-        <div class="starry-tip-box">
-          <span class="tip-icon">💡</span>
-          <span class="tip-text">{{ currentTip }}</span>
-        </div>
       </div>
     </div>
   </transition>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import AppIcon from './AppIcon.vue'
-
-const props = defineProps({
+defineProps({
   destination: {
     type: String,
     default: 'Miền Trung'
@@ -164,39 +102,12 @@ const props = defineProps({
   },
   loadingMessage: {
     type: String,
-    default: 'Đang khởi tạo lịch trình tối ưu...'
+    default: ''
   },
   messageIndex: {
     type: Number,
     default: 0
   }
-})
-
-const currentMessage = computed(() => {
-  return props.loadingMessage || 'AI Travel đang phân tích điểm đến và tối ưu tuyến đường...'
-})
-
-// Danh sách mẹo du lịch luân phiên
-const TRAVEL_TIPS = [
-  'Hội An lung linh nhất từ 17h30 khi các dãy đèn lồng ven sông Hoài bắt đầu thắp sáng.',
-  'Cầu Rồng Đà Nẵng phun lửa và nước vào đúng 21h00 thứ Bảy và Chủ Nhật hàng tuần.',
-  'Bún bò Huế buổi sáng tại các gánh hàng rong ven sông Hương mang trọn hương vị nguyên bản.',
-  'Bà Nà Hills thường có sương mây vào sớm mai, bạn nên chuẩn bị một chiếc áo khoác nhẹ.',
-  'Ghềnh Đá Đĩa (Phú Yên) tuyệt đẹp khi đón những tia nắng bình minh đầu tiên của ngày mới.'
-]
-
-const tipIndex = ref(0)
-const currentTip = computed(() => TRAVEL_TIPS[tipIndex.value])
-let tipTimer = null
-
-onMounted(() => {
-  tipTimer = setInterval(() => {
-    tipIndex.value = (tipIndex.value + 1) % TRAVEL_TIPS.length
-  }, 3500)
-})
-
-onUnmounted(() => {
-  if (tipTimer) clearInterval(tipTimer)
 })
 </script>
 
@@ -394,17 +305,17 @@ onUnmounted(() => {
   }
 }
 
-/* THẺ NỘI DUNG TRUNG TÂM (GLASSMORPHISM CAO CẤP) */
+/* THẺ NỘI DUNG TRUNG TÂM (GLASSMORPHISM THU GỌN CHỈ HIỂN THỊ XE CHẠY) */
 .starry-content-card {
   position: relative;
   z-index: 10;
-  max-width: 620px;
-  width: 100%;
-  padding: 40px 32px;
+  max-width: 220px;
+  width: auto;
+  padding: 24px 28px;
   background: rgba(18, 16, 38, 0.75);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border-radius: 28px;
+  border-radius: 24px;
   border: 1px solid rgba(255, 255, 255, 0.16);
   box-shadow:
     0 24px 60px rgba(0, 0, 0, 0.6),
@@ -412,9 +323,9 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  text-align: center;
+  justify-content: center;
   color: #fff;
-  animation: introFadeUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: introFadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* CAR LOADER ANIMATION (UIVERSE CAR ON ROAD) */
@@ -423,7 +334,7 @@ onUnmounted(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 0;
 }
 
 .car-glow-backdrop {
@@ -563,163 +474,6 @@ onUnmounted(() => {
   }
 }
 
-/* TIÊU ĐỀ TITLE TỪ MẪU GỐC */
-#title {
-  color: #fff;
-  text-align: center;
-  font-family: 'Outfit', 'Inter', -apple-system, sans-serif;
-  font-weight: 800;
-  font-size: 26px;
-  letter-spacing: 6px;
-  margin-bottom: 8px;
-  opacity: 0;
-  transform: translateY(20px);
-  animation: introFadeUp 1.2s ease-out forwards;
-}
-
-#title span {
-  background: -webkit-linear-gradient(white, #93c5fd);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  display: inline-block;
-  text-shadow: 0 0 20px rgba(147, 197, 253, 0.35);
-}
-
-.starry-subheading {
-  font-size: 16px;
-  font-weight: 500;
-  color: #c7d2fe;
-  margin-bottom: 16px;
-  letter-spacing: 0.5px;
-}
-
-/* BADGE HÀNH TRÌNH */
-.starry-trip-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 16px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 30px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #e2e8f0;
-  margin-bottom: 22px;
-}
-
-.badge-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.badge-separator {
-  color: rgba(255, 255, 255, 0.3);
-}
-
-/* KHỐI THÔNG ĐIỆP ĐỘNG */
-.starry-message-box {
-  min-height: 52px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 18px;
-  width: 100%;
-}
-
-.starry-message-text {
-  font-size: 17px;
-  font-weight: 600;
-  color: #ffffff;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-  line-height: 1.45;
-  margin: 0;
-}
-
-/* THANH TIẾN TRÌNH NEON */
-.starry-progress-wrapper {
-  width: 100%;
-  height: 6px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  overflow: hidden;
-  position: relative;
-  margin-bottom: 24px;
-}
-
-.starry-progress-bar {
-  height: 100%;
-  width: 45%;
-  background: linear-gradient(90deg, #38bdf8, #818cf8, #f43f5e);
-  border-radius: 12px;
-  box-shadow: 0 0 14px rgba(56, 189, 248, 0.8);
-  animation: progressScan 2s ease-in-out infinite alternate;
-}
-
-@keyframes progressScan {
-  0% { transform: translateX(-40%); width: 25%; }
-  100% { transform: translateX(260%); width: 55%; }
-}
-
-/* CHECKPOINT STATUS */
-.starry-checkpoints {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 24px;
-}
-
-.checkpoint-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 12px;
-  background: rgba(129, 140, 248, 0.12);
-  border: 1px solid rgba(129, 140, 248, 0.25);
-  border-radius: 16px;
-  font-size: 11px;
-  font-weight: 600;
-  color: #a5b4fc;
-}
-
-.cp-pulse {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #34d399;
-  box-shadow: 0 0 8px #34d399;
-  animation: blinkFast 1.2s infinite;
-}
-
-@keyframes blinkFast {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.3; transform: scale(1.3); }
-}
-
-/* MẸO DU LỊCH */
-.starry-tip-box {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 18px;
-  background: rgba(251, 191, 36, 0.08);
-  border: 1px dashed rgba(251, 191, 36, 0.3);
-  border-radius: 12px;
-  font-size: 12px;
-  color: #fef08a;
-  text-align: left;
-  line-height: 1.4;
-  max-width: 520px;
-}
-
-.tip-icon {
-  font-size: 16px;
-  flex-shrink: 0;
-}
-
 /* TRANSITIONS */
 .starry-fade-enter-active,
 .starry-fade-leave-active {
@@ -731,25 +485,10 @@ onUnmounted(() => {
   opacity: 0;
 }
 
-.msg-slide-enter-active,
-.msg-slide-leave-active {
-  transition: all 0.35s ease;
-}
-
-.msg-slide-enter-from {
-  opacity: 0;
-  transform: translateY(12px);
-}
-
-.msg-slide-leave-to {
-  opacity: 0;
-  transform: translateY(-12px);
-}
-
 @keyframes introFadeUp {
   0% {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(20px);
   }
   100% {
     opacity: 1;
@@ -760,25 +499,7 @@ onUnmounted(() => {
 /* RESPONSIVE */
 @media (max-width: 640px) {
   .starry-content-card {
-    padding: 30px 18px;
-  }
-  #title {
-    font-size: 20px;
-    letter-spacing: 3px;
-  }
-  .starry-subheading {
-    font-size: 14px;
-  }
-  .starry-trip-badge {
-    font-size: 11px;
-    flex-direction: column;
-    gap: 4px;
-  }
-  .badge-separator {
-    display: none;
-  }
-  .starry-message-text {
-    font-size: 15px;
+    padding: 18px 22px;
   }
 }
 </style>

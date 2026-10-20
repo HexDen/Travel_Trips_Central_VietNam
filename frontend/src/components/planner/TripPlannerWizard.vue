@@ -44,8 +44,6 @@
                 @click="goToStep(1)"
                 title="Quay lại Bước 1: Điểm đến & Thời gian"
               >
-                <span class="step-status-tag" v-if="currentPlannerStep > 1">[Đã xong]</span>
-                <span class="step-status-tag" v-else-if="currentPlannerStep === 1">[Đang điền]</span>
                 1. Điểm đến &amp; Thời gian
               </button>
               <div class="step-divider" :class="{ completed: currentPlannerStep > 1 }"></div>
@@ -63,9 +61,6 @@
                 @click="currentPlannerStep > 2 ? goToStep(2) : null"
                 title="Bước 2: Ngân sách &amp; Sở thích"
               >
-                <span class="step-status-tag" v-if="currentPlannerStep > 2">[Đã xong]</span>
-                <span class="step-status-tag" v-else-if="currentPlannerStep === 2">[Đang điền]</span>
-                <span class="step-status-tag" v-else>[Chưa tới]</span>
                 2. Ngân sách &amp; Sở thích
               </button>
               <div class="step-divider" :class="{ completed: currentPlannerStep > 2 }"></div>
@@ -78,8 +73,6 @@
                   }
                 ]"
               >
-                <span class="step-status-tag" v-if="currentPlannerStep === 3">[Đang điền]</span>
-                <span class="step-status-tag" v-else>[Chưa tới]</span>
                 3. Di chuyển &amp; Lưu trú
               </div>
             </div>
@@ -308,9 +301,6 @@
                         @click="handleSelectCity(c.name)"
                       >
                         <span class="city-name-text">{{ c.name }}</span>
-                        <span class="city-km-pill">
-                          <span class="city-km-dot"></span>{{ getCityDistanceKm(c.name) }} km
-                        </span>
                       </label>
                     </div>
                   </div>
@@ -393,28 +383,13 @@
                   </div>
                 </div>
 
-                <!-- TÙY CHỌN ĐÊM TRÊN PHƯƠNG TIỆN (XỬ LÝ RIÊNG ĐÊM TRÊN XE/TÀU) -->
-                <div class="overnight-transit-field">
-                  <label class="overnight-transit-label">
-                    <input
-                      type="checkbox"
-                      v-model="formDuLieu.demTrenXe"
-                      class="overnight-transit-checkbox"
-                    />
-                    <span class="otl-text">Có đêm di chuyển trên xe khách hoặc tàu hỏa (chuyến đêm liên tỉnh)</span>
-                  </label>
-                  <div v-if="formDuLieu.demTrenXe" class="overnight-transit-note">
-                    Đã tính 1 đêm di chuyển trên phương tiện. Số đêm khách sạn cần đặt điều chỉnh thành <strong>{{ computedHotelNights }} đêm</strong> (Nhận phòng: {{ hotelCheckInDisplay }} - Trả phòng: {{ hotelCheckOutDisplay }}).
-                  </div>
-                </div>
-
                 <!-- Tóm tắt lịch trình chi tiết -->
                 <div class="trip-date-summary-banner" v-if="formDuLieu.ngayBatDau && formDuLieu.soNgay > 0">
                   <span class="tdsb-icon"><AppIcon name="sparkles" :size="16" /></span>
                   <div class="tdsb-text">
                     Lịch trình: <b>{{ dinhDangNgayTuan(formDuLieu.ngayBatDau) }}</b>
                     ➔ <b>{{ dinhDangNgayTuan(formDuLieu.ngayKetThuc || ngayKetThucDisplay) }}</b>
-                    <span>({{ formDuLieu.soNgay }} ngày {{ formDuLieu.soDem }} đêm • {{ formDuLieu.soNguoi }} khách tại {{ formDuLieu.diemDen }}<template v-if="formDuLieu.demTrenXe"> • {{ computedHotelNights }} đêm khách sạn</template>)</span>
+                    <span>({{ formDuLieu.soNgay }} ngày {{ formDuLieu.soDem }} đêm • {{ formDuLieu.soNguoi }} khách tại {{ formDuLieu.diemDen }})</span>
                   </div>
                 </div>
               </div>
@@ -2996,36 +2971,6 @@ const dateValidationError = computed(() => {
   return ''
 })
 
-const computedHotelNights = computed(() => {
-  const totalNights = Number(props.formDuLieu?.soDem) || 0
-  if (totalNights <= 0) return 0
-  if (props.formDuLieu?.demTrenXe) {
-    return Math.max(0, totalNights - 1)
-  }
-  return totalNights
-})
-
-const hotelCheckInDisplay = computed(() => {
-  if (!props.formDuLieu?.ngayBatDau) return ''
-  if (props.formDuLieu?.demTrenXe) {
-    try {
-      const parts = props.formDuLieu.ngayBatDau.split('-')
-      const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10))
-      d.setDate(d.getDate() + 1)
-      const yyyy = d.getFullYear()
-      const mm = String(d.getMonth() + 1).padStart(2, '0')
-      const dd = String(d.getDate()).padStart(2, '0')
-      return `${dd}/${mm}/${yyyy}`
-    } catch (e) {
-      return props.formDuLieu.ngayBatDau
-    }
-  }
-  return props.formDuLieu.ngayBatDau
-})
-
-const hotelCheckOutDisplay = computed(() => {
-  return props.formDuLieu?.ngayKetThuc || props.ngayKetThucDisplay || ''
-})
 
 // ==================== STEP 2: MANUAL BUDGET & SCOPE LOGIC ====================
 const formattedBudgetDisplay = computed(() => {
@@ -3706,50 +3651,6 @@ onUnmounted(() => {
   font-weight: 600;
 }
 
-.overnight-transit-field {
-  margin-top: 14px;
-  padding: 12px 16px;
-  background: rgba(2, 132, 199, 0.05);
-  border: 1px dashed rgba(2, 132, 199, 0.25);
-  border-radius: 10px;
-}
-
-:root[data-theme="dark"] .overnight-transit-field {
-  background: rgba(56, 189, 248, 0.06);
-  border-color: rgba(56, 189, 248, 0.2);
-}
-
-.overnight-transit-label {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--text-color, #1e293b);
-  cursor: pointer;
-}
-
-:root[data-theme="dark"] .overnight-transit-label {
-  color: #f1f5f9;
-}
-
-.overnight-transit-checkbox {
-  width: 17px;
-  height: 17px;
-  accent-color: var(--primary, #0284c7);
-  cursor: pointer;
-}
-
-.overnight-transit-note {
-  margin-top: 8px;
-  font-size: 12.5px;
-  color: #0369a1;
-  line-height: 1.5;
-}
-
-:root[data-theme="dark"] .overnight-transit-note {
-  color: #38bdf8;
-}
 
 /* ==================== MANUAL BUDGET INPUT & ENHANCED SCOPE ==================== */
 .manual-budget-card {

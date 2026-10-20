@@ -1,22 +1,19 @@
 <template>
   <section class="tab-pane">
     <!-- Banner Hero App -->
-    <div class="app-hero-card">
-      <div class="hero-content">
-        <span class="hero-badge">AI TRAVEL ASSISTANT</span>
-        <h2>Lên lịch đi chơi, đừng lên lịch cãi nhau.</h2>
-        <p>AI sắp xếp lịch trình, bạn chỉ cần quyết định... ai trả tiền.</p>
-        <button class="hero-cta-btn" @click="$emit('startPlanner')">
-          <span>Lên lịch trình ngay</span>
-          <strong>→</strong>
-        </button>
-      </div>
-    </div>
+    <div class="app-hero-card"></div>
 
-    <!-- Thanh chọn nhanh Tỉnh/Thành phố dạng Thẻ Ảnh -->
-    <div class="explore-section" v-reveal>
-      <div class="section-title-row">
-        <h3>Điểm đến nổi tiếng</h3>
+    <!-- Thanh chọn nhanh Tỉnh/Thành phố dạng Thẻ Ảnh (CINEMATIC SHOWCASE & AMBIENT GLOW MOCKUP REPLICA) -->
+    <div class="explore-section spotlight-master-section" v-reveal>
+      <div class="section-title-row spotlight-title-row">
+        <div class="spotlight-header-headline">
+          <div class="spotlight-hero-kicker">
+            <span class="kicker-glow-dot"></span>
+            <span>TÂM ĐIỂM TRẢI NGHIỆM MIỀN TRUNG</span>
+          </div>
+          <h3 class="spotlight-main-heading">Điểm đến nổi tiếng</h3>
+          <p class="spotlight-main-subheading">Chọn tỉnh thành để khám phá tâm điểm du lịch & gợi ý lịch trình độc quyền</p>
+        </div>
 
         <div class="city-music-toolbar">
           <VolumeSlider
@@ -29,120 +26,199 @@
         </div>
       </div>
 
-      <div class="cities-carousel">
-        <div
-          v-for="city in visibleDestinationCards"
-          :key="city.name"
-          :class="['city-card-btn', { active: currentDestination === city.name }]"
-          @click="$emit('selectCity', city.name)"
-          @keydown.enter="$emit('selectCity', city.name)"
-          @keydown.space.prevent="$emit('selectCity', city.name)"
-          role="button"
-          tabindex="0"
-          :style="city.name === allDestinationsConst ? {
-            background: 'linear-gradient(135deg, #0f766e 0%, #06b6d4 100%)'
-          } : {
-            backgroundImage: `url(${city.image})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center'
-          }"
+      <!-- Carousel bọc ngoài với nút cuộn trái / phải như Mockup -->
+      <div class="carousel-outer-shell">
+        <button
+          type="button"
+          class="carousel-nav-btn prev"
+          @click="scrollCarousel('left')"
+          title="Xem trước"
+          aria-label="Cuộn trái"
         >
-          <span class="city-pin-icon">
-            <AppIcon name="pin" :size="16" />
-          </span>
-          <span class="city-name">{{ city.displayName || city.name }}</span>
-          <small class="city-tag">{{ city.tag }}</small>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+
+        <div class="cities-carousel" ref="carouselRef">
+          <div
+            v-for="city in visibleDestinationCards"
+            :key="city.name"
+            :class="['city-card-btn', { active: currentDestination === city.name }]"
+            @click="$emit('selectCity', city.name)"
+            @keydown.enter="$emit('selectCity', city.name)"
+            @keydown.space.prevent="$emit('selectCity', city.name)"
+            role="button"
+            tabindex="0"
+            :style="city.name === allDestinationsConst ? {
+              background: 'linear-gradient(135deg, #0f766e 0%, #06b6d4 100%)'
+            } : {
+              backgroundImage: `url(${city.image})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center'
+            }"
+          >
+            <div class="city-card-vignette"></div>
+            <span class="city-ratio-tag">16:9</span>
+            <span class="city-active-pill" v-if="currentDestination === city.name">
+              <span class="active-dot"></span> ACTIVE
+            </span>
+            <span class="city-name-uppercase">{{ (city.displayName || city.name).toUpperCase() }}</span>
+          </div>
         </div>
+
+        <button
+          type="button"
+          class="carousel-nav-btn next"
+          @click="scrollCarousel('right')"
+          title="Xem tiếp"
+          aria-label="Cuộn phải"
+        >
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
       </div>
 
-      <!-- HERO SHOWCASE & THUMBNAILS GALLERY TỈNH THÀNH -->
+      <!-- HERO SHOWCASE SPOTLIGHT CARD (CHUẨN 100% THEO MOCKUP PHƯƠNG ÁN 1) -->
       <div class="province-spotlight-card" v-if="currentSpotlight" v-reveal>
-        <div class="spotlight-visual-column">
-          <!-- Ảnh lớn hero -->
-          <div class="spotlight-hero-wrap">
-            <img
-              :src="activeHeroImage"
-              :alt="currentSpotlight.title"
-              class="spotlight-hero-img"
-              loading="lazy"
-            />
-            <div class="spotlight-overlay"></div>
-            
-            <div class="spotlight-badge-esg">
-              <span class="esg-icon"><AppIcon name="leaf" :size="16" /></span>
-              <strong>{{ currentSpotlight.esgText }}</strong>
+        <!-- Vầng hào quang Ambient Glow phát sáng nền -->
+        <div class="spotlight-ambient-glow" aria-hidden="true"></div>
+
+        <!-- CỘT TRÁI: HERO STAGE ĐIỆN ẢNH VỚI CHỮ VÀ HUY HIỆU ĐÈ LÊN ẢNH -->
+        <div class="spotlight-cinematic-stage">
+          <img
+            :src="activeHeroImage"
+            :alt="currentSpotlight.title"
+            class="stage-hero-img"
+            loading="lazy"
+          />
+          <div class="stage-gradient-vignette"></div>
+
+          <!-- Nút phóng to fullscreen ở góc trên -->
+          <button
+            type="button"
+            class="stage-fullscreen-btn"
+            @click="isSpotlightModalOpen = true"
+            title="Phóng to ảnh toàn màn hình"
+          >
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2">
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <polyline points="9 21 3 21 3 15"></polyline>
+              <line x1="21" y1="3" x2="14" y2="10"></line>
+              <line x1="3" y1="21" x2="10" y2="14"></line>
+            </svg>
+          </button>
+
+          <!-- KHỐI CHỮ & HUY HIỆU VÀNG HOÀNG GIA ĐÈ LÊN ĐÁY ẢNH HERO -->
+          <div class="stage-bottom-overlay">
+            <div class="stage-title-wrap">
+              <h2 class="stage-gold-title">{{ formatSpotlightTitle(currentSpotlight.title).mainName }}</h2>
+              <span class="stage-title-sep" v-if="formatSpotlightTitle(currentSpotlight.title).subName">-</span>
+              <span class="stage-sub-title" v-if="formatSpotlightTitle(currentSpotlight.title).subName">
+                {{ formatSpotlightTitle(currentSpotlight.title).subName }}
+              </span>
             </div>
 
-            <div class="spotlight-badge-cert" v-if="currentSpotlight.badge">
-              <span><AppIcon name="award" :size="16" /> {{ currentSpotlight.badge }}</span>
+            <p class="stage-desc-text">{{ currentSpotlight.description }}</p>
+
+            <div class="stage-footer-row">
+              <!-- Huy hiệu UNESCO / Di sản vàng sang trọng -->
+              <div class="stage-unesco-pill">
+                <span class="unesco-gold-emblem">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+                  </svg>
+                </span>
+                <span class="unesco-text">{{ currentSpotlight.badge || 'UNESCO Heritage Site | 1993' }}</span>
+              </div>
+
+              <!-- Dãy thumbnail danh lam thu nhỏ nổi trên ảnh để bấm chuyển mượt mà -->
+              <div class="stage-mini-thumbs" v-if="currentSpotlight.gallery && currentSpotlight.gallery.length">
+                <button
+                  v-for="(thumb, idx) in currentSpotlight.gallery"
+                  :key="idx"
+                  type="button"
+                  :class="['mini-thumb-dot', { active: activeHeroImage === thumb.image }]"
+                  @click="$emit('selectHeroImage', thumb.image)"
+                  :title="thumb.name"
+                >
+                  <img :src="thumb.image" :alt="thumb.name" loading="lazy" />
+                </button>
+              </div>
             </div>
-
-            <button
-              type="button"
-              class="spotlight-fullscreen-btn"
-              @click="isSpotlightModalOpen = true"
-              title="Phóng to ảnh toàn màn hình"
-            >
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2">
-                <polyline points="15 3 21 3 21 9"></polyline>
-                <polyline points="9 21 3 21 3 15"></polyline>
-                <line x1="21" y1="3" x2="14" y2="10"></line>
-                <line x1="3" y1="21" x2="10" y2="14"></line>
-              </svg>
-            </button>
-          </div>
-
-          <!-- Dãy hình ảnh miêu tả bên dưới để bấm chuyển ảnh -->
-          <div class="spotlight-thumbnails-row">
-            <button
-              v-for="(thumb, idx) in currentSpotlight.gallery"
-              :key="idx"
-              type="button"
-              :class="['spotlight-thumb-btn', { active: activeHeroImage === thumb.image }]"
-              @click="$emit('selectHeroImage', thumb.image)"
-              :title="thumb.name"
-            >
-              <img :src="thumb.image" :alt="thumb.name" loading="lazy" />
-              <span class="thumb-caption">{{ thumb.name }}</span>
-            </button>
           </div>
         </div>
 
-        <!-- Cột thông tin chi tiết về Tỉnh / Thành phố -->
-        <div class="spotlight-info-column">
-          <div class="spotlight-header-meta">
-            <span class="spotlight-tag-kicker"><AppIcon name="sparkles" :size="14" /> ĐIỂM ĐẾN NỔI BẬT MIỀN TRUNG</span>
-            <span class="spotlight-cert-sub">{{ currentSpotlight.certText }}</span>
-          </div>
-          <h3 class="spotlight-title">{{ currentSpotlight.title }}</h3>
-          <p class="spotlight-subtitle">{{ currentSpotlight.subtitle }}</p>
-          <p class="spotlight-description">{{ currentSpotlight.description }}</p>
-
-          <!-- Đặc sản nổi tiếng -->
-          <div class="spotlight-highlight-box">
-            <div class="shb-label"><AppIcon name="utensils" :size="16" /> <b>Đặc sản trứ danh:</b></div>
-            <div class="shb-chips">
-              <span v-for="spec in currentSpotlight.specialties" :key="spec" class="spotlight-spec-chip">
-                {{ spec }}
+        <!-- CỘT PHẢI: 3 KHỐI BENTO INTERACTIVE CHUẨN MOCKUP -->
+        <div class="spotlight-bento-column">
+          <!-- BENTO 1: TOP 3 ĐẶC SẢN DẠNG CARD CÓ HÌNH ẢNH MÓN ĂN -->
+          <div class="bento-specialties-block">
+            <div class="bento-block-header">
+              <span class="bento-header-label">
+                <AppIcon name="utensils" :size="15" /> ĐẶC SẢN TRỨ DANH
               </span>
+              <span class="bento-header-sub">Món ngon bản địa</span>
+            </div>
+
+            <div class="bento-dishes-grid">
+              <div
+                v-for="(dish, dIdx) in getTopDishes(currentDestination, currentSpotlight.specialties)"
+                :key="dIdx"
+                class="bento-dish-card"
+                :title="dish.name"
+              >
+                <div class="dish-photo-wrap">
+                  <img :src="dish.image" :alt="dish.name" loading="lazy" />
+                </div>
+                <h4 class="dish-title">{{ dish.name }}</h4>
+                <div class="dish-price-row">
+                  <span class="dish-tag">{{ dish.tag || 'Món ngon' }}</span>
+                  <span class="dish-info-icon">ℹ</span>
+                </div>
+              </div>
             </div>
           </div>
 
-          <!-- Mùa du lịch lý tưởng -->
-          <div class="spotlight-highlight-box">
-            <div class="shb-label"><AppIcon name="sun" :size="16" /> <b>Thời điểm lý tưởng:</b></div>
-            <p class="shb-text">{{ currentSpotlight.bestSeason }}</p>
+          <!-- BENTO 2: BEST TIME TO VISIT DẠNG CAPSULE KÍNH MỜ CÓ ICON VÀNG & SPARKLINE -->
+          <div class="bento-season-card">
+            <div class="season-gold-icon">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="3" ry="3"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+            </div>
+
+            <div class="season-content">
+              <div class="season-kicker">BEST TIME TO VISIT</div>
+              <div class="season-big-text">{{ extractSeasonMonths(currentSpotlight.bestSeason) }}</div>
+              <div class="season-desc">{{ extractSeasonDesc(currentSpotlight.bestSeason) }}</div>
+            </div>
+
+            <!-- Đường biểu đồ sóng khí hậu Sparkline vàng sang trọng -->
+            <div class="season-sparkline" aria-hidden="true">
+              <svg width="68" height="34" viewBox="0 0 68 34" fill="none">
+                <path d="M2 28 C 16 28, 22 8, 38 16 C 50 22, 56 6, 64 8" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"/>
+                <circle cx="64" cy="8" r="3.5" fill="#f59e0b" />
+              </svg>
+            </div>
           </div>
 
-          <!-- Nút CTA chuyển sang lên lịch trình ngay -->
-          <div class="spotlight-actions" v-if="currentDestination !== allDestinationsConst">
+          <!-- BENTO 3: NÚT CTA XANH CYAN PHÁT SÁNG NEON DẠNG VIÊN THUỐC PILL -->
+          <div class="bento-cta-wrap" v-if="currentDestination !== allDestinationsConst">
             <button
               type="button"
-              class="spotlight-cta-btn"
+              class="bento-flagship-cta"
               @click="$emit('planToCity', currentDestination)"
             >
-              <span><AppIcon name="sparkles" :size="16" /> Lên lịch trình đến {{ currentDestination }} ngay</span>
-              <strong>→</strong>
+              <span class="bento-cta-text">LÊN LỊCH TRÌNH ĐẾN {{ currentDestination.toUpperCase() }} NGAY</span>
+              <span class="bento-cta-arrow">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </span>
             </button>
           </div>
         </div>
@@ -184,14 +260,8 @@
     <!-- Widget Thời tiết thời gian thực 3D Glassmorphic Capsule -->
     <WeatherGlassCard3D v-if="weather" :weather="weather" />
 
-    <!-- TỔNG QUAN BỀ DÀY LỊCH SỬ & DI SẢN MIỀN TRUNG KHI CHỌN "TẤT CẢ" -->
-    <CentralHeritageOverview
-      v-if="currentDestination === allDestinationsConst"
-      @select-destination="(c) => $emit('selectCity', c)"
-    />
-
-    <!-- Danh sách địa điểm đặc sắc theo thành phố CÓ HÌNH ẢNH SỐNG ĐỘNG (KHI CHỌN TỈNH THÀNH CỤ THỂ) -->
-    <div v-else class="explore-section" v-reveal>
+    <!-- Danh sách địa điểm đặc sắc theo thành phố CÓ HÌNH ẢNH SỐNG ĐỘNG -->
+    <div class="explore-section" v-reveal>
       <div class="section-title-row">
         <div>
           <h3>Địa điểm & Đặc sản tại {{ currentDestination === allDestinationsConst ? 'Miền Trung' : currentDestination }}</h3>
@@ -357,7 +427,6 @@ import AppIcon from '../common/AppIcon.vue'
 import VolumeSlider from '../common/VolumeSlider.vue'
 import SkeletonCard from '../SkeletonCard.vue'
 import MapComponent from '../MapComponent.vue'
-import CentralHeritageOverview from './CentralHeritageOverview.vue'
 import WeatherGlassCard3D from './WeatherGlassCard3D.vue'
 
 const props = defineProps({
@@ -476,6 +545,107 @@ defineEmits([
 ])
 
 const isSpotlightModalOpen = ref(false)
+
+
+const carouselRef = ref(null)
+
+function scrollCarousel(direction) {
+  if (!carouselRef.value) return
+  const amount = direction === 'left' ? -280 : 280
+  carouselRef.value.scrollBy({ left: amount, behavior: 'smooth' })
+}
+
+function formatSpotlightTitle(title) {
+  if (!title) return { mainName: 'ĐIỂM ĐẾN', subName: '' }
+  const parts = title.split(' - ')
+  if (parts.length > 1) {
+    return { mainName: parts[0].trim(), subName: parts.slice(1).join(' - ').trim() }
+  }
+  const colonParts = title.split(': ')
+  if (colonParts.length > 1) {
+    return { mainName: colonParts[0].trim(), subName: colonParts.slice(1).join(': ').trim() }
+  }
+  return { mainName: title, subName: '' }
+}
+
+function extractSeasonMonths(bestSeason) {
+  if (!bestSeason) return 'QUANH NĂM'
+  const match = bestSeason.match(/(Tháng\s*\d+\s*-\s*Tháng\s*\d+)/i)
+  if (match) return match[1].toUpperCase()
+  const parenIdx = bestSeason.indexOf('(')
+  if (parenIdx !== -1) {
+    return bestSeason.substring(0, parenIdx).trim().toUpperCase()
+  }
+  return bestSeason.length > 22 ? bestSeason.substring(0, 22).toUpperCase() : bestSeason.toUpperCase()
+}
+
+function extractSeasonDesc(bestSeason) {
+  if (!bestSeason) return 'Khí hậu khô ráo, nắng vàng chan hòa'
+  const match = bestSeason.match(/\((.*?)\)/)
+  if (match) {
+    let desc = match[1]
+    if (desc.length > 60) desc = desc.substring(0, 57) + '...'
+    return desc
+  }
+  return 'Thời tiết ôn hòa lý tưởng khám phá'
+}
+
+const PROVINCE_DISH_IMAGES = {
+  'Đà Nẵng': [
+    { name: 'Mì Quảng Ếch', tag: 'Món #1', image: 'https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?w=300&auto=format&fit=crop&q=80' },
+    { name: 'Bánh Tráng Thịt Heo', tag: 'Trứ danh', image: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=300&auto=format&fit=crop&q=80' },
+    { name: 'Bánh Xèo Nem Lụi', tag: 'Phố cổ', image: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=300&auto=format&fit=crop&q=80' }
+  ],
+  'Huế': [
+    { name: 'Bún Bò Huế', tag: 'Món #1', image: 'https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?w=300&auto=format&fit=crop&q=80' },
+    { name: 'Cơm Hến Sông Hương', tag: 'Cung đình', image: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=300&auto=format&fit=crop&q=80' },
+    { name: 'Bánh Khoái Cố Đô', tag: 'Đặc sản', image: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=300&auto=format&fit=crop&q=80' }
+  ],
+  'Quảng Nam': [
+    { name: 'Cao Lầu Hội An', tag: 'Món #1', image: 'https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?w=300&auto=format&fit=crop&q=80' },
+    { name: 'Cơm Gà Phố Hội', tag: 'Trứ danh', image: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=300&auto=format&fit=crop&q=80' },
+    { name: 'Bánh Mì Phượng', tag: 'Nổi tiếng', image: 'https://images.unsplash.com/photo-1509722747041-616f39b57569?w=300&auto=format&fit=crop&q=80' }
+  ],
+  'Quảng Bình': [
+    { name: 'Cháo Canh Cá Lóc', tag: 'Món #1', image: 'https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?w=300&auto=format&fit=crop&q=80' },
+    { name: 'Bánh Lọc Mệ Xuân', tag: 'Đặc sản', image: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=300&auto=format&fit=crop&q=80' },
+    { name: 'Đẻn Biển Quảng Bình', tag: 'Lạ vị', image: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=300&auto=format&fit=crop&q=80' }
+  ],
+  'Quảng Trị': [
+    { name: 'Thịt Trâu Lá Trơng', tag: 'Món #1', image: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=300&auto=format&fit=crop&q=80' },
+    { name: 'Bánh Khoái Chợ Sãi', tag: 'Dân dã', image: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=300&auto=format&fit=crop&q=80' },
+    { name: 'Cháo Bột Vịt', tag: 'Đậm đà', image: 'https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?w=300&auto=format&fit=crop&q=80' }
+  ],
+  'Khánh Hòa': [
+    { name: 'Bún Chả Cá', tag: 'Món #1', image: 'https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?w=300&auto=format&fit=crop&q=80' },
+    { name: 'Nem Nướng Ninh Hòa', tag: 'Trứ danh', image: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=300&auto=format&fit=crop&q=80' },
+    { name: 'Bánh Căn Mực', tag: 'Biển xanh', image: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=300&auto=format&fit=crop&q=80' }
+  ]
+}
+
+const DEFAULT_FOOD_PHOTOS = [
+  'https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?w=300&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=300&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1544025162-d76694265947?w=300&auto=format&fit=crop&q=80'
+]
+
+function getTopDishes(city, specialties) {
+  if (city && PROVINCE_DISH_IMAGES[city]) {
+    return PROVINCE_DISH_IMAGES[city]
+  }
+  if (specialties && specialties.length) {
+    return specialties.slice(0, 3).map((spec, i) => ({
+      name: spec,
+      tag: i === 0 ? 'Món #1' : (i === 1 ? 'Đặc sản' : 'Phải thử'),
+      image: DEFAULT_FOOD_PHOTOS[i % DEFAULT_FOOD_PHOTOS.length]
+    }))
+  }
+  return [
+    { name: 'Đặc sản bản địa', tag: 'Món #1', image: DEFAULT_FOOD_PHOTOS[0] },
+    { name: 'Ẩm thực truyền thống', tag: 'Trứ danh', image: DEFAULT_FOOD_PHOTOS[1] },
+    { name: 'Món ngon nổi tiếng', tag: 'Phải thử', image: DEFAULT_FOOD_PHOTOS[2] }
+  ]
+}
 
 function isFavorite(placeId) {
   if (!placeId || !props.favoritesList) return false

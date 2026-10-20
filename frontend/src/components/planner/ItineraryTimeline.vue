@@ -118,9 +118,10 @@
 
                     <div class="swipe-handle">
                       <div class="icon-container">
-                        <svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke-width="2">
-                          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        <svg class="lock-icon save-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                          <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                          <polyline points="7 3 7 8 15 8"></polyline>
                         </svg>
                         <svg
                           class="checkmark-icon"
@@ -1394,21 +1395,10 @@ const onSwipeSaveChange = (e) => {
 
 .lock-icon {
   stroke: #8a9baf;
-}
-
-.lock-icon path,
-.lock-icon rect {
-  transition: stroke-dashoffset 0.4s cubic-bezier(0.5, 0, 0.9, 0.5);
-}
-
-.lock-icon path {
-  stroke-dasharray: 35;
-  stroke-dashoffset: 0;
-}
-
-.lock-icon rect {
-  stroke-dasharray: 58;
-  stroke-dashoffset: 0;
+  transition:
+    opacity 0.3s ease,
+    transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform: scale(1);
 }
 
 .checkmark-icon {
@@ -1592,11 +1582,9 @@ const onSwipeSaveChange = (e) => {
   animation: shine-animation 1s cubic-bezier(0.23, 1, 0.32, 1) 0.3s;
 }
 
-#swipe-toggle:checked + .swipe-container .lock-icon path {
-  stroke-dashoffset: 35;
-}
-#swipe-toggle:checked + .swipe-container .lock-icon rect {
-  stroke-dashoffset: 58;
+#swipe-toggle:checked + .swipe-container .lock-icon {
+  opacity: 0;
+  transform: scale(0.4) rotate(20deg);
 }
 
 #swipe-toggle:checked + .swipe-container .checkmark-icon {

@@ -563,7 +563,6 @@ import api from './services/api'
 import AppHeader from './components/layout/AppHeader.vue'
 import SkeletonCard from './components/SkeletonCard.vue'
 import MapComponent from './components/MapComponent.vue'
-import CentralHeritageOverview from './components/home/CentralHeritageOverview.vue'
 import AdminDashboard from './components/admin/AdminDashboard.vue'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
@@ -5797,409 +5796,682 @@ button { cursor: pointer; }
   accent-color: var(--primary);
   cursor: pointer;
 }
-.cities-carousel {
+/* ========================================================
+   PHƯƠNG ÁN 1: CINEMATIC SHOWCASE & AMBIENT GLOW (100% MOCKUP REPLICA)
+   TÂM ĐIỂM DU LỊCH & SPOTLIGHT TỈNH THÀNH (FLAGSHIP HERO)
+   ======================================================== */
+
+.spotlight-master-section {
+  position: relative;
+  margin-top: 10px;
+}
+.spotlight-title-row {
   display: flex;
-  gap: 12px;
-  overflow-x: auto;
-  padding: 10px 4px 14px 4px;
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: thin;
-  scrollbar-color: var(--primary) var(--primary-light);
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 16px;
 }
-.cities-carousel::-webkit-scrollbar {
-  height: 8px;
-}
-.cities-carousel::-webkit-scrollbar-track {
-  background: var(--primary-light);
-  border-radius: 999px;
-}
-.cities-carousel::-webkit-scrollbar-thumb {
-  background: var(--primary);
-  border-radius: 999px;
-}
-.cities-carousel::-webkit-scrollbar-thumb:hover {
-  background: var(--primary-dark, #0f766e);
-}
-.city-card-btn {
-  background-color: var(--card-bg);
-  background-size: cover;
-  background-position: center;
-  border: 2px solid transparent;
-  outline: none;
-  padding: 12px 10px;
-  border-radius: 18px;
+.spotlight-header-headline {
   display: flex;
   flex-direction: column;
+  gap: 4px;
+}
+.spotlight-hero-kicker {
+  display: inline-flex;
   align-items: center;
-  justify-content: flex-end;
-  min-width: 130px;
-  max-width: 150px;
-  height: 140px;
-  color: #ffffff;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: #0284c7;
+  background: linear-gradient(90deg, rgba(6, 182, 212, 0.12), rgba(2, 132, 199, 0.04));
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(6, 182, 212, 0.25);
+  width: fit-content;
+}
+:root[data-theme="dark"] .spotlight-hero-kicker {
+  color: #38bdf8;
+  background: linear-gradient(90deg, rgba(6, 182, 212, 0.2), rgba(2, 132, 199, 0.08));
+  border-color: rgba(56, 189, 248, 0.35);
+}
+.kicker-glow-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #06b6d4;
+  box-shadow: 0 0 8px #06b6d4;
+  animation: beaconPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+@keyframes beaconPulse {
+  0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.7); }
+  50% { opacity: 0.75; transform: scale(1.15); box-shadow: 0 0 0 6px rgba(6, 182, 212, 0); }
+}
+.spotlight-main-heading {
+  font-size: 22px;
+  font-weight: 850;
+  color: var(--text-color, #0f172a);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+:root[data-theme="dark"] .spotlight-main-heading {
+  color: #f8fafc;
+}
+.spotlight-main-subheading {
+  font-size: 13px;
+  color: var(--text-muted, #64748b);
+  margin: 0;
+}
+:root[data-theme="dark"] .spotlight-main-subheading {
+  color: #94a3b8;
+}
+
+/* CAROUSEL KHUNG NGOÀI CÓ 2 NÚT ĐIỀU HƯỚNG TRÁI / PHẢI */
+.carousel-outer-shell {
   position: relative;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+.carousel-nav-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 5;
+  flex-shrink: 0;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+.carousel-nav-btn:hover {
+  background: #0284c7;
+  border-color: #38bdf8;
+  color: #ffffff;
+  transform: scale(1.1);
+  box-shadow: 0 0 16px rgba(2, 132, 199, 0.6);
+}
+
+/* DÃY CAROUSEL THẺ TỈNH THÀNH (TỶ LỆ 16:9 CHUẨN MOCKUP) */
+.cities-carousel {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  padding: 8px 4px 14px 4px;
+  -ms-overflow-style: none;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(6, 182, 212, 0.4) transparent;
+  scroll-behavior: smooth;
+  flex: 1;
+}
+.cities-carousel::-webkit-scrollbar {
+  height: 5px;
+}
+.cities-carousel::-webkit-scrollbar-track {
+  background: transparent;
+}
+.cities-carousel::-webkit-scrollbar-thumb {
+  background: rgba(6, 182, 212, 0.4);
+  border-radius: 999px;
+}
+
+/* THẺ THÀNH PHỐ RỘNG 16:9 THEO MOCKUP */
+.city-card-btn {
+  position: relative;
+  width: 215px;
+  min-width: 215px;
+  height: 118px;
+  border-radius: 16px;
   overflow: hidden;
   cursor: pointer;
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  background-color: #0b1329;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 12px;
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
   flex-shrink: 0;
   -webkit-appearance: none;
   appearance: none;
 }
-.city-card-btn::before {
-  content: '';
+.city-card-vignette {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.45) 55%, rgba(0,0,0,0.05) 100%);
+  background: linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.3) 40%, rgba(10, 16, 29, 0.95) 100%);
   z-index: 1;
   border-radius: inherit;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.25s ease;
+}
+.city-ratio-tag {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: #94a3b8;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 2px 6px;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  z-index: 2;
 }
 .city-card-btn:hover {
-  transform: translateY(-8px) scale(1.03);
-  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.45), 0 0 20px rgba(14, 165, 233, 0.4);
-  border-color: rgba(14, 165, 233, 0.6);
+  transform: translateY(-5px) scale(1.02);
+  border-color: rgba(6, 182, 212, 0.6);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45), 0 0 20px rgba(6, 182, 212, 0.3);
 }
+.city-card-btn:hover .city-card-vignette {
+  background: linear-gradient(180deg, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.2) 35%, rgba(10, 16, 29, 0.98) 100%);
+}
+
+/* TRẠNG THÁI ACTIVE: VIỀN CYAN PHÁT SÁNG NEON & HUY HIỆU ● ACTIVE */
 .city-card-btn.active {
-  box-shadow: 0 0 0 3px #0ea5e9, 0 12px 28px rgba(14, 165, 233, 0.45);
-  border-color: #0ea5e9;
-  transform: translateY(-4px);
+  border: 2px solid #00f0ff !important;
+  box-shadow: 0 0 25px rgba(0, 240, 255, 0.55), inset 0 0 12px rgba(0, 240, 255, 0.22), 0 10px 25px rgba(0,0,0,0.5) !important;
+  transform: translateY(-4px) scale(1.02);
 }
-.city-card-btn.active::after {
-  content: '✓';
+.city-card-btn.active .city-ratio-tag {
+  display: none;
+}
+.city-active-pill {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  font-size: 13px;
-  font-weight: 800;
-  background: #10b981;
-  color: #fff;
-  width: 26px;
-  height: 26px;
+  top: 8px;
+  right: 8px;
+  background: rgba(11, 17, 32, 0.88);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1.5px solid #00f0ff;
+  color: #00f0ff;
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 1px;
+  padding: 3px 8px;
+  border-radius: 999px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 5px;
+  z-index: 2;
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.45);
+}
+.active-dot {
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  z-index: 2;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.35);
+  background: #00f0ff;
+  box-shadow: 0 0 8px #00f0ff;
+  animation: beaconPulse 1.8s infinite;
 }
-.city-icon, .city-name, .city-tag {
+.city-name-uppercase {
   position: relative;
   z-index: 2;
-}
-.city-pin-icon {
-  display: block;
-  margin-bottom: 6px;
-  opacity: 0.95;
-  filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5));
-  position: relative;
-  z-index: 2;
-}
-.city-name {
-  font-size: 14px;
-  font-weight: 800;
+  font-size: 14.5px;
+  font-weight: 850;
+  letter-spacing: 0.8px;
   color: #ffffff;
-  text-shadow: 0 2px 6px rgba(0,0,0,0.9);
-  line-height: 1.25;
-  margin-bottom: 4px;
-}
-.city-tag {
-  font-size: 10px;
-  color: rgba(255,255,255,0.92);
-  text-shadow: 0 1px 4px rgba(0,0,0,0.85);
-  font-weight: 500;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  line-height: 1.35;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.9);
+  text-transform: uppercase;
 }
 
 /* ========================================================
-   PROVINCE SPOTLIGHT SHOWCASE & THUMBNAILS GALLERY (YÊU CẦU 2)
+   MASTER CINEMATIC SHOWCASE CARD (100% THEO MOCKUP PHƯƠNG ÁN 1)
    ======================================================== */
 .province-spotlight-card {
+  position: relative;
+  isolation: isolate;
   display: grid;
-  grid-template-columns: 1.15fr 1fr;
+  grid-template-columns: 1.35fr 1fr;
   gap: 24px;
-  background: var(--card-bg, #ffffff);
-  border: 1px solid var(--border-color, #e2e8f0);
-  border-radius: 20px;
+  background: #0b1120;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
   padding: 22px;
-  margin-top: 18px;
-  margin-bottom: 24px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  margin-top: 14px;
+  margin-bottom: 28px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.65), 0 0 45px rgba(0, 240, 255, 0.08);
   transition: all 0.3s ease;
 }
-:root[data-theme="dark"] .province-spotlight-card {
-  background: #1e293b;
-  border-color: #334155;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+:root[data-theme="light"] .province-spotlight-card {
+  background: #0f172a; /* Keep dark cinematic stage even in light mode for luxury contrast */
+  border-color: rgba(56, 189, 248, 0.35);
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.25), 0 0 35px rgba(6, 182, 212, 0.15);
 }
-@media (max-width: 900px) {
+
+/* VẦNG HÀO QUANG AMBIENT GLOW */
+.spotlight-ambient-glow {
+  position: absolute;
+  inset: -15px;
+  background: radial-gradient(circle at 15% 25%, rgba(0, 240, 255, 0.25) 0%, transparent 45%),
+              radial-gradient(circle at 85% 75%, rgba(2, 132, 199, 0.2) 0%, transparent 50%),
+              radial-gradient(circle at 50% 90%, rgba(245, 158, 11, 0.12) 0%, transparent 45%);
+  filter: blur(40px);
+  border-radius: 36px;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.9;
+  animation: ambientAuraBreath 8s ease-in-out infinite alternate;
+}
+@keyframes ambientAuraBreath {
+  0% { transform: scale(0.98); opacity: 0.75; }
+  100% { transform: scale(1.02); opacity: 1; }
+}
+
+@media (max-width: 992px) {
   .province-spotlight-card {
     grid-template-columns: 1fr;
-    gap: 18px;
+    gap: 20px;
     padding: 16px;
   }
 }
-.spotlight-visual-column {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.spotlight-hero-wrap {
+
+/* CỘT TRÁI: HERO CINEMATIC STAGE */
+.spotlight-cinematic-stage {
   position: relative;
   width: 100%;
-  height: 240px;
-  border-radius: 16px;
+  height: 100%;
+  min-height: 470px;
+  border-radius: 18px;
   overflow: hidden;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
 }
 @media (max-width: 600px) {
-  .spotlight-hero-wrap {
-    height: 240px;
+  .spotlight-cinematic-stage {
+    min-height: 400px;
   }
 }
-.spotlight-hero-img {
+.stage-hero-img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.4s ease;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.spotlight-hero-wrap:hover .spotlight-hero-img {
-  transform: scale(1.02);
+.spotlight-cinematic-stage:hover .stage-hero-img {
+  transform: scale(1.03);
 }
-.spotlight-overlay {
+
+/* LỚP PHỦ VIGNETTE ĐIỆN ẢNH ĐẬM ĐÀ */
+.stage-gradient-vignette {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.05) 50%, rgba(0,0,0,0.3) 100%);
+  background: linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 30%, rgba(11, 17, 32, 0.65) 60%, rgba(11, 17, 32, 0.98) 100%);
   pointer-events: none;
 }
-.spotlight-badge-esg {
-  position: absolute;
-  bottom: 14px;
-  left: 14px;
-  background: rgba(236, 253, 245, 0.95);
-  backdrop-filter: blur(8px);
-  border: 1px solid #10b981;
-  color: #065f46;
-  font-size: 13px;
-  font-weight: 700;
-  padding: 6px 12px;
-  border-radius: 999px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-  z-index: 2;
-}
-.spotlight-badge-cert {
+
+/* NÚT PHÓNG TO GÓC TRÊN HERO */
+.stage-fullscreen-btn {
   position: absolute;
   top: 14px;
   right: 14px;
-  background: rgba(254, 243, 199, 0.95);
-  backdrop-filter: blur(8px);
-  border: 1px solid #f59e0b;
-  color: #92400e;
-  font-size: 12.5px;
-  font-weight: 700;
-  padding: 6px 12px;
-  border-radius: 999px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-  z-index: 2;
-}
-.spotlight-fullscreen-btn {
-  position: absolute;
-  bottom: 14px;
-  right: 14px;
-  width: 38px;
-  height: 38px;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  width: 36px;
+  height: 36px;
   border-radius: 10px;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #f8fafc;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #1e293b;
   cursor: pointer;
+  z-index: 3;
   transition: all 0.2s ease;
-  z-index: 2;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
-.spotlight-fullscreen-btn:hover {
-  background: #ffffff;
-  transform: scale(1.08);
-  color: #0284c7;
+.stage-fullscreen-btn:hover {
+  background: #0284c7;
+  border-color: #38bdf8;
+  color: #ffffff;
+  transform: scale(1.1);
+  box-shadow: 0 0 14px rgba(2, 132, 199, 0.6);
 }
 
-/* 5 Thumbnails Gallery dưới ảnh chính */
-.spotlight-thumbnails-row {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 8px;
-}
-.spotlight-thumb-btn {
+/* NỘI DUNG CHỮ ĐÈ LÊN ĐÁY ẢNH HERO (CHUẨN HOÀNG GIA NHƯ MOCKUP) */
+.stage-bottom-overlay {
   position: relative;
-  height: 54px;
-  border: 2px solid transparent;
-  border-radius: 10px;
+  z-index: 2;
+  padding: 24px 22px 18px 22px;
+}
+.stage-title-wrap {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.stage-gold-title {
+  font-family: 'Playfair Display', 'Cinzel', 'Merriweather', Georgia, serif;
+  font-size: 28px;
+  font-weight: 800;
+  color: #f5d77f;
+  margin: 0;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9);
+  line-height: 1.2;
+}
+.stage-title-sep {
+  color: #94a3b8;
+  font-size: 20px;
+  font-weight: 400;
+}
+.stage-sub-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+}
+.stage-desc-text {
+  font-size: 13px;
+  line-height: 1.55;
+  color: #cbd5e1;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+  margin: 0 0 16px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: 95%;
+}
+
+/* HÀNG FOOTER GỒM HUY HIỆU UNESCO VÀNG VÀ DÃY THUMBNAILS DANH LAM */
+.stage-footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.stage-unesco-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(245, 158, 11, 0.6);
+  color: #fef3c7;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: 0.3px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4), 0 0 14px rgba(245, 158, 11, 0.25);
+}
+.unesco-gold-emblem {
+  color: #fbbf24;
+  display: flex;
+  align-items: center;
+}
+
+/* DÃY THUMBNAILS DANH LAM THU NHỎ NỔI TRÊN HERO */
+.stage-mini-thumbs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.mini-thumb-dot {
+  width: 44px;
+  height: 32px;
+  border-radius: 8px;
   overflow: hidden;
   padding: 0;
   background: #000;
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
   cursor: pointer;
   transition: all 0.2s ease;
   outline: none;
 }
-.spotlight-thumb-btn img {
+.mini-thumb-dot img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease, opacity 0.2s ease;
-  opacity: 0.82;
+  opacity: 0.75;
 }
-.spotlight-thumb-btn:hover img {
-  opacity: 1;
-  transform: scale(1.05);
-}
-.spotlight-thumb-btn.active {
-  border-color: #0284c7;
-  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.3);
-}
-.spotlight-thumb-btn.active img {
+.mini-thumb-dot:hover img {
   opacity: 1;
 }
-.thumb-caption {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: rgba(0, 0, 0, 0.72);
-  color: #fff;
-  font-size: 9.5px;
-  font-weight: 600;
-  padding: 2px 4px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  text-align: center;
+.mini-thumb-dot.active {
+  border-color: #00f0ff;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.6);
+  transform: translateY(-2px);
+}
+.mini-thumb-dot.active img {
+  opacity: 1;
 }
 
-/* Cột thông tin chi tiết */
-.spotlight-info-column {
+/* ========================================================
+   CỘT PHẢI: 3 KHỐI BENTO INTERACTIVE (CHUẨN MOCKUP)
+   ======================================================== */
+.spotlight-bento-column {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  gap: 16px;
 }
-.spotlight-header-meta {
+
+/* BENTO 1: TOP 3 ĐẶC SẢN CÓ ẢNH MÓN ĂN */
+.bento-specialties-block {
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 14px 16px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.bento-block-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 6px;
+  margin-bottom: 12px;
 }
-.spotlight-tag-kicker {
-  font-size: 11.5px;
-  font-weight: 800;
-  letter-spacing: 0.8px;
-  color: #0284c7;
+.bento-header-label {
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 1px;
   text-transform: uppercase;
-}
-.spotlight-cert-sub {
-  font-size: 11.5px;
-  color: var(--text-muted, #64748b);
-  font-weight: 500;
-}
-.spotlight-title {
-  font-size: 18px;
-  font-weight: 800;
-  color: var(--text-color, #0f172a);
-  line-height: 1.3;
-  margin: 0 0 4px 0;
-}
-:root[data-theme="dark"] .spotlight-title {
-  color: #f8fafc;
-}
-.spotlight-subtitle {
-  font-size: 12.5px;
-  font-weight: 600;
-  color: #0ea5e9;
-  margin: 0 0 10px 0;
-  line-height: 1.4;
-}
-.spotlight-description {
-  font-size: 13.5px;
-  color: var(--text-muted, #475569);
-  line-height: 1.6;
-  margin: 0 0 14px 0;
-}
-:root[data-theme="dark"] .spotlight-description {
-  color: #cbd5e1;
-}
-.spotlight-highlight-box {
-  background: var(--bg-soft, #f8fafc);
-  border: 1px solid var(--border-color, #e2e8f0);
-  border-radius: 12px;
-  padding: 10px 14px;
-  margin-bottom: 10px;
-}
-:root[data-theme="dark"] .spotlight-highlight-box {
-  background: #0f172a;
-  border-color: #334155;
-}
-.shb-label {
-  font-size: 12.5px;
-  color: var(--text-color, #0f172a);
-  margin-bottom: 6px;
-}
-:root[data-theme="dark"] .shb-label {
-  color: #f8fafc;
-}
-.shb-chips {
+  color: #38bdf8;
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   gap: 6px;
 }
-.spotlight-spec-chip {
-  font-size: 12px;
-  font-weight: 600;
-  background: rgba(2, 132, 199, 0.1);
-  color: #0284c7;
-  padding: 3px 9px;
-  border-radius: 999px;
-  border: 1px solid rgba(2, 132, 199, 0.2);
+.bento-header-sub {
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 500;
 }
-.shb-text {
-  font-size: 12px;
-  color: #10b981;
-  font-weight: 600;
-  margin: 0;
+.bento-dishes-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
 }
-.spotlight-actions {
-  margin-top: 10px;
+.bento-dish-card {
+  background: rgba(11, 17, 32, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 10px 6px;
+  text-align: center;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
 }
-.spotlight-cta-btn {
+.bento-dish-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(0, 240, 255, 0.45);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4), 0 0 15px rgba(0, 240, 255, 0.2);
+}
+.dish-photo-wrap {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin: 0 auto 8px auto;
+  border: 2px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  background: #000;
+}
+.dish-photo-wrap img {
   width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s ease;
+}
+.bento-dish-card:hover .dish-photo-wrap img {
+  transform: scale(1.1);
+}
+.dish-title {
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 750;
+  margin: 0 0 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 2px;
+}
+.dish-price-row {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
-  color: #ffffff;
-  font-size: 14.5px;
-  font-weight: 700;
-  padding: 13px 20px;
-  border-radius: 12px;
-  border: none;
-  cursor: pointer;
-  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
-  transition: all 0.2s ease;
+  gap: 4px;
 }
-.spotlight-cta-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(2, 132, 199, 0.45);
+.dish-tag {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #fbbf24;
+}
+.dish-info-icon {
+  font-size: 10px;
+  color: #94a3b8;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* BENTO 2: BEST TIME TO VISIT CAPSULE CÓ ICON VÀNG & SPARKLINE */
+.bento-season-card {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: all 0.25s ease;
+}
+.bento-season-card:hover {
+  border-color: rgba(245, 158, 11, 0.4);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+.season-gold-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);
+  flex-shrink: 0;
+}
+.season-content {
+  flex: 1;
+}
+.season-kicker {
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 1.2px;
+  color: #f59e0b;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+.season-big-text {
+  font-size: 20px;
+  font-weight: 850;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+.season-desc {
+  font-size: 11.5px;
+  color: #94a3b8;
+  margin-top: 3px;
+  line-height: 1.35;
+}
+.season-sparkline {
+  flex-shrink: 0;
+  opacity: 0.9;
+}
+
+/* BENTO 3: NÚT CTA CYAN PHÁT SÁNG NEON DẠNG PILL (CHÍNH XÁC NHƯ MOCKUP) */
+.bento-cta-wrap {
+  margin-top: 4px;
+}
+.bento-flagship-cta {
+  width: 100%;
+  height: 52px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(90deg, #00d2ff 0%, #00f0ff 100%);
+  color: #032b43;
+  font-size: 14.5px;
+  font-weight: 900;
+  letter-spacing: 0.6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  cursor: pointer;
+  box-shadow: 0 0 35px rgba(0, 240, 255, 0.7), 0 8px 24px rgba(0, 240, 255, 0.45);
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  text-transform: uppercase;
+}
+.bento-flagship-cta:hover {
+  transform: translateY(-2px) scale(1.01);
+  background: linear-gradient(90deg, #38bdf8 0%, #22d3ee 100%);
+  box-shadow: 0 0 45px rgba(0, 240, 255, 0.85), 0 12px 28px rgba(0, 240, 255, 0.55);
+}
+.bento-flagship-cta:active {
+  transform: translateY(0) scale(0.99);
+}
+.bento-cta-text {
+  font-weight: 900;
+}
+.bento-cta-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.25s ease;
+}
+.bento-flagship-cta:hover .bento-cta-arrow {
+  transform: translateX(4px);
 }
 
 /* Spotlight Fullscreen Modal */
