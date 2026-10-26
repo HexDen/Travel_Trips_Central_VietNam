@@ -219,6 +219,94 @@
             </div>
           </div>
 
+          <!-- THANH TIỆN ÍCH HÀNH TRÌNH CHUYÊN SÂU (MOBILE ACTION BAR - ĐỒNG BỘ ĐẦY ĐỦ VỚI PC) -->
+          <div class="mobile-travel-toolkit">
+            <div class="m-toolkit-header">
+              <span class="m-toolkit-title">⚡ TIỆN ÍCH CHUYẾN ĐI</span>
+              <span class="m-toolkit-sub">Đồng bộ đầy đủ công cụ thông minh</span>
+            </div>
+            
+            <div class="m-toolkit-scroll-row">
+              <!-- 1. Tối ưu đường đi -->
+              <button
+                type="button"
+                class="m-toolkit-btn"
+                :class="{ 'is-active-success': toiUuSuccessToast }"
+                @click="toiUuCungDuongMobile"
+                title="Sắp xếp đường đi ngắn nhất"
+              >
+                <span class="m-tb-icon">⚡</span>
+                <span class="m-tb-label">Tối ưu đường</span>
+              </button>
+
+              <!-- 2. Đổi lịch tránh mưa -->
+              <button
+                type="button"
+                class="m-toolkit-btn"
+                @click="moModalTranhMuaMobile"
+                title="Đổi hoạt động trong nhà khi trời mưa"
+              >
+                <span class="m-tb-icon">🌧️</span>
+                <span class="m-tb-label">Tránh mưa</span>
+              </button>
+
+              <!-- 3. Đổi phương án / Replan -->
+              <button
+                type="button"
+                class="m-toolkit-btn"
+                @click="hienReplanModal = true"
+                title="Thay đổi lịch trình khác"
+              >
+                <span class="m-tb-icon">🔄</span>
+                <span class="m-tb-label">Đổi lịch</span>
+              </button>
+
+              <!-- 4. Chia tiền nhóm -->
+              <button
+                type="button"
+                class="m-toolkit-btn"
+                @click="hienBillSplitter = true"
+                title="Chia đều tiền chuyến đi cho nhóm"
+              >
+                <span class="m-tb-icon">👥</span>
+                <span class="m-tb-label">Chia tiền</span>
+              </button>
+
+              <!-- 5. Vé hành trình / Travel Pass -->
+              <button
+                type="button"
+                class="m-toolkit-btn"
+                @click="hienTravelPass = true"
+                title="Thẻ vé hành trình du lịch offline"
+              >
+                <span class="m-tb-icon">🎫</span>
+                <span class="m-tb-label">Thẻ vé</span>
+              </button>
+
+              <!-- 6. Xuất ảnh Infographic -->
+              <button
+                type="button"
+                class="m-toolkit-btn"
+                @click="hienInfographic = true"
+                title="Thẻ ảnh chia sẻ Zalo / Mạng xã hội"
+              >
+                <span class="m-tb-icon">📊</span>
+                <span class="m-tb-label">Infographic</span>
+              </button>
+
+              <!-- 7. Tải PDF -->
+              <button
+                type="button"
+                class="m-toolkit-btn"
+                @click="xuatPdfMobile"
+                title="Tải kế hoạch PDF về máy"
+              >
+                <span class="m-tb-icon">📄</span>
+                <span class="m-tb-label">Tải PDF</span>
+              </button>
+            </div>
+          </div>
+
           <!-- BÓC TÁCH CHI PHÍ THÔNG MINH (BUDGET BREAKDOWN - ĐỒNG BỘ 100% VỚI PC) -->
           <div v-if="generatedPlan.budget_breakdown" class="mobile-budget-breakdown-card">
             <div class="m-card-header-line">
@@ -439,7 +527,7 @@
                     </span>
                   </div>
 
-                  <!-- HÀNG NÚT HÀNH ĐỘNG: CHỈ ĐƯỜNG GOOGLE MAPS -->
+                  <!-- HÀNG NÚT HÀNH ĐỘNG: CHỈ ĐƯỜNG GOOGLE MAPS & ĐỔI ĐỊA ĐIỂM -->
                   <div class="m-act-action-row">
                     <a
                       :href="chiDuongUrl(act.place, act.address)"
@@ -448,8 +536,17 @@
                       class="btn-act-direction"
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
-                      Chỉ đường Google Maps ↗
+                      Chỉ đường
                     </a>
+
+                    <button
+                      type="button"
+                      class="btn-act-change"
+                      @click="moModalDoiDiaDiemMobile(currentActiveDayIndex, aIdx, act)"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                      Đổi điểm
+                    </button>
                   </div>
                 </div>
 
@@ -1219,6 +1316,14 @@
       </button>
     </nav>
 
+    <!-- FLOATING MOBILE TOAST NOTIFICATION -->
+    <transition name="m-toast-fade">
+      <div v-if="mobileToastMsg" class="mobile-floating-toast">
+        <span class="mft-icon">✨</span>
+        <span class="mft-text">{{ mobileToastMsg }}</span>
+      </div>
+    </transition>
+
     <!-- MODAL ĐỒNG HÀNH TRỰC TIẾP CHUYẾN ĐI (LIVE TRIP COMPANION MOBILE) -->
     <LiveTripCompanion
       :isOpen="showMobileLiveCompanion"
@@ -1227,6 +1332,63 @@
       @close="showMobileLiveCompanion = false"
       @finish="showMobileLiveCompanion = false"
     />
+
+    <!-- POPUP MODAL ĐỔI PHƯƠNG ÁN LỊCH TRÌNH (REPLAN) -->
+    <ReplanModal
+      :isOpen="hienReplanModal"
+      @close="hienReplanModal = false"
+      @edit-params="onReplanEditParams"
+      @ai-new-plan="onReplanAiNewPlan"
+      @change-province="onReplanChangeProvince"
+    />
+
+    <!-- POPUP MODAL CHIA TIỀN NHÓM (BILL SPLITTER) -->
+    <BillSplitterModal
+      :isOpen="hienBillSplitter"
+      :initialTotal="Number(generatedPlan?.total_budget) || 0"
+      :initialPeople="Number(generatedPlan?.people) || 1"
+      @close="hienBillSplitter = false"
+    />
+
+    <!-- POPUP MODAL THẺ VÉ HÀNH TRÌNH OFFLINE (TRAVEL PASS) -->
+    <TravelPassModal
+      :isOpen="hienTravelPass"
+      :itinerary="generatedPlan"
+      @close="hienTravelPass = false"
+      @export-pdf="xuatPdfMobile"
+    />
+
+    <!-- POPUP MODAL ĐỔI ĐỊA ĐIỂM THAY THẾ (CHANGE PLACE) -->
+    <ChangePlaceModal
+      :isOpen="hienChangePlaceModal"
+      :places="alternativePlaces"
+      @close="hienChangePlaceModal = false"
+      @select="chonDiaDiemMoiMobile"
+    />
+
+    <!-- POPUP MODAL ĐỔI LỊCH TRÁNH MƯA THÔNG MINH (RAIN RESCUE) -->
+    <RainModal
+      :isOpen="hienRainModal"
+      :destination="generatedPlan?.destination || 'Miền Trung'"
+      :oldPlaces="rainOldPlaces"
+      :newPlaces="rainNewPlaces"
+      :isLoading="isRainAdjusting"
+      @close="hienRainModal = false"
+      @confirm="xacNhanDoiLichTranhMuaMobile"
+    />
+
+    <!-- POPUP MODAL THẺ INFOGRAPHIC CHIA SẺ MẠNG XÃ HỘI -->
+    <InfographicModal
+      :isOpen="hienInfographic"
+      :itinerary="generatedPlan"
+      :defaultDestination="generatedPlan?.destination || 'Miền Trung'"
+      :defaultPeople="generatedPlan?.people || 1"
+      :departureCity="guidanceForm.origin || generatedPlan?.origin || 'Hà Nội'"
+      :googleMapsUrl="chiDuongUrl(generatedPlan?.destination || 'Miền Trung')"
+      :isCopied="daSaoChepInfographic"
+      @close="hienInfographic = false"
+      @copy-zalo="saoChepInfographicZalo"
+    />
   </div>
 </template>
 
@@ -1234,6 +1396,13 @@
 import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue'
 import api from '../../services/api'
 import LiveTripCompanion from '../planner/LiveTripCompanion.vue'
+import html2pdf from 'html2pdf.js'
+import BillSplitterModal from '../modals/BillSplitterModal.vue'
+import TravelPassModal from '../modals/TravelPassModal.vue'
+import RainModal from '../modals/RainModal.vue'
+import ReplanModal from '../modals/ReplanModal.vue'
+import InfographicModal from '../modals/InfographicModal.vue'
+import ChangePlaceModal from '../modals/ChangePlaceModal.vue'
 
 // ==================== LIVE TRIP COMPANION MOBILE STATE & ACTIONS ====================
 const showMobileLiveCompanion = ref(false)
@@ -2385,6 +2554,325 @@ function getWeatherDesc(code) {
   if (code <= 48) return 'Sương mù nhẹ'
   if (code <= 67) return 'Có mưa rào'
   return 'Thời tiết mát mẻ'
+}
+
+// ==================== THANH TIỆN ÍCH HÀNH TRÌNH MOBILE (ITEM 3) ====================
+// Toast Notification
+const mobileToastMsg = ref('')
+let mobileToastTimer = null
+function hienThongBaoToast(msg) {
+  mobileToastMsg.value = msg
+  if (mobileToastTimer) clearTimeout(mobileToastTimer)
+  mobileToastTimer = setTimeout(() => {
+    mobileToastMsg.value = ''
+  }, 3500)
+}
+
+// 1. Tối ưu đường đi
+const toiUuSuccessToast = ref(false)
+function toiUuCungDuongMobile() {
+  if (!generatedPlan.value) return
+  const days = generatedPlan.value.daysList || generatedPlan.value.days || []
+  const day = days[currentActiveDayIndex.value]
+  if (!day || !day.activities || day.activities.length <= 2) {
+    hienThongBaoToast('Ngày này chỉ có 1-2 điểm, lộ trình đã tối ưu sẵn!')
+    return
+  }
+
+  const acts = [...day.activities]
+  const optimized = [acts[0]]
+  const remaining = acts.slice(1)
+
+  while (remaining.length > 0) {
+    const current = optimized[optimized.length - 1]
+    let nearestIndex = 0
+    let minDistance = Infinity
+
+    for (let i = 0; i < remaining.length; i++) {
+      const next = remaining[i]
+      let dist = 1
+      if (current.latitude && current.longitude && next.latitude && next.longitude) {
+        dist = Math.hypot(
+          Number(next.latitude) - Number(current.latitude),
+          Number(next.longitude) - Number(current.longitude)
+        )
+      } else {
+        dist = Math.abs(i - 0.5)
+      }
+      if (dist < minDistance) {
+        minDistance = dist
+        nearestIndex = i
+      }
+    }
+    optimized.push(remaining.splice(nearestIndex, 1)[0])
+  }
+
+  const defaultTimes = ['07:30', '09:15', '11:45', '14:30', '17:00', '19:00', '21:00']
+  optimized.forEach((act, idx) => {
+    if (defaultTimes[idx]) act.time = defaultTimes[idx]
+  })
+
+  day.activities = optimized
+  dongBoChiPhiLichTrinh()
+  toiUuSuccessToast.value = true
+  hienThongBaoToast(`⚡ Đã tối ưu cung đường Ngày ${currentActiveDayIndex.value + 1} gần nhất!`)
+  setTimeout(() => { toiUuSuccessToast.value = false }, 3500)
+}
+
+// 2. Đổi lịch tránh mưa
+const hienRainModal = ref(false)
+const rainOldPlaces = ref([])
+const rainNewPlaces = ref([])
+const isRainAdjusting = ref(false)
+
+function moModalTranhMuaMobile() {
+  if (!generatedPlan.value) return
+  const days = generatedPlan.value.daysList || generatedPlan.value.days || []
+  const day = days[currentActiveDayIndex.value]
+  if (!day || !day.activities) return
+
+  rainOldPlaces.value = []
+  rainNewPlaces.value = []
+
+  const indoorOptions = [
+    { place: 'Bảo tàng Nghệ thuật & Di sản', activity: 'Khám phá văn hóa di sản và chụp ảnh không gian triển lãm nghệ thuật trong nhà', type: 'attraction' },
+    { place: 'Quán Cà Phê Trầm / Acoustic', activity: 'Thưởng thức cà phê đặc sản, ngắm mưa và lắng nghe giai điệu thư thái', type: 'cafe' },
+    { place: 'Chợ Đặc Sản Trong Nhà Mái Vòm', activity: 'Khám phá thiên đường ẩm thực dân dã có mái che, thưởng thức đặc sản địa phương', type: 'restaurant' }
+  ]
+
+  let changedCount = 0
+  day.activities.forEach((act, idx) => {
+    const isOutdoor = act.is_indoor === false || !act.is_indoor
+    if (isOutdoor && changedCount < 2) {
+      const indoor = indoorOptions[idx % indoorOptions.length]
+      rainOldPlaces.value.push(act.place || act.title)
+      rainNewPlaces.value.push(`${indoor.place} (${generatedPlan.value.destination || 'Miền Trung'})`)
+      changedCount++
+    }
+  })
+
+  if (rainOldPlaces.value.length === 0) {
+    rainOldPlaces.value.push('Điểm tham quan ngoài trời')
+    rainNewPlaces.value.push(`Bảo tàng Nghệ thuật (${generatedPlan.value.destination || 'Miền Trung'})`)
+  }
+
+  hienRainModal.value = true
+}
+
+function xacNhanDoiLichTranhMuaMobile() {
+  hienRainModal.value = false
+  const days = generatedPlan.value.daysList || generatedPlan.value.days || []
+  const day = days[currentActiveDayIndex.value]
+  if (!day || !day.activities) return
+
+  const indoorTemplates = [
+    { place: `Bảo tàng Văn hóa ${generatedPlan.value.destination || ''}`, desc: 'Không gian trong nhà mát mẻ, khám phá di sản nghệ thuật đặc sắc', type: 'attraction' },
+    { place: `Cà Phê Không Gian Xưa & Nhạc Trầm`, desc: 'Không gian ấm cúng thưởng thức đồ uống đặc sản ngắm mưa', type: 'cafe' }
+  ]
+
+  let replaced = 0
+  day.activities.forEach((act) => {
+    if (replaced < 2 && (act.is_indoor === false || !act.is_indoor)) {
+      const item = indoorTemplates[replaced % indoorTemplates.length]
+      act.place = item.place
+      act.activity = item.desc
+      act.is_indoor = true
+      replaced++
+    }
+  })
+
+  dongBoChiPhiLichTrinh()
+  hienThongBaoToast(`🌧️ Đã chuyển sang phương án tránh mưa cho Ngày ${currentActiveDayIndex.value + 1}!`)
+}
+
+// 3. Đổi phương án / Replan Modal
+const hienReplanModal = ref(false)
+
+function onReplanEditParams() {
+  hienReplanModal.value = false
+  showGuidanceModal.value = true
+}
+
+async function onReplanAiNewPlan() {
+  hienReplanModal.value = false
+  hienThongBaoToast('✨ AI đang làm mới phương án lịch trình...')
+  await handleGenerateFromForm()
+}
+
+function onReplanChangeProvince() {
+  hienReplanModal.value = false
+  generatedPlan.value = null
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+  hienThongBaoToast('🗺️ Hãy chọn hoặc nhập tỉnh thành bạn muốn khám phá!')
+}
+
+// 4. Chia tiền nhóm
+const hienBillSplitter = ref(false)
+
+// 5. Vé hành trình / Travel Pass
+const hienTravelPass = ref(false)
+
+// 6. Infographic Zalo
+const hienInfographic = ref(false)
+const daSaoChepInfographic = ref(false)
+
+function saoChepInfographicZalo() {
+  if (!generatedPlan.value) return
+  const days = generatedPlan.value.daysList || generatedPlan.value.days || []
+  let text = `🌟 KẾ HOẠCH DU LỊCH ${generatedPlan.value.destination?.toUpperCase()} 🌟\n`
+  text += `⏱️ Thời gian: ${days.length} Ngày ${Math.max(1, days.length - 1)} Đêm | 👥 Số khách: ${generatedPlan.value.people || 1} người\n`
+  text += `💰 Dự toán chi phí: ~${formatMoney(generatedPlan.value.total_budget || 0)}đ\n\n`
+  
+  days.forEach((day, dIdx) => {
+    text += `📍 NGÀY ${dIdx + 1}:\n`
+    ;(day.activities || []).forEach(a => {
+      text += ` - ${a.time || '08:00'}: ${a.place || a.title} (${a.estimated_cost ? formatMoney(a.estimated_cost) + 'đ' : 'Miễn phí'})\n`
+    })
+    text += `\n`
+  })
+  text += `✈️ Tạo tự động bởi Travel Trips Miền Trung AI!`
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      daSaoChepInfographic.value = true
+      hienThongBaoToast('📋 Đã sao chép lịch trình! Có thể dán gửi Zalo/Messenger.')
+      setTimeout(() => { daSaoChepInfographic.value = false }, 4000)
+    }).catch(() => {
+      hienThongBaoToast('Không thể sao chép tự động.')
+    })
+  } else {
+    hienThongBaoToast('Trình duyệt không hỗ trợ sao chép tự động.')
+  }
+}
+
+// 7. Xuất file PDF Mobile
+async function xuatPdfMobile() {
+  const element = document.querySelector('.mobile-generated-plan')
+  if (!element) {
+    alert('Không tìm thấy nội dung lịch trình để xuất PDF!')
+    return
+  }
+  hienThongBaoToast('📄 Đang xử lý xuất PDF lịch trình...')
+  
+  try {
+    const clone = element.cloneNode(true)
+    const toolkit = clone.querySelector('.mobile-travel-toolkit')
+    if (toolkit) toolkit.remove()
+    const quickBtns = clone.querySelector('.plan-quick-buttons')
+    if (quickBtns) quickBtns.remove()
+    const actBtns = clone.querySelectorAll('.m-act-action-row')
+    actBtns.forEach(b => b.remove())
+
+    const opt = {
+      margin: 8,
+      filename: `lich-trinh-${generatedPlan.value?.destination || 'chuyen-di'}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, logging: false },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    }
+    await html2pdf().set(opt).from(clone).save()
+    hienThongBaoToast('✅ Đã tải file PDF lịch trình thành công!')
+  } catch (err) {
+    console.error('Lỗi xuất PDF mobile:', err)
+    alert('Có lỗi khi tạo file PDF, bạn có thể chụp ảnh màn hình hoặc dùng tính năng Xuất Infographic!')
+  }
+}
+
+// 8. Đổi địa điểm trên thẻ hoạt động (Change Place)
+const hienChangePlaceModal = ref(false)
+const changingActInfo = ref(null)
+const alternativePlaces = ref([])
+const isLoadingAltPlaces = ref(false)
+const cachedDestPlaces = ref({})
+
+async function moModalDoiDiaDiemMobile(dayIdx, actIdx, act) {
+  changingActInfo.value = { dayIdx, actIdx, act }
+  const dest = generatedPlan.value?.destination || 'Đà Nẵng'
+  const actType = act.type || 'attraction'
+  let targetType = actType
+  if (['breakfast', 'lunch', 'dinner', 'restaurant'].includes(actType)) {
+    targetType = 'restaurant'
+  }
+
+  if (cachedDestPlaces.value[dest]) {
+    filterAndOpenChangeModal(cachedDestPlaces.value[dest], targetType, act)
+    return
+  }
+
+  isLoadingAltPlaces.value = true
+  try {
+    const res = await api.get('/places', { params: { destination: dest } })
+    const allPlaces = res.data || []
+    cachedDestPlaces.value[dest] = allPlaces
+    filterAndOpenChangeModal(allPlaces, targetType, act)
+  } catch (err) {
+    console.error('Lỗi tải địa điểm thay thế:', err)
+    filterAndOpenChangeModal([], targetType, act)
+  } finally {
+    isLoadingAltPlaces.value = false
+  }
+}
+
+function filterAndOpenChangeModal(allPlaces, targetType, currentAct) {
+  const currentName = (currentAct.place || currentAct.title || '').toLowerCase()
+  let filtered = allPlaces.filter(p => {
+    const pType = p.type || 'attraction'
+    const isSameType = targetType === 'restaurant'
+      ? ['restaurant', 'food', 'breakfast', 'lunch', 'dinner'].includes(pType)
+      : pType === targetType
+    return isSameType && (p.name || '').toLowerCase() !== currentName
+  })
+
+  if (filtered.length === 0) {
+    filtered = allPlaces.filter(p => (p.name || '').toLowerCase() !== currentName)
+  }
+
+  alternativePlaces.value = filtered
+  hienChangePlaceModal.value = true
+}
+
+function chonDiaDiemMoiMobile(newPlace) {
+  if (!changingActInfo.value || !generatedPlan.value) return
+  const { dayIdx, actIdx } = changingActInfo.value
+  const days = generatedPlan.value.daysList || generatedPlan.value.days || []
+  const day = days[dayIdx]
+  if (!day || !day.activities?.[actIdx]) return
+
+  const act = day.activities[actIdx]
+  act.place = newPlace.name
+  act.address = newPlace.address || `Khu vực ${generatedPlan.value.destination}`
+  if (newPlace.estimated_cost !== undefined) {
+    act.estimated_cost = Number(newPlace.estimated_cost) || 50000
+  }
+  if (newPlace.latitude && newPlace.longitude) {
+    act.latitude = newPlace.latitude
+    act.longitude = newPlace.longitude
+  }
+  if (newPlace.image) {
+    act.image = newPlace.image
+  }
+  if (newPlace.open_hours) {
+    act.open_hours = newPlace.open_hours
+  }
+  if (newPlace.dwell_time) {
+    act.dwell_time = newPlace.dwell_time
+  }
+  if (newPlace.rating) {
+    act.rating = newPlace.rating
+    act.review_count = newPlace.review_count || '1k+'
+  }
+
+  const isEat = ['breakfast', 'lunch', 'dinner', 'restaurant'].includes(act.type)
+  if (isEat) {
+    act.activity = `Thưởng thức ẩm thực đặc sản tại ${newPlace.name}`
+  } else {
+    act.activity = newPlace.description || `Tham quan và trải nghiệm tại ${newPlace.name}`
+  }
+
+  hienChangePlaceModal.value = false
+  changingActInfo.value = null
+  dongBoChiPhiLichTrinh()
+  hienThongBaoToast(`🔄 Đã đổi sang: ${newPlace.name}!`)
 }
 </script>
 
@@ -5680,5 +6168,170 @@ function getWeatherDesc(code) {
 }
 .trip-start-fast-btn:active {
   transform: scale(0.95);
+}
+
+/* ==================== THANH TIỆN ÍCH HÀNH TRÌNH MOBILE (ITEM 3) ==================== */
+.mobile-travel-toolkit {
+  margin: 12px 14px 16px;
+  background: var(--bg-surface, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 18px;
+  padding: 12px 10px 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+.m-toolkit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0 4px 8px;
+  border-bottom: 1px solid var(--border-color, #f1f5f9);
+  margin-bottom: 8px;
+}
+
+.m-toolkit-title {
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: var(--primary, #0d7c76);
+}
+
+.m-toolkit-sub {
+  font-size: 0.68rem;
+  color: var(--text-sub, #64748b);
+}
+
+.m-toolkit-scroll-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 2px 4px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.m-toolkit-scroll-row::-webkit-scrollbar {
+  display: none;
+}
+
+.m-toolkit-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 72px;
+  flex-shrink: 0;
+  background: var(--bg-card, #f8fafc);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 14px;
+  padding: 8px 6px 7px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  color: var(--text-main, #1e293b);
+  touch-action: manipulation;
+}
+
+.m-toolkit-btn:active {
+  transform: scale(0.92);
+  background: rgba(13, 124, 118, 0.1);
+}
+
+.m-toolkit-btn.is-active-success {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.12);
+  color: #047857;
+}
+
+.m-tb-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.m-tb-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Nút đổi địa điểm trên Activity Card */
+.btn-act-change {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: rgba(13, 124, 118, 0.08);
+  border: 1px solid rgba(13, 124, 118, 0.25);
+  border-radius: 10px;
+  color: var(--primary, #0d7c76);
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  touch-action: manipulation;
+}
+.btn-act-change:active {
+  transform: scale(0.94);
+  background: rgba(13, 124, 118, 0.18);
+}
+
+/* Floating Toast Notification */
+.mobile-floating-toast {
+  position: fixed;
+  top: 64px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.94);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #ffffff;
+  padding: 10px 18px;
+  border-radius: 999px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+  font-size: 0.8rem;
+  font-weight: 600;
+  max-width: 90vw;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  pointer-events: none;
+}
+.mft-icon {
+  font-size: 1rem;
+}
+.mft-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.m-toast-fade-enter-active,
+.m-toast-fade-leave-active {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.m-toast-fade-enter-from,
+.m-toast-fade-leave-to {
+  opacity: 0;
+  transform: translate(-50%, -15px) scale(0.92);
+}
+
+/* Dark Mode Overrides cho Toolkit */
+:global([data-theme="dark"]) .mobile-travel-toolkit {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+:global([data-theme="dark"]) .m-toolkit-header {
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+:global([data-theme="dark"]) .m-toolkit-btn {
+  background: #0f172a;
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #f1f5f9;
+}
+:global([data-theme="dark"]) .btn-act-change {
+  background: rgba(56, 189, 248, 0.12);
+  border-color: rgba(56, 189, 248, 0.3);
+  color: #38bdf8;
 }
 </style>
