@@ -135,12 +135,18 @@
                 </button>
               </div>
 
-              <!-- Nút mẹo tối ưu lịch trình AI chuyên nghiệp & súc tích -->
+              <!-- Nút mẹo tối ưu lịch trình AI & Chế độ đi công tác GPS -->
               <div class="capsule-guide-row">
                 <button type="button" class="btn-prompt-guide" @click="openGuidanceSheet(false)">
                   <span class="guide-bulb">💡</span>
-                  <span class="guide-text">Mẹo tối ưu lịch trình AI</span>
+                  <span class="guide-text">Mẹo tạo lịch AI</span>
                   <span class="guide-arrow">›</span>
+                </button>
+                <button type="button" class="btn-business-trip-btn" @click="openBusinessTripSheet">
+                  <span class="btb-radar"></span>
+                  <span class="btb-icon">📍</span>
+                  <span class="btb-text">Khám phá quanh đây</span>
+                  <span class="btb-tag">GPS</span>
                 </button>
               </div>
             </div>
@@ -184,7 +190,8 @@
           <!-- BANNER TỔNG QUAN CHUYẾN ĐI -->
           <div class="plan-summary-banner">
             <div class="plan-badge-line">
-              <span class="badge-emerald">✦ LỊCH TRÌNH CÁ NHÂN HÓA</span>
+              <span v-if="generatedPlan.is_business_trip" class="badge-business">📍 KHÁM PHÁ QUANH ĐÂY</span>
+              <span v-else class="badge-emerald">✦ LỊCH TRÌNH CÁ NHÂN HÓA</span>
               <span class="badge-amber">{{ (generatedPlan.daysList || generatedPlan.days || []).length }} Ngày {{ Math.max(1, (generatedPlan.daysList || generatedPlan.days || []).length - 1) }} Đêm</span>
             </div>
             
@@ -1287,6 +1294,208 @@
           </div>
         </Teleport>
 
+        <!-- MODAL ĐI CÔNG TÁC / KHÁM PHÁ QUANH TỌA ĐỘ GPS (BUSINESS BLEISURE TRIP) -->
+        <Teleport to="body">
+          <div v-if="showBusinessTripSheet" class="m-bottom-sheet-overlay" @click.self="showBusinessTripSheet = false">
+            <div class="m-bottom-sheet-content m-business-sheet">
+              <div class="sheet-handle-bar"></div>
+
+              <div class="sheet-header">
+                <div class="sheet-title-group">
+                  <div class="business-badge">
+                    <span class="bb-pulse-dot"></span>
+                    <span>📍 KHÁM PHÁ THEO TỌA ĐỘ GPS</span>
+                  </div>
+                  <h3 class="sheet-title">Khám Phá Quanh Chỗ Ở Hiện Tại</h3>
+                  <p class="sheet-subtitle">
+                    Dành cho bạn đang ở khách sạn hoặc đi công tác: AI tự động quét vị trí GPS, gợi ý quán ngon, cafe chill & điểm dạo chơi gần nhất.
+                  </p>
+                </div>
+                <button type="button" class="sheet-close-btn" @click="showBusinessTripSheet = false" aria-label="Đóng">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+              </div>
+
+              <div class="guidance-checklist-scroll">
+                
+                <!-- 1. Vị trí GPS hiện tại (Chỗ ở / Khách sạn) -->
+                <div class="guidance-item is-ready">
+                  <div class="g-item-header">
+                    <span class="g-item-icon">📍</span>
+                    <div class="g-item-info">
+                      <div class="g-item-title-row">
+                        <span class="g-item-name">Vị trí hiện tại (Chỗ ở của bạn)</span>
+                        <span v-if="businessForm.latitude" class="g-ready-pill">✓ Đã định vị GPS</span>
+                        <span v-else class="g-ready-pill text-amber">Đang dò GPS...</span>
+                      </div>
+                      <p class="g-item-desc">Điểm xuất phát & quay về nghỉ ngơi mỗi buổi</p>
+                    </div>
+                  </div>
+
+                  <div class="business-gps-card">
+                    <div v-if="isLocatingBusinessGPS" class="bgps-loading">
+                      <span class="bgps-spinner"></span>
+                      <span>Đang xác định tọa độ GPS và tên đường hiện tại...</span>
+                    </div>
+                    <div v-else class="bgps-content">
+                      <div class="bgps-row">
+                        <span class="bgps-pin">🏢</span>
+                        <div class="bgps-details">
+                          <input
+                            v-model="businessForm.locationName"
+                            type="text"
+                            class="bgps-input-title"
+                            placeholder="Tên khách sạn / Tòa nhà bạn đang ở..."
+                          />
+                          <p class="bgps-address">{{ businessForm.detailedAddress || 'Đang cập nhật địa chỉ GPS...' }}</p>
+                        </div>
+                        <button type="button" class="btn-refresh-gps" @click="layViTriGPSCongTac" title="Lấy lại GPS">
+                          🔄
+                        </button>
+                      </div>
+
+                      <div class="bgps-badges-row">
+                        <span class="bgps-tag green">🏨 Chỗ ở: Đã có (0đ)</span>
+                        <span class="bgps-tag blue">🛵 Di chuyển: Grab/Taxi nội thành</span>
+                        <span v-if="businessForm.destination" class="bgps-tag amber">📍 {{ businessForm.destination }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 2. Khung thời gian rảnh rỗi -->
+                <div class="guidance-item is-ready">
+                  <div class="g-item-header">
+                    <span class="g-item-icon">⏰</span>
+                    <div class="g-item-info">
+                      <div class="g-item-title-row">
+                        <span class="g-item-name">Khung thời gian bạn rảnh rỗi</span>
+                        <span class="g-ready-pill">Đã chọn</span>
+                      </div>
+                      <p class="g-item-desc">Chọn khoảng thời gian bạn muốn xả hơi khám phá</p>
+                    </div>
+                  </div>
+
+                  <div class="business-scope-grid">
+                    <button
+                      type="button"
+                      :class="['b-scope-card', { active: businessForm.scope === 'evening' }]"
+                      @click="businessForm.scope = 'evening'; businessForm.budget = 350000"
+                    >
+                      <span class="bsc-icon">🌙</span>
+                      <strong class="bsc-title">Tối nay xả hơi</strong>
+                      <span class="bsc-time">17:30 - 22:30 (Sau giờ làm)</span>
+                      <p class="bsc-desc">Ăn tối đặc sản + Cafe view đẹp + Dạo phố đêm gần chỗ ở</p>
+                    </button>
+
+                    <button
+                      type="button"
+                      :class="['b-scope-card', { active: businessForm.scope === 'half_day' }]"
+                      @click="businessForm.scope = 'half_day'; businessForm.budget = 500000"
+                    >
+                      <span class="bsc-icon">☀️</span>
+                      <strong class="bsc-title">Nửa ngày rảnh</strong>
+                      <span class="bsc-time">Khoảng 4 - 5 tiếng</span>
+                      <p class="bsc-desc">Ghé 1-2 điểm check-in biểu tượng + Ăn uống cafe</p>
+                    </button>
+
+                    <button
+                      type="button"
+                      :class="['b-scope-card', { active: businessForm.scope === '1day' }]"
+                      @click="businessForm.scope = '1day'; businessForm.budget = 750000"
+                    >
+                      <span class="bsc-icon">📅</span>
+                      <strong class="bsc-title">1 Ngày cuối tuần</strong>
+                      <span class="bsc-time">Trọn vẹn từ sáng đến tối</span>
+                      <p class="bsc-desc">Khám phá thoả thích các điểm nổi tiếng nhất</p>
+                    </button>
+
+                    <button
+                      type="button"
+                      :class="['b-scope-card', { active: businessForm.scope === '2days' }]"
+                      @click="businessForm.scope = '2days'; businessForm.budget = 1400000"
+                    >
+                      <span class="bsc-icon">🗓️</span>
+                      <strong class="bsc-title">2 Ngày cuối tuần</strong>
+                      <span class="bsc-time">Thứ 7 & Chủ nhật</span>
+                      <p class="bsc-desc">Trọn vẹn 2 ngày nghỉ ngơi trước khi bay về</p>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- 3. Sở thích & Gu trải nghiệm -->
+                <div class="guidance-item">
+                  <div class="g-item-header">
+                    <span class="g-item-icon">🎯</span>
+                    <div class="g-item-info">
+                      <div class="g-item-title-row">
+                        <span class="g-item-name">Bạn muốn trải nghiệm gì?</span>
+                      </div>
+                      <p class="g-item-desc">Chọn các trải nghiệm bạn muốn AI ưu tiên</p>
+                    </div>
+                  </div>
+
+                  <div class="g-chips-flow">
+                    <button
+                      v-for="tag in businessInterestOptions"
+                      :key="tag.label"
+                      type="button"
+                      :class="['g-chip-btn', { active: businessForm.interests.includes(tag.label) }]"
+                      @click="toggleBusinessInterest(tag.label)"
+                    >
+                      {{ tag.icon }} {{ tag.label }}
+                    </button>
+                  </div>
+                </div>
+
+                <!-- 4. Ngân sách dự kiến -->
+                <div class="guidance-item">
+                  <div class="g-item-header">
+                    <span class="g-item-icon">💰</span>
+                    <div class="g-item-info">
+                      <div class="g-item-title-row">
+                        <span class="g-item-name">Dự trù kinh phí ăn chơi</span>
+                        <span class="g-ready-pill">{{ formatMoney(businessForm.budget) }}đ</span>
+                      </div>
+                      <p class="g-item-desc">Tiền ăn uống, cafe và Grab/Taxi nội thành (Không tính tiền phòng)</p>
+                    </div>
+                  </div>
+
+                  <div class="g-chips-flow">
+                    <button
+                      v-for="bg in [250000, 350000, 500000, 800000, 1200000]"
+                      :key="bg"
+                      type="button"
+                      :class="['g-chip-btn', { active: businessForm.budget === bg }]"
+                      @click="businessForm.budget = bg"
+                    >
+                      {{ formatMoney(bg) }}đ
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- Footer Buttons -->
+              <div class="sheet-footer">
+                <button type="button" class="btn-sheet-cancel" @click="showBusinessTripSheet = false">
+                  Đóng
+                </button>
+                <button
+                  type="button"
+                  class="btn-sheet-save btn-business-generate"
+                  :disabled="isGenerating || isLocatingBusinessGPS || !businessForm.destination"
+                  @click="submitBusinessTripPlan"
+                >
+                  <span v-if="!isGenerating">🚀 Tạo lịch trình quanh đây ngay</span>
+                  <span v-else>AI đang tìm kiếm điểm đến gần bạn...</span>
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </Teleport>
+
     </main>
 
     <!-- BOTTOM TAB NAVIGATION (MOBILE BAR) -->
@@ -1403,6 +1612,7 @@ import RainModal from '../modals/RainModal.vue'
 import ReplanModal from '../modals/ReplanModal.vue'
 import InfographicModal from '../modals/InfographicModal.vue'
 import ChangePlaceModal from '../modals/ChangePlaceModal.vue'
+import { detectCurrentLocationCity } from '../../services/locationService'
 
 // ==================== LIVE TRIP COMPANION MOBILE STATE & ACTIONS ====================
 const showMobileLiveCompanion = ref(false)
@@ -2873,6 +3083,137 @@ function chonDiaDiemMoiMobile(newPlace) {
   changingActInfo.value = null
   dongBoChiPhiLichTrinh()
   hienThongBaoToast(`🔄 Đã đổi sang: ${newPlace.name}!`)
+}
+
+// ==================== CHẾ ĐỘ ĐI CÔNG TÁC (BLEISURE TRIP GPS) ====================
+const showBusinessTripSheet = ref(false)
+const isLocatingBusinessGPS = ref(false)
+
+const businessForm = reactive({
+  latitude: null,
+  longitude: null,
+  destination: 'Đà Nẵng',
+  locationName: 'Khách sạn nơi đang lưu trú',
+  detailedAddress: '',
+  scope: 'evening', // 'evening' | 'half_day' | '1day' | '2days'
+  budget: 350000,
+  interests: ['Ẩm thực đặc sản', 'Cafe ngắm phố', 'Dạo phố đêm & Chợ đêm']
+})
+
+const businessInterestOptions = [
+  { label: 'Ẩm thực đặc sản', icon: '🍜' },
+  { label: 'Cafe ngắm phố', icon: '☕' },
+  { label: 'Dạo phố đêm & Chợ đêm', icon: '🛍️' },
+  { label: 'Check-in cảnh đẹp', icon: '📸' },
+  { label: 'Hóng gió biển / sông', icon: '🌊' },
+  { label: 'Văn hóa & Di sản', icon: '🏛️' }
+]
+
+function toggleBusinessInterest(label) {
+  const idx = businessForm.interests.indexOf(label)
+  if (idx > -1) {
+    businessForm.interests.splice(idx, 1)
+  } else {
+    businessForm.interests.push(label)
+  }
+}
+
+async function openBusinessTripSheet() {
+  showBusinessTripSheet.value = true
+  if (!businessForm.latitude) {
+    await layViTriGPSCongTac()
+  }
+}
+
+async function layViTriGPSCongTac() {
+  isLocatingBusinessGPS.value = true
+  try {
+    const loc = await detectCurrentLocationCity()
+    if (loc && loc.latitude && loc.longitude) {
+      businessForm.latitude = loc.latitude
+      businessForm.longitude = loc.longitude
+      businessForm.destination = loc.city || 'Đà Nẵng'
+      businessForm.detailedAddress = loc.detailedAddress || `${loc.city}, Việt Nam`
+      businessForm.locationName = loc.detailedAddress ? loc.detailedAddress.split(',')[0] : `Khách sạn tại ${loc.city || 'Đà Nẵng'}`
+      hienThongBaoToast(`📍 Đã định vị GPS: ${loc.city || 'Đà Nẵng'}`)
+    }
+  } catch (err) {
+    console.warn('Lỗi định vị GPS công tác:', err.message)
+    businessForm.destination = 'Đà Nẵng'
+    businessForm.detailedAddress = 'Quận Hải Châu, TP. Đà Nẵng'
+    businessForm.locationName = 'Khách sạn lưu trú tại Đà Nẵng'
+    businessForm.latitude = 16.0544
+    businessForm.longitude = 108.2022
+    hienThongBaoToast('Đã chọn vị trí chỗ ở mặc định tại Đà Nẵng')
+  } finally {
+    isLocatingBusinessGPS.value = false
+  }
+}
+
+async function submitBusinessTripPlan() {
+  isGenerating.value = true
+  showBusinessTripSheet.value = false
+  isPlanSaved.value = false
+  hienThongBaoToast('🤖 AI đang tìm kiếm các điểm ăn chơi gần chỗ ở của bạn...')
+
+  try {
+    const daysMap = {
+      evening: 1,
+      half_day: 1,
+      '1day': 1,
+      '2days': 2
+    }
+    const daysCount = daysMap[businessForm.scope] || 1
+
+    const payload = {
+      is_business_trip: true,
+      business_trip_mode: true,
+      business_scope: businessForm.scope,
+      current_lat: businessForm.latitude,
+      current_lng: businessForm.longitude,
+      current_location_name: businessForm.locationName || `Chỗ ở tại ${businessForm.destination}`,
+      current_address: businessForm.detailedAddress || `Khu vực ${businessForm.destination}`,
+      origin: businessForm.destination || 'Đà Nẵng',
+      destination: businessForm.destination || 'Đà Nẵng',
+      days: daysCount,
+      nights: businessForm.scope === '2days' ? 1 : 0,
+      people: 1,
+      budget: Number(businessForm.budget) || 350000,
+      total_budget: Number(businessForm.budget) || 350000,
+      self_hotel: true,
+      tu_tuc_khach_san: true,
+      self_transit: true,
+      tu_tuc_phuong_tien: true,
+      transportation: 'xe máy / Grab taxi',
+      interests: businessForm.interests || ['ẩm thực', 'cafe']
+    }
+
+    const res = await api.post('/ai/plan', payload)
+    generatedPlan.value = res.data
+    generatedPlan.value.is_business_trip = true
+    generatedPlan.value.business_scope = businessForm.scope
+    generatedPlan.value.current_location_name = businessForm.locationName
+
+    generatedPlan.value.hotel_recommendation = {
+      name: businessForm.locationName || `Chỗ ở tại ${businessForm.destination}`,
+      address: businessForm.detailedAddress || `Khu vực ${businessForm.destination}`,
+      rating: 5.0,
+      price_per_night: 0,
+      estimated_cost: 0,
+      description: 'Chỗ ở hiện tại của du khách đang công tác. Chi phí phòng: 0đ.'
+    }
+
+    dongBoChiPhiLichTrinh()
+    currentActiveDayIndex.value = 0
+    currentTab.value = 'explore'
+    window.scrollTo({ top: 380, behavior: 'smooth' })
+    hienThongBaoToast('✨ Đã tạo xong lịch trình khám phá quanh vị trí của bạn!')
+  } catch (err) {
+    console.error('Lỗi tạo lịch công tác:', err)
+    alert(err.response?.data?.error || err.message || 'Không thể tạo lịch trình lúc này, vui lòng thử lại!')
+  } finally {
+    isGenerating.value = false
+  }
 }
 </script>
 
@@ -5536,6 +5877,9 @@ function chonDiaDiemMoiMobile(newPlace) {
   margin-top: 8px;
   display: flex;
   justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
   width: 100%;
 }
 
@@ -6333,5 +6677,278 @@ function chonDiaDiemMoiMobile(newPlace) {
   background: rgba(56, 189, 248, 0.12);
   border-color: rgba(56, 189, 248, 0.3);
   color: #38bdf8;
+}
+
+/* ==================== STYLES CHẾ ĐỘ ĐI CÔNG TÁC GPS MOBILE ==================== */
+.btn-business-trip-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.12) 0%, rgba(14, 165, 233, 0.18) 100%);
+  border: 1px solid rgba(2, 132, 199, 0.35);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #0284c7;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  touch-action: manipulation;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.btn-business-trip-btn:active {
+  transform: scale(0.94);
+  background: rgba(2, 132, 199, 0.25);
+}
+.btb-radar {
+  width: 6px;
+  height: 6px;
+  background: #0284c7;
+  border-radius: 50%;
+  box-shadow: 0 0 0 0 rgba(2, 132, 199, 0.7);
+  animation: radar-ping 1.8s infinite;
+}
+@keyframes radar-ping {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(2, 132, 199, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(2, 132, 199, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(2, 132, 199, 0); }
+}
+.btb-tag {
+  font-size: 0.62rem;
+  background: #0284c7;
+  color: #ffffff;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-weight: 800;
+}
+
+.badge-business {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: #ffffff;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.3);
+}
+
+.business-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(2, 132, 199, 0.12);
+  border: 1px solid rgba(2, 132, 199, 0.3);
+  color: #0284c7;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+.bb-pulse-dot {
+  width: 6px;
+  height: 6px;
+  background: #0284c7;
+  border-radius: 50%;
+  animation: pulse-dot 1.5s infinite;
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
+
+.business-gps-card {
+  margin-top: 10px;
+  background: var(--bg-card, #f8fafc);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 14px;
+  padding: 12px;
+}
+.bgps-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.8rem;
+  color: var(--text-sub, #64748b);
+  padding: 8px 4px;
+}
+.bgps-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(2, 132, 199, 0.2);
+  border-top-color: #0284c7;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.bgps-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.bgps-pin {
+  font-size: 1.3rem;
+  margin-top: 2px;
+}
+.bgps-details {
+  flex: 1;
+}
+.bgps-input-title {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-main, #1e293b);
+  padding: 0;
+  margin-bottom: 3px;
+}
+.bgps-address {
+  font-size: 0.75rem;
+  color: var(--text-sub, #64748b);
+  margin: 0;
+  line-height: 1.35;
+}
+.btn-refresh-gps {
+  background: transparent;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+.btn-refresh-gps:active {
+  transform: rotate(180deg);
+  transition: transform 0.3s ease;
+}
+
+.bgps-badges-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border-color, #e2e8f0);
+}
+.bgps-tag {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+.bgps-tag.green {
+  background: rgba(16, 185, 129, 0.12);
+  color: #047857;
+}
+.bgps-tag.blue {
+  background: rgba(2, 132, 199, 0.12);
+  color: #0284c7;
+}
+.bgps-tag.amber {
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+}
+
+.business-scope-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+.b-scope-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  background: var(--bg-card, #f8fafc);
+  border: 1.5px solid var(--border-color, #e2e8f0);
+  border-radius: 12px;
+  padding: 10px 10px 8px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  touch-action: manipulation;
+}
+.b-scope-card:active {
+  transform: scale(0.96);
+}
+.b-scope-card.active {
+  border-color: #0284c7;
+  background: rgba(2, 132, 199, 0.08);
+  box-shadow: 0 2px 10px rgba(2, 132, 199, 0.15);
+}
+.bsc-icon {
+  font-size: 1.25rem;
+  margin-bottom: 4px;
+}
+.bsc-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-main, #1e293b);
+  margin-bottom: 2px;
+}
+.bsc-time {
+  font-size: 0.68rem;
+  color: #0284c7;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.bsc-desc {
+  font-size: 0.65rem;
+  color: var(--text-sub, #64748b);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.btn-business-generate {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+}
+
+:global([data-theme="dark"]) .btn-business-trip-btn {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: rgba(56, 189, 248, 0.4);
+  color: #38bdf8;
+}
+:global([data-theme="dark"]) .btb-radar {
+  background: #38bdf8;
+}
+:global([data-theme="dark"]) .business-badge {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: rgba(56, 189, 248, 0.35);
+  color: #38bdf8;
+}
+:global([data-theme="dark"]) .business-gps-card {
+  background: #0f172a;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+:global([data-theme="dark"]) .b-scope-card {
+  background: #0f172a;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+:global([data-theme="dark"]) .b-scope-card.active {
+  border-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.14);
+}
+:global([data-theme="dark"]) .bsc-title {
+  color: #f1f5f9;
+}
+:global([data-theme="dark"]) .bsc-time {
+  color: #38bdf8;
+}
+:global([data-theme="dark"]) .bgps-input-title {
+  color: #ffffff;
 }
 </style>

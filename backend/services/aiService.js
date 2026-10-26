@@ -137,9 +137,12 @@ async function taoLichTrinh(duLieu) {
   }
 
   const budgetPerPersonPerDay = nganSach / (nguoi * ngay);
-  if (budgetPerPersonPerDay < 500000) {
-    const requiredBudget = 500000 * nguoi * ngay;
-    throw new Error(`Ngân sách quá thấp! Để duy trì các chi phí cơ bản (khách sạn, ăn uống, di chuyển) trong ${ngay} ngày cho ${nguoi} người, bạn cần tối thiểu ${requiredBudget.toLocaleString('vi-VN')}đ (tương đương 500.000đ/người/ngày). Vui lòng tăng ngân sách lên nhé!`);
+  const isBusinessTrip = Boolean(duLieu.is_business_trip || duLieu.business_trip_mode);
+  const isSelfHotel = Boolean(duLieu.self_hotel || duLieu.tu_tuc_khach_san || isBusinessTrip);
+  const minBudgetThreshold = isSelfHotel ? 100000 : 500000;
+  if (budgetPerPersonPerDay < minBudgetThreshold) {
+    const requiredBudget = minBudgetThreshold * nguoi * ngay;
+    throw new Error(`Ngân sách quá thấp! Để duy trì các chi phí cơ bản (${isSelfHotel ? 'ăn uống, di chuyển' : 'khách sạn, ăn uống, di chuyển'}) trong ${ngay} ngày cho ${nguoi} người, bạn cần tối thiểu ${requiredBudget.toLocaleString('vi-VN')}đ. Vui lòng tăng ngân sách lên nhé!`);
   }
 
   const geminiKey = getGeminiKey()
@@ -311,6 +314,17 @@ function buildPrompt(duLieu, diaDiemDatabase) {
     ksLoai = 'khách sạn 3-4 sao'
   }
 
+  const isBusiness = Boolean(duLieu.is_business_trip || duLieu.business_trip_mode);
+  const bScope = duLieu.business_scope || 'evening';
+  const cLocName = duLieu.current_location_name || 'Khách sạn / Chỗ ở hiện tại';
+  const cAddress = duLieu.current_address || `Khu vực ${diaDiem}`;
+
+  if (isBusiness) {
+    ksGia = 0;
+    ksLoai = 'Chỗ ở công tác có sẵn';
+    ksMota = 'Chỗ ở hiện tại của du khách';
+  }
+
   let goiYDbText = ''
   if (diaDiemDatabase && diaDiemDatabase.length > 0) {
     const listHotels = diaDiemDatabase.filter(p => p.type === 'hotel').slice(0, 4).map(p => `${p.name} (${p.address || diaDiem}, giá: ${p.estimated_cost || 850000}đ)`).join('; ')
@@ -349,6 +363,15 @@ ${(duLieu.selected_hotel || duLieu.khachSanDaChon) ? `- KHÁCH SẠN ĐÃ CHỌN
 - Yêu cầu khách sạn: ${duLieu.hotel_request || 'tiêu chuẩn, vị trí thuận tiện'}
 - Phong cách nhận phòng: ${duLieu.hotel_checkin_preference === 'play_first' ? 'ĐI CHƠI TRƯỚC, BẮT BUỘC xếp lịch Nhận phòng khách sạn vào ĐÚNG 14:00 CHIỀU của Ngày 1 (sau khi ăn trưa xong)' : 'CẤT ĐỒ TRƯỚC, BẮT BUỘC xếp lịch Nhận phòng/Gửi đồ tại khách sạn là HOẠT ĐỘNG ĐẦU TIÊN CỦA NGÀY 1 (ví dụ 08:00 - 10:00 sáng), SAU ĐÓ mới đi chơi'}
 - Sở thích: ${soThich.join(', ') || 'khám phá ẩm thực đặc sản, check-in cảnh đẹp'}
+${isBusiness ? `
+🌟 ĐẶC BIỆT - CHẾ ĐỘ ĐI CÔNG TÁC / KHÁM PHÁ QUANH TỌA ĐỘ VỊ TRÍ HIỆN TẠI:
+- Du khách đang đi công tác tại: "${diaDiem}", đang lưu trú tại: "${cLocName}" (Địa chỉ: ${cAddress}${duLieu.current_lat ? `, Tọa độ GPS: ${duLieu.current_lat}, ${duLieu.current_lng}` : ''}).
+- ĐÃ CÓ CHỖ Ở CỐ ĐỊNH: "hotel_recommendation" BẮT BUỘC đặt: name = "${cLocName}", address = "${cAddress}", rating = 5.0, price_per_night = 0, description = "Chỗ ở hiện tại của du khách đang công tác. Đã có sẵn nơi lưu trú, không mất chi phí phòng."
+- Mọi mốc xuất phát đầu ngày/buổi và mốc quay về nghỉ ngơi cuối ngày/buổi BẮT BUỘC là "${cLocName}".
+${bScope === 'evening' ? '- KHUNG GIỜ: DU KHÁCH CHỈ RẢNH BUỔI TỐI SAU GIỜ LÀM VIỆC (Từ 17:30 đến 22:30). BẮT BUỘC chỉ sinh duy nhất 1 BUỔI TỐI: 17:30 - 19:30 Ăn tối đặc sản ngon nức tiếng gần đó (<5km) -> 19:45 - 21:00 Cafe view đẹp/rooftop ngắm phố -> 21:15 - 22:30 Dạo phố đêm/chợ đêm/check-in phố đi bộ gần đó -> 22:30 Về lại chỗ ở nghỉ ngơi.' : ''}
+${bScope === 'half_day' ? '- KHUNG GIỜ: DU KHÁCH RẢNH NỬA NGÀY (4-5 tiếng). Sắp xếp 1-2 điểm check-in biểu tượng gần chỗ ở + 1 bữa ăn/cafe đặc sản.' : ''}
+- BẮT BUỘC ưu tiên các địa điểm gần tọa độ của du khách (${duLieu.current_lat ? `${duLieu.current_lat}, ${duLieu.current_lng}` : cAddress}) để tiết kiệm thời gian di chuyển!
+` : ''}
 ${goiYDbText}${mustVisitText}
 QUY TẮC BẮT BUỘC:
 1. TUYỆT ĐỐI KHÔNG ĐƯỢC LẶP LẠI ĐỊA ĐIỂM: Mọi thắng cảnh, quán ăn sáng, quán ăn trưa, quán ăn tối trong suốt toàn bộ ${ngay} ngày BẮT BUỘC PHẢI KHÁC NHAU 100%. Không được xếp lại cùng 1 địa điểm ở các ngày khác nhau.
@@ -607,13 +630,17 @@ async function taoLichTrinhThongMinh(duLieu, diaDiemDatabase) {
     bestCluster = clusters.reduce((prev, curr) => (curr.length > prev.length) ? curr : prev, clusters[0]);
   }
   
-  // 2. Tìm Centroid của cụm dày đặc nhất
+  // 2. Tìm Centroid của cụm dày đặc nhất (Hoặc lấy trực tiếp từ GPS nếu đi công tác)
   let centroid = null;
-  const clusterWithCoords = bestCluster.filter(p => p.latitude && p.longitude);
-  if (clusterWithCoords.length > 0) {
-    const sumLat = clusterWithCoords.reduce((sum, p) => sum + parseFloat(p.latitude), 0);
-    const sumLng = clusterWithCoords.reduce((sum, p) => sum + parseFloat(p.longitude), 0);
-    centroid = { latitude: sumLat / clusterWithCoords.length, longitude: sumLng / clusterWithCoords.length };
+  if (duLieu.is_business_trip && duLieu.current_lat && duLieu.current_lng) {
+    centroid = { latitude: Number(duLieu.current_lat), longitude: Number(duLieu.current_lng) };
+  } else {
+    const clusterWithCoords = bestCluster.filter(p => p.latitude && p.longitude);
+    if (clusterWithCoords.length > 0) {
+      const sumLat = clusterWithCoords.reduce((sum, p) => sum + parseFloat(p.latitude), 0);
+      const sumLng = clusterWithCoords.reduce((sum, p) => sum + parseFloat(p.longitude), 0);
+      centroid = { latitude: sumLat / clusterWithCoords.length, longitude: sumLng / clusterWithCoords.length };
+    }
   }
 
   // 3. Chọn Khách sạn bình dân GẦN CENTROID NHẤT
@@ -634,7 +661,20 @@ async function taoLichTrinhThongMinh(duLieu, diaDiemDatabase) {
   }
 
   let hotelChon = null
-  if (duLieu.selected_hotel || duLieu.khachSanDaChon) {
+  if (duLieu.is_business_trip) {
+    hotelChon = {
+      name: duLieu.current_location_name || 'Khách sạn / Chỗ ở công tác của bạn',
+      address: duLieu.current_address || `Khu vực trung tâm ${diemDen}`,
+      rating: 5.0,
+      estimated_cost: 0,
+      price_per_night: 0,
+      room_name: 'Phòng đã có sẵn',
+      description: 'Chỗ ở hiện tại của du khách đang công tác. Đã có sẵn phòng, không tốn chi phí lưu trú.',
+      latitude: duLieu.current_lat ? Number(duLieu.current_lat) : (centroid ? centroid.latitude : null),
+      longitude: duLieu.current_lng ? Number(duLieu.current_lng) : (centroid ? centroid.longitude : null),
+      image: null
+    }
+  } else if (duLieu.selected_hotel || duLieu.khachSanDaChon) {
     const selH = duLieu.selected_hotel || duLieu.khachSanDaChon
     const selR = duLieu.selected_room || duLieu.phongDaChon
     hotelChon = {
@@ -939,18 +979,108 @@ async function taoLichTrinhThongMinh(duLieu, diaDiemDatabase) {
     const aDinner = availableRestaurants.filter(isDinnerItem);
     const dinnerPool = cDinner.length > 0 ? cDinner : (aDinner.length > 0 ? aDinner : availableRestaurants);
 
+    if (duLieu.is_business_trip && duLieu.business_scope === 'evening') {
+      lastPlaceInDay = hotelChon;
+
+      const restToi = layDiaDiemKhongTrung(dinnerPool, `Quán đặc sản buổi tối ${diemDen}`, 'dinner', 140000, lastPlaceInDay);
+      addActivity('17:45', 'dinner', 'Ăn tối đặc sản', restToi, `Thưởng thức ẩm thực tối đặc sản gần chỗ ở tại ${restToi.name}`, '1.5 tiếng');
+
+      const cafeToi = layDiaDiemKhongTrung(cCafes.length > 0 ? cCafes : availableCafes, `Quán Cà phê ngắm phố đêm ${diemDen}`, 'cafe', 45000, lastPlaceInDay);
+      addActivity('19:30', 'cafe', 'Cà phê & Thư giãn', cafeToi, `Thư thái thưởng thức cà phê ngắm phố đêm tại ${cafeToi.name}`, '1.25 tiếng');
+
+      const attToi = layDiaDiemKhongTrung(cAttractions.length > 0 ? cAttractions : availableAttractions, `Điểm dạo chơi về đêm ${diemDen}`, 'attraction', 0, lastPlaceInDay);
+      addActivity('21:00', 'attraction', 'Dạo phố & Check-in', attToi, `Hóng gió và dạo chơi về đêm tại ${attToi.name}`, '1.25 tiếng');
+
+      actDay.push({
+        id: `act-1-2230-rest`,
+        time: '22:30',
+        type: 'checkin',
+        label: 'Về chỗ ở nghỉ ngơi',
+        place: hotelChon.name,
+        address: hotelChon.address || `Khu vực ${diemDen}`,
+        activity: `Trở về ${hotelChon.name} nghỉ ngơi sau buổi tối xả hơi trọn vẹn.`,
+        recommendation_reason: 'Nghỉ ngơi lấy lại năng lượng sau ngày làm việc',
+        estimated_cost: 0,
+        latitude: hotelChon.latitude,
+        longitude: hotelChon.longitude,
+        travel_from: lastPlaceInDay.name,
+        travel_distance_km: lastPlaceInDay.latitude && hotelChon.latitude ? Math.round(calculateDistance(lastPlaceInDay.latitude, lastPlaceInDay.longitude, hotelChon.latitude, hotelChon.longitude) * 10) / 10 : 2.0,
+        travel_duration_mins: 8,
+        travel_cost: '20.000đ - 35.000đ (Grab/Taxi)',
+        open_hours: '24/24',
+        dwell_time: 'Qua đêm',
+        best_time: '22:30',
+        is_indoor: true,
+        verified: true,
+        status: 'Đã xác thực'
+      });
+
+      mangNgay.push({
+        day: 1,
+        title: `Tối nay: Xả hơi sau giờ làm việc tại ${diemDen}`,
+        date: duLieu.start_date || 'Hôm nay',
+        activities: actDay
+      });
+      break;
+    }
+
+    if (duLieu.is_business_trip && duLieu.business_scope === 'half_day') {
+      lastPlaceInDay = hotelChon;
+
+      const att1 = layDiaDiemKhongTrung(cAttractions.length > 0 ? cAttractions : availableAttractions, `Danh thắng biểu tượng ${diemDen}`, 'attraction', 60000, lastPlaceInDay);
+      addActivity('14:00', 'attraction', 'Tham quan / Check-in', att1, `Khám phá cảnh đẹp gần nơi ở`);
+
+      const cafeChieu = layDiaDiemKhongTrung(cCafes.length > 0 ? cCafes : availableCafes, `Quán Cà phê view đẹp ${diemDen}`, 'cafe', 45000, lastPlaceInDay);
+      addActivity('16:00', 'cafe', 'Cafe & Chill', cafeChieu, `Thưởng thức cà phê thư giãn`);
+
+      const restChieuToi = layDiaDiemKhongTrung(dinnerPool, `Quán ăn đặc sản ${diemDen}`, 'dinner', 150000, lastPlaceInDay);
+      addActivity('18:00', 'dinner', 'Ăn tối đặc sản', restChieuToi, `Dùng bữa tối món ngon địa phương`);
+
+      actDay.push({
+        id: `act-1-2000-rest`,
+        time: '20:00',
+        type: 'checkin',
+        label: 'Về chỗ ở nghỉ ngơi',
+        place: hotelChon.name,
+        address: hotelChon.address || `Khu vực ${diemDen}`,
+        activity: `Trở về ${hotelChon.name} nghỉ ngơi.`,
+        recommendation_reason: 'Nghỉ ngơi tiện lợi gần chỗ ở',
+        estimated_cost: 0,
+        latitude: hotelChon.latitude,
+        longitude: hotelChon.longitude,
+        travel_from: lastPlaceInDay.name,
+        travel_distance_km: 2.0,
+        travel_duration_mins: 8,
+        travel_cost: '20.000đ - 35.000đ (Grab/Taxi)',
+        open_hours: '24/24',
+        dwell_time: 'Qua đêm',
+        best_time: '20:00',
+        is_indoor: true,
+        verified: true,
+        status: 'Đã xác thực'
+      });
+
+      mangNgay.push({
+        day: 1,
+        title: `Nửa ngày: Trải nghiệm ẩm thực & check-in ${diemDen}`,
+        date: duLieu.start_date || 'Hôm nay',
+        activities: actDay
+      });
+      break;
+    }
+
     if (d === 1) {
       // NGÀY 1: Có khoảng đệm đến nơi, gửi hành lý, nhận phòng 14:00
       actDay.push({
         id: `act-1-0800-arrival`,
         time: '08:00',
         type: 'transit',
-        label: 'Đến nơi & Gửi hành lý',
+        label: duLieu.is_business_trip ? 'Xuất phát từ chỗ ở' : 'Đến nơi & Gửi hành lý',
         place: hotelChon.name,
         address: hotelChon.address || `Trung tâm ${diemDen}`,
-        activity: `Đến ${diemDen}, di chuyển về khách sạn gửi hành lý tại quầy lễ tân (khoảng đệm 45 phút chuẩn bị).`,
+        activity: duLieu.is_business_trip ? `Khởi hành từ ${hotelChon.name} bắt đầu ngày khám phá ${diemDen}.` : `Đến ${diemDen}, di chuyển về khách sạn gửi hành lý tại quầy lễ tân (khoảng đệm 45 phút chuẩn bị).`,
         estimated_cost: 0,
-        dwell_time: '45 phút',
+        dwell_time: duLieu.is_business_trip ? '15 phút' : '45 phút',
         verified: true,
         status: 'Đã xác thực'
       });
@@ -1127,6 +1257,9 @@ async function taoLichTrinhThongMinh(duLieu, diaDiemDatabase) {
   };
 
   return {
+    trip_title: duLieu.is_business_trip
+      ? `Lịch trình: Khám phá quanh chỗ ở tại ${diemDen}`
+      : `Hành trình khám phá trọn vẹn ${diemDen} ${soNgay} ngày`,
     destination: diemDen,
     total_budget: exactTotal,
     calculated_total: exactTotal,
@@ -1139,7 +1272,8 @@ async function taoLichTrinhThongMinh(duLieu, diaDiemDatabase) {
       name: hotelChon.name,
       address: hotelChon.address || `Trung tâm ${diemDen}`,
       rating: hotelChon.rating || 4.7,
-      price_per_night: hotelChon.estimated_cost || 850000,
+      price_per_night: hotelChon.price_per_night !== undefined ? hotelChon.price_per_night : (hotelChon.estimated_cost || 850000),
+      estimated_cost: hotelChon.estimated_cost !== undefined ? hotelChon.estimated_cost : 0,
       description: hotelChon.description || `Khách sạn tiện nghi tại ${diemDen}`
     },
     budget_breakdown: exactBudgetBreakdown,
@@ -1175,7 +1309,17 @@ function boSungDuLieuLichTrinh(lichTrinh, duLieu, diaDiemDatabase) {
   const placeDataMap = new Map(diaDiemList.map(p => [p.name.toLowerCase().trim(), p]))
   
   let validatedHotelRec = lichTrinh.hotel_recommendation || defaultHotel;
-  if (duLieu.selected_hotel || duLieu.khachSanDaChon) {
+  if (duLieu.is_business_trip) {
+    validatedHotelRec = {
+      name: duLieu.current_location_name || 'Khách sạn / Chỗ ở công tác của bạn',
+      address: duLieu.current_address || `Trung tâm ${duLieu.destination || 'thành phố'}`,
+      rating: 5.0,
+      price_per_night: 0,
+      description: 'Chỗ ở hiện tại của du khách đang công tác. Đã có sẵn nơi lưu trú, chi phí phòng: 0đ.',
+      latitude: duLieu.current_lat || null,
+      longitude: duLieu.current_lng || null
+    };
+  } else if (duLieu.selected_hotel || duLieu.khachSanDaChon) {
     const selH = duLieu.selected_hotel || duLieu.khachSanDaChon;
     const selR = duLieu.selected_room || duLieu.phongDaChon;
     const priceNight = Number(selR?.price || selH.price_from || selH.estimated_cost || 850000);
@@ -1351,6 +1495,9 @@ function boSungDuLieuLichTrinh(lichTrinh, duLieu, diaDiemDatabase) {
 
   const finalResult = {
     ...lichTrinh,
+    trip_title: lichTrinh.trip_title || (duLieu.is_business_trip
+      ? `Lịch trình: Khám phá quanh chỗ ở tại ${lichTrinh.destination || duLieu.destination}`
+      : `Hành trình khám phá trọn vẹn ${lichTrinh.destination || duLieu.destination}`),
     destination: lichTrinh.destination || duLieu.destination,
     total_budget: Number(lichTrinh.total_budget) || nganSach,
     people: Number(lichTrinh.people) || Number(duLieu.people) || 1,
