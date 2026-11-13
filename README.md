@@ -1,430 +1,281 @@
-# 🌴 Travel Trips Central VietNam — Hệ Thống Trợ Lý Du Lịch & Lập Lịch Trình Thông Minh Bằng AI
+# 🌴 Travel Trips Central VietNam
+### Hệ Thống Du Lịch & Lập Lịch Trình Thông Minh Miền Trung — Tây Nguyên
 
-[![Vue.js](https://img.shields.io/badge/Vue.js-3.4-4FC08D?style=for-the-badge&logo=vue.js&logoColor=white)](https://vuejs.org/)
-[![Vite](https://img.shields.io/badge/Vite-5.4-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-18.x-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
-[![Express.js](https://img.shields.io/badge/Express.js-4.18-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
-[![MongoDB](https://img.shields.io/badge/MongoDB_Atlas-7.0-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/atlas)
-[![Gemini AI](https://img.shields.io/badge/Google_Gemini-2.5_Flash-8E75B2?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev/)
+[![Vue.js](https://img.shields.io/badge/Frontend-Vue%203%20%7C%20Vite%205-4FC08D?style=flat-square&logo=vue.js&logoColor=white)](https://vuejs.org/)
+[![TailwindCSS](https://img.shields.io/badge/UI-Tailwind%20CSS%203.4-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![Node.js](https://img.shields.io/badge/Backend-Node.js%20%7C%20Express-339933?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![MongoDB](https://img.shields.io/badge/Database-MongoDB%20Atlas-47A248?style=flat-square&logo=mongodb&logoColor=white)](https://www.mongodb.com/atlas)
+[![Gemini AI](https://img.shields.io/badge/AI%20Core-Google%20Gemini%202.5%20Flash-8E75B2?style=flat-square&logo=google&logoColor=white)](https://ai.google.dev/)
+[![Open-Meteo](https://img.shields.io/badge/Weather-Open--Meteo%20Live-FF9900?style=flat-square&logo=open-meteo&logoColor=white)](https://open-meteo.com/)
 
-> **Travel Trips Central VietNam** là ứng dụng du lịch thông minh đa nền tảng (_Giao diện chuẩn App di động & Máy tính PC_) ứng dụng **Trí tuệ Nhân tạo (Generative AI & Data Intelligence Crawler)** kết hợp cơ sở dữ liệu số hóa phong phú để tự động thu thập thông tin địa điểm du lịch thực tế, hỗ trợ du khách khám phá toàn diện và lập lịch trình tối ưu tại **11 tỉnh/thành phố Miền Trung & Tây Nguyên (theo địa giới sáp nhập mở rộng)**.
-
----
-
-## 📑 MỤC LỤC TỔNG QUAN
-
-1. [Bảng Đặc Tả Yêu Cầu Phần Mềm (SRS — Chuẩn IEEE 830)](#1-bảng-đặc-tả-yêu-cầu-phần-mềm-srs--chuẩn-ieee-830)
-2. [Hệ Thống Sơ Đồ Hoạt Động (Đơn Giản & Dễ Hiểu)](#2-hệ-thống-sơ-đồ-hoạt-động-đơn-giản--dễ-hiểu)
-   - [2.1 Sơ đồ Hoạt động Tổng thể](#21-sơ-đồ-hoạt-động-tổng-thể-luồng-từ-trái-sang-phải)
-   - [2.2 Sơ đồ Các Chức Năng Của Hệ Thống](#22-sơ-đồ-các-chức-năng-của-hệ-thống)
-   - [2.3 Sơ đồ Luồng AI Cào Dữ Liệu Địa Điểm](#23-sơ-đồ-luồng-ai-cào-dữ-liệu-địa-điểm)
-   - [2.4 Sơ đồ Luồng Tạo Lịch Trình Bằng AI](#24-sơ-đồ-luồng-tạo-lịch-trình-bằng-ai)
-   - [2.5 Sơ đồ Dữ Liệu Lưu Trữ (Cơ Sở Dữ Liệu)](#25-sơ-đồ-dữ-liệu-lưu-trữ-cơ-sở-dữ-liệu-đơn-giản)
-3. [Cơ Chế & Hoạt Động Của AI Cào Dữ Liệu Du Lịch (AI Crawler)](#3-cơ-chế--hoạt-động-của-ai-cào-dữ-liệu-du-lịch-ai-crawler)
-4. [Báo Cáo Thống Kê Dữ Liệu Thực Tế (523+ Địa Điểm)](#4-báo-cáo-thống-kê-dữ-liệu-thực-tế-523-địa-điểm)
-5. [Các Tính Năng Cốt Lõi Đã Triển Khai](#5-các-tính-năng-cốt-lõi-đã-triển-khai)
-6. [Hướng Dẫn Cài Đặt & Khởi Chạy](#6-hướng-dẫn-cài-đặt--khởi-chạy)
-7. [Danh Mục API Endpoints](#7-danh-mục-api-endpoints)
+> Ứng dụng web đa nền tảng (*Tối ưu hiển thị cho cả Điện thoại di động & Máy tính PC*) hỗ trợ khách du lịch tự túc khám phá và tự động tạo lịch trình thông minh tại **11 tỉnh thành Duyên hải Miền Trung & Tây Nguyên**, tích hợp AI thế hệ mới và dữ liệu khí tượng thời gian thực.
 
 ---
 
-## 1. Bảng Đặc Tả Yêu Cầu Phần Mềm (SRS — Chuẩn IEEE 830)
+## 👨‍🏫 THÔNG TIN ĐỒ ÁN
 
-### 1.1 Bảng Yêu Cầu Chức Năng (Functional Requirements — FR)
-
-| Mã Yêu Cầu | Tên Chức Năng | Tác Nhân | Mức Độ | Mô Tả Kỹ Thuật Chi Tiết |
-| :---: | :--- | :---: | :---: | :--- |
-| **FR-01** | **Xác thực Tài khoản** | Người dùng | 🔴 Bắt buộc | Đăng ký, đăng nhập tài khoản bảo mật bằng thuật toán băm mật khẩu `bcryptjs` (salt = 10), cấp phát và xác thực phiên qua `JWT (JSON Web Token)`. |
-| **FR-02** | **Khám phá & Tìm kiếm Tức thì** | Người dùng | 🔴 Bắt buộc | Tra cứu danh lam thắng cảnh, quán đặc sản, khách sạn, cafe 11 tỉnh thành. Tìm kiếm nhanh thời gian thực theo từ khóa, quận/huyện, tên món ăn. |
-| **FR-03** | **AI Thu Thập Dữ Liệu Tự Động** | Module AI | 🔴 Bắt buộc | Tự động cào quét sâu rộng 4 danh mục theo 11 tỉnh thành bằng Google Gemini 2.5 Flash, trích xuất 10 thuộc tính thực tế và chống trùng lặp Upsert vào MongoDB Atlas. |
-| **FR-04** | **Lập Lịch Trình Tự Động Bằng AI** | Người dùng, AI | 🔴 Bắt buộc | Nhận tham số (Điểm đến, số ngày 1--7, ngân sách, số người, sở thích), tự động sinh lịch trình tối ưu tuyến đường, phân bổ 5 khoản chi phí trong **~1.9 giây**. |
-| **FR-05** | **Đổi Lịch Tránh Mưa Thông Minh** | Người dùng, AI, Khí tượng | 🟡 Nâng cao | Tích hợp dữ liệu thời tiết thời gian thực từ `Open-Meteo API`, tự động hoặc 1-chạm hoán đổi hoạt động ngoài trời sang địa điểm trong nhà khi trời mưa. |
-| **FR-06** | **Công Cụ Chia Tiền Nhóm** | Người dùng | 🟡 Tiện ích | Tự động chia đều tổng chi phí chuyến đi cho các thành viên trong đoàn một cách chính xác và minh bạch. |
-| **FR-07** | **Xuất Thẻ Vé Ngoại Tuyến** | Người dùng | 🟢 Tiện ích | Kết xuất thẻ vé Boarding Pass kèm mã QR mô phỏng để chụp màn hình sử dụng thuận tiện khi mất kết nối mạng 4G. |
-| **FR-08** | **Quản Lý & Lưu Trữ Chuyến Đi** | Người dùng | 🔴 Bắt buộc | Lưu trữ lịch sử chuyến đi vào MongoDB Atlas đám mây, xem lại chi tiết và sao chép liên kết chia sẻ cho bạn bè. |
+- **Học phần:** Đồ án Trí tuệ Nhân tạo (AIP202)
+- **Đơn vị:** Khoa Công nghệ Thông tin — Trường Đại học Kiến trúc Đà Nẵng (DAU)
+- **Giảng viên hướng dẫn:** **ThS. Đỗ Phúc Hảo**
+- **Sinh viên thực hiện:**
+  - **Vũ Cao Khải** (Lớp 23CT2)
+  - **Trần Văn Nguyên** (Lớp 23CT2)
+- **Năm học:** **2026 – 2027**
 
 ---
 
-### 1.2 Bảng Yêu Cầu Phi Chức Năng (Non-Functional Requirements — NFR theo chuẩn FURPS+)
+## 📖 GIỚI THIỆU ĐỀ TÀI
 
-| Tiêu Chuẩn Đánh Giá | Chỉ Số Mục Tiêu | Giải Pháp Kỹ Thuật Đáp Ứng |
+Du lịch tự túc (*FIT — Free Independent Travelers*) tại miền Trung và Tây Nguyên ngày càng phát triển nhưng du khách thường gặp khó khăn trong việc:
+1. Mất nhiều ngày tìm kiếm thông tin phân tán để lên kế hoạch đi lại.
+2. Lộ trình di chuyển dễ bị "nhảy cóc", zic-zac giữa các điểm xa nhau, tốn kém thời gian và tiền bạc.
+3. Thời tiết miền Trung thất thường (mưa dông nhiệt đới), lịch trình ngoài trời dễ bị vỡ kế hoạch.
+4. Quản lý chi tiêu nhóm phức tạp, khó chia tiền công bằng.
+
+**Travel Trips Central VietNam** ra đời nhằm giải quyết toàn diện các vấn đề trên, mang lại trải nghiệm du lịch số hóa mượt mà:
+- ⚡ **Lên lịch trình tự động trong ~1.3 giây** bằng Google Gemini 2.5 Flash, tối ưu theo ngân sách và sở thích.
+- 🎯 **Không trùng lặp địa điểm (0%)** và lộ trình được phân cụm theo ngày, di chuyển tịnh tiến liên tục.
+- 🌧️ **Tự động đổi lịch tránh mưa** khi thời tiết xấu nhờ kết nối vệ tinh khí tượng Open-Meteo.
+- 📱 **Đồng hành trực tiếp trên đường đi** với chế độ Live Companion (GPS, chỉ đường, check-in, đối soát chi phí).
+
+---
+
+## ✨ TÍNH NĂNG NỔI BẬT
+
+### 1. 🔍 Khám Phá 11 Tỉnh Thành (Explore Tab)
+- Số hóa hơn **523+ địa điểm du lịch thực tế** trên 11 tỉnh thành miền Trung & Tây Nguyên (Đà Nẵng, Quảng Nam, Quảng Trị, Quảng Bình, Thừa Thiên Huế, Thanh Hóa, Nghệ An, Hà Tĩnh, Quảng Ngãi, Bình Định, Khánh Hòa, Phú Yên, Lâm Đồng, Gia Lai, Kon Tum, Đắk Lắk, Đắk Nông).
+- Phân chia thành 4 nhóm rõ ràng: 🏛️ **Thắng cảnh** | 🍜 **Ẩm thực đặc sản** | 🏨 **Khách sạn** | ☕ **Quán cafe chill**.
+- **Thẻ thời tiết 3D Glassmorphism:** Hiển thị nhiệt độ, sức gió, độ ẩm và dự báo mưa theo thời gian thực.
+- **Tìm kiếm toàn cục siêu nhanh (`Ctrl + K`):** Gõ từ khóa để tìm ngay bất kỳ điểm đến, món ăn hay quán cafe nào.
+- Nghe nhạc nền quê hương miền Trung êm dịu tạo cảm hứng khi lên kế hoạch.
+
+### 2. 🤖 Lên Lịch Trình Tự Động Bằng AI (Planner Tab)
+- **Trình hướng dẫn 4 bước:** Chọn Điểm đến $\rightarrow$ Số ngày (1 – 7 ngày) $\rightarrow$ Ngân sách & Số người $\rightarrow$ Sở thích & Ghi chú riêng.
+- **Tối ưu hóa thông minh:**
+  - AI sắp xếp các hoạt động logic theo buổi: Sáng – Trưa – Tối.
+  - Phân cụm địa lý theo khu vực lân cận, không bị di chuyển ngược đường.
+  - Đảm bảo **0% trùng lặp** điểm đến giữa các ngày.
+- **Bản đồ trực quan (Leaflet):** Cắm mốc (Marker) lộ trình từng ngày và hỗ trợ 1-chạm mở chỉ đường Google Maps.
+- **Đổi điểm lẻ linh hoạt (`Change Place`):** Dễ dàng thay thế một điểm bất kỳ trong lịch trình bằng điểm lân cận cùng loại mà không cần tạo lại cả chuyến đi.
+
+### 3. 🌧️ Đổi Lịch Tránh Mưa Thông Minh
+- Khi phát hiện điểm đến có mưa lớn từ dữ liệu vệ tinh Open-Meteo, hệ thống sẽ đưa ra cảnh báo.
+- Du khách chỉ cần nhấn **"Đổi lịch tránh mưa"**, hệ thống sẽ tự động thay các hoạt động ngoài trời bằng các điểm đến trong nhà thú vị (bảo tàng, xưởng gốm, cafe ngắm mưa, di tích có mái che).
+
+### 4. 🧭 Chế Độ Đồng Hành Thực Tế (Live Trip Companion)
+- Chuyển giao diện sang chế độ theo dõi trực tiếp khi bắt đầu đi:
+  - Bản đồ GPS bám sát vị trí thực địa.
+  - Thẻ nhắc **"Điểm đến tiếp theo"** và thời gian gợi ý.
+  - Thanh tiến trình thể hiện % hành trình đã hoàn thành.
+  - Nút **"Check-in"** kèm hộp thoại nhập chi phí phát sinh thực tế để kiểm soát ví tiền.
+
+### 5. 💸 Tiện Ích Du Lịch Thông Minh
+- 📊 **Máy tính chia tiền nhóm (Bill Splitter):** Tự động tính toán số tiền mỗi thành viên cần trả/nhận lại, minh bạch tuyệt đối.
+- 🎨 **Xuất Infographic chuyến đi:** Tải về thẻ ảnh tóm tắt lịch trình đẹp mắt để đăng story Facebook, Instagram, Zalo.
+- 🎫 **Thẻ vé QR Offline & In vé PDF:** Lưu thẻ Boarding Pass kèm mã QR để sử dụng thuận tiện ngay cả khi mất sóng điện thoại 4G.
+
+### 6. 👤 Hồ Sơ Cá Nhân & Cấp Bậc Phượt Thủ
+- Đổi ảnh đại diện trực tiếp (ảnh được nén tự động qua HTML5 Canvas giúp tải trang cực nhanh).
+- Hệ thống danh hiệu Gamification: 🌱 *Tân binh* $\rightarrow$ 🎒 *Tín đồ mê xê dịch* $\rightarrow$ 🚀 *Dân phượt chính hiệu* $\rightarrow$ 👑 *Chuyên gia du lịch*.
+- Quản lý danh sách địa điểm thả tim yêu thích.
+
+---
+
+## 🛠️ CÔNG NGHỆ SỬ DỤNG (TECH STACK)
+
+| Thành phần | Công nghệ | Chi tiết sử dụng |
 | :--- | :--- | :--- |
-| **Chức năng (Functionality)** | Đầy đủ tính năng du lịch cốt lõi | Khám phá, AI Crawler, Lập lịch AI, Bản đồ tương tác, Chia tiền nhóm, Đổi lịch tránh mưa, Vé offline. |
-| **Khả năng Sử dụng (Usability)** | Trải nghiệm mượt mà, dễ dùng | Giao diện chuẩn App di động & PC Desktop, thanh chọn 11 tỉnh thành thẻ ảnh trực quan, bộ lọc 1-chạm. |
-| **Độ tin cậy (Reliability)** | Sẵn sàng $\ge 99.8\%$, trùng lặp $0\%$ | Cơ chế Upsert chống trùng lặp, cơ sở dữ liệu đám mây MongoDB Atlas Cluster phân tán. |
-| **Hiệu năng (Performance)** | - Tải dữ liệu: $< 30$ms<br>- Sinh lịch AI: $< 2.0$s<br>- Build Frontend: $< 0.8$s | Bộ nhớ đệm MongoDB Atlas, tối ưu Prompt tokens Gemini 2.5 Flash, đóng gói nén mã nguồn Vite Gzip. |
-| **Khả năng Bảo trì (Supportability)** | Dễ dàng mở rộng & bảo trì | Kiến trúc phân tầng rõ ràng (Định tuyến Routes, Mô hình Models, Dịch vụ AI Services, Bộ trung gian Middleware). |
+| **Frontend** | **Vue 3** (Composition API, `<script setup>`) | Giao diện hiện đại, phản hồi tức thì, cấu trúc Component rõ ràng |
+| **Công cụ Build**| **Vite 5** | Tốc độ biên dịch siêu tốc, nén mã nguồn tối ưu |
+| **Styling** | **Tailwind CSS 3.4** | Thiết kế Responsive chuẩn Mobile App-First và PC Desktop |
+| **Bản đồ** | **Leaflet / OpenStreetMap** | Bản đồ số tương tác, vẽ đường đi, định vị GPS |
+| **Backend** | **Node.js & Express.js** | Máy chủ RESTful API kiến trúc phân tầng (Router - Controller - Service) |
+| **Cơ sở dữ liệu** | **MongoDB Atlas Cloud** | Lưu trữ đám mây phân tán, lập chỉ mục tốc độ cao |
+| **Trí tuệ nhân tạo**| **Google Gemini 2.5 Flash** | Xử lý ngôn ngữ tự nhiên, sinh lịch trình JSON trong ~1.3s |
+| **Dịch vụ Thời tiết**| **Open-Meteo API** | Dữ liệu khí tượng thời gian thực miễn phí, không giới hạn |
+| **Xác thực** | **JWT & Bcrypt.js** | Bảo mật thông tin tài khoản và băm mật khẩu 10 vòng |
+| **Dữ liệu & Cào** | **Puppeteer & Wikipedia REST API** | Thu thập tự động hình ảnh thật, tọa độ GPS và thông tin du lịch |
 
 ---
 
-## 2. Hệ Thống Sơ Đồ Hoạt Động (Đơn Giản & Dễ Hiểu)
+## 🚀 HƯỚNG DẪN CÀI ĐẶT & KHỞI CHẠY (QUICK START)
 
-### 2.1 Sơ đồ Hoạt động Tổng thể (Luồng từ Trái sang Phải)
+Thầy và các bạn có thể cài đặt và chạy thử dự án trên máy cá nhân theo các bước đơn giản dưới đây:
 
-```mermaid
-flowchart LR
-    A["👤 Người Dùng"] ---> B["📱 Giao Diện Web (Vue.js)"]
-    B ---> C["⚙️ Máy Chủ Xử Lý (Node.js)"]
-    C ---> D["🤖 Trí Tuệ Nhân Tạo (Gemini AI)"]
-    C ---> E["🗄️ Cơ Sở Dữ Liệu (MongoDB)"]
-    C ---> F["⛅ Dự Báo Thời Tiết (Open-Meteo)"]
-```
+### 1. Yêu cầu môi trường
+- Máy tính đã cài **Node.js** (Khuyên dùng phiên bản $\ge 18.0.0$) $\rightarrow$ [Tải Node.js tại đây](https://nodejs.org/)
+- Trình quản lý gói **npm** (đi kèm Node.js)
+- Trình duyệt web hiện đại (Google Chrome, Microsoft Edge, Brave, v.v.)
 
-```text
-+--------------+        +---------------+        +------------------+
-|  NGƯỜI DÙNG  | -----> | GIAO DIỆN WEB | -----> | MÁY CHỦ BACKEND  |
-+--------------+        +---------------+        +--------+---------+
-                                                          |
-                      +-------------------+---------------+-------------------+
-                      |                   |                                   |
-                      v                   v                                   v
-             +-----------------+ +-------------------+             +--------------------+
-             | GEMINI AI (Trợ  | | CƠ SỞ DỮ LIỆU     |             | DỰ BÁO THỜI TIẾT   |
-             | lý lên lịch)    | | (Lưu địa điểm/vé) |             | (Thời tiết mưa)    |
-             +-----------------+ +-------------------+             +--------------------+
+---
+
+### 2. Tải mã nguồn về máy
+Mở Terminal / PowerShell và clone dự án (hoặc tải tệp ZIP giải nén):
+
+```bash
+git clone https://github.com/your-username/Travel_Trips_Central_VietNam.git
+cd Travel_Trips_Central_VietNam
 ```
 
 ---
 
-### 2.2 Sơ đồ Các Chức Năng Của Hệ Thống
+### 3. Cấu hình biến môi trường (`.env`)
+Kiểm tra hoặc tạo tệp `.env` tại thư mục `backend/.env` với nội dung mẫu:
 
-```mermaid
-flowchart TD
-    App["🌴 ỨNG DỤNG DU LỊCH MIỀN TRUNG"]
-    
-    App ---> CN1["1. Đăng ký & Đăng nhập"]
-    App ---> CN2["2. Xem địa điểm & Quán ăn"]
-    App ---> CN3["3. AI Lập lịch trình"]
-    App ---> CN4["4. Đổi lịch khi trời mưa"]
-    App ---> CN5["5. Chia tiền nhóm"]
-    App ---> CN6["6. Lưu & Xuất vé du lịch"]
-```
-
-```text
-                  +-----------------------------------+
-                  |   ỨNG DỤNG DU LỊCH MIỀN TRUNG     |
-                  +-----------------+-----------------+
-                                    |
-     +--------------+---------------+--------------+--------------+
-     |              |               |              |              |
-     v              v               v              v              v
-+---------+   +------------+   +----------+   +----------+   +---------+
-| Đăng ký |   | Tra cứu    |   | AI Lên   |   | Đổi lịch |   | Chia    |
-| Đăng    |   | địa điểm,  |   | lịch     |   | khi trời |   | tiền    |
-| nhập    |   | đặc sản    |   | trình    |   | mưa      |   | nhóm    |
-+---------+   +------------+   +----------+   +----------+   +---------+
-```
-
----
-
-### 2.3 Sơ đồ Luồng AI Cào Dữ Liệu Địa Điểm
-
-```mermaid
-flowchart LR
-    K1["1. Chưa có dữ liệu tỉnh mới"] ---> K2["2. AI tìm địa điểm, giá vé, GPS"]
-    K2 ---> K3["3. Gán ảnh đẹp & lọc trùng"]
-    K3 ---> K4["4. Lưu vào Database"]
-```
-
-```text
-+-------------------+      +--------------------+      +--------------------+      +--------------------+
-|     BƯỚC 1        |      |      BƯỚC 2        |      |      BƯỚC 3        |      |      BƯỚC 4        |
-| Cần dữ liệu điểm  | ---> | AI tìm quán ăn,    | ---> | Gán ảnh đẹp và     | ---> | Lưu vào MongoDB    |
-| đến mới           |      | khách sạn, toạ độ  |      | loại bỏ trùng lặp  |      | để sử dụng         |
-+-------------------+      +--------------------+      +--------------------+      +--------------------+
-```
-
----
-
-### 2.4 Sơ đồ Luồng Tạo Lịch Trình Bằng AI
-
-```mermaid
-flowchart LR
-    B1["1. Chọn Tỉnh, Số ngày, Tiền"] ---> B2["2. Gửi cho Gemini AI tính"]
-    B2 ---> B3["3. Phân bổ Sáng - Trưa - Tối"]
-    B3 ---> B4["4. Hiển thị lịch & Bản đồ"]
-```
-
-```text
-+-------------------+      +--------------------+      +--------------------+      +--------------------+
-|     BƯỚC 1        |      |      BƯỚC 2        |      |      BƯỚC 3        |      |      BƯỚC 4        |
-| Người dùng chọn   | ---> | Gửi dữ liệu        | ---> | AI sắp xếp địa     | ---> | Hiển thị lịch      |
-| điểm đến, số ngày |      | qua Gemini AI      |      | điểm và chi phí    |      | trình & bản đồ     |
-+-------------------+      +--------------------+      +--------------------+      +--------------------+
-```
-
----
-
-### 2.5 Sơ đồ Dữ Liệu Lưu Trữ (Cơ Sở Dữ Liệu Đơn Giản)
-
-```mermaid
-erDiagram
-    NGUOI_DUNG ||--o{ CHUYEN_DI : "tạo và lưu"
-
-    NGUOI_DUNG {
-        string HoTen "Họ và tên"
-        string Email "Email đăng nhập"
-        string MatKhau "Mật khẩu"
-    }
-
-    DIA_DIEM {
-        string TenDiaDiem "Tên địa điểm / quán ăn"
-        string TinhThanh "Tỉnh hoặc Thành phố"
-        string LoaiHinh "Thắng cảnh / Quán ăn / Khách sạn"
-        string DiaChi "Địa chỉ cụ thể"
-        number GiaTien "Giá tham khảo"
-        number ToaDoGPS "Vĩ độ & Kinh độ"
-    }
-
-    CHUYEN_DI {
-        string DiemDen "Điểm đến du lịch"
-        number SoNgay "Số ngày đi (1 - 7 ngày)"
-        number TongTien "Tổng ngân sách dự kiến"
-        string ChiTiet "Lịch trình Sáng - Trưa - Tối"
-    }
-```
-
-**Mô tả ngắn gọn:**
-- **Người dùng:** Lưu thông tin đăng nhập tài khoản.
-- **Địa điểm:** Lưu kho thông tin danh lam thắng cảnh, quán ăn, khách sạn và toạ độ bản đồ.
-- **Chuyến đi:** Lưu các lịch trình du lịch đã được AI tạo cho người dùng.
-
----
-
-### 2.6 Sơ đồ Luồng Dữ liệu (DFD Mức Ngữ Cảnh 0)
-
-```mermaid
-flowchart LR
-    KhachDuLich(["Khách Du Lịch"])
-    HeThong(["HỆ THỐNG DU LỊCH THÔNG MINH TRAVEL TRIPS AI"])
-    GeminiAI["Google Gemini 2.5 Flash"]
-    DichVuThoiTiet["Open-Meteo Weather API"]
-    CSDLDamMay[("MongoDB Atlas Cloud")]
-
-    KhachDuLich -->|Thông tin tìm kiếm, Lập lịch trình, Tài khoản| HeThong
-    HeThong -->|Lịch trình tối ưu, Bản đồ chỉ đường, Danh sách địa điểm| KhachDuLich
-
-    HeThong -->|Lệnh Prompt cào dữ liệu và sinh lịch trình| GeminiAI
-    GeminiAI -->|Dữ liệu cấu trúc JSON chuẩn hóa| HeThong
-
-    HeThong -->|Tọa độ GPS và tên thành phố| DichVuThoiTiet
-    DichVuThoiTiet -->|Thông tin thời tiết hiện tại và dự báo| HeThong
-
-    HeThong -->|Đọc và Ghi Địa điểm, Chuyến đi, Tài khoản| CSDLDamMay
-    CSDLDamMay -->|Kết quả truy vấn dữ liệu| HeThong
-```
-
-**Mô tả luồng thông tin DFD:**
-- Người dùng truyền tham số tìm kiếm hoặc tạo lịch trình vào hệ thống.
-- Hệ thống gửi prompt tới Gemini AI để nhận cấu trúc lịch trình, đồng thời truy vấn Open-Meteo để thu thập thời tiết thời gian thực và đồng bộ dữ liệu vào cơ sở dữ liệu MongoDB Atlas.
-
----
-
-## 3. Cơ Chế & Hoạt Động Của AI Cào Dữ Liệu Du Lịch (AI Crawler)
-
-Module **AI Crawler (`backend/services/aiCrawlerService.js`)** đóng vai trò là "bộ não" thu thập và làm giàu tri thức du lịch tự động cho toàn bộ hệ thống mà không cần nhập liệu thủ công gò bó:
-
-### 3.1 Phân Tầng Trích Xuất Dữ Liệu Chuyên Sâu (Multi-Category Extraction)
-AI Crawler phân chia dữ liệu của mỗi tỉnh thành thành 4 nhóm độc lập:
-1. 🏛️ **Thắng cảnh & Di tích (`attraction`):** Bãi biển đẹp, núi đèo hiểm trở, hang động kỳ vĩ, thác nước, di sản thế giới UNESCO, cố đô, di tích Chăm Pa, bảo tàng, làng nghề truyền thống và chợ đêm.
-2. 🍜 **Ẩm thực & Quán đặc sản lâu đời (`restaurant`):** Các quán ăn truyền thống gia truyền, nhà hàng đặc sản địa phương, ẩm thực đường phố trứ danh (nêu rõ tên món đặc sản nổi bật trong mô tả).
-3. 🏨 **Khách sạn & Nghỉ dưỡng (`hotel`):** Khách sạn, resort ven biển cao cấp, homestay view đẹp với đầy đủ mức giá tham khảo.
-4. ☕ **Quán Cafe & Bar chill (`cafe`):** Cafe sân thượng ngắm cảnh, cafe view biển/núi, check-in phong cảnh độc đáo.
-
-### 3.2 Cấu Trúc Dữ Liệu Địa Điểm Chuẩn Xác 10 Thuộc Tính
-- `name`: Tên địa danh/quán ăn chính xác có thật 100%.
-- `type`: Phân loại danh mục (`attraction` | `restaurant` | `hotel` | `cafe`).
-- `destination`: Tỉnh/Thành phố trực thuộc.
-- `address`: Địa chỉ cụ thể thực tế (Số nhà, tên đường, phường/xã, quận/huyện).
-- `description`: Mô tả sinh động 1--2 câu làm nổi bật nét đẹp, hương vị món ăn.
-- `tags`: Mảng các từ khóa tìm kiếm nhanh (`["biển", "check-in", "đặc sản"]`).
-- `estimated_cost`: Giá vé vào cổng / chi phí bình quân / giá phòng tham khảo (VND).
-- `latitude` & `longitude`: Tọa độ GPS chuẩn để vẽ tuyến đường trên Google Maps và tính toán khoảng cách di chuyển.
-- `rating`: Điểm đánh giá thực tế (4.5 -- 5.0 sao).
-- `image`: URL hình ảnh chất lượng cao tối ưu hiển thị.
-
-### 3.3 Cơ Chế Tự Động Kích Hoạt & Cập Nhật Dữ Liệu
-- **Tự động khởi chạy khi bật Server (`autoInitPlaces`):** Khi hệ thống Backend khởi động, AI sẽ tự động kiểm tra số lượng dữ liệu của từng tỉnh thành. Nếu khu vực nào chưa có đủ dữ liệu, AI Crawler sẽ tự động quét ngầm và nạp thêm.
-- **Chống trùng lặp tuyệt đối (Upsert Mechanism):** Sử dụng khóa duy nhất `{ name, destination }` khi ghi vào MongoDB Atlas, giúp dữ liệu luôn được làm mới mà không bị nhân bản trùng tên.
-
-### 3.4 Cơ Chế Tích Hợp Hình Ảnh Thực Tế (Google Maps API & Puppeteer Crawler)
-
-Nhằm khắc phục hoàn toàn điểm yếu của dữ liệu hình ảnh giả lập (Unsplash) thiếu tính chân thực, hệ thống đã được nâng cấp với **Kiến trúc Lai (Hybrid Image Engine)**. Kiến trúc này cho phép tự động hóa việc lấy hình ảnh chân thực 100% của từng địa điểm, quán ăn, khách sạn từ Google Maps thông qua 2 phương thức hoạt động song song, đảm bảo tính ổn định và tối ưu hóa chi phí (Cost-Optimization) tuyệt đối:
-
-#### A. Tích hợp Google Maps Places API (Phương thức Chính quy)
-- **Cơ chế hoạt động (`googleMapsService.js`):** 
-  - Hệ thống sử dụng Giao thức RESTful API kết nối trực tiếp với máy chủ Google Cloud thông qua `Places API (New)`.
-  - Khi AI sinh ra một địa điểm mới, hệ thống sẽ tự động gọi phương thức `Text Search` kèm theo tọa độ (nếu có) để tìm kiếm địa điểm chính xác nhất.
-  - Sau khi lấy được `Place ID`, hệ thống tiếp tục gọi phương thức `Place Photos` để tải về URL hình ảnh chất lượng cao nhất của địa điểm đó do người dùng thật đánh giá (Reviews).
-- **Ưu điểm:** Tốc độ phản hồi cực nhanh (dưới 500ms), dữ liệu chuẩn hóa JSON, hoạt động ổn định và có thể lấy được các hình ảnh độc quyền.
-- **Hạn chế:** Chịu sự kiểm soát khắt khe của hệ thống thanh toán Google Cloud Billing (thường yêu cầu xác minh thẻ tín dụng quốc tế hoặc đặt cọc phí ngăn chặn bot).
-
-#### B. Trình cào dữ liệu tự động hóa - Puppeteer Headless (Phương thức Tối ưu chi phí)
-Để vượt qua rào cản chi phí và giới hạn quota của Google Cloud, hệ thống được trang bị một công cụ cào dữ liệu độc lập cực kỳ mạnh mẽ tại `scripts/crawlGoogleMapsPuppeteer.js`.
-- **Cơ chế giả lập (Browser Automation):** Khởi chạy một trình duyệt Chrome ẩn danh ngầm (Headless Mode) thông qua thư viện `puppeteer-core`. Hệ thống truyền các tham số như `--no-sandbox`, `--disable-setuid-sandbox` và giả mạo cấu trúc `User-Agent` hợp lệ để qua mặt hàng rào chống Bot (Anti-bot) của Google.
-- **Phân tích cú pháp DOM sâu (Deep DOM Parsing):** Kịch bản tự động điều hướng đến URL bản đồ, nhập hàng loạt biến thể từ khóa phức tạp (Ví dụ: *"khu du lịch sinh thái điểm tham quan Đà Nẵng"*). Sau đó, nó can thiệp vào mã nguồn trang web, tự động mô phỏng thao tác "cuộn chuột liên tục" (Scrolling Trigger) để ép máy chủ Google Maps tải thêm dữ liệu cho đến khi hết danh sách.
-- **Khai thác dữ liệu ngầm (Data Extraction):** 
-  - Đọc các thẻ DOM (`div.Nv2PK`, `a.hfpxzc`) để lấy tên địa điểm, địa chỉ và điểm đánh giá thực tế (Rating).
-  - Trích xuất URL gốc của hình ảnh từ các thẻ `img` và **tự động nâng cấp độ phân giải** hình ảnh từ ảnh thumb mờ lên chất lượng HD thông qua thuật toán thay thế tham số định dạng URL (`=w800-h600-k-no`).
-  - Bóc tách Vĩ độ và Kinh độ (Latitude & Longitude) trực tiếp từ chuỗi URL định tuyến bằng Regex.
-
-#### C. Công cụ Đồng bộ Dữ liệu Không gián đoạn (Zero-Downtime Migration)
-- Các kịch bản chạy nền như `updateGoogleMapsPhotos.js` và `enrichAllRealPhotos.js` được thiết kế để quét qua toàn bộ cơ sở dữ liệu hàng trăm bản ghi đang có trong MongoDB Atlas.
-- Trình quét (Scanner) thông minh chỉ nhắm mục tiêu vào các địa điểm đang sử dụng ảnh Unsplash hoặc ảnh lỗi, tiến hành gọi module Puppeteer/API để fetch ảnh thực tế và lưu đè (Upsert) mà không làm sập server hay ghi đè các trường dữ liệu quan trọng khác.
-- **Kết quả:** Toàn bộ hình ảnh trên giao diện người dùng ngay lập tức trở nên sinh động, thực tế, góp phần tăng tính thuyết phục cho hệ thống tạo lịch trình AI.
-
----
-
-## 4. Báo Cáo Thống Kê Dữ Liệu Thực Tế (523+ Địa Điểm)
-
-Cơ sở dữ liệu MongoDB Atlas hiện đã được nạp phong phú, phủ kín **11 tỉnh thành Miền Trung & Tây Nguyên**:
-
-| STT | Tỉnh / Thành phố (Khu vực mở rộng) | Số lượng địa điểm | Địa danh & Đặc sản tiêu biểu |
-| :-: | :--------------------------------- | :---------------: | :--------------------------- |
-| 1 | **Đà Nẵng** *(gồm Quảng Nam - Hội An)* | **77** | Bà Nà Hills & Cầu Vàng, Phố cổ Hội An, Sơn Trà & Linh Ứng, Ngũ Hành Sơn, Đèo Hải Vân, Thánh địa Mỹ Sơn, Rừng dừa Bảy Mẫu, Mì Quảng Bà Mua, Bánh mì Phượng, Quán Trần... |
-| 2 | **Quảng Trị** *(gồm Quảng Bình)* | **99** | Động Phong Nha, Động Thiên Đường, Suối Moọc, Hang Sơn Đoòng, Cồn Cát Quang Phú, Thành Cổ Quảng Trị, Địa đạo Vịnh Mốc, Bánh canh cá lóc, Bún hến Mai Xá... |
-| 3 | **Thanh Hóa** | **72** | Bãi biển Sầm Sơn, Pù Luông, Thành Nhà Hồ, Suối Cá Thần Cẩm Lương, Đền Bà Triệu, Nem chua Thanh Hóa, Chả tôm, Bánh khoái tép... |
-| 4 | **Nghệ An** | **47** | Bãi biển Cửa Lò, Khu di tích Kim Liên Quê Bác, Đồi chè Thanh Chương, Vườn Quốc gia Pù Mát, Cháo lươn Nghệ An, Nhút Thanh Chương, Tương Nam Đàn... |
-| 5 | **Hà Tĩnh** | **42** | Bãi biển Thiên Cầm, Ngã ba Đồng Lộc, Chùa Hương Tích, Hồ Kẻ Gỗ, Kẹo cu đơ Hà Tĩnh, Mực nhảy Vũng Áng, Ram mướt... |
-| 6 | **Quảng Ngãi** *(gồm Bình Định - Quy Nhơn)* | **37** | Đảo Lý Sơn, Cổng Tò Vò, Eo Gió & Kỳ Co, Tháp Đôi Chăm Pa, Khu chứng tích Sơn Mỹ, Don Quảng Ngãi, Bánh xèo tôm nhảy, Tỏi cô đơn... |
-| 7 | **Khánh Hòa** *(gồm Phú Yên)* | **30** | VinWonders Nha Trang, Tháp Bà Ponagar, Gành Đá Đĩa, Mũi Điện Đại Lãnh, Bãi Dài Cam Ranh, Bún chả cá Nha Trang, Nem nướng Ninh Hòa, Mắt cá ngừ... |
-| 8 | **Lâm Đồng** *(Đà Lạt & Bảo Lộc)* | **29** | Hồ Xuân Hương, Quảng trường Lâm Viên, Đỉnh Langbiang, Thác Datanla, Đồi chè Cầu Đất, Lẩu gà lá é, Lẩu bò Ba Toa, Bánh tráng nướng... |
-| 9 | **Gia Lai** *(gồm Kon Tum)* | **28** | Biển Hồ T’Nưng, Núi lửa Chư Đăng Ya, Chùa Minh Thành, Nhà thờ Gỗ Kon Tum, Cầu treo Kon Klor, Phở hai tô Gia Lai, Bò một nắng muối kiến vàng... |
-| 10 | **Huế** | **27** | Đại Nội Cố Đô, Chùa Thiên Mụ, Lăng Khải Định, Đồi Vọng Cảnh, Vịnh Lăng Cô, Phá Tam Giang, Bún bò Huế chuẩn vị, Cà phê muối, Cơm hến... |
-| 11 | **Đắk Lắk** *(gồm Đắk Nông)* | **21** | Bảo tàng Thế giới Cà phê, Thác Dray Nur, Hồ Lắk, Buôn Đôn, Hồ Tà Đùng, Bún đỏ Buôn Ma Thuột, Gà nướng than Bản Đôn, Cà phê Robusta... |
-| | **TỔNG CỘNG TOÀN HỆ THỐNG** | **523+** | **Đầy đủ 4 loại hình: Thắng cảnh, Quán ăn, Khách sạn, Cafe** |
-
----
-
-## 5. Các Tính Năng Cốt Lõi Đã Triển Khai
-
-1. 🧭 **Lập Lịch Trình Thông Minh Bằng AI (Smart AI Planner):** Sinh lịch trình 1--7 ngày cùng phân bổ 5 khoản ngân sách trong **~1.9 giây**, trạng thái nút `"Đang lên lịch trình..."`.
-2. 🔍 **Bộ Lọc & Tìm Kiếm Tức Thì (Instant Explore Search):** Thanh tìm kiếm thời gian thực theo món ăn, bãi biển, quận/huyện, di tích trên hơn 520+ địa điểm.
-3. 🗺️ **Bản Đồ Hành Trình Trực Quan (Interactive Route Maps):** Vẽ tuyến đường di chuyển từng ngày, nút chỉ đường Google Maps 1-chạm.
-4. 🌧️ **Đổi Lịch Tránh Mưa Thông Minh (Weather Adaptive Re-scheduler):** Kết nối **Open-Meteo API** thời gian thực, tự động đổi lịch trình sang địa điểm trong nhà khi thời tiết xấu.
-5. 💸 **Công Cụ Chia Tiền Nhóm (Group Bill Splitter):** Tính toán chi phí bình quân đầu người minh bạch.
-6. 🎫 **Xuất Vé Ngoại Tuyến (Offline Travel Pass):** Tạo vé Boarding Pass kèm mã QR mô phỏng.
-7. 🔐 **Hệ Thống Xác Thực & Quản Lý Chuyến Đi:** Đăng ký/đăng nhập JWT và lưu trữ lịch sử chuyến đi trên MongoDB Atlas.
-8. 🔄 **Tùy Biến Lịch Trình Linh Hoạt (Manual Itinerary Customizer):** Cho phép người dùng trực tiếp can thiệp, "Đổi điểm" ngay trên lịch trình AI đã tạo nhằm cá nhân hóa tối đa chuyến đi theo sở thích.
-9. 🖼️ **AI Auto-Enricher (Đồng bộ ảnh thực tế 100%):** Tự động quét và thay thế toàn bộ ảnh minh họa bằng hình ảnh độ phân giải cao thực tế (từ Wikipedia và Google Maps) cho 5250+ địa điểm.
-
----
-
-### 5.1 Báo Cáo Cập Nhật Tiến Độ Triển Khai Mới Nhất
-
-Trong đợt cập nhật gần nhất, hệ thống đã hoàn thiện và khắc phục thành công các chức năng quan trọng sau:
-
-1. **Nâng cấp Tốc độ Tải Dữ liệu & Xử lý Độ trễ (Zero-Latency RAM Cache):**
-   - **Vấn đề cũ:** Khi chuyển đổi giữa các tỉnh thành, hệ thống mất nhiều thời gian (lên đến 30s) để truy vấn MongoDB Atlas do giới hạn băng thông và rào cản DNS tại Việt Nam.
-   - **Cách thức hoạt động mới:** Triển khai nạp toàn bộ 5250+ địa điểm lên mảng RAM nội bộ (`RAM_PLACES`) ngay khi khởi động Server, kết hợp ép DNS `8.8.8.8` qua module `node:dns`. Kết quả là tốc độ phản hồi API tìm kiếm và tải địa điểm giảm xuống chỉ còn **0.001ms**, mang lại trải nghiệm tức thì.
-
-2. **Chế độ "Trợ Lý Du Lịch Ảo" (Live Travel Companion Mode):**
-   - **Vấn đề cũ:** Việc chỉ có danh sách lịch trình tĩnh gây khó khăn khi người dùng thực tế đang di chuyển, không biết nên đi đâu tiếp theo hoặc đã đi được bao nhiêu nơi.
-   - **Cách thức hoạt động mới:** Thêm nút "Bắt đầu chuyến đi" để chuyển giao diện sang chế độ **Live Tracking**. Màn hình tối giản hóa thành chế độ xem đôi (Split-Screen) với bản đồ thực tế bên trái và thẻ "Điểm đến tiếp theo" bên phải. Tích hợp thanh tiến độ (Progress Tracker) để người dùng nắm rõ số lượng địa điểm đã qua. Mỗi khi đến nơi, người dùng nhấn "Check-in", một hộp thoại (Modal) tùy chỉnh sẽ hiện ra để nhập chi phí thực tế. Hệ thống sẽ tự động gạch bỏ điểm đến đó và chuyển hướng dẫn đường tới địa điểm tiếp theo.
-
-3. **Hồ Sơ Cá Nhân Premium & Hệ Thống Cấp Bậc (Gamified Profile):**
-   - **Cách thức hoạt động mới:** Thay thế trang hồ sơ cơ bản bằng giao diện Premium cực đẹp. Người dùng có thể **tải trực tiếp ảnh đại diện từ thiết bị**. Ở frontend, công nghệ **HTML5 Canvas** được sử dụng để tự động nén dung lượng và thay đổi kích thước ảnh trước khi chuyển sang định dạng Base64, sau đó gửi lên máy chủ lưu trữ an toàn trong MongoDB. Máy chủ đã được nâng cấp Payload Size (`express.json({ limit: '10mb' })`) để tiếp nhận hình ảnh.
-   - **Hệ thống Xếp hạng (Ranking System) dựa trên số chuyến đi hoàn thành (Completed Trips):**
-     - **Dưới 2 chuyến đi:** `Tân binh 🌱` (Màu tím) - Khởi đầu hành trình khám phá.
-     - **Từ 2 - 4 chuyến đi:** `Tín đồ mê xê dịch 🎒` (Màu xanh ngọc) - Bắt đầu đam mê du lịch.
-     - **Từ 5 - 9 chuyến đi:** `Dân phượt chính hiệu 🚀` (Màu xanh dương) - Giàu kinh nghiệm, quen thuộc với mọi nẻo đường.
-     - **Từ 10 chuyến đi trở lên:** `Chuyên gia du lịch 👑` (Màu vàng gold) - Đạt cảnh giới cao nhất của sự xê dịch.
-   - Đi kèm là bảng thống kê điểm số nhằm mục đích tạo tính thi đua (Gamification) để người dùng chia sẻ thành tích với bạn bè.
-
-
-2. **Chức năng "Đổi Điểm" - Tùy Biến Lịch Trình AI:**
-   - **Vấn đề cũ:** Sau khi AI sinh lịch trình, người dùng bị gò bó trong kế hoạch cố định, không thể thay đổi nếu có một địa điểm không vừa ý.
-   - **Cách thức hoạt động mới:** Giao diện `App.vue` được tích hợp nút hành động **"Đổi điểm" (Change Place)** tại mỗi mốc thời gian trong dòng thời gian (Timeline). Khi người dùng nhấn đổi, hệ thống sẽ tự động hoán đổi địa điểm hiện tại bằng một địa điểm lân cận khác cùng thể loại, đảm bảo lộ trình vẫn hợp lý mà không cần nhờ AI tính toán lại toàn bộ.
-
-3. **Hệ thống Trí Tuệ Nhân Tạo Tự Động Tìm Ảnh Thật (AI Photo Enricher & Google Maps Crawler):**
-   - **Vấn đề cũ:** Các danh lam thắng cảnh nổi tiếng bị gán ảnh minh họa generic (từ Unsplash) do Crawler chưa tìm thấy ảnh thực tế, làm giảm trải nghiệm trực quan.
-   - **Cách thức hoạt động mới:** Hệ thống kết hợp 2 luồng tự động (Auto-Crawling) chạy nền:
-     - **Luồng 1 (Wikipedia API):** Sử dụng chuẩn Open REST API của Wikipedia (không cần API Key). Thuật toán gọi trực tiếp endpoint `https://vi.wikipedia.org/w/api.php?action=query&prop=pageimages...` truyền vào từ khóa là Tên địa điểm. Wikipedia sẽ trả về chuẩn JSON chứa đường dẫn ảnh gốc (Original HD Image) của các danh lam thắng cảnh, di tích lịch sử nổi tiếng (như Động Thiên Đường, Đại Nội Huế). Nguồn ảnh này đảm bảo độ chính xác tuyệt đối, sắc nét và tuân thủ giấy phép mã nguồn mở.
-     - **Luồng 2 (Google Maps / Bing Images Web Scraping):** Đối với các nhà hàng, khách sạn, quán cafe không có trên Wikipedia, hệ thống sử dụng thuật toán Web Scraping (`Axios`, `Cheerio`, `Puppeteer`) để phân tích mã nguồn HTML kết quả tìm kiếm và trích xuất đường dẫn ảnh độ phân giải cao.
-     - *Kết quả:* Toàn bộ 5250+ ảnh minh họa lập tức bị ghi đè bằng ảnh thật trong Database và đồng bộ lên RAM, mang lại trải nghiệm thị giác chân thực 100%.
-
-4. **Tích hợp Bản đồ Tương tác & Định vị Nổi bật (Interactive Map & Markers):**
-   - **Mô tả hoạt động:** Khắc phục việc xem lịch trình dạng chữ khô khan, hệ thống hiện đã vẽ nổi bật toàn bộ các địa điểm lên bản đồ số.
-   - **Cách thức hoạt động:** Mọi địa điểm thu thập đều được gán tọa độ GPS (Vĩ độ & Kinh độ). Thông qua thư viện `Leaflet`, Frontend tự động render các Marker (Điểm ghim) theo từng ngày và vẽ các đường nối lộ trình di chuyển trực quan. Người dùng có thể click vào Marker để xem thông tin hoặc nhấn "Chỉ đường" để mở ngay Google Maps.
-
-5. **Thuật Toán Lên Lịch Trình Thông Minh Bằng AI (Smart AI Itinerary Planner):**
-   - **Mô tả hoạt động:** Trái tim của ứng dụng, giúp cá nhân hóa chuyến đi chỉ với một cú click chuột.
-   - **Cách thức hoạt động:** Khi người dùng nhập Điểm đến, Số ngày (1-7), Ngân sách và Sở thích, Backend sẽ tổng hợp và gửi một **Cấu trúc Prompt (Câu lệnh)** tối ưu tới lõi **Google Gemini 2.5 Flash**. AI sẽ tiến hành phân tích không gian địa lý, lựa chọn địa điểm phù hợp trong bán kính di chuyển, phân bổ logic theo buổi (Sáng - Trưa - Tối) và tính toán chi tiêu dự kiến. Kết quả được trả về dưới định dạng JSON chuẩn hóa và hiển thị thành dòng thời gian (Timeline) đẹp mắt chỉ trong thời gian ~1.9 giây.
-
-6. **Thuật Toán Phân Bổ Ngân Sách Động (Dynamic Budget AI Prompting):**
-   - **Mô tả hoạt động:** Hệ thống không còn gán cứng tiêu chí "giá rẻ" cho mọi lịch trình.
-   - **Cách thức hoạt động:** AI tự động đánh giá mức chi tiêu bình quân (Ngân sách / Số người / Số ngày). Nếu ngân sách cao (>2 triệu/người/ngày), AI sẽ tự động điều chỉnh cấu trúc JSON để ép buộc chọn các Resort, Khách sạn 4-5 sao, nhà hàng cao cấp, quán ăn sang trọng. Ngược lại, nếu ngân sách thấp, AI sẽ tập trung vào khách sạn bình dân 300k, homestay và các điểm tham quan miễn phí. Đảm bảo trải nghiệm chuyến đi khớp 100% với túi tiền.
-
-7. **Tối Ưu Tuyến Đường Bằng Thuật Toán Phân Cụm Địa Lý (Geographic Clustering):**
-   - **Mô tả hoạt động:** Tránh tình trạng AI lên lịch trình di chuyển "zic-zac" xa xôi.
-   - **Cách thức hoạt động:** Dữ liệu trước khi gửi cho Gemini AI sẽ được chạy qua thuật toán `clusterPlaces` (tương tự K-Means++) để chia thành các Cụm Khu vực (các địa điểm cách nhau dưới 10-15km). AI bị ép buộc quy tắc "Mỗi ngày 1 cụm", giúp tối ưu thời gian di chuyển và bảo vệ sức khỏe cho du khách. Đồng thời chuẩn hóa toàn bộ dữ liệu địa lý của các tỉnh đã sáp nhập (Ví dụ: tách bạch Quảng Bình - Quảng Trị).
-
-8. **Nâng Cấp Trải Nghiệm Người Dùng (UI/UX Smart Enhancements):**
-   - **Custom Input:** Bổ sung ô nhập liệu tự do ở bước "Sở thích", cho phép du khách tự gõ tên địa điểm/quán ăn ngoài danh sách gợi ý.
-   - **Responsive Layout:** Cải thiện cấu trúc hiển thị danh sách thẻ địa điểm (Chips) dạng tự động xuống dòng (Wrap), khắc phục triệt để lỗi khó kéo ngang trên Desktop.
-   - **Logic Tương tác:** Tính năng Toggle Hủy chọn (Deselect) cho Phương tiện di chuyển; Tự động ẩn thẻ Gợi ý Vé xe khách/Tàu hỏa nếu người dùng chọn Xe máy/Ô tô cá nhân.
-   - **Graceful Error Handling:** Tích hợp Banners báo lỗi AI đẹp mắt, thân thiện ngay trên Form thay thế cho các Alert hệ thống khô cứng khi mất kết nối.
-
----
-
-## 6. Hướng Dẫn Cài Đặt & Khởi Chạy
-
-### 6.1 Yêu Cầu Môi Trường
-- **Node.js:** $\ge 18.0.0$
-- **npm:** $\ge 9.0.0$
-- **MongoDB Atlas Connection URI**
-- **Google Gemini API Key**
-
-### 6.2 Cấu Hình Biến Môi Trường (`backend/.env`)
 ```env
 PORT=3000
-MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/ai-travel
-GEMINI_API_KEY=AIzaSyYourGeminiApiKeyHere
+
+# Kết nối cơ sở dữ liệu MongoDB Atlas
+MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/ai-travel?retryWrites=true&w=majority
+
+# Khóa API Google Gemini AI (Lấy miễn phí tại Google AI Studio)
+GEMINI_API_KEY=your_gemini_api_key_here
 GEMINI_MODEL=gemini-2.5-flash
-JWT_SECRET=TravelTripsSecretKey2026
+
+# Khóa bí mật mã hóa JWT phiên đăng nhập
+JWT_SECRET=your_jwt_secret_key_here
 ```
 
-### 6.3 Khởi Chạy Hệ Thống
+> 💡 **Ghi chú:** Cơ sở dữ liệu MongoDB Atlas đã được nạp sẵn toàn bộ dữ liệu 11 tỉnh thành, người dùng không cần cài đặt MongoDB cục bộ trên máy.
 
-#### 🔹 Bước 1: Khởi động Backend Server
+---
+
+### 4. Khởi chạy hệ thống (2 bước)
+
+Dự án gồm 2 phần độc lập: **Backend** (Máy chủ API) và **Frontend** (Giao diện người dùng).
+
+#### 🔹 Bước 1: Khởi động Backend
+Mở một cửa sổ Terminal (cửa sổ thứ nhất):
+
 ```bash
+# Di chuyển vào thư mục backend
 cd backend
+
+# Cài đặt các gói thư viện
 npm install
+
+# Khởi động máy chủ API
 npm start
-# Server chạy tại: http://localhost:3000
 ```
 
-#### 🔹 Bước 2: Khởi động Frontend App
+Sau khi chạy thành công, Terminal sẽ hiển thị:
+```text
+🚀 Server is running on port 3000
+📦 MongoDB Connected successfully!
+⚡ RAM Cache: Loaded 523 places into memory
+```
+👉 Máy chủ Backend chạy tại: `http://localhost:3000`
+
+---
+
+#### 🔹 Bước 2: Khởi động Frontend
+Mở một cửa sổ Terminal thứ hai (song song với cửa sổ Backend):
+
 ```bash
+# Di chuyển vào thư mục frontend
 cd frontend
+
+# Cài đặt các gói thư viện
 npm install
+
+# Khởi động máy chủ giao diện
 npm run dev
-# Ứng dụng chạy tại: http://localhost:5173
+```
+
+Sau khi chạy thành công, Terminal sẽ hiển thị:
+```text
+  VITE v5.4.x  ready in 450 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+```
+👉 Mở trình duyệt web và truy cập: **`http://localhost:5173`** để trải nghiệm ứng dụng.
+
+---
+
+## 🎯 KỊCH BẢN TRẢI NGHIỆM NHANH (DÀNH CHO THẦY & NGƯỜI CHẤM)
+
+Để kiểm thử nhanh toàn bộ các tính năng cốt lõi của đề tài:
+
+1. **Khám phá điểm đến:**
+   - Tại trang chủ, chọn tỉnh thành (ví dụ: *Đà Nẵng* hoặc *Quảng Bình*).
+   - Thử lọc qua các tab: Thắng cảnh, Quán ăn, Khách sạn, Cafe.
+   - Thử nhấn tổ hợp phím **`Ctrl + K`** và gõ `"bánh mì"` hoặc `"biển"` để thấy tốc độ tìm kiếm tức thì.
+
+2. **Lập lịch trình bằng AI:**
+   - Chuyển sang tab **"Lên lịch"**.
+   - Chọn điểm đến: **Đà Nẵng**, số ngày: **3 ngày**, ngân sách: **Tiêu chuẩn**, sở thích: **Check-in sống ảo, Ẩm thực**.
+   - Bấm **"Tạo lịch trình AI"** $\rightarrow$ Hệ thống sẽ xử lý và hiển thị lịch trình chi tiết Sáng - Trưa - Tối kèm bản đồ chỉ sau khoảng **1.3 giây**.
+   - Thử bấm nút **"Đổi điểm"** trên một địa điểm bất kỳ trong Timeline để kiểm tra tính năng hoán đổi linh hoạt.
+
+3. **Thử nghiệm tính năng Đổi lịch tránh mưa:**
+   - Bấm vào biểu tượng thời tiết hoặc nút **"Đổi lịch tránh mưa"** trên lịch trình để quan sát AI tự động thay thế các hoạt động ngoài trời bằng địa điểm trong nhà.
+
+4. **Trải nghiệm Chế độ Đồng hành (Live Trip Companion):**
+   - Bấm nút **"Bắt đầu chuyến đi"** để chuyển sang giao diện Split-Screen dẫn đường.
+   - Bấm nút **"Check-in"** và thử nhập số tiền đã chi để kiểm tra thanh tiến độ và bảng cân đối tài chính.
+
+5. **Xuất vé & Chia tiền nhóm:**
+   - Bấm biểu tượng **"Chia tiền"** để mở công cụ Bill Splitter nhập chi phí của nhóm bạn.
+   - Bấm **"Xuất vé QR"** hoặc **"Xuất Infographic"** để tải thẻ ảnh lịch trình.
+
+---
+
+## 📁 CẤU TRÚC DỰ ÁN
+
+```text
+Travel_Trips_Central_VietNam/
+│
+├── backend/                             # Máy chủ Backend (Node.js & Express)
+│   ├── crawler/                         # Bộ cào dữ liệu tự hành đa tầng
+│   ├── middleware/                      # Xác thực JWT (auth.js)
+│   ├── models/                          # Mô hình dữ liệu Mongoose (Place, Trip, User)
+│   ├── routes/                          # Các API routes (ai.js, places.js, auth.js, weather.js)
+│   ├── scripts/                         # Các kịch bản nạp và cào dữ liệu (seed, enrich)
+│   ├── services/                        # Xử lý lõi Gemini AI, thuật toán K-Means++, TSP Tour
+│   ├── .env                             # Cấu hình kết nối MongoDB & Gemini API Key
+│   ├── package.json                     # Danh sách thư viện Backend
+│   └── server.js                        # Điểm khởi chạy chính của Backend
+│
+├── frontend/                            # Giao diện người dùng (Vue 3 & Vite)
+│   ├── src/
+│   │   ├── assets/                      # Hình ảnh, biểu tượng SVG, âm thanh
+│   │   ├── components/
+│   │   │   ├── common/                  # Tìm kiếm Ctrl+K, hiệu ứng chiêm tinh
+│   │   │   ├── home/                    # Tab Khám phá, Thẻ thời tiết 3D
+│   │   │   ├── planner/                 # Wizard lập lịch AI, Timeline, Chế độ Live Companion
+│   │   │   ├── trips/                   # Danh sách chuyến đi đã lưu, xem chi tiết
+│   │   │   ├── modals/                  # Hộp thoại: Chia tiền, Đổi điểm, Tránh mưa, In vé PDF
+│   │   │   ├── MapComponent.vue         # Bản đồ số tương tác Leaflet
+│   │   │   └── UserProfile.vue          # Hồ sơ cá nhân & Cấp bậc phượt thủ
+│   │   ├── App.vue                      # Giao diện chính đa màn hình
+│   │   └── main.js                      # Điểm khởi tạo ứng dụng Vue 3
+│   ├── index.html                       # Tệp HTML khởi đầu
+│   ├── package.json                     # Danh sách thư viện Frontend
+│   └── vite.config.js                   # Cấu hình Vite
+│
+├── Bao_cao/                             # Toàn bộ mã nguồn Báo cáo Đồ án LaTeX (DAU)
+│   ├── chuong/                          # 5 chương báo cáo chuẩn quy cách học phần
+│   ├── do-an.tex                        # Tệp tài liệu chính LaTeX
+│   └── DAU_Bao_Cao_SIEU_NHANH_DA_FIX.zip# Tệp nén hoàn chỉnh sẵn sàng nộp và in ấn
+│
+└── README.md                            # Tài liệu giới thiệu và hướng dẫn dự án
 ```
 
 ---
 
-## 7. Danh Mục API Endpoints
+## 📞 LIÊN HỆ & BẢN QUYỀN
 
-| Phương thức | Đường dẫn Endpoint | Mô tả chức năng |
-| :--- | :--- | :--- |
-| `GET` | `/health` | Kiểm tra trạng thái hoạt động của Backend & CSDL |
-| `GET` | `/api/places?destination={city}&type={type}` | Lấy danh sách địa điểm theo tỉnh thành (phản hồi < 30ms) |
-| `GET` | `/api/places/nearby?placeName={name}&destination={city}` | Tìm khách sạn & quán ăn lân cận 1 địa danh cụ thể |
-| `POST` | `/api/places/crawl-deep` | Kích hoạt AI Deep Crawler cào quét toàn bộ 4 danh mục cho 1 tỉnh |
-| `POST` | `/api/ai/plan` | Tạo và sinh lịch trình du lịch thông minh bằng Gemini AI (< 2s) |
-| `POST` | `/api/ai/replan` | Đổi lịch trình thích ứng tránh thời tiết xấu |
-| `GET` | `/api/weather?destination={city}` | Lấy dữ liệu dự báo thời tiết thời gian thực |
-| `POST` | `/api/auth/register` \| `/api/auth/login` | Đăng ký & Đăng nhập tài khoản người dùng |
-| `GET` | `/api/social/my-trips` | Lấy danh sách chuyến đi đã lưu của tài khoản |
+Đồ án được phát triển phục vụ học tập và nghiên cứu trong khuôn khổ môn học **Trí tuệ Nhân tạo** tại **Trường Đại học Kiến trúc Đà Nẵng (DAU)**.
+
+Mọi ý kiến đóng góp hoặc thắc mắc về mã nguồn, xin vui lòng liên hệ:
+- **Sinh viên:** Vũ Cao Khải & Trần Văn Nguyên (Lớp 23CT2)
+- **Khoa:** Công nghệ Thông tin — Trường Đại học Kiến trúc Đà Nẵng
+- **Email:** `sinhvien@dau.edu.vn`
 
 ---
 
-## 👥 Nhóm Tác Giả & Đồ Án Học Phần
-
-- **Đồ án môn học:** Trí tuệ Nhân tạo (AIP202)
-- **Đơn vị:** Khoa Công nghệ Thông tin — Trường Đại học Kiến trúc Đà Nẵng (DAU)
-- **Sinh viên thực hiện:**
-  1. **Trần Văn Nguyên**
-  2. **Vũ Cao Khải**
-- **Năm học:** 2025 -- 2026
+<p align="center">
+  <b>ĐẠI HỌC KIẾN TRÚC ĐÀ NẴNG — KHOA CÔNG NGHỆ THÔNG TIN</b><br>
+  <i>Đà Nẵng, Năm học 2026 – 2027</i>
+</p>
