@@ -193,34 +193,6 @@ Sau khi chạy thành công, Terminal sẽ hiển thị:
 
 ---
 
-## 🎯 KỊCH BẢN TRẢI NGHIỆM NHANH (DÀNH CHO THẦY & NGƯỜI CHẤM)
-
-Để kiểm thử nhanh toàn bộ các tính năng cốt lõi của đề tài:
-
-1. **Khám phá điểm đến:**
-   - Tại trang chủ, chọn tỉnh thành (ví dụ: *Đà Nẵng* hoặc *Quảng Bình*).
-   - Thử lọc qua các tab: Thắng cảnh, Quán ăn, Khách sạn, Cafe.
-   - Thử nhấn tổ hợp phím **`Ctrl + K`** và gõ `"bánh mì"` hoặc `"biển"` để thấy tốc độ tìm kiếm tức thì.
-
-2. **Lập lịch trình bằng AI:**
-   - Chuyển sang tab **"Lên lịch"**.
-   - Chọn điểm đến: **Đà Nẵng**, số ngày: **3 ngày**, ngân sách: **Tiêu chuẩn**, sở thích: **Check-in sống ảo, Ẩm thực**.
-   - Bấm **"Tạo lịch trình AI"** $\rightarrow$ Hệ thống sẽ xử lý và hiển thị lịch trình chi tiết Sáng - Trưa - Tối kèm bản đồ chỉ sau khoảng **1.3 giây**.
-   - Thử bấm nút **"Đổi điểm"** trên một địa điểm bất kỳ trong Timeline để kiểm tra tính năng hoán đổi linh hoạt.
-
-3. **Thử nghiệm tính năng Đổi lịch tránh mưa:**
-   - Bấm vào biểu tượng thời tiết hoặc nút **"Đổi lịch tránh mưa"** trên lịch trình để quan sát AI tự động thay thế các hoạt động ngoài trời bằng địa điểm trong nhà.
-
-4. **Trải nghiệm Chế độ Đồng hành (Live Trip Companion):**
-   - Bấm nút **"Bắt đầu chuyến đi"** để chuyển sang giao diện Split-Screen dẫn đường.
-   - Bấm nút **"Check-in"** và thử nhập số tiền đã chi để kiểm tra thanh tiến độ và bảng cân đối tài chính.
-
-5. **Xuất vé & Chia tiền nhóm:**
-   - Bấm biểu tượng **"Chia tiền"** để mở công cụ Bill Splitter nhập chi phí của nhóm bạn.
-   - Bấm **"Xuất vé QR"** hoặc **"Xuất Infographic"** để tải thẻ ảnh lịch trình.
-
----
-
 ## 📁 CẤU TRÚC DỰ ÁN
 
 ```text
